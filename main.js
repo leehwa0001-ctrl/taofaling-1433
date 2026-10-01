@@ -119,7 +119,7 @@
     const s = R.S, st = s && s.classes[s.cls];
     $('t-go').hidden = !s;
     if (s) $('t-go').querySelector('small').textContent = (s.name ? s.name + '・' : '') + R.clsName(s.cls) + ' Lv ' + st.lv + (R.dateOf ? '・' + R.shortDate(R.dateOf(s.day || 0)) : '');
-    $('t-new').querySelector('small').textContent = '抽種族、捏角、選職業';
+    $('t-new').querySelector('small').textContent = '抽種族、捏角、登記武器';
     slots();
   };
   // 三格存檔：讀取、刪除（按兩次）、在空的格子開始新的冒險
