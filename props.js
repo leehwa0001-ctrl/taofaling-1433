@@ -37,6 +37,8 @@
   R.addSteal = (o, list) => { const st = Object.assign({ left: o.max || 2 }, o); (list || steals).push(st); return st; };
   const C = { heat: 0, seen: 0, lostT: 0, ch: null };
   R.crime = C;
+  // 難度倍數（vigilance.js 每一格算好放在 R.crimeK：居民越來越警惕、衛兵越來越難甩）
+  const K1 = { range: 1, fov: 1, seen: 1, time: 1, look: 1, lost: 1 }, K = () => R.crimeK || K1;
   // 互動列表上的「偷」
   R.stealInter = st => ({ x: st.x, z: st.z, r: st.r, steal: st, get label() { return st.label + (st.left > 0 ? '' : '（已經空了）'); }, act: () => startSteal(st) });
   R.crimeReset = () => {
@@ -58,11 +60,11 @@
   const faceOf = n => (n.h ? n.h.g.rotation.y : n.rot);
   const sees = (n, P) => {
     const w = n.watch; if (!w || n.busy) return 0;
-    const dx = P.x - n.x, dz = P.z - n.z, d = Math.hypot(dx, dz); if (d > w.range) return 0;
+    const k = K(), rg = w.range * (w.guard ? Math.max(1, k.range * 0.9) : k.range), dx = P.x - n.x, dz = P.z - n.z, d = Math.hypot(dx, dz); if (d > rg) return 0;
     const off = Math.abs(wrap(Math.atan2(dx, dz) - faceOf(n)));
-    if (off > w.fov && d > 1.4) return 0;
+    if (off > Math.min(2.6, w.fov * k.fov) && d > 1.4) return 0;
     if (blocked(n.x, n.z, P.x, P.z)) return 0;
-    return 1 - d / w.range * 0.7;
+    return 1 - d / rg * 0.7;
   };
   // 地上的視線扇形（靠近可以偷的東西時才畫）
   const coneFor = (ctx, n) => {
@@ -75,7 +77,7 @@
   const lookAround = (n, dt) => {
     if (n.walk || n.chase || n.talkT > 0) return;
     n.lookT = (n.lookT || Math.random() * 3) - dt;
-    if (n.lookT <= 0) { n.lookT = 1.8 + Math.random() * 3.2; n.lookA = Math.random() < 0.28 ? n.rot + Math.PI : n.rot + (Math.random() - 0.5) * 2.2; }
+    if (n.lookT <= 0) { n.lookT = (1.8 + Math.random() * 3.2) / K().look; n.lookA = Math.random() < 0.28 ? n.rot + Math.PI : n.rot + (Math.random() - 0.5) * 2.2; }
     if (n.lookA != null) { const cur = n.h.g.rotation.y, d = wrap(n.lookA - cur); n.h.g.rotation.y = cur + d * Math.min(1, dt * 4); }
   };
   R.crimeStep = (dt, watchers, ctx) => {
@@ -96,9 +98,9 @@
       if (Math.hypot(P.x - ch.x, P.z - ch.z) > 0.6 || P.sit) { C.ch = null; R.toast('沒偷成。'); }
       else {
         ch.t += dt;
-        if (seen > 0) C.seen = Math.min(1, C.seen + dt * (seer && seer.watch.guard ? 2.6 : 1.7) * seen * (R.hoodOn && R.hoodOn() ? 0.8 : 1));
+        if (seen > 0) C.seen = Math.min(1, C.seen + dt * (seer && seer.watch.guard ? 2.6 : 1.7) * seen * (R.hoodOn && R.hoodOn() ? 0.8 : 1) * K().seen);
         if (C.seen >= 1) caught(ch.st, seer);
-        else if (ch.t >= ch.st.time) done(ch.st);
+        else if (ch.t >= ch.st.time * K().time) done(ch.st);
       }
     } else C.seen = Math.max(0, C.seen - dt * 0.5);
     // 被通緝：衛兵追你；甩掉視線一陣子，星星會退掉
@@ -108,7 +110,8 @@
       guards.forEach(g => {
         const d = Math.hypot(P.x - g.x, P.z - g.z), v = sees(g, P) || (d < 3 ? 1 : 0);
         if (v > 0) { spotted = true; g.chase = true; g.lastX = P.x; g.lastZ = P.z; }
-        if (g.chase) {
+        if (g.chase && R.guardMove) { R.guardMove(g, P, v > 0, dt); if (C.heat > 0 && Math.hypot(P.x - g.x, P.z - g.z) < 1.2) arrest(g); }   // vigilance.js：追、搜、包抄
+        else if (g.chase) {
           const tx = g.lastX, tz = g.lastZ, a = Math.atan2(tx - g.x, tz - g.z), dd = Math.hypot(tx - g.x, tz - g.z), sp = 6.2;
           if (dd > 0.4) { g.x += Math.sin(a) * sp * dt; g.z += Math.cos(a) * sp * dt; const o = { x: g.x, z: g.z }; R.collide(o, 0.35); g.x = o.x; g.z = o.z; }
           g.h.g.position.set(g.x, 0, g.z); g.h.g.rotation.y = a; R.animHero(g.h, dd > 0.4 ? sp : 0, dt, false);
@@ -117,13 +120,13 @@
         }
       });
       C.lostT = spotted ? 0 : C.lostT + dt;
-      if (C.lostT > 6 + C.heat * 3) { C.heat--; C.lostT = 0; R.toast(C.heat > 0 ? '衛兵還在找你……' : '甩掉衛兵了。'); if (!C.heat) guards.forEach(g => { g.chase = false; if (g.patrol) { g.tx = g.x; g.tz = g.z; } }); }
+      if (C.lostT > (6 + C.heat * 3) * K().lost) { C.heat--; C.lostT = 0; R.toast(C.heat > 0 ? '衛兵還在找你……' : '甩掉衛兵了。'); if (!C.heat) guards.forEach(g => { g.chase = false; if (g.patrol) { g.tx = g.x; g.tz = g.z; } }); }
     }
     // 魔族：路人看到你會躲開
     if (R.xenoLevel && R.xenoLevel() >= 3) watchers.forEach(n => { if (n.watch.civ && n.walk && Math.hypot(P.x - n.x, P.z - n.z) < 4 && !(n.flee > 0)) { n.flee = 2; const a = Math.atan2(n.x - P.x, n.z - P.z); n.tx = n.x + Math.sin(a) * 8; n.tz = n.z + Math.cos(a) * 8; } });
   };
   // 在建築物裡：躲著，通緝會慢慢退
-  R.crimeHide = dt => { if (C.heat <= 0) return; C.lostT += dt; if (C.lostT > 6 + C.heat * 3) { C.heat--; C.lostT = 0; if (!C.heat) R.toast('外面的衛兵好像走了。'); } };
+  R.crimeHide = dt => { if (C.heat <= 0) return; C.lostT += dt; if (C.lostT > (6 + C.heat * 3) * K().lost) { C.heat--; C.lostT = 0; if (!C.heat) R.toast('外面的衛兵好像走了。'); } };
   const done = st => {
     C.ch = null; st.left--;
     const l = st.loot(); let what = '';
@@ -155,7 +158,7 @@
     if (S0.gold >= fine) { S0.gold -= fine; R.townTalk('東鶴的衛兵', ['「抓到了。」', '（被押到衛兵所，罰了 ' + fine + ' 費拉。）', '「再有下次，就送公會的懲戒委員會。」']); }
     else { S0.gold = 0; R.townTalk('東鶴的衛兵', ['「抓到了。……錢不夠？那就在拘留所待一晚。」', '（在拘留所過了一晚。）']); if (R.advanceDays) R.advanceDays(1); }
     if (R.addDeed) R.addDeed('西市口的竊案嫌犯被衛兵當場逮捕。據說是一名勇者。');
-    S0.rep = (S0.rep || 0) - 3; R.save();
+    S0.rep = (S0.rep || 0) - 3; if (R.onArrest) R.onArrest(); R.save();
     if (R.townHud) R.townHud(true);
   };
   R.crimeSees = sees; R.crimeCaught = caught;   // 扒路人的錢包（streetcrime.js）也用同一套視線、抓包

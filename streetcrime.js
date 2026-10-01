@@ -12,7 +12,8 @@
   const behind = (n, P) => Math.abs(wrap(Math.atan2(P.x - n.x, P.z - n.z) - faceOf(n))) > 1.9;
   const canPick = n => !pp && !n.off && n.walk && !n.patrol && !n.guard && !n.name && !n.person && !n.chase && !(n.flee > 0) && n.picked !== S().day && W.P && !W.P.sit && behind(n, W.P);
   const pickInter = n => ({ get x() { return n.x; }, get z() { return n.z; }, r: 1.5, pick: n, label: '扒走路人的錢包', when: () => canPick(n), act: () => start(n) });
-  const start = n => { pp = { n, t: 0, time: 0.7 + Math.random() * 0.5, turn: Math.random() < 0.2 ? 0.2 + Math.random() * 0.4 : -1 }; R.toast('……（貼著走，別離太遠）'); };
+  const K = () => R.crimeK || { time: 1, turn: 1, seen: 1 };   // vigilance.js：大家越來越警惕
+  const start = n => { const k = K(); pp = { n, t: 0, time: (0.7 + Math.random() * 0.5) * k.time, turn: Math.random() < Math.min(0.7, 0.2 * k.turn) ? 0.2 + Math.random() * 0.4 * k.time : -1 }; R.toast('……（貼著走，別離太遠）'); };
   const loot = () => {
     const r = Math.random();
     if (r < 0.1) return null;
@@ -47,7 +48,7 @@
     // 旁邊的人看得到你：視線條往上漲
     let seen = 0, seer = null;
     tw.watchers.forEach(w => { if (w === n || w.off) return; const v = R.crimeSees ? R.crimeSees(w, P) : 0; if (v > seen) { seen = v; seer = w; } });
-    if (seen > 0) C.seen = Math.min(1, C.seen + dt * (seer.watch.guard ? 2.8 : 1.9) * seen * (R.hoodOn && R.hoodOn() ? 0.8 : 1));
+    if (seen > 0) C.seen = Math.min(1, C.seen + dt * (seer.watch.guard ? 2.8 : 1.9) * seen * (R.hoodOn && R.hoodOn() ? 0.8 : 1) * K().seen);
     if (C.seen >= 1) { C.seen = 0; caught(seer, n); return; }
     if (pp.t >= pp.time) done(n);
   };
