@@ -13,6 +13,7 @@
   - 不能違反的設定（世界觀、人物、種族、遺跡的規則）。
 - 開工前先跑 `git status`、`git log -5`，看看 Claude 剛剛改了什麼。
 - 一次只做一件事。只改需要改的那幾段，不要整檔重寫或重新排版。
+- 線上版在 https://leehwa0001-ctrl.github.io/taofaling-1433/ ：改完 commit 之後 `git push`，一兩分鐘後自動更新。
 - 改完要做三件事：
   1. 每個改過的檔案跑 `node --check`；
   2. 用瀏覽器開 `index.html` 實際玩一次，看 console 有沒有錯誤；
