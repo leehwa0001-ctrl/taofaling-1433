@@ -319,12 +319,12 @@ window.R = window.R || {};
     { id: 'ukishima', map: 'nation', x: 38.72, z: -22.62, kind: 'ruin', grade: 'kesent', type: 'island', env: 'deep', name: '外海・浮島遺跡', src: '遊戲', desc: '只會出現在海上的浮島型遺跡，島上還長著好幾座偽裝成高塔型的遺跡。', status: 'lock' },
     { id: 'kaso', map: 'nation', x: 39.45, z: -25.85, kind: 'forbidden', grade: 'kaso', name: '封鎖海域', src: '遊戲', desc: '公會明文禁止任何個人單獨進入卡索級遺跡。航海圖上這一塊，是用紅筆整片塗掉的。', status: 'forbidden' },
     // 東鶴近郊（x、y：0～100 的示意座標）
-    { id: 'dh-town', map: 'donghe', x: 57, y: 58, kind: 'city', name: '東鶴', src: '設定', desc: '公會東鶴分館、鐵匠鋪、白藤堂、倉庫。遺跡回來的第一站。', hub: 1 },
-    { id: 'dh-sokkutsu', map: 'donghe', x: 74, y: 24, kind: 'ruin', grade: 'hamilia', type: 'maze', name: '霜溪石窟', src: '遊戲', desc: '霜溪上游的哈米莉亞級遺跡。一般民眾經登記也能進去採藥草。第一次下遺跡就從這裡開始。', status: 'open' },
-    { id: 'dh-josai', map: 'donghe', x: 17, y: 44, kind: 'ruin', grade: 'amile', type: 'maze', name: '城西遺跡', src: '館員', desc: '公會在入口設了調查點，調查點主任真壁每天派人把報告送回分館。最近遺跡裡的魔力濃度一直往上升，外圍第一層已經標出了十二處危險點。', status: 'open' },
-    { id: 'dh-kouzan', map: 'donghe', x: 58, y: 10, kind: 'ruin', grade: 'amile', type: 'city', name: '北山礦坑・深層', src: '遊戲', desc: '德克斯凡礦務公司的北山礦坑，往下挖穿了一座遺跡。礦殼成群，整面牆都是礦脈。礦坑本身出自《公會館員日誌》。', status: 'open' },
-    { id: 'dh-yuyama', map: 'donghe', x: 20, y: 9, kind: 'village', name: '湯山村', src: '東鶴', desc: '矮丘山口另一邊的溫泉村。' },
-    { id: 'dh-farm', map: 'donghe', x: 84, y: 33, kind: 'village', name: '北郊農舍', src: '東鶴', desc: '冬天常被冰鼬騷擾的農家。' }
+    { id: 'dh-town', map: 'donghe', x: 57, y: 62, kind: 'city', name: '東鶴', src: '設定', desc: '公會東鶴分館、鐵匠鋪、白藤堂、倉庫。遺跡回來的第一站。', hub: 1 },
+    { id: 'dh-sokkutsu', map: 'donghe', x: 80, y: 7, kind: 'ruin', grade: 'hamilia', type: 'maze', name: '霜溪石窟', src: '遊戲', desc: '霜溪上游的哈米莉亞級遺跡。一般民眾經登記也能進去採藥草。第一次下遺跡就從這裡開始。', status: 'open' },
+    { id: 'dh-josai', map: 'donghe', x: 10, y: 32, kind: 'ruin', grade: 'amile', type: 'maze', name: '城西遺跡', src: '館員', desc: '公會在入口設了調查點，調查點主任真壁每天派人把報告送回分館。最近遺跡裡的魔力濃度一直往上升，外圍第一層已經標出了十二處危險點。', status: 'open' },
+    { id: 'dh-kouzan', map: 'donghe', x: 56, y: 5, kind: 'ruin', grade: 'amile', type: 'city', name: '北山礦坑・深層', src: '遊戲', desc: '德克斯凡礦務公司的北山礦坑，往下挖穿了一座遺跡。礦殼成群，整面牆都是礦脈。礦坑本身出自《公會館員日誌》。', status: 'open' },
+    { id: 'dh-yuyama', map: 'donghe', x: 13, y: 6, kind: 'village', name: '湯山村', src: '東鶴', desc: '矮丘山口另一邊的溫泉村。' },
+    { id: 'dh-farm', map: 'donghe', x: 76, y: 18, kind: 'village', name: '北郊農舍', src: '東鶴', desc: '冬天常被冰鼬騷擾的農家。' }
   ];
   R.GRADE_COLOR = { hamilia: '#4E9A5A', amile: '#C98A2E', mors: '#7A4FC8', kesent: '#C8323A', kaso: '#1A1A1A' };
 

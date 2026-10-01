@@ -124,39 +124,36 @@
       + '<filter id="paper2" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="11"/><feColorMatrix values="0 0 0 0 .35  0 0 0 0 .28  0 0 0 0 .18  0 0 0 .09 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>'
       + '<pattern id="hatch-red2" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(40)"><path d="M0 3.5H7" stroke="' + RED + '" stroke-width="1.1" opacity=".5"/></pattern></defs>';
     s += '<rect width="1000" height="1000" fill="#EFE3C4"/>';
+    // 照 city.js 的規劃畫（和城裡走的是同一座城）
+    const C = R.CITY, line = (pts, w, col, extra) => '<path d="' + openPath(pts) + '" fill="none" stroke="' + col + '" stroke-width="' + w + '" stroke-linecap="round" stroke-linejoin="round"' + (extra || '') + '/>';
     // 北山與矮丘
     const R1 = rng(5);
-    for (let i = 0; i < 16; i++) s += mountain(420 + i * 38 + (R1() - 0.5) * 16, 60 + (R1() - 0.5) * 40, 1.2 + R1() * 0.6, true);
-    for (let i = 0; i < 9; i++) s += '<path d="M' + (180 + i * 34) + ' ' + (190 + (R1() - 0.5) * 30) + 'q18 -26 36 0" fill="' + PAPER + '" stroke="' + INK + '" stroke-width="1.6"/>';
-    s += '<text x="330" y="245" class="area-name">矮丘</text><text x="610" y="130" class="area-name">北山</text>';
-    // 霜溪（由西往東）與紅樁子保育區
-    const stream = [[0, 272], [120, 262], [250, 280], [380, 262], [500, 258], [620, 244], [760, 232], [880, 226], [1000, 214]];
-    s += '<path d="' + openPath(stream) + '" fill="none" stroke="#7FA8C0" stroke-width="16" stroke-linecap="round" opacity=".75"/><path d="' + openPath(stream) + '" fill="none" stroke="#5E8FA8" stroke-width="2"/>';
-    s += '<path d="M318 266L340 262" stroke="#DDEFFA" stroke-width="12" stroke-linecap="round"/><text x="300" y="300" class="note-name">薄冰</text>';
-    [[455, 262, 38], [620, 246, 44]].forEach(([x, y, r]) => { s += '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="url(#hatch-red2)" stroke="' + RED + '" stroke-width="2" stroke-dasharray="4 4"/>'; });
-    s += '<text x="540" y="318" class="area-name small">霜溪・紅樁子保育區</text>';
-    // 西河岸（南北向的河）與橋
-    s += '<path d="M330 300C340 420 318 560 336 700S330 900 340 1000" fill="none" stroke="#7FA8C0" stroke-width="44" opacity=".8"/><path d="M330 300C340 420 318 560 336 700S330 900 340 1000" fill="none" stroke="#5E8FA8" stroke-width="2"/>';
-    s += '<text x="262" y="860" class="area-name small" writing-mode="tb">西河岸</text>';
-    s += '<rect x="298" y="392" width="72" height="14" fill="#8A6A44" stroke="' + INK + '" stroke-width="1.4"/><text x="334" y="385" class="note-name">北橋</text>';
-    s += '<rect x="298" y="612" width="72" height="14" fill="#8A6A44" stroke="' + INK + '" stroke-width="1.4"/><path d="M320 606l28 26M348 606l-28 26" stroke="' + RED + '" stroke-width="3"/><text x="334" y="655" class="note-name">西橋（整修，封路）</text>';
-    // 東鶴：城牆、北門、北渠、街道
-    s += '<rect x="420" y="440" width="360" height="400" fill="#E6D8B6" stroke="' + INK + '" stroke-width="3"/>';
-    for (let x = 460; x < 780; x += 50) s += '<path d="M' + x + ' 440V840" stroke="#B8A47E" stroke-width="1.2"/>';
-    for (let y = 480; y < 840; y += 50) s += '<path d="M420 ' + y + 'H780" stroke="#B8A47E" stroke-width="1.2"/>';
-    s += '<path d="M420 520H780" stroke="#5E8FA8" stroke-width="7"/><text x="772" y="512" class="note-name end">北渠</text>';
-    s += '<path d="M600 440V840M420 660H780" stroke="#8A6A44" stroke-width="5"/><rect x="578" y="428" width="44" height="22" fill="' + INK + '"/><text x="600" y="418" class="note-name">北門</text>';
-    s += '<rect x="570" y="582" width="60" height="30" fill="#9C978D" stroke="' + INK + '" stroke-width="1.5"/><path d="M586 582V560M614 582V560" stroke="' + INK + '" stroke-width="1.5"/><path d="M586 560h14v8h-14zM614 560h14v8h-14z" fill="' + GREEN + '"/>';
-    s += '<text x="600" y="636" class="note-name">公會東鶴分館</text>';
-    // 道路：大路、崙腳、往城西遺跡、往北山礦坑
-    const road = pts => '<path d="' + openPath(pts) + '" fill="none" stroke="#8A5A32" stroke-width="3" stroke-dasharray="9 5" stroke-linecap="round"/>';
-    s += road([[600, 440], [650, 330], [620, 220], [520, 150], [380, 110], [210, 95]]) + '<text x="690" y="350" class="note-name">大路</text>';
-    s += road([[430, 470], [390, 380], [340, 300], [325, 262], [330, 190], [220, 100]]) + '<text x="398" y="330" class="note-name">崙腳</text>';
-    s += road([[334, 399], [260, 420], [175, 440]]) + road([[650, 330], [600, 200], [580, 110]]);
-    // 北郊的田
-    s += '<rect x="790" y="300" width="130" height="80" fill="url(#field)" stroke="#8A9A6A" stroke-width="1.5"/>';
+    for (let i = 0; i < 24; i++) s += mountain(i * 44 + (R1() - 0.5) * 16, 22 + (R1() - 0.5) * 18, 1.3 + R1() * 0.6, true);
+    for (let i = 0; i < 7; i++) s += '<path d="M' + (250 + i * 26) + ' ' + (88 + (R1() - 0.5) * 16) + 'q14 -20 28 0" fill="' + PAPER + '" stroke="' + INK + '" stroke-width="1.6"/>';
+    s += '<text x="330" y="72" class="area-name small">矮丘</text><text x="620" y="60" class="area-name">北山</text>';
+    // 田
+    C.FIELDS.forEach(r => { s += '<rect x="' + r[0] + '" y="' + r[1] + '" width="' + (r[2] - r[0]) + '" height="' + (r[3] - r[1]) + '" fill="url(#field)" stroke="#8A9A6A" stroke-width="1.2"/>'; });
+    // 水：霜溪、西河岸、南渠、外濠
+    C.water.forEach(w => { s += line(w.pts, w.w + 4, '#7FA8C0', ' opacity=".8"') + line(w.pts, 2, '#5E8FA8'); });
+    s += '<text x="150" y="196" class="area-name small">霜溪</text><text x="236" y="930" class="area-name small" writing-mode="tb">西河岸</text><text x="760" y="975" class="note-name">南渠</text>';
+    // 鐵路、東鶴站
+    s += '<path d="M0 ' + C.RAIL.y + 'H1000" stroke="' + INK + '" stroke-width="5"/><path d="M0 ' + C.RAIL.y + 'H1000" stroke="' + PAPER + '" stroke-width="2.4" stroke-dasharray="10 10"/>';
+    s += '<rect x="' + C.STATION[0] + '" y="' + C.STATION[1] + '" width="' + (C.STATION[2] - C.STATION[0]) + '" height="' + (C.STATION[3] - C.STATION[1]) + '" fill="#9C978D" stroke="' + INK + '" stroke-width="1.6"/><text x="' + (C.STATION[0] + C.STATION[2]) / 2 + '" y="' + (C.STATION[1] - 34) + '" class="note-name">東鶴站</text>';
+    // 舊城
+    { const [x0, y0, x1, y1] = C.OLD; s += '<rect x="' + x0 + '" y="' + y0 + '" width="' + (x1 - x0) + '" height="' + (y1 - y0) + '" fill="#E6D8B6" stroke="' + INK + '" stroke-width="3"/>'; }
+    // 街區（房子）
+    C.lots.forEach(l => { if (l.type === 'parking' || l.type === 'garden' || l.type === 'vacant') return; s += '<rect x="' + l.r[0].toFixed(0) + '" y="' + l.r[1].toFixed(0) + '" width="' + (l.r[2] - l.r[0]).toFixed(0) + '" height="' + (l.r[3] - l.r[1]).toFixed(0) + '" fill="#D8C8A4" stroke="#B8A47E" stroke-width=".8"/>'; });
+    // 道路：主幹道、副幹道、巷子、舊城的石板路、城外的路
+    const RC = { main: ['#8A5A32', 14], sub: ['#9A6A42', 8], old: ['#A08868', 6], arcade: ['#B8823A', 6], olane: ['#B8A47E', 3], lane: ['#B8A47E', 3] };
+    ['lane', 'olane', 'old', 'arcade', 'sub', 'main'].forEach(k => C.roads.filter(r => r.kind === k).forEach(r => { s += line(r.pts, RC[k][1], RC[k][0]); }));
+    C.roads.filter(r => r.kind === 'dirt').forEach(r => { s += line(r.pts, 3, '#8A5A32', ' stroke-dasharray="9 5"'); });
+    { const [cx, cy, rx, ry] = C.SQUARE; s += '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="' + ry + '" fill="#C8B898" stroke="' + INK + '" stroke-width="1.2"/>'; }
+    // 橋
+    C.bridges.forEach(b => { s += '<g transform="translate(' + b.sx.toFixed(0) + ' ' + b.sy.toFixed(0) + ') rotate(' + (b.ang * 180 / Math.PI).toFixed(0) + ')"><rect x="' + (-b.len / 2) + '" y="' + (-b.wid / 2 - 2) + '" width="' + b.len + '" height="' + (b.wid + 4) + '" fill="#8A6A44" stroke="' + INK + '" stroke-width="1.2"/>' + (b.ok ? '' : '<path d="M-14 -12l28 24M14 -12l-28 24" stroke="' + RED + '" stroke-width="3"/>') + '</g>'; });
+    // 地名
+    [['國道一號', 300, 396], ['站前大通', 660, 376], ['站前商店街', 410, 300], ['舊城', 470, 760], ['西市口', 592, 600], ['官廳街', 812, 640], ['新商區', 860, 300], ['寺町', 470, 830], ['城西', 330, 640], ['河西', 90, 520], ['城東', 950, 760]].forEach(([t, x, y]) => { s += '<text x="' + x + '" y="' + y + '" class="note-name">' + t + '</text>'; });
     // 湯山村的溫泉
-    s += '<ellipse cx="200" cy="110" rx="26" ry="14" fill="#9CC3C8" stroke="' + INK + '" stroke-width="1.4"/><path d="M188 96q-6 -12 2 -20M204 94q-6 -12 2 -20" fill="none" stroke="#8A7A6A" stroke-width="1.6" stroke-linecap="round"/>';
+    s += '<ellipse cx="130" cy="60" rx="22" ry="12" fill="#9CC3C8" stroke="' + INK + '" stroke-width="1.4"/><path d="M120 48q-6 -12 2 -20M136 46q-6 -12 2 -20" fill="none" stroke="#8A7A6A" stroke-width="1.6" stroke-linecap="round"/>';
     // 地點
     s += R.SITES.filter(x => x.map === 'donghe').map(x => { const [px, py] = P(x.x, x.y); return '<g class="site k-' + x.kind + (x.status === 'lock' ? ' locked' : '') + '" data-site="' + x.id + '" transform="translate(' + px + ' ' + py + ')" tabindex="0" role="button" aria-label="' + esc(x.name) + '"><g class="mk">' + marker(x) + '</g><text class="site-name" y="30">' + esc(x.name) + '</text></g>'; }).join('');
     s += '<rect width="1000" height="1000" filter="url(#paper2)" pointer-events="none"/>';
