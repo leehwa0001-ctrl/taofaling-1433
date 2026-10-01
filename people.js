@@ -240,7 +240,7 @@
   const invite = id => {
     const p = P[id], s = S();
     if (s.party.length >= R.PARTY_MAX) return;
-    const lv = Math.max(1, Math.min(p.lv, s.classes[s.cls].lv + (id === 'taki' ? 4 : 2)));
+    const lv = Math.max(id === 'taki' ? 15 : 1, Math.min(p.lv, s.classes[s.cls].lv + (id === 'taki' ? 12 : 2)));   // 瀧是特攻段：比你高很多（taki.js）
     s.party.push({ id: 'p-' + id, story: id, name: p.name, cls: p.cls, lv, fee: 0, line: '', race: p.race, look: p.look, weapon: p.weapon });
     R.save(); R.closeSheet(); R.toast(p.short + '加入了隊伍。' + (p.onlyHamilia ? '（只去哈米莉亞級的遺跡）' : ''));
     refreshAllies();
@@ -256,7 +256,7 @@
     return true;
   };
   // 隊伍裡的劇情人物：升級跟著你走（最多到他們原本的等級）
-  R.syncStoryLv = () => { const s = S(); (s.party || []).forEach(m => { if (m.story) m.lv = Math.max(1, Math.min(P[m.story].lv, s.classes[s.cls].lv + (m.story === 'taki' ? 4 : 2))); }); };
+  R.syncStoryLv = () => { const s = S(); (s.party || []).forEach(m => { if (m.story) m.lv = Math.max(m.story === 'taki' ? 15 : 1, Math.min(P[m.story].lv, s.classes[s.cls].lv + (m.story === 'taki' ? 12 : 2))); }); };
   // 戀人在隊伍裡：多一點力氣
   R.partyBond = Pl => { const s = S(); if (!s || !W.run) return; const lover = (s.party || []).find(m => m.story && s.rel[m.story] === 'lover'); if (lover) { Pl.dmgMult *= 1.06; Pl.def += 2; Pl.bond = lover.story; } };
 
