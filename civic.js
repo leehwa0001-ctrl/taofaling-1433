@@ -10,7 +10,7 @@
   let flagTex = null;   // 昭旭聯合王國的國旗（作者提供的 flag.webp）
 
   R.buildCivic = api => {
-    const { group, npc, inter, block, talk, lam, SB, HB, G3, B_, glowW, darkW, woodM, gableB, sign, lampPost, pineAt, bench, vending, bike, WX, WZ, tw, E } = api;
+    const { group, npc, inter, block, faceAt, talk, lam, SB, HB, G3, B_, glowW, darkW, woodM, gableB, sign, lampPost, pineAt, bench, vending, bike, WX, WZ, tw, E } = api;
     const FAC = R.CITY.FAC;
     const TH = THREE; seed = 3;
     const snowM = B_('#F2F6F8', { tex: 'ground' }), dk = B_('#3A3C42', { tex: 'cap' });
@@ -40,13 +40,14 @@
     if (!flagTex) { flagTex = new TH.TextureLoader().load('flag.webp'); flagTex.encoding = TH.sRGBEncoding; flagTex.userData.shared = true; }
 
     // ---------- 東鶴縣廳：五層的石造廳舍、前庭、國旗 ----------
-    { const b = civ(FAC.pref[0], FAC.pref[1], 26, 15, 5, { col: '#B4AEA2', columns: 1, win: 1.7, door: 4.2, fh: 3.4 });
+    const face = (k, fn) => (faceAt ? faceAt(WX(FAC[k][0]), WZ(FAC[k][1]), (R.CITY.FACE || {})[k] || 0, fn) : fn());   // 門朝路（city.js 的 C.FACE）
+    face('pref', () => { const b = civ(FAC.pref[0], FAC.pref[1], 26, 15, 5, { col: '#B4AEA2', columns: 1, win: 1.7, door: 4.2, fh: 3.4 });
       HB.at(b.x, b.z, 0); HB.add(G3.box, B_('#B4AEA2', { tex: 'wall' }), 0, b.H + 2.0, -1, 5, 2.6, 5); HB.add(G3.box, dk, 0, b.H + 3.4, -1, 5.4, 0.2, 5.4); HB.add(G3.box, snowM, 0, b.H + 3.52, -1, 5, 0.06, 5); HB.at(null);
       const face = new TH.Mesh(new TH.CircleGeometry(0.9, 20), R.seeThrough(new TH.MeshLambertMaterial({ color: '#F4ECD8', emissive: '#FFE8B0', emissiveIntensity: 0.5 }))); face.position.set(b.x, b.H + 2.2, b.z + 1.52); group.add(face);
       bigSign(b.x, 4.6, b.front + 1.82, 0, '東鶴縣廳', '#2E2A26', '#F4E9CD', 4.2, 0.8);
       [-6, 6].forEach(o => flagpole(b.x + o, b.front + 5, 7, flagTex));
       for (let i = 0; i < 2; i++) pineAt(b.x - 9 + i * 18, b.front + 3, 0.9); bench(b.x - 3.5, b.front + 4.6, 0); bench(b.x + 3.5, b.front + 4.6, 0);
-      inter(b.door[0], b.door[1], 2.4, '東鶴縣廳的服務台', () => talk('東鶴縣廳', E.martial ? ['「今日退位大典，縣廳只辦緊急事務。」', '大廳的收音機正在轉播皇嶺的典禮。'] : [pick(['「勇者登記請到公會分館；這裡是縣廳。」', '「陪都的事情多：皇嶺的人來來去去，戶籍、通行證都在這裡辦。」', '「河西的西橋什麼時候修好？預算還在審。」'])])); }
+      inter(b.door[0], b.door[1], 2.4, '東鶴縣廳的服務台', () => talk('東鶴縣廳', E.martial ? ['「今日退位大典，縣廳只辦緊急事務。」', '大廳的收音機正在轉播皇嶺的典禮。'] : [pick(['「勇者登記請到公會分館；這裡是縣廳。」', '「陪都的事情多：皇嶺的人來來去去，戶籍、通行證都在這裡辦。」', '「河西的西橋什麼時候修好？預算還在審。」'])])); });
     // ---------- 衛兵詰所：官廳街，衛兵輪班的地方 ----------
     { const b = civ(FAC.guardHQ[0], FAC.guardHQ[1], 13, 9, 3, { col: '#8E8A80', win: 2.0 });
       bigSign(b.x, 3.6, b.front + 1.62, 0, '衛兵詰所', '#2E3A48', '#F4E9CD', 2.8, 0.6);
@@ -85,7 +86,7 @@
       bigSign(x, 5.6, z + d / 2 + 0.06, 0, '東鶴座', '#1E1414', '#F4D88A', 4.4, 1.2); sign(x, 3.5, z + d / 2 + 0.68, 0, '今夜上演・《雪中的勇者》', '#3A1E14', 5.6);
       inter(x, z + d / 2 + 2.4, 2.4, '劇場「東鶴座」', () => talk('東鶴座', E.martial ? ['「大典那天停演一天。」'] : ['「今晚的戲是《雪中的勇者》：一個勇者在遺跡裡迷路的故事。」', '「票賣完了。站票的話，開演前再來看看。」'])); }
     // ---------- 德克斯凡百貨：站前的六層樓、大櫥窗、垂幕、屋頂的小遊樂園 ----------
-    { const b = civ(FAC.dept[0], FAC.dept[1], 28, 22, 6, { col: '#D8D4CC', tex: 'wall', win: 1.4, fh: 3.8, doorW: 4 });
+    face('dept', () => { const b = civ(FAC.dept[0], FAC.dept[1], 28, 22, 6, { col: '#D8D4CC', tex: 'wall', win: 1.4, fh: 3.8, doorW: 4 });
       [-10, -5, 5, 10].forEach(o => HB.add(G3.box, B_('#BFE0F0', { em: '#4A7A9A', ei: 0.75 }), b.x + o, 1.8, b.front + 0.06, 4.2, 2.8, 0.06));
       HB.add(G3.box, B_('#2E3A4A', { tex: 'cap' }), b.x, 3.6, b.front + 1.2, 12, 0.2, 2.4); HB.add(G3.box, snowM, b.x, 3.73, b.front + 1.2, 11.6, 0.06, 2.2);
       // 外牆的垂幕（年底大特賣）
@@ -103,7 +104,7 @@
       { const cx = b.x + 1, cz = b.z + 5; HB.add(G3.cyl, B_('#E8D8B0', { tex: 0 }), cx, top + 0.2, cz, 4.4, 0.4, 4.4); HB.add(G3.cone, B_('#C83A3A', { tex: 0 }), cx, top + 3.4, cz, 4.8, 1.4, 4.8); HB.add(G3.cone, snowM, cx, top + 3.62, cz, 4.2, 1.0, 4.2); for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; HB.add(G3.box, B_('#C9A13A', { tex: 0 }), cx + Math.cos(a) * 1.7, top + 1.5, cz + Math.sin(a) * 1.7, 0.08, 2.4, 0.08); HB.add(G3.box, B_(['#F0ECE2', '#8A6A44', '#E8A0B0'][i % 3], { tex: 0 }), cx + Math.cos(a) * 1.7, top + 0.9, cz + Math.sin(a) * 1.7, 0.4, 0.5, 0.8, 0, -a, 0); } }
       HB.add(G3.box, B_('#E8A03A', { em: '#E8A03A', ei: 0.8 }), b.x + b.w / 2 + 0.2, b.H * 0.55, b.front - 2, 0.2, b.H * 0.6, 1.0);
       inter(b.door[0], b.door[1], 2.6, '德克斯凡百貨（樓層介紹、買東西、屋頂遊樂園）', () => R.deptSheet());
-      vending(b.x + 13, b.front + 1.2); bike(b.x - 13, b.front + 1.4, 0.1); bike(b.x - 12.3, b.front + 1.4, 0.1); }
+      vending(b.x + 13, b.front + 1.2); bike(b.x - 13, b.front + 1.4, 0.1); bike(b.x - 12.3, b.front + 1.4, 0.1); });
     // ---------- 錢湯「松之湯」：高高的煙囪、男湯女湯的暖簾 ----------
     { const [sx, sy] = FAC.bath, x = WX(sx), z = WZ(sy), w = 12, d = 10, B = HB, h = 4.2; B.at(x, z, 0);
       B.add(G3.box, B_('#D8D0BE'), 0, h / 2, 0, w, h, d); gableB(B, w, d, h, 0, '#D8D0BE');

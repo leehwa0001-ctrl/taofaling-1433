@@ -88,6 +88,7 @@
   road('dirt', [[500, 92], [650, 86], [800, 76]], '往霜溪石窟');
   road('dirt', [[470, 126], [350, 112], [200, 84], [130, 62]], '往湯山村');
   road('dirt', [[90, 412], [90, 396]], '');
+  road('olane', [[575, 565], [575, 592]], '公會前');   // 公會的門口直通西市口廣場
 
   // ---------- 海：東鶴靠海（作者）。海岸線在示意圖 x = 975，以東是海（coast.js 蓋海、防波堤、漁港、燈塔、海水浴場）----------
   // 伸進海裡的路、河、渠都切在海岸線上；國道一號的盡頭就是漁港
@@ -204,14 +205,18 @@
   };
   C.FS = FS; C._occ = occ; C._freeR = freeR;
   setR(C.COAST - 1, 0, 1000, 1000, 2); setR(948, 110, C.COAST, 206, 3);   // 海、海水浴場的沙灘：不蓋房子
-  Object.keys(FS).forEach(k => { const p = C.FAC[k]; if (!p) return; const [w, d] = FS[k]; setR(p[0] - w / 2 - 2, p[1] - d / 2 - 2, p[0] + w / 2 + 2, p[1] + d / 2 + 4, 3); });
+  // 門朝哪邊（作者：有的建築門開在屋子後面）：預設朝南；百貨公司朝西對著站前廣場、縣廳朝東對著國道（civic.js 的 faceAt 整棟轉過去）
+  C.FACE = { dept: -Math.PI / 2, pref: Math.PI / 2 };
+  // 設施的地＋門前的前庭（12 單位，約 5 公尺）：一般的房子不會蓋在門口
+  C.footR = (k, F) => { const p = C.FAC[k], [w0, d0] = FS[k], a = C.FACE[k] || 0, side = Math.abs(Math.sin(a)) > 0.5, w = side ? d0 : w0, d = side ? w0 : d0, f = F == null ? 12 : F, r = [p[0] - w / 2 - 2, p[1] - d / 2 - 2, p[0] + w / 2 + 2, p[1] + d / 2 + 2], dx = Math.round(Math.sin(a)), dy = Math.round(Math.cos(a)); if (dx > 0) r[2] += f; if (dx < 0) r[0] -= f; if (dy > 0) r[3] += f; if (dy < 0) r[1] -= f; return r; };
+  Object.keys(FS).forEach(k => { const p = C.FAC[k]; if (!p || typeof p[0] !== 'number') return; setR(...C.footR(k), 3); });
   C.FAC.stalls.forEach(([x, y]) => setR(x - 9, y - 8, x + 9, y + 12, 3));
   { const [x0, y0, x1, y1] = C.FAC.dojo; setR(x0 - 2, y0 - 2, x1 + 2, y1 + 2, 3); }
   C.FAC.danchi.forEach(([x, y]) => setR(x - 22, y - 12, x + 22, y + 12, 3));
   C.FAC.busStop.forEach(([x, y]) => setR(x - 6, y - 3, x + 6, y + 3, 3));
   // 巷子不能從設施底下穿過：碰到設施（含公團住宅）的那一段切掉，巷子走到設施前就斷（不然路面、電線桿、電線都會穿過建築）
   {
-    const facR = Object.keys(FS).filter(k => C.FAC[k]).map(k => { const p = C.FAC[k], [w, d] = FS[k]; return [p[0] - w / 2 - 3, p[1] - d / 2 - 3, p[0] + w / 2 + 3, p[1] + d / 2 + 5]; })
+    const facR = Object.keys(FS).filter(k => C.FAC[k] && typeof C.FAC[k][0] === 'number').map(k => { const r = C.footR(k, 3); return [r[0] - 1, r[1] - 1, r[2] + 1, r[3] + 1]; })
       .concat(C.FAC.danchi.map(([x, y]) => [x - 26, y - 15, x + 26, y + 15]), [[C.FAC.dojo[0] - 3, C.FAC.dojo[1] - 3, C.FAC.dojo[2] + 3, C.FAC.dojo[3] + 3]]);
     const inside = (x, y) => facR.some(r => x > r[0] && x < r[2] && y > r[1] && y < r[3]);
     // 取樣後只留轉彎的點（點太多的話，找路口的時候會很慢）

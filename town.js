@@ -50,14 +50,16 @@
   const CH = 40;   // 區塊大小（公尺）
   const Batch = () => {
     const TH = T(), map = new Map(), m4 = new TH.Matrix4(), nm = new TH.Matrix3(), q = new TH.Quaternion(), e = new TH.Euler(), p = new TH.Vector3(), s = new TH.Vector3();
-    let parent = null;
+    let parent = null, frameM = null;
     // 每個基本形狀只拆一次（非索引的頂點陣列）
     const base = geo => geo.userData.ni || (geo.userData.ni = (() => { const g = geo.index ? geo.toNonIndexed() : geo; return { P: g.attributes.position.array, N: g.attributes.normal.array, U: g.attributes.uv.array, n: g.attributes.position.count }; })());
     return {
       // 之後加的零件都放在 (x, z)、轉 ry
       at(x, z, ry) { parent = x == null ? null : new TH.Matrix4().compose(new TH.Vector3(x, 0, z), new TH.Quaternion().setFromEuler(new TH.Euler(0, ry || 0, 0)), new TH.Vector3(1, 1, 1)); },
+      // 整棟轉向（門朝路）：之後加的零件全部繞 (cx, cz) 轉 ang（faceAt 用）
+      frame(cx, cz, ang) { frameM = cx == null || !ang ? null : new TH.Matrix4().makeTranslation(cx, 0, cz).multiply(new TH.Matrix4().makeRotationY(ang)).multiply(new TH.Matrix4().makeTranslation(-cx, 0, -cz)); },
       add(geo, mat, x, y, z, sx, sy, sz, rx, ry, rz) {
-        e.set(rx || 0, ry || 0, rz || 0); q.setFromEuler(e); p.set(x, y, z); s.set(sx, sy, sz); m4.compose(p, q, s); if (parent) m4.premultiply(parent);
+        e.set(rx || 0, ry || 0, rz || 0); q.setFromEuler(e); p.set(x, y, z); s.set(sx, sy, sz); m4.compose(p, q, s); if (parent) m4.premultiply(parent); if (frameM) m4.premultiply(frameM);
         nm.getNormalMatrix(m4);
         const b = base(geo), me = m4.elements, ne = nm.elements, ck = parent ? parent.elements : me;
         const key = Math.floor((ck[12] + 400) / CH) * 1000 + Math.floor((ck[14] + 400) / CH);
@@ -122,6 +124,19 @@
     const G3 = { box: new TH.BoxGeometry(1, 1, 1), cyl: new TH.CylinderGeometry(0.5, 0.5, 1, 10), sph: new TH.SphereGeometry(0.5, 10, 7), cone: new TH.ConeGeometry(0.5, 1, 8), tri: new TH.ShapeGeometry(new TH.Shape([new TH.Vector2(-1, 0), new TH.Vector2(1, 0), new TH.Vector2(0, 1)])) };
     const bx = (w, h, d, m, x, y, z, par) => { const o = new TH.Mesh(new TH.BoxGeometry(w, h, d), typeof m === 'string' ? lam(m) : m); o.position.set(x, y, z); o.castShadow = true; o.receiveShadow = true; (par || group).add(o); return o; };
     const block = (x0, x1, z0, z1, tag, ref) => R.addBox(x0, x1, z0, z1, tag || 'town', ref);
+    // 整棟轉向：fn 裡面照「門朝南」蓋，蓋完整個繞 (cx, cz) 轉 ang（零件、碰撞、互動、人、路燈都一起轉）。city.js 的 C.FACE 決定誰轉
+    const faceAt = (cx, cz, ang, fn) => {
+      if (!ang) return fn();
+      const c = Math.cos(ang), s = Math.sin(ang), rot = (x, z) => [cx + (x - cx) * c + (z - cz) * s, cz - (x - cx) * s + (z - cz) * c];
+      const g0 = group.children.length, n0 = tw.npcs.length, i0 = tw.inter.length, l0 = tw.lamps.length, ab = R.addBox;
+      R.addBox = (x0, x1, z0, z1, tag, ref) => { const p = [rot(x0, z0), rot(x1, z0), rot(x0, z1), rot(x1, z1)], xs = p.map(q => q[0]), zs = p.map(q => q[1]); return ab(Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs), tag, ref); };
+      SB.frame(cx, cz, ang); HB.frame(cx, cz, ang);
+      try { fn(); } finally { R.addBox = ab; SB.frame(null); HB.frame(null); }
+      group.children.slice(g0).forEach(o => { const [x, z] = rot(o.position.x, o.position.z); o.position.x = x; o.position.z = z; o.rotation.y += ang; });
+      tw.npcs.slice(n0).forEach(n => { [n.x, n.z] = rot(n.x, n.z); n.rot = (n.rot || 0) + ang; if (n.h) { n.h.g.position.x = n.x; n.h.g.position.z = n.z; n.h.g.rotation.y = n.rot; } if (n.tx != null) [n.tx, n.tz] = rot(n.tx, n.tz); });
+      tw.inter.slice(i0).forEach(it => { if (it.follow) return; const dsc = Object.getOwnPropertyDescriptor(it, 'x'); if (dsc && dsc.get) return; [it.x, it.z] = rot(it.x, it.z); });
+      tw.lamps.slice(l0).forEach(p => { const [x, z] = rot(p[0], p[1]); p[0] = x; p[1] = z; });
+    };
     const inter = (x, z, r, label, act, o) => { const it = Object.assign({ x, z, r, label, act }, o || {}); tw.inter.push(it); return it; };
     const talk = R.townTalk;
 
@@ -410,7 +425,7 @@
     const onCar = (x, z) => C.inCarriage && C.inCarriage(x / S + 500, z / S + 500);
     const offRoad = f => function (x, z) { return onCar(x, z) ? null : f.apply(this, arguments); };
     const lampPostG = offRoad(lampPost), bikeG = offRoad(bike), vendingG = offRoad(vending), pineAtG = offRoad(pineAt);
-    if (R.buildCivic) R.buildCivic({ group, npc, inter, block, talk, lam, SB, HB, G3, B_, glowW, darkW, woodM, gableB, house, sign, lampPost: lampPostG, pineAt: pineAtG, bench, vending: vendingG, bike: bikeG, reserve, WX, WZ, tw, E, dexBuilding });
+    if (R.buildCivic) R.buildCivic({ group, npc, inter, block, faceAt, talk, lam, SB, HB, G3, B_, glowW, darkW, woodM, gableB, house, sign, lampPost: lampPostG, pineAt: pineAtG, bench, vending: vendingG, bike: bikeG, reserve, WX, WZ, tw, E, dexBuilding });
     // 德克斯凡的磚造大樓：平屋頂、女兒牆、整排的窗、屋頂的水塔、直立的霓虹招牌
     function dexBuilding(sx, sy, w, d, floors, face) {
       const x = WX(sx), z = WZ(sy), B = HB, fh = 3.0, H = floors * fh; B.at(x, z, face || 0);
