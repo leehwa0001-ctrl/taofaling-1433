@@ -1,0 +1,37 @@
+# 發布到 GitHub Pages：每次 push 到 main 就自動更新線上版
+# index.html 是給 Claude Artifact 用的「頁面內容」（沒有 <!doctype>、<head>），這裡先包成完整的網頁再發布。
+name: 發布到 GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: 包成完整的網頁
+        run: |
+          mkdir -p _site
+          cp *.js emblem.png flag.webp _site/
+          {
+            printf '%s\n' '<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body>'
+            cat index.html
+            printf '%s\n' '</body></html>'
+          } > _site/index.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
