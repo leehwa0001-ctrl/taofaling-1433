@@ -287,7 +287,7 @@
     const [dist, f] = roadSide(placed), mid = f === 0 ? [(placed[0] + placed[2]) / 2, placed[3] + dist] : f === 1 ? [(placed[0] + placed[2]) / 2, placed[1] - dist] : f === 2 ? [placed[0] - dist, (placed[1] + placed[3]) / 2] : [placed[2] + dist, (placed[1] + placed[3]) / 2];
     const rd = dist < 1e8 ? nearRoad(mid[0], mid[1]) : null, back = !rd || dist > 14;
     const k = lotKind(zone, placed[2] - placed[0], placed[3] - placed[1], rd || { kind: 'lane' });
-    if (back && (k.type === 'shop' || k.type === 'conbini' || k.type === 'clinic')) k.type = zone === 'old' ? 'oldhouse' : zone === 'com' ? 'midrise' : 'house';
+    if (back && (k.type === 'shop' || k.type === 'conbini' || k.type === 'clinic')) { k.type = zone === 'old' ? 'oldhouse' : zone === 'com' ? 'midrise' : 'house'; k.floors = k.floors || (k.type === 'midrise' ? 3 : 2); }   // 改成住家要補層數（不然高度是 NaN）
     lot(Object.assign({ r: placed, f: back ? (rnd() < 0.5 ? 0 : 1) : f, zone, col: zone === 'old' ? pick(OLDC) : pick(WALLS), yard: rnd(), road: rd ? rd.kind : null, back }, k));
   }
 
