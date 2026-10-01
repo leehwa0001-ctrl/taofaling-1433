@@ -43,7 +43,7 @@
   R.genFloor = (run, f) => {
     const g = run.grade, type = R.TYPES[run.type], form = R.FORM[run.type] || R.FORM.city;
     const last = f === run.floors - 1;
-    const n = Math.max(4, Math.min(14, type.rooms(f + 1) + g.lv - 1));
+    const n = Math.max(4, Math.min(15, type.rooms(f + 1) + g.lv));
     const rooms = [], at = new Map(), K = (x, y) => x + ',' + y;
     const add = (gx, gy, from) => { const r = { i: rooms.length, gx, gy, links: {}, type: 'fight' }; rooms.push(r); at.set(K(gx, gy), r); if (from) { const d = DIRS.find(d => from.gx + d[0] === gx && from.gy + d[1] === gy); from.links[d[2]] = r.i; r.links[{ n: 's', s: 'n', e: 'w', w: 'e' }[d[2]]] = from.i; } return r; };
     add(0, 0, null);
@@ -58,7 +58,7 @@
       add(nx, ny, base);
     }
     // 偶爾多開一條通道，形成迴圈
-    rooms.forEach(r => DIRS.forEach(d => { const o = at.get(K(r.gx + d[0], r.gy + d[1])); if (o && !r.links[d[2]] && Math.random() < 0.12) { r.links[d[2]] = o.i; o.links[{ n: 's', s: 'n', e: 'w', w: 'e' }[d[2]]] = r.i; } }));
+    rooms.forEach(r => DIRS.forEach(d => { const o = at.get(K(r.gx + d[0], r.gy + d[1])); if (o && !r.links[d[2]] && Math.random() < (run.type === 'tower' ? 0.12 : 0.24)) { r.links[d[2]] = o.i; o.links[{ n: 's', s: 'n', e: 'w', w: 'e' }[d[2]]] = r.i; } }));
     // 從入口算距離
     const dist = rooms.map(() => 1e9); dist[0] = 0; const q = [0];
     while (q.length) { const i = q.shift(); Object.values(rooms[i].links).forEach(j => { if (dist[j] > dist[i] + 1) { dist[j] = dist[i] + 1; q.push(j); } }); }
@@ -81,14 +81,24 @@
     if (g.nest && last) end.nest = 1;
     // 尺寸、形狀、位置（hx、hz：半寬、半深）
     rooms.forEach(r => {
-      const hs = r.type === 'boss' ? [15, 12] : r.type === 'lord' ? [13.5, 11] : r.type === 'start' ? [8, 7] : r.type === 'chest' ? [7.5, 6.5] : r.type === 'deep' ? (r.nest ? [12.5, 10] : [10, 8]) : r.type === 'stairs' ? [9.5, 8] : [rnd(10, 13), rnd(8, 10)];
+      const hs = r.type === 'boss' ? [15, 12] : r.type === 'lord' ? [13.5, 11] : r.type === 'start' ? [8, 7] : r.type === 'chest' ? [7.5, 6.5] : r.type === 'deep' ? (r.nest ? [12.5, 10] : [10, 8]) : r.type === 'stairs' ? [9.5, 8] : [rnd(10.5, 15), rnd(8.5, 12)];
       const big = form.big || 1;
-      r.hx = Math.min(16, hs[0] * big); r.hz = Math.min(13, hs[1] * big);
+      r.hx = Math.min(16.5, hs[0] * big); r.hz = Math.min(13, hs[1] * big);
       r.shape = r.type === 'boss' || r.type === 'lord' ? form.boss : ['start', 'chest', 'stairs', 'deep', 'trap'].includes(r.type) ? form.calm : pick(form.shapes);
       r.seed = Math.random() * 10;
       r.x = r.gx * CW; r.z = r.gy * CH; r.w = r.hx * 2; r.h = r.hz * 2;
       r.cleared = r.type === 'start' || r.type === 'stairs' || (r.type === 'deep' && !r.nest); r.visited = false;
     });
+    // 大廳：有些房間往旁邊空著的格子長出去，變成跨兩格的大空間（高塔型的塔室不長）
+    if (run.type !== 'tower') {
+      const taken = new Set(), nBig = n >= 8 ? 2 : 1;
+      rooms.filter(r => r.type === 'fight' || r.type === 'trap' || r.type === 'ore').sort(() => Math.random() - 0.5).slice(0, nBig).forEach(r => {
+        const free = DIRS.filter(d => { const k = K(r.gx + d[0], r.gy + d[1]); return !at.has(k) && !taken.has(k); }); if (!free.length) return;
+        const d = pick(free); taken.add(K(r.gx + d[0], r.gy + d[1])); r.big = 1;
+        if (d[0]) { r.x += d[0] * CW / 2; r.hx = CW / 2 + rnd(10, 13); r.hz = rnd(10.5, 13); } else { r.z += d[1] * CH / 2; r.hz = CH / 2 + rnd(8, 10.5); r.hx = rnd(12, 15.5); }
+        r.shape = pick(['hall', 'plaza', 'rect', 'octagon']); r.w = r.hx * 2; r.h = r.hz * 2;
+      });
+    }
     const F = { f, rooms, last };
     R.carve(F, run);
     return F;
@@ -123,21 +133,63 @@
     };
     links.forEach((L, li) => {
       const a = rooms[L.a], b = rooms[L.b], w = form.corrW;
+      // 兩間房重疊的範圍裡挑一條路（拐彎時兩頭各挑一條）
+      const span = (p, q, hp, hq) => { const lo = Math.max(p - hp, q - hq) + 3, hi = Math.min(p + hp, q + hq) - 3; return hi > lo ? [lo, hi] : [p, p]; };
+      const jog = form.corr !== 'wind' && form.corr !== 'straight' && Math.random() < 0.45;
       if (L.dir === 'e') {
-        const row = tZ(a.z), x0 = tX(a.x), x1 = tX(b.x);
-        if (form.corr === 'wind') {
+        const [lo0, hi0] = span(a.z, b.z, a.hz, b.hz), r1 = tZ(form.corr === 'wind' ? (lo0 + hi0) / 2 : rnd(lo0, hi0)), r2 = jog ? tZ(rnd(lo0, hi0)) : r1, row = r1, x0 = tX(a.x), x1 = tX(b.x);
+        if (form.corr !== 'wind' && r1 !== r2) { const mx = Math.round((tX(a.x + a.hx) + tX(b.x - b.hx)) / 2); seg(x0, r1, mx, r1, w, li); seg(mx, r1, mx, r2, w, li); seg(mx, r2, x1, r2, w, li); }
+        else if (form.corr === 'wind') {
           const lo = tX(a.x + a.hx) + 1, hi = tX(b.x - b.hx) - 2, mid = hi > lo ? rint(lo, hi) : Math.round((x0 + x1) / 2), off = pick([-3, -2, 2, 3]);
           seg(x0, row, mid, row, w, li); seg(mid, row, mid, row + off, w, li); seg(mid, row + off, x1, row + off, w, li); seg(x1, row + off, x1, row, w, li);
           if (Math.random() < 0.45) seg(mid, row, mid, row - Math.sign(off) * rint(3, 4), w, li);
         } else seg(x0, row, x1, row, w, li);
       } else {
-        const col = tX(a.x), z0 = tZ(a.z), z1 = tZ(b.z);
-        if (form.corr === 'wind') {
+        const [lo0, hi0] = span(a.x, b.x, a.hx, b.hx), c1 = tX(form.corr === 'wind' ? (lo0 + hi0) / 2 : rnd(lo0, hi0)), c2 = jog ? tX(rnd(lo0, hi0)) : c1, col = c1, z0 = tZ(a.z), z1 = tZ(b.z);
+        if (form.corr !== 'wind' && c1 !== c2) { const mz = Math.round((tZ(a.z + a.hz) + tZ(b.z - b.hz)) / 2); seg(c1, z0, c1, mz, w, li); seg(c1, mz, c2, mz, w, li); seg(c2, mz, c2, z1, w, li); }
+        else if (form.corr === 'wind') {
           const lo = tZ(a.z + a.hz) + 1, hi = tZ(b.z - b.hz) - 2, mid = hi > lo ? rint(lo, hi) : Math.round((z0 + z1) / 2), off = pick([-3, -2, 2, 3]);
           seg(col, z0, col, mid, w, li); seg(col, mid, col + off, mid, w, li); seg(col + off, mid, col + off, z1, w, li); seg(col + off, z1, col, z1, w, li);
           if (Math.random() < 0.45) seg(col, mid, col - Math.sign(off) * rint(3, 4), mid, w, li);
         } else seg(col, z0, col, z1, w, li);
       }
+    });
+    // 岔道：通道旁邊多出一條死路，盡頭是一個小室（高塔、浮島的橋不長）
+    if (form.corr !== 'bridge') links.forEach((L, li) => {
+      if (Math.random() > 0.35) return;
+      const cs = []; for (let k = 0; k < N; k++) if (CR[k] === li) cs.push(k); if (cs.length < 3) return;
+      const k0 = cs[Math.floor(cs.length / 2)], tx0 = k0 % nx, tz0 = (k0 - tx0) / nx, dirs = L.dir === 'e' ? [[0, 1], [0, -1]] : [[1, 0], [-1, 0]], dd = pick(dirs), dx = dd[0], dz = dd[1], len = rint(3, 6);
+      const path = []; for (let i = 2; i <= len + 2; i++) path.push([tx0 + dx * i, tz0 + dz * i]);
+      const ex = path[path.length - 1][0], ez = path[path.length - 1][1], room2 = []; for (let oz = -1; oz <= 1; oz++) for (let ox = -1; ox <= 1; ox++) room2.push([ex + ox, ez + oz]);
+      const clear = path.concat(room2).every(([x, z]) => { for (let oz = -1; oz <= 1; oz++) for (let ox = -1; ox <= 1; ox++) { const xx = x + ox, zz = z + oz; if (!inside(xx, zz)) return false; const m = id(xx, zz); if (T[m] !== VOID && CR[m] !== li) return false; } return true; });
+      if (!clear) return;
+      path.concat(room2).forEach(([x, z]) => setC(x, z, li));
+    });
+    // 房間裡的結構：柱子、有缺口的隔牆、石塊、L 形的牆（入口、寶箱、樓梯、最深處、領主、核心的房間不放）
+    // 只放在離房間邊緣三格以上的地方（門口和繞一圈的路都留著），放完確認整間還是連通的，不通就拿掉
+    rooms.forEach(r => {
+      if (run.type === 'tower' || !['fight', 'trap', 'ore'].includes(r.type) || (!r.big && Math.random() < 0.3)) return;
+      const set = new Set(r.tiles), depth = new Map(), q = [];
+      r.tiles.forEach(k => { const tx = k % nx, tz = (k - tx) / nx; if (N4.some(([dx, dz]) => !set.has(id(tx + dx, tz + dz)))) { depth.set(k, 0); q.push(k); } });
+      for (let i = 0; i < q.length; i++) { const k = q[i], tx = k % nx, tz = (k - tx) / nx; N4.forEach(([dx, dz]) => { const m = id(tx + dx, tz + dz); if (set.has(m) && !depth.has(m)) { depth.set(m, depth.get(k) + 1); q.push(m); } }); }
+      const ok = (tx, tz) => { const m = id(tx, tz); return set.has(m) && depth.get(m) >= 3; };
+      const cx = tX(r.x), cz = tZ(r.z), wall = new Set(), put = (tx, tz) => { if (ok(tx, tz)) wall.add(id(tx, tz)); };
+      const kind = run.type === 'tomb' ? pick(['pillars', 'partition']) : run.type === 'city' ? pick(['blocks', 'partition', 'blocks']) : run.type === 'maze' ? pick(['ell', 'ell', 'blocks']) : pick(['pillars', 'blocks', 'ell', 'partition']);
+      const kinds = r.big ? [kind, pick(['blocks', 'ell', 'pillars'])] : [kind];
+      kinds.forEach(kd => {
+        if (kd === 'pillars') { const step = rint(3, 4); for (let tz = cz - 12; tz <= cz + 12; tz += step) for (let tx = cx - 16; tx <= cx + 16; tx += step) if (Math.abs(tx - cx) + Math.abs(tz - cz) > 2) put(tx, tz); }
+        else if (kd === 'partition') { const alongX = r.hx >= r.hz, off = rint(-2, 2), gaps = [rint(-6, -2), rint(2, 6)]; for (let i = -18; i <= 18; i++) { if (gaps.some(g2 => Math.abs(i - g2) <= 1)) continue; if (alongX) put(cx + off, cz + i); else put(cx + i, cz + off); } }
+        else if (kd === 'blocks') { for (let n2 = 0; n2 < rint(2, 4); n2++) { const bx = cx + rint(-8, 8), bz = cz + rint(-6, 6), w2 = rint(2, 3), h2 = rint(2, 4); for (let z = 0; z < h2; z++) for (let x = 0; x < w2; x++) put(bx + x, bz + z); } }
+        else { for (let n2 = 0; n2 < rint(2, 3); n2++) { const bx = cx + rint(-7, 7), bz = cz + rint(-5, 5), sx = pick([-1, 1]), sz = pick([-1, 1]), l1 = rint(3, 5), l2 = rint(2, 4); for (let i = 0; i < l1; i++) put(bx + sx * i, bz); for (let i = 1; i < l2; i++) put(bx, bz + sz * i); } }
+      });
+      if (!wall.size) return;
+      // 連通檢查
+      const rest = r.tiles.filter(k => !wall.has(k)); if (!rest.length) return;
+      const seen = new Set([rest[0]]), st = [rest[0]];
+      while (st.length) { const k = st.pop(), tx = k % nx, tz = (k - tx) / nx; N4.forEach(([dx, dz]) => { const m = id(tx + dx, tz + dz); if (set.has(m) && !wall.has(m) && !seen.has(m)) { seen.add(m); st.push(m); } }); }
+      if (seen.size !== rest.length) return;
+      const solid = form.edge === 'pit' ? PIT : WALL;
+      wall.forEach(k => { T[k] = solid; RM[k] = -1; }); r.tiles = rest; r.inner = wall.size;
     });
     // 高塔的塔室：中間是往下看得到深淵的井
     rooms.forEach(r => {

@@ -106,10 +106,11 @@
   // 一間房裡放多少、放什麼（dormant：還沒醒，在房裡慢慢晃，走進來才醒）
   const fillRoom = (r, dormant) => {
     const run = W.run, g = run.grade, f = run.floor, pool = g.pool;
-    let cnt = 0; const cap = 4 + 2 * g.lv + R.alliesUp().length;   // 一間房最多幾隻
+    let cnt = 0, cap = 4 + 2 * g.lv + R.alliesUp().length;   // 一間房最多幾隻
     const put = (id, o) => { const [x, z] = R.roomPoint(r, { away: W.P, min: 5 }); const e = R.spawnEnemy(id, x, z, r.i, Object.assign({ quiet: dormant }, o)); cnt++; if (dormant) { e.dormant = true; e.aggro = false; } return e; };
     let n = r.type === 'ore' ? 2 : r.type === 'chest' || r.type === 'trap' ? 2 : 3 + g.lv + Math.floor(f / 2) + Math.floor(Math.random() * 3) + R.alliesUp().length;   // 隊友越多，怪也越多
     if (run.type === 'maze') n = Math.round(n * 0.8);   // 迷宮型的房間多，每間少放一點
+    if (r.big) { n = Math.round(n * 1.6); cap += 4; }   // 跨兩格的大廳
     if (r.type === 'ore') for (let i = 0; i < 2 + g.lv; i++) put('kousaku');
     let lantern = false, elite = false, guard = 0;
     while (n > 0 && guard++ < 80 && cnt < cap) {
