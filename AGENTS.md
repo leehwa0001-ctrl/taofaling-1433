@@ -6,6 +6,7 @@
 ## 協作的規矩（Claude Code 和 Codex 共用這個資料夾）
 
 0. **專案的資料夾：`C:\Users\user\Documents\討伐令1433`**（有 git）。不要再改其他地方的複本（例如 Claude 的暫存資料夾）。
+   **線上版只有一個網址：https://claude.ai/artifact/S18gM8sHY2pGiEbWKERT1Z**（作者手機上用的）。改完、commit 之後，把這個資料夾的 `index.html` 和所有 `.js`、`emblem.png`、`flag.webp` 發布到這個網址（取代整個舊版）。不要另外開新的網址。
 1. **輪流改，不要同時改。** 開工前先 `git status`、`git log -3` 看看別人剛改了什麼；收工前 commit。
 2. **commit 訊息用繁體中文**，寫清楚改了什麼、為什麼。例如：`遺跡：斷尾型改成封住房間前後的出入口`。
 3. **一次只做一件事。** 大改動（例如重寫某個系統）先跟作者確認。
