@@ -1,19 +1,23 @@
-// 限時補償（2026-10-02 上線）：5000 費拉、升 10 等經驗書一本、種族抽選券 200 張，寄到每個存檔的背包。
+// 限時補償（2026-10-02 上線）：5000 費拉、升 10 等經驗書一本、種族抽選券 200 張、魔力核心一顆，寄到每個存檔的背包。
+// （魔力核心是後來加的：已經領過的存檔會另外補發一顆，用 comp20261002b 記）
 // ※ 作者：「下一版完就刪掉」。下一個版本做完的時候，刪掉這個檔案和 index.html 裡的 <script src="compensation.js">，其他檔案都不用改。
 //   存檔裡留下的 comp20261002、xpBooks、raceTickets 欄位沒有別的程式會讀，不用清。
 (function (R) {
   const $ = id => document.getElementById(id), esc = s => R.esc(s);
-  const KEY = 'comp20261002', GOLD = 5000, BOOK_LV = 10, TICKETS = 200;
-  const MSG = ['公會寄來了補償', GOLD + ' 費拉、升 ' + BOOK_LV + ' 等經驗書、種族抽選券 ' + TICKETS + ' 張，放進背包了。抽選券在公會的登記處用。'];
+  const KEY = 'comp20261002', KEY2 = 'comp20261002b', GOLD = 5000, BOOK_LV = 10, TICKETS = 200;
+  const MSG = ['公會寄來了補償', GOLD + ' 費拉、升 ' + BOOK_LV + ' 等經驗書、種族抽選券 ' + TICKETS + ' 張、魔力核心一顆，放進背包了。抽選券在公會的登記處用。'];
+  const MSG2 = ['公會補寄了一件補償', '魔力核心一顆，放進背包了（轉職用得到）。'];
 
-  // 寄到背包：每個存檔只寄一次
+  // 寄到背包：每個存檔只寄一次（已經領過的，只補寄魔力核心）
   const deliver = () => {
-    const S = R.S; if (!S || S[KEY]) return false;
-    S[KEY] = 1; S.gold += GOLD; S.xpBooks = (S.xpBooks || 0) + 1; S.raceTickets = (S.raceTickets || 0) + TICKETS;
-    R.save(); return true;
+    const S = R.S; if (!S || (S[KEY] && S[KEY2])) return null;
+    S.mats = S.mats || {}; S.mats.core = (S.mats.core || 0) + 1;
+    if (S[KEY]) { S[KEY2] = 1; R.save(); return MSG2; }
+    S[KEY] = 1; S[KEY2] = 1; S.gold += GOLD; S.xpBooks = (S.xpBooks || 0) + 1; S.raceTickets = (S.raceTickets || 0) + TICKETS;
+    R.save(); return MSG;
   };
   const etn = R.enterTownNow;
-  R.enterTownNow = (from, at) => { etn(from, at); if (deliver()) setTimeout(() => R.banner(MSG[0], MSG[1]), 3600); };
+  R.enterTownNow = (from, at) => { etn(from, at); const m = deliver(); if (m) setTimeout(() => R.banner(m[0], m[1]), 3600); };
 
   // 升 10 等經驗書：現在登記的武器（職業）直接升 10 級
   const readBook = () => {
@@ -88,6 +92,6 @@
       const b = document.createElement('button'); b.type = 'button'; b.className = 'btn gold'; b.textContent = '用種族抽選券（還有 ' + S.raceTickets + ' 張）';
       b.onclick = ticketGacha; anchor.after(b);
     }
-    if (sent) R.say(MSG[0] + '：' + MSG[1]);
+    if (sent) R.say(sent[0] + '：' + sent[1]);
   };
 })(window.R);
