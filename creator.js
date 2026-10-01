@@ -1,4 +1,4 @@
-// 討伐令 1433：勇者登記（新的冒險）：抽種族 → 捏角（名字、外觀） → 選職業
+// 討伐令 1433：勇者登記（新的冒險）：抽種族 → 捏角（名字、外觀） → 登記武器（武器的類別就是職業）
 (function (R) {
   const $ = id => document.getElementById(id);
   const esc = s => R.esc(s);
@@ -13,14 +13,14 @@
 
   R.createChar = slot => {
     if (slot) R.slot = slot;
-    st = { step: 'race', race: null, look: null, name: '', cls: 'blade' };
+    st = { step: 'race', race: null, look: null, name: '', cls: 'gunner', weapon: 'pistol' };
     R.showScreen('pick'); step();
   };
   const step = () => {
     clearInterval(timer);
     const h = $('pick-cards');
-    $('pick-h').textContent = '勇者登記・' + { race: '一、種族', look: '二、外觀', cls: '三、職業' }[st.step];
-    $('pick-intro').textContent = { race: '公會東鶴分館的登記處。戴眼鏡的館員推了推眼鏡：「下一位。種族、名字、職業，一項一項來。」', look: '「勇者證上要貼照片。」館員指了指牆邊的鏡子。', cls: '「最後，職業。之後隨時可以在公會換，每個職業的等級分開算。練到 8 級、交一顆魔力核心，就能轉職。」' }[st.step];
+    $('pick-h').textContent = '勇者登記・' + { race: '一、種族', look: '二、外觀', cls: '三、登記武器' }[st.step];
+    $('pick-intro').textContent = { race: '公會東鶴分館的登記處。戴眼鏡的館員推了推眼鏡：「下一位。種族、名字、武器，一項一項來。」', look: '「勇者證上要貼照片。」館員指了指牆邊的鏡子。', cls: '「最後，登記武器。勇者證上寫的是你的主要武器，公會照武器的類別派委託。之後隨時可以來改，每一類的等級分開算；練到 8 級、交一顆魔力核心，就能轉職。」' }[st.step];
     if (st.step === 'race') R.raceGacha(h, id => { st.race = id; st.look = defaultLook(id); st.name = R.randomName(id); st.step = 'look'; step(); });
     else if (st.step === 'look') lookStep(h);
     else clsStep(h);
@@ -30,7 +30,7 @@
   // ---------- 預覽：正面、側面、背面，走路的樣子 ----------
   let sheet = null, sheetKey = '';
   const preview = cv => {
-    const look = Object.assign({ weapon: R.STARTER[st.cls] || 'katana', shield: !!R.CLASSES[st.cls].shield, race: st.race }, st.look), k = JSON.stringify(look);
+    const look = Object.assign({ weapon: st.weapon || R.STARTER[st.cls] || 'katana', shield: !!R.CLASSES[st.cls].shield, race: st.race }, st.look), k = JSON.stringify(look);
     if (k !== sheetKey) { sheet = R.heroSheetCanvas(look); sheetKey = k; }
     let t = 0;
     const draw = () => {
@@ -53,7 +53,7 @@
       + '<h3>眼睛</h3>' + sw('eye', EYES, L.eye)
       + '<h3>衣服</h3>' + sw('top', CLOTH, L.top) + '<h3>披風</h3>' + sw('cloak', CLOTH, L.cloak)
       + '<h3>配件</h3>' + chips('acc', ACC, L.acc) + (L.acc !== 'none' && L.acc !== 'glasses' && L.acc !== 'eyepatch' && L.acc !== 'earring' ? sw('accCol', ACCC, L.accCol) : '')
-      + '</div></div><div class="row"><button type="button" class="btn" id="cr-rand">全部隨機</button><button type="button" class="btn pri" id="cr-next">下一步：選職業</button></div>';
+      + '</div></div><div class="row"><button type="button" class="btn" id="cr-rand">全部隨機</button><button type="button" class="btn pri" id="cr-next">下一步：登記武器</button></div>';
     preview($('cr-cv'));
     $('cr-name').oninput = e => { st.name = e.target.value.trim(); };
     $('cr-rname').onclick = () => { st.name = R.randomName(st.race); $('cr-name').value = st.name; };
@@ -63,15 +63,21 @@
     $('cr-next').onclick = () => { if (!st.name) { st.name = R.randomName(st.race); } st.step = 'cls'; step(); };
   };
   const clsStep = h => {
-    h.innerHTML = '<div class="creator"><div class="cr-prev"><canvas id="cr-cv" width="360" height="150"></canvas><p class="note"><b>' + esc(st.name) + '</b>・' + esc(R.RACES[st.race].name) + '</p></div><div class="cr-opts"><div class="cls-cards">'
-      + R.CLASS_IDS.map(c => { const d = R.CLASSES[c]; return '<button type="button" class="cls-card' + (st.cls === c ? ' sel' : '') + '" data-cls="' + c + '" style="--c:' + d.color + '"><b>' + esc(d.name) + '</b><small>生命 ' + d.hp + '・魔力 ' + d.mp + '</small><span>' + esc(d.desc) + '</span><em>轉職：' + R.ADV[c].map(a => a.name).join('／') + '</em></button>'; }).join('')
+    const g0 = R.regGroup(st.cls), d0 = R.CLASSES[st.cls];
+    h.innerHTML = '<div class="creator"><div class="cr-prev"><canvas id="cr-cv" width="360" height="150"></canvas><p class="note"><b>' + esc(st.name) + '</b>・' + esc(R.RACES[st.race].name) + '</p>'
+      + '<p class="note">登記：<b>' + esc(R.regName(st.cls, st.weapon)) + '</b>　公會分類：' + esc(g0.group) + '（' + esc(d0.name) + '）<br>生命 ' + d0.hp + '・魔力 ' + d0.mp + '・' + esc(d0.desc) + '<br><span style="color:var(--gold)">轉職：' + esc(R.ADV[st.cls].map(a => a.name).join('／')) + '</span></p></div>'
+      + '<div class="cr-opts"><div class="reg-groups">'
+      + R.REG.map(g => { const d = R.CLASSES[g.cls]; return '<div class="reg-group" style="--c:' + d.color + '"><h4>' + esc(g.group) + '<small>' + esc(d.name) + '</small></h4><div class="reg-list">'
+        + g.list.map(([w, line]) => '<button type="button" class="reg-card' + (st.cls === g.cls && st.weapon === w ? ' sel' : '') + '" data-cls="' + g.cls + '" data-w="' + w + '"><b>' + esc(R.regName(g.cls, w)) + '</b><span>' + esc(line) + '</span></button>').join('') + '</div></div>'; }).join('')
       + '</div></div></div><div class="row"><button type="button" class="btn" id="cr-back">回上一步</button><button type="button" class="btn pri" id="cr-go">登記完成，走出公會</button></div>';
     preview($('cr-cv'));
-    h.querySelectorAll('[data-cls]').forEach(b => { b.onclick = () => { st.cls = b.dataset.cls; clsStep(h); }; });
+    h.querySelectorAll('[data-w]').forEach(b => { b.onclick = () => { st.cls = b.dataset.cls; st.weapon = b.dataset.w; clsStep(h); }; });
     $('cr-back').onclick = () => { st.step = 'look'; step(); };
     $('cr-go').onclick = () => {
       clearInterval(timer);
       R.S = R.freshSave(st.cls, { name: st.name, look: st.look, race: st.race });
+      // 公會配給登記的那把武器（不是每一類固定的那把）
+      const w = R.makeItem({ kind: 'weapon', base: st.weapon, ilvl: 1, rarity: 0, identified: true }); R.S.stash.push(w); R.S.equip[st.cls].weapon = w.id;
       R.ensureKit(st.cls); if (R.ensureWorld) R.ensureWorld();
       if (st.race === 'demon') { R.S.watched = true; R.addDeed && R.addDeed('公會東鶴分館登記了一名魔族勇者，列為受監視對象。'); }
       R.save(); R.enterTown();

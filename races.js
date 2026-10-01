@@ -8,11 +8,11 @@
   const $ = id => document.getElementById(id);
   const esc = s => R.esc(s);
   R.TIERS = {
-    N: { name: 'N', w: 46, color: '#B9BEC7' },
-    R: { name: 'R', w: 32, color: '#62CB7E' },
+    N: { name: 'N', w: 50, color: '#B9BEC7' },
+    R: { name: 'R', w: 31.4, color: '#62CB7E' },
     SR: { name: 'SR', w: 16, color: '#5BA8F2' },
-    SSR: { name: 'SSR', w: 5.2, color: '#F2B64C' },
-    UR: { name: 'UR', w: 0.8, color: '#E04A6A', hidden: 1 }
+    SSR: { name: 'SSR', w: 2, color: '#F2B64C' },
+    UR: { name: 'UR', w: 0.6, color: '#E04A6A', hidden: 1 }
   };
   // b：加成（hp、mp 是倍率；def 是加上去的防禦；speed、dmg、melee、magic、ranged 倍率；crit 暴擊率；critMult 暴擊傷害；dodge、skillCd 冷卻縮短；regen 每秒回復；calm 佩特拉的注意變慢；xp 經驗；vamp 吸血；ignite 點燃機率；thorns 反傷；guard 隊友少受傷；crystal 多掉魔力水晶；immune 免疫）
   // xeno：在東鶴被排擠的程度 0～3
@@ -22,6 +22,7 @@
     cat: { name: '貓人族', tier: 'N', from: '地表高地・獸人族種', xeno: 2, skins: ['#F0CFAE', '#DDB08A'], b: { dodge: 0.2, crit: 0.04 }, line: '身手輕巧，翻滾回得快。', look: { ears: 'cat', tail: 'cat', whisk: 1 } },
     elf: { name: '精靈族', tier: 'R', from: '地表森林・精靈族種', xeno: 1, skins: ['#F4DCC4', '#EBD0B5'], hairs: ['#E9D8A6', '#C9C3B6', '#6B4A2E'], b: { mp: 0.2, skillCd: 0.1 }, line: '魔力多，技能轉得快。', look: { ears: 'elf' } },
     fox: { name: '狐人族', tier: 'R', from: '地表平原・獸妖族種', xeno: 2, skins: ['#F2D2B4'], hairs: ['#D2692A', '#E08A3C', '#EFE3D2'], b: { magic: 0.12, calm: 0.1 }, line: '對魔力質很敏感。法術打得重，也比較不容易被佩特拉注意。', look: { ears: 'fox', tail: 'fox' } },
+    snowfox: { name: '雪狐族', tier: 'SR', from: '地表高地・獸妖族種', xeno: 2, skins: ['#F6E2D2', '#EED6C4'], hairs: ['#F4F2EE', '#E2E6EE', '#D8DCE6'], eye: '#5AA8E0', b: { magic: 0.1, mp: 0.1, immune: { slow: 1 } }, line: '雪白的狐耳和尾巴，天藍色的眼睛。寒氣凍不住，法術也打得重。', look: { ears: 'fox', tail: 'fox' } },
     wolf: { name: '狼人族', tier: 'R', from: '地表森林・獸人族種', xeno: 2, skins: ['#E6C4A2', '#CFA27E'], hairs: ['#6D6A66', '#3E3B38', '#A9A39A'], b: { hp: 0.1, melee: 0.1 }, line: '耐打，近身的時候最兇。', look: { ears: 'wolf', tail: 'wolf' } },
     sand: { name: '沙人族', tier: 'R', from: '地表沙漠・岩礦族種', xeno: 1, skins: ['#D8B98A', '#C9A673'], b: { def: 3, immune: { blind: 1 } }, line: '習慣風沙：砂幕蒙不了眼。', look: { hood: 1, hoodCol: '#C8A870' } },
     fin: { name: '鰭人族', tier: 'R', from: '淺海珊瑚礁區・鰭人族種', xeno: 1, skins: ['#7FB6B0', '#6AA3A8'], b: { regen: 0.5, immune: { slow: 1 } }, line: '傷口癒合得快，寒氣也凍不住。', look: { ears: 'fin', fin: 1, bald: 1 } },
@@ -39,6 +40,22 @@
       b: { hp: 0.3, mp: 0.4, dmg: 0.3, def: 3, vamp: 0.04, skillCd: 0.25, regen: 1.2, calm: 0.15 },
       line: '翅膀、光環、黑色雙角。人界的人怕你：店家不賣你東西、路人躲著走、私人賞金獵人會來找你。公會把你列為「受監視對象」——但也只有公會不准任何人討伐你。', look: { horns: 'demon', wings: 'demon', halo: 1 } }
   };
+  // 混血：勇者證的註名本來就有「混血與否」這一欄（公會的勇者大約三成是混血）
+  // 長相淡一點（留耳朵、角變小；尾巴、鱗片、四隻眼睛之類的沒有），加成減半，再多一點大陸人族那邊的學習力；
+  // 看起來比較像本地人，閒話少一級
+  const mixHex = (a, b) => '#' + [1, 3, 5].map(i => Math.round((parseInt(a.slice(i, i + 2), 16) + parseInt(b.slice(i, i + 2), 16)) / 2).toString(16).padStart(2, '0')).join('');
+  const HALF = ['hp', 'mp', 'speed', 'dmg', 'melee', 'magic', 'crit', 'critMult', 'dodge', 'skillCd', 'regen', 'calm', 'xp', 'vamp', 'ignite', 'thorns', 'guard', 'crystal'];
+  Object.keys(R.RACES).forEach(id => {
+    const r = R.RACES[id]; if (id === 'human' || id === 'demon') return;
+    const b = { xp: 0.05 };
+    HALF.forEach(k => { if (r.b[k]) b[k] = Math.round(((b[k] || 0) + r.b[k] / 2) * 100) / 100; });
+    if (r.b.def) b.def = Math.max(1, Math.round(r.b.def / 2));
+    const L = Object.assign({}, r.look);
+    ['tail', 'scales', 'eyes4', 'rock', 'cracks', 'flame', 'whisk', 'beard', 'crest', 'halo', 'fin', 'hood', 'hoodCol', 'bald'].forEach(k => { delete L[k]; });
+    if (L.horns) L.horns = 'small';
+    const hairs = (r.hairs || (r.hairCol ? [r.hairCol] : [])).concat(['#2A1E16', '#5A3B24', '#8B5A2B']);
+    R.RACES[id + '_m'] = { name: r.name + '（混血）', tier: r.tier, w: 0.43, mixed: id, from: r.from + '・混血', xeno: Math.max(0, r.xeno - 1), skins: r.skins.map(s => mixHex(s, '#E6BE98')), hairs, eye: r.eye, b, line: '雙親有一邊是' + r.name + '。長相淡一點，' + r.name + '的本事只有一半，學東西倒是比較快。', look: L };
+  });
   R.RACE_IDS = Object.keys(R.RACES);
   R.raceOf = () => (R.S && R.S.race ? R.RACES[R.S.race] : null);
   // 長相（給 sprites.js）
@@ -63,13 +80,15 @@
     const tiers = Object.keys(R.TIERS), tot = tiers.reduce((a, t) => a + R.TIERS[t].w, 0);
     let r = Math.random() * tot, tier = 'N';
     for (const t of tiers) { r -= R.TIERS[t].w; if (r <= 0) { tier = t; break; } }
-    const list = R.RACE_IDS.filter(id => R.RACES[id].tier === tier);
-    return list[Math.floor(Math.random() * list.length)];
+    const list = R.RACE_IDS.filter(id => R.RACES[id].tier === tier), tw = list.reduce((a, id) => a + (R.RACES[id].w || 1), 0);
+    let q = Math.random() * tw;
+    for (const id of list) { q -= R.RACES[id].w || 1; if (q <= 0) return id; }
+    return list[list.length - 1];
   };
   // 抽種族的畫面：最多抽 4 次，從抽到的裡面選一個登記（host：放進哪個元素；done(id)：選好了）
   R.raceGacha = (host, done, o) => {
     o = o || {}; const got = [], MAX = o.max || 4;
-    const rates = '<div class="rates">' + Object.keys(R.TIERS).map(t => { const T0 = R.TIERS[t], names = R.RACE_IDS.filter(id => R.RACES[id].tier === t).map(id => R.RACES[id].name); return '<div class="rate" style="--c:' + T0.color + '"><b>' + T0.name + '</b><span>' + T0.w + '%</span><small>' + (T0.hidden ? '？？？' : esc(names.join('、'))) + '</small></div>'; }).join('') + '</div>';
+    const rates = '<div class="rates">' + Object.keys(R.TIERS).map(t => { const T0 = R.TIERS[t], names = R.RACE_IDS.filter(id => R.RACES[id].tier === t && !R.RACES[id].mixed).map(id => R.RACES[id].name); return '<div class="rate" style="--c:' + T0.color + '"><b>' + T0.name + '</b><span>' + T0.w + '%</span><small>' + (T0.hidden ? '？？？' : esc(names.join('、'))) + '</small></div>'; }).join('') + '</div><p class="note">每一族都有大約三成是混血（勇者證上註名「混血」）：長相淡一點、加成減半、經驗多一點、閒話少一些。</p>';
     const card = (id, i) => { const r = R.RACES[id], T0 = R.TIERS[r.tier]; return '<button type="button" class="race-card' + (o.pick === i ? ' sel' : '') + '" data-pick="' + i + '" style="--c:' + T0.color + '"><span class="tier">' + T0.name + '</span><b>' + esc(r.name) + '</b><small>' + esc(r.from) + '</small><span>' + esc(r.line) + '</span><em>' + esc(R.raceBonusText(id).join('・')) + '</em><i>' + esc(R.XENO_TEXT[r.xeno]) + '</i></button>'; };
     const render = () => {
       host.innerHTML = '<h2>' + (o.title || '種族登記') + '</h2><p class="note">' + esc(o.intro || '勇者證上要寫種族。你是哪一族？最多抽 ' + MAX + ' 次，從抽到的裡面選一個登記。') + '</p>' + rates

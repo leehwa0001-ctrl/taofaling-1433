@@ -29,8 +29,9 @@
     stone: { a: ['格倫', '岩', '晶', '燧', '熾', '砂'], b: ['黑石', '碎岩', '紫晶', '深熔', '赤砂', '熾核', '玄晶'], sep: '・' },
     dragon: { a: ['瓦爾', '雷蒙', '伊格', '薩隆'], b: ['赤鱗', '鋼角', '烈爪', '燼尾', '石脊'], sep: '・', three: 1 }
   };
-  const byRace = { human: ['zx', 'zx', 'zx', 'west', 'dex', 'ban', 'karu'], elf: ['elf'], dog: ['beast'], cat: ['beast'], wolf: ['beast'], fox: ['fox'], winged: ['wing'], phantom: ['phantom'], tree: ['tree'], fin: ['sea'], blackstone: ['stone'], crystal: ['stone'], lava: ['stone'], sand: ['stone', 'west'], giant: ['west', 'stone'], flame: ['stone', 'west'], spider: ['karu', 'dex'], dragon: ['dragon'], demon: ['phantom'] };
+  const byRace = { human: ['zx', 'zx', 'zx', 'west', 'dex', 'ban', 'karu'], elf: ['elf'], dog: ['beast'], cat: ['beast'], wolf: ['beast'], fox: ['fox'], snowfox: ['fox'], winged: ['wing'], phantom: ['phantom'], tree: ['tree'], fin: ['sea'], blackstone: ['stone'], crystal: ['stone'], lava: ['stone'], sand: ['stone', 'west'], giant: ['west', 'stone'], flame: ['stone', 'west'], spider: ['karu', 'dex'], dragon: ['dragon'], demon: ['phantom'] };
   R.randomName = race => {
+    const mx = R.RACES && R.RACES[race] && R.RACES[race].mixed; if (mx) race = Math.random() < 0.5 ? mx : 'human';
     const n = N[pick(byRace[race] || byRace.human)];
     if (n.three) { const b1 = pick(n.b); let b2 = pick(n.b); if (b2 === b1) b2 = n.b[(n.b.indexOf(b1) + 1) % n.b.length]; return pick(n.a) + n.sep + b1 + n.sep + b2; }
     return pick(n.a) + n.sep + pick(n.b);

@@ -152,6 +152,16 @@ body.pixel #r-map,body.pixel #gl{image-rendering:pixelated}
 .cls-card span{font-size:13px;color:#D6CCB8}
 .cls-card em{font-style:normal;font-size:12px;color:var(--gold)}
 .pick-body h2{font-family:var(--serif);font-size:22px;margin:4px 0}
+.reg-groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.reg-group{background:var(--bg2);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:10px;padding:8px 10px 10px}
+.reg-group h4{margin:0 0 6px;font-family:var(--serif);font-size:17px;letter-spacing:.06em;display:flex;align-items:baseline;gap:8px}
+.reg-group h4 small{font-family:var(--sans);font-size:12px;color:var(--dim);letter-spacing:0}
+.reg-list{display:grid;gap:6px}
+.reg-card{display:grid;gap:2px;text-align:left;background:#1A1620;border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:inherit}
+.reg-card b{font-size:15px}
+.reg-card span{font-size:12px;color:#D6CCB8}
+.reg-card:hover,.reg-card:focus-visible{border-color:var(--c)}
+.reg-card.sel{border-color:var(--c);box-shadow:0 0 0 2px var(--c) inset;background:#221C28}
 .cls-card.sel{border-color:var(--c);box-shadow:0 0 0 2px var(--c) inset;background:#221C28}
 /* ---------- 存檔、捏角、抽種族 ---------- */
 .t-slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;width:100%;text-align:left}

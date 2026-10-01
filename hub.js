@@ -82,10 +82,10 @@
       + '<button type="button" class="btn" data-map="1">攤開地圖看全部</button></div>'
       + cardBox()
       + partyBox()
-      + '<h3>職業登記</h3><p class="note">可以隨時換職業。每個職業的等級分開算；練到 ' + R.PROMOTE_LV + ' 級、交一顆魔力核心，就能轉職（三條路選一條，之後再交一顆可以重選）。</p><div class="cls-grid">'
+      + '<h3>武器登記</h3><p class="note">勇者證上登記的主要武器，可以隨時改；公會照武器的類別派委託。每一類的等級分開算；練到 ' + R.PROMOTE_LV + ' 級、交一顆魔力核心，就能轉職（三條路選一條，之後再交一顆可以重選）。</p><div class="cls-grid">'
       + R.CLASS_IDS.map(c => { const d = R.CLASSES[c], st = S.classes[c], adv = st.adv ? R.ADV[c].find(a => a.id === st.adv) : null, cur = S.cls === c;
-        return '<div class="cls-row' + (cur ? ' cur' : '') + '" style="--c:' + d.color + '"><b>' + esc(d.name) + (adv ? '→' + esc(adv.name) : '') + '</b><small>Lv ' + st.lv + '</small>'
-          + (cur ? '<span class="tag">現在的職業</span>' : '<button type="button" class="mini" data-cls="' + c + '">換成這個</button>')
+        return '<div class="cls-row' + (cur ? ' cur' : '') + '" style="--c:' + d.color + '"><b>' + esc(R.regGroup(c).group) + '</b><small>' + esc(d.name) + (adv ? '→' + esc(adv.name) : '') + '・Lv ' + st.lv + '</small>'
+          + (cur ? '<span class="tag">現在登記的</span>' : '<button type="button" class="mini" data-cls="' + c + '">改登記這一類</button>')
           + (st.lv >= R.PROMOTE_LV ? '<button type="button" class="mini gold" data-promo="' + c + '">' + (adv ? '重選轉職' : '轉職') + '</button>' : '') + '</div>'; }).join('') + '</div>'
       + ((S.cards || []).length ? '<h3>撿到的勇者證</h3><p class="note">在遺跡裡偷襲你的人留下的勇者證。交給公會：註銷名單上的冒用證件有獎金。</p><ul class="loot">' + S.cards.map(c => '<li>' + esc(c.no) + '　' + esc(c.name) + (c.revoked ? '　<b style="color:#E04A3A">註銷名單上的號碼</b>' : '') + '</li>').join('') + '</ul><button type="button" class="btn pri" data-cards="1">全部交給公會</button>' : '')
       + '<h3>素材收購</h3><p class="note">公會收購從遺跡帶回來的素材。魔力核心留著轉職用，公會不收。</p><div class="sellmats">' + (Object.keys(R.MATS).filter(k => k !== 'core' && S.mats[k] > 0).map(k => '<div class="sellmat"><span>' + esc(R.MATS[k].name) + ' ×' + S.mats[k] + '（每個 ' + R.MATS[k].value + ' 費拉）</span><button type="button" class="mini" data-sellmat="' + k + ':1">賣 1</button><button type="button" class="mini" data-sellmat="' + k + ':all">全賣</button></div>').join('') || '<span class="note">沒有可以賣的素材。</span>') + '</div>'
@@ -94,7 +94,7 @@
   // 在公會裡面走到哪裡，就只看那一塊（告示板＝委託、登記處＝職業與隊伍、收購窗口＝素材）
   const FOCUS = {
     quests: { at: '委託告示板', line: '告示板上用圖釘釘著一張張委託，紙頭的顏色是遺跡的分級。', keep: ['遺跡委託'] },
-    desk: { at: '登記處', line: '登記處的館員抬頭看了你一眼：「下一位。」', keep: ['勇者證', '同行的勇者', '職業登記'] },
+    desk: { at: '登記處', line: '登記處的館員抬頭看了你一眼：「下一位。」', keep: ['勇者證', '同行的勇者', '武器登記'] },
     sell: { at: '收購窗口', line: '收購窗口的館員把秤擦乾淨：「今天收什麼？」', keep: ['撿到的勇者證', '素材收購', '手邊的素材'] }
   };
   const focusGuild = html => {

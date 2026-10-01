@@ -109,6 +109,18 @@ window.R = window.R || {};
     spear: { name: '長槍', cls: ['knight'], kind: 'thrust', dmg: 17, rate: 1.9, range: 3.7, width: 0.9, kb: 1.5 }
   };
   R.STARTER = { gunner: 'pistol', archer: 'shortbow', warrior: 'sword', mage: 'staff', priest: 'holystaff', blade: 'katana', knight: 'sword' };
+  // 登記武器：勇者證上寫的是主要武器，公會照它的類別派委託（類別就是職業）。騎士是「武器＋盾」
+  R.REG = [
+    { cls: 'gunner', group: '槍械', list: [['pistol', '單發準、換彈快。'], ['rifle', '連射，彈匣大。'], ['shotgun', '近距離一發打一片。']] },
+    { cls: 'archer', group: '弓', list: [['shortbow', '射得快。'], ['longbow', '按住蓄力，射得遠又痛。'], ['crossbow', '一箭貫穿。']] },
+    { cls: 'warrior', group: '重兵器', list: [['sword', '平衡，揮得快。'], ['greatsword', '慢，一刀掃一大片。'], ['axe', '重，把敵人打退。']] },
+    { cls: 'mage', group: '魔導具', list: [['staff', '會爆炸的法彈。'], ['orb', '三發會追蹤的法彈。']] },
+    { cls: 'priest', group: '聖具', list: [['holystaff', '法彈打中會回一點生命。'], ['mace', '近身打，有機會把敵人打暈。']] },
+    { cls: 'blade', group: '刀', list: [['katana', '快、準。'], ['dualblades', '一次砍兩下。']] },
+    { cls: 'knight', group: '武器＋盾', list: [['sword', '平衡；正面的傷害減少。'], ['spear', '刺得遠；正面的傷害減少。'], ['mace', '會把敵人打暈；正面的傷害減少。']] }
+  ];
+  R.regGroup = cls => R.REG.find(g => g.cls === cls);
+  R.regName = (cls, base) => R.WEAPONS[base].name + (cls === 'knight' ? '＋盾' : '');
   R.weaponsFor = cls => Object.keys(R.WEAPONS).filter(k => R.WEAPONS[k].cls.includes(cls));
   R.TIER_NAME = ['鐵製', '魔晶', '核心'];
   R.tierOf = ilvl => (ilvl >= 6 ? 2 : ilvl >= 3 ? 1 : 0);
