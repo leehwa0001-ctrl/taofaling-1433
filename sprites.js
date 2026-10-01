@@ -315,10 +315,12 @@
   };
   const heroSheet = o => {
     const L = heroLook(o), c = cvs(FW * COLS, FH * ROWS), x = c.getContext('2d');
-    for (let dir = 0; dir < 3; dir++) for (let fr = 0; fr < COLS; fr++) drawHero(x, fr * FW + BX, dir * FH + BY, dir, fr, L);
+    const NF = o.lite ? 3 : COLS;
+    for (let dir = 0; dir < 3; dir++) for (let fr = 0; fr < NF; fr++) drawHero(x, fr * FW + BX, dir * FH + BY, dir, fr, L);
     // 朝左＝朝右的鏡像
     const mirror = (sx, sy, dx, dy) => { x.save(); x.translate(dx + FW, dy); x.scale(-1, 1); x.drawImage(c, sx, sy, FW, FH, 0, 0, FW, FH); x.restore(); };
-    for (let fr = 0; fr < COLS; fr++) mirror(fr * FW, 2 * FH, fr * FW, 3 * FH);
+    for (let fr = 0; fr < NF; fr++) mirror(fr * FW, 2 * FH, fr * FW, 3 * FH);
+    if (o.lite) { outline(c); return c; }
     // 翻滾：往右滾四格，往左是鏡像
     for (let fr = 0; fr < 4; fr++) drawRoll(x, fr * FW, 4 * FH, fr / 4, L);
     for (let fr = 0; fr < 4; fr++) mirror(fr * FW, 4 * FH, fr * FW, 5 * FH);
@@ -343,9 +345,11 @@
   R.heroSheetCanvas = o => heroSheet(o);
   R.HERO_FRAME = { FW, FH, ROWS, COLS };
   const dummy = () => new (T().Group)();
+  const litePool = {};
   R.makeHeroSprite = (cls, weaponBase, look) => {
     const c = R.CLASSES[cls], o = Object.assign({ top: c.look.top, hair: c.look.hair, cloak: c.look.cloak, weapon: weaponBase, shield: !!c.shield, eq: null }, look || {});
-    const g = new (T().Group)(), sp = billboard(heroSheet(o), COLS, ROWS, FW, FH, FH - (BY + 23) - 1); g.add(sp.m); addShadow(g, 0.45);
+    const sheetC = o.pool ? (litePool[o.pool] || (litePool[o.pool] = heroSheet(o))) : heroSheet(o);
+    const g = new (T().Group)(), sp = billboard(sheetC, COLS, ROWS, FW, FH, FH - (BY + 23) - 1); g.add(sp.m); addShadow(g, 0.45);
     return { g, sp, spr: sp.m, opt: o, isSprite: true, hip: dummy(), legL: dummy(), legR: dummy(), armL: dummy(), armR: dummy(), head: dummy(), hand: dummy(), offhand: dummy(), phase: 0, swing: 0, recoil: 0, roll: 0, kind: R.WEAPONS[weaponBase] ? R.WEAPONS[weaponBase].kind : 'melee', base: weaponBase, dress: null };
   };
   const rebuildHero = h => { h.sp.t.image = heroSheet(h.opt); h.sp.t.needsUpdate = true; };
@@ -563,8 +567,8 @@
   const texCache = {};
   R.pixTex = kind => {
     if (texCache[kind]) return texCache[kind];
-    seed = { floor: 11, wall: 23, cap: 37, plaster: 51, ground: 67, planks: 83 }[kind] || 5;
-    const size = kind === 'floor' ? 80 : kind === 'cap' || kind === 'ground' ? 40 : 48, c = cvs(size, size), x = c.getContext('2d');
+    seed = { floor: 11, wall: 23, cap: 37, plaster: 51, ground: 67, planks: 83, asphalt: 97, paving: 101, stone: 113, gravel: 127 }[kind] || 5;
+    const size = kind === 'floor' || kind === 'stone' ? 80 : kind === 'cap' || kind === 'ground' || kind === 'paving' ? 40 : kind === 'gravel' ? 32 : 48, c = cvs(size, size), x = c.getContext('2d');
     // 平均大約 0.9 倍，接縫暗一點（不會讓整個場景變暗）
     const P = (a, b, v) => { v = Math.max(0, Math.min(255, Math.round(v * 1.12))); x.fillStyle = 'rgb(' + v + ',' + v + ',' + v + ')'; x.fillRect(a, b, 1, 1); };
     if (kind === 'floor') {
@@ -586,6 +590,20 @@
         P(xx, yy, v);
       }
     } else if (kind === 'cap') { for (let yy = 0; yy < size; yy++) for (let xx = 0; xx < size; xx++) P(xx, yy, (xx % 20 === 0 || yy % 20 === 0) ? 160 : 212 + (srnd() - 0.5) * 16); }
+    else if (kind === 'asphalt') {
+      // 柏油：細細的碎石點、幾條補過的痕跡
+      for (let yy = 0; yy < size; yy++) for (let xx = 0; xx < size; xx++) { let v = 206 + (srnd() - 0.5) * 18; const r = srnd(); if (r < 0.06) v -= 34; else if (r < 0.1) v += 22; P(xx, yy, v); }
+      for (let k = 0; k < 3; k++) { let px = Math.floor(srnd() * size), py = Math.floor(srnd() * size); for (let s = 0; s < 14; s++) { P((px + size) % size, (py + size) % size, 168); px += srnd() < 0.7 ? 1 : 0; py += srnd() < 0.4 ? 1 : srnd() < 0.2 ? -1 : 0; } }
+    } else if (kind === 'paving') {
+      // 人行道的磚：50 公分一塊（5 像素），一排錯開半塊
+      for (let yy = 0; yy < size; yy++) for (let xx = 0; xx < size; xx++) { const row = Math.floor(yy / 5), off = row % 2 ? 2 : 0, b = Math.floor((xx + off) / 5); let v = 208 + ((row * 7 + b * 3) % 4) * 5 + (srnd() - 0.5) * 8; if (yy % 5 === 4 || (xx + off) % 5 === 4) v = 160; P(xx, yy, v); }
+    } else if (kind === 'stone') {
+      // 舊城的石板：大小不一的長方形石塊、深色的縫
+      for (let yy = 0; yy < size; yy++) for (let xx = 0; xx < size; xx++) P(xx, yy, 150);
+      for (let yy = 0; yy < size;) { const h = 3 + Math.floor(srnd() * 4); let xx = Math.floor(srnd() * 6); while (xx < size + 10) { const w = 4 + Math.floor(srnd() * 6), base = 192 + (srnd() - 0.5) * 34; for (let j = 1; j < h && yy + j < size; j++) for (let i = 1; i < w; i++) { const px = (xx + i) % size; P(px, yy + j, base + (srnd() - 0.5) * 10 + (j === 1 || i === 1 ? 12 : 0)); } xx += w; } yy += h; }
+    } else if (kind === 'gravel') {
+      for (let yy = 0; yy < size; yy++) for (let xx = 0; xx < size; xx++) { const r = srnd(); P(xx, yy, r < 0.3 ? 160 + srnd() * 20 : r < 0.6 ? 200 + srnd() * 20 : 225 + srnd() * 20); }
+    }
     else if (kind === 'planks') { for (let yy = 0; yy < size; yy++) for (let xx = 0; xx < size; xx++) { const plank = Math.floor(yy / 8); let v = 196 + ((plank * 5) % 3) * 8 + (srnd() - 0.5) * 12; if (yy % 8 === 7) v = 120; if ((xx + plank * 17) % 48 === 0) v = 140; if ((xx * 3 + yy) % 13 === 0) v -= 10; P(xx, yy, v); } }
     else { for (let yy = 0; yy < size; yy++) for (let xx = 0; xx < size; xx++) P(xx, yy, 212 + (srnd() - 0.5) * 26 + (srnd() < 0.04 ? -36 : 0)); }   // ground：雪地、草地的細節
     const tt = tex(c, true); tt.userData.shared = true; return (texCache[kind] = tt);
@@ -654,6 +672,34 @@
     // 每次畫之前轉向鏡頭（松樹不會動，也不用每一幀另外處理）
     m.onBeforeRender = function () { const cam = R.W.cam ? R.W.cam.yaw : 0; if (this.rotation.y !== cam) { this.rotation.y = cam; this.updateMatrix(); this.matrixWorld.multiplyMatrices(this.parent.matrixWorld, this.matrix); } };
     g.userData.bb = m; return g;
+  };
+  // 冬天的行道樹（落葉的樹，枝上積雪）
+  const bareCs = {};
+  const bareCanvas = n => {
+    if (bareCs[n]) return bareCs[n];
+    const w = 22 + n * 4, h = 34 + n * 6, c = cvs(w, h), x = c.getContext('2d'), P = (a, b, ww, hh, col) => { x.fillStyle = col; x.fillRect(a, b, ww, hh); }, cx = Math.floor(w / 2);
+    let s = 31 + n; const r = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+    P(cx - 1, h - 14, 3, 14, '#4A3A2E'); P(cx - 1, h - 14, 1, 14, '#6A5240');
+    const branch = (bx, by, dx, len, depth) => { let px = bx, py = by; for (let i = 0; i < len; i++) { px += dx * (r() < 0.7 ? 1 : 0); py -= 1; P(Math.round(px), py, 1, 1, '#4A3A2E'); if (r() < 0.25) P(Math.round(px), py - 1, 1, 1, '#F2F6F8'); if (depth < 2 && r() < 0.18) branch(px, py, -dx || 1, Math.floor(len * 0.5), depth + 1); } P(Math.round(px), py - 1, 1, 1, '#F2F6F8'); };
+    for (let i = 0; i < 5 + n; i++) branch(cx + (r() - 0.5) * 2, h - 12 - Math.floor(r() * 8), r() < 0.5 ? -1 : 1, 8 + Math.floor(r() * (8 + n * 2)), 0);
+    P(cx - 4, h - 2, 9, 2, '#F2F6F8');
+    outline(c); return (bareCs[n] = c);
+  };
+  // list：[{ x, z, s, bare }]；回傳 { update(yaw) }
+  R.treeField = (list, group) => {
+    const TH = T(), groups = {}, dummy = new TH.Object3D(), out = [];
+    list.forEach(t => { const n = t.bare ? 'b' + (t.s < 0.9 ? 1 : t.s < 1.15 ? 2 : 3) : 'p' + (t.s == null ? 5 : t.s < 0.95 ? 4 : t.s < 1.2 ? 5 : 6); (groups[n] = groups[n] || []).push(t); });
+    Object.keys(groups).forEach(n => {
+      const L = groups[n], c = n[0] === 'b' ? bareCanvas(+n.slice(1)) : pineCanvas(+n.slice(1)), sp = billboard(c, 1, 1, c.width, c.height, 1);
+      const im = new TH.InstancedMesh(sp.m.geometry, sp.mat, L.length); im.renderOrder = 1; im.frustumCulled = false;
+      const sg = new TH.CircleGeometry(0.3 + c.width * 0.012, 10), sh = new TH.InstancedMesh(sg, new TH.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: 0.3, depthWrite: false }), L.length);
+      L.forEach((t, i) => { dummy.position.set(t.x, 0.03, t.z); dummy.rotation.set(-Math.PI / 2, 0, 0); dummy.updateMatrix(); sh.setMatrixAt(i, dummy.matrix); });
+      group.add(im); group.add(sh); out.push({ im, L });
+    });
+    let last = null;
+    const update = yaw => { if (yaw === last) return; last = yaw; out.forEach(({ im, L }) => { L.forEach((t, i) => { dummy.position.set(t.x, 0, t.z); dummy.rotation.set(0, yaw, 0); dummy.updateMatrix(); im.setMatrixAt(i, dummy.matrix); }); im.instanceMatrix.needsUpdate = true; }); };
+    update(R.W.cam ? R.W.cam.yaw : 0);
+    return { update };
   };
   // 換場景：把只屬於舊場景的形狀、材質、貼圖丟掉（共用的、keep 裡的不丟）
   R.disposeScene = (sc, keep) => {

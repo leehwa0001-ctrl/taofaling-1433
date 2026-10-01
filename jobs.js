@@ -10,7 +10,7 @@
   const S = () => R.S;
   const CLIENTS = ['西市的布商', '北郊的農家', '德克斯凡的跑單員', '湯山村的旅館', '驛站的車伕', '自稱學者的人', '城南的老太太', '戴著帽子的男人', '新商區的店員', '一位外地的商人'];
   const PLACES = [['湯山村', '湯山村的溫泉旁'], ['北郊農舍', '北郊農舍的門口'], ['驛站', '驛站的售票口前'], ['神社', '東鶴神社的鳥居下'], ['調查點', '城西遺跡的公會調查點']];
-  const TARGET = { '湯山村': [200, 128], '北郊農舍': [790, 276], '驛站': [640, 492], '神社': [470, 512], '調查點': [200, 478] };
+  const TARGET = R.CITY ? R.CITY.TARGET : { '湯山村': [200, 128], '北郊農舍': [790, 276], '驛站': [640, 492], '神社': [470, 512], '調查點': [200, 478] };
   const MAT_JOBS = [['herb', 6], ['iron', 4], ['crystal', 3], ['shell', 4], ['branch', 10]];
   const HUNT = [['kousaku', '礦殼', 'dh-kouzan'], ['kodama', '根童', 'dh-sokkutsu'], ['onibi', '游焰', 'dh-sokkutsu'], ['kasa', '獨腳傘', 'dh-josai'], ['hyakume', '群瞳', 'dh-josai']];
   const hash = s => R.hash01(S().seed + ':' + s);
@@ -105,7 +105,7 @@
     (s.jobs || []).forEach(j => {
       if (j.vanish) return;
       if (j.kind === 'deliver') { const t = TARGET[j.to]; const [x, z] = api.spot(t[0], t[1]); const n = api.npc(x, z, { top: '#5A4A3A', hair: '#2A2420', cloak: '#3A3A30' }, '收貨的人', 0); n.near = 1; api.inter(x, z + 1, 2, '把包裹交給收貨的人', () => finish(j, '你把包裹交了出去。'), { follow: n }); }
-      if (j.kind === 'gather') { const [x, z] = api.spot(465, 566); const n = api.npc(x, z, { top: '#3A4A5A', hair: '#6A4A2E', cloak: '#2E3A48' }, j.client, Math.PI); n.near = 1; api.inter(x, z, 2, '把' + R.MATS[j.mat].name + '交給委託人（' + j.n + ' 個）', () => { if ((s.mats[j.mat] || 0) < j.n) { R.toast(R.MATS[j.mat].name + '不夠。'); return; } s.mats[j.mat] -= j.n; finish(j, '委託人點了點數量。'); }, { follow: n }); }
+      if (j.kind === 'gather') { const [x, z] = api.spot(...(R.CITY ? R.CITY.gatherSpot : [465, 566])); const n = api.npc(x, z, { top: '#3A4A5A', hair: '#6A4A2E', cloak: '#2E3A48' }, j.client, Math.PI); n.near = 1; api.inter(x, z, 2, '把' + R.MATS[j.mat].name + '交給委託人（' + j.n + ' 個）', () => { if ((s.mats[j.mat] || 0) < j.n) { R.toast(R.MATS[j.mat].name + '不夠。'); return; } s.mats[j.mat] -= j.n; finish(j, '委託人點了點數量。'); }, { follow: n }); }
     });
   };
   R.refreshJobs = () => { };

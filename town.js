@@ -2,53 +2,20 @@
 // 公元 2836 年的東鶴：和德克斯凡技術交流十幾年，城裡鋪了柏油大馬路、立了魔導路燈，東邊是德克斯凡的新商區和選礦廠；
 // 老街、西市口的攤子、望月家道場、神社還在。出了城，沿著大路、崙腳可以走到各個遺跡的入口。
 // 地形照「東鶴近郊」的示意圖：霜溪由西往東流、西河岸的河由北往南，北橋可以過河，西橋在整修；城南外是南渠和南橋。季節是冬天。
-// 座標：示意圖的 1 單位＝遊戲裡的 0.22 公尺（WX、WZ 換算）。
+// 座標：示意圖的 1 單位＝遊戲裡的 0.44 公尺（WX、WZ 換算）；整座城的規劃在 city.js（R.CITY）。
 (function (R) {
   const T = () => THREE;
   const $ = id => document.getElementById(id);
   const W = R.W;
-  const S = 0.22;
+  const C = R.CITY, S = C.S;
   const WX = sx => (sx - 500) * S, WZ = sy => (sy - 500) * S;
   const HALF = 500 * S;
   let seed = 7; const srand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
   R.townXY = (sx, sy) => [WX(sx), WZ(sy)];
 
-  // ---------- 地形資料（示意圖座標 0～1000） ----------
-  const G = {
-    town: [390, 400, 960, 880],
-    canal: 520, southCanal: 930,
-    stream: [[0, 272], [120, 262], [250, 280], [380, 262], [500, 258], [620, 244], [760, 232], [880, 226], [1000, 214]],
-    river: [[330, 300], [335, 400], [328, 500], [330, 600], [336, 700], [333, 800], [335, 900], [340, 1000]],
-    roads: [
-      [[600, 400], [600, 285], [620, 262], [620, 220], [520, 150], [380, 110], [210, 95]],   // 大路（北門 → 站前 → 平交道 → 霜溪）
-      [[390, 480], [378, 380], [366, 300], [352, 262], [338, 190], [220, 100]],  // 崙腳
-      [[380, 400], [334, 399], [300, 399], [260, 420], [185, 440]],                  // 從崙腳直直上北橋，過了橋往城西遺跡
-      [[620, 220], [600, 200], [580, 120]],                                      // 往北山礦坑（過了霜溪才分岔）
-      [[620, 262], [700, 262], [742, 250], [744, 214]],                          // 往霜溪石窟（過霜溪）
-      [[700, 262], [760, 266]],                                                  // 往北郊農舍
-      [[600, 880], [600, 1000]],                                                 // 南門外（過南橋）
-      [[960, 650], [1000, 650]],                                                 // 東門外：往皇嶺的官道
-      [[390, 650], [356, 650]]                                                   // 西門外：西橋（整修中）
-    ],
-    field: [800, 244, 930, 282],
-    // 城裡的街：柏油大馬路（中央大道、西市街）、石板路
-    avenues: [[[600, 400], [600, 880]], [[390, 650], [960, 650]]],
-    streets: [[[390, 532], [960, 532]], [[390, 760], [960, 760]], [[500, 400], [500, 880]], [[712, 400], [712, 880]], [[820, 400], [820, 880]], [[400, 562], [494, 562]], [[506, 820], [589, 820]], [[611, 820], [706, 820]], [[718, 820], [814, 820]], [[826, 820], [954, 820]], [[396, 820], [494, 820]]],
-    plaza: [600, 650, 46, 40]
-  };
-  // 左上角顯示的地名（城外）
-  const AREAS = [
-    { n: '霜溪', x: 620, y: 250, r: 90 }, { n: '霜溪石窟', x: 745, y: 205, r: 70 },
-    { n: '城西遺跡・公會調查點', x: 175, y: 440, r: 90 }, { n: '北山礦坑', x: 580, y: 100, r: 90 }, { n: '湯山村', x: 200, y: 100, r: 100 },
-    { n: '北郊農舍', x: 830, y: 262, r: 70 }, { n: '西河岸', x: 335, y: 600, r: 70 }, { n: '北橋', x: 334, y: 399, r: 40 }, { n: '大路', x: 612, y: 240, r: 50 }, { n: '矮丘', x: 330, y: 200, r: 110 },
-    { n: '南渠・南橋', x: 600, y: 930, r: 50 }, { n: '往皇嶺的官道', x: 950, y: 650, r: 60 }
-  ];
-  // 城裡的地名
-  const DISTRICTS = [
-    { n: '西市口', x: 600, y: 650, r: 52 }, { n: '公會東鶴分館前', x: 548, y: 632, r: 26 }, { n: '新商區', x: 890, y: 640, r: 75 }, { n: '德克斯凡選礦廠', x: 890, y: 470, r: 55 }, { n: '鐘樓前', x: 940, y: 580, r: 26 },
-    { n: '後巷', x: 445, y: 562, r: 40 }, { n: '東鶴神社', x: 456, y: 472, r: 40 }, { n: '驛站', x: 660, y: 478, r: 36 }, { n: '望月家道場', x: 770, y: 712, r: 48 },
-    { n: '赤提燈前', x: 420, y: 634, r: 22 }, { n: '白藤堂前', x: 470, y: 634, r: 20 }, { n: '北渠', x: 650, y: 526, r: 16 }, { n: '中央大道', x: 600, y: 760, r: 60 }, { n: '南門', x: 600, y: 866, r: 26 }, { n: '城南的住宅區', x: 700, y: 820, r: 130 }, { n: '城北的住宅區', x: 560, y: 450, r: 60 }
-  ];
+  // ---------- 地形資料：city.js ----------
+  const G = { town: C.OLD };
+  const AREAS = C.AREAS, DISTRICTS = C.DISTRICTS;
   R.TOWN_G = G; R.TOWN_AREAS = AREAS; R.TOWN_DISTRICTS = DISTRICTS;
 
   // ---------- 材質：顏色照寫的色碼顯示；點陣花紋照世界座標貼 ----------
@@ -76,79 +43,39 @@
   };
   const inTown = (sx, sy, pad) => sx > G.town[0] - (pad || 0) && sx < G.town[2] + (pad || 0) && sy > G.town[1] - (pad || 0) && sy < G.town[3] + (pad || 0);
 
-  // ---------- 地面：一張 2048 的畫布，一個像素大約 0.1 公尺（和人物、牆的點陣一樣細）；只畫一次 ----------
-  let ground = null;
-  const paintGround = bridges => {
-    const N = 2048, c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d'), k = N / 1000;
-    const poly = (pts, w, col, cap) => { g.strokeStyle = col; g.lineWidth = w * k; g.lineCap = cap || 'round'; g.lineJoin = 'round'; g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x * k, y * k) : g.moveTo(x * k, y * k))); g.stroke(); };
-    const rect = (x0, y0, x1, y1, col) => { g.fillStyle = col; g.fillRect(Math.round(x0 * k), Math.round(y0 * k), Math.max(1, Math.round((x1 - x0) * k)), Math.max(1, Math.round((y1 - y0) * k))); };
-    g.fillStyle = '#E2E9EE'; g.fillRect(0, 0, N, N);
-    // 雪地上的枯草、石頭
-    for (let i = 0; i < 2600; i++) { const v = srand(); g.fillStyle = v < 0.6 ? 'rgba(150,160,130,.35)' : v < 0.85 ? 'rgba(120,124,118,.4)' : 'rgba(200,214,224,.8)'; const s2 = 1 + Math.floor(srand() * 4); g.fillRect(Math.floor(srand() * N), Math.floor(srand() * N), s2, s2 > 2 ? 2 : 1); }
-    // 北郊的田：雪下的一條條田畦
-    const [fx0, fy0, fx1, fy1] = G.field; rect(fx0, fy0, fx1, fy1, '#D2D4C2');
-    for (let y = fy0 + 6; y < fy1; y += 9) rect(fx0, y, fx1, y + 1.2, 'rgba(110,100,80,.5)');
-    // 城外的泥土路（車轍）
-    G.roads.forEach(p => { poly(p, 13, '#9C8670'); poly(p, 7, '#8A735A'); poly(p, 2.4, '#A8927A'); });
-    // 城內：石板地
-    const [tx0, ty0, tx1, ty1] = G.town; rect(tx0, ty0, tx1, ty1, '#B4AC9C');
-    for (let y = ty0; y < ty1; y += 6) for (let x = tx0 + ((y / 6) % 2) * 3; x < tx1; x += 6) { const v = 160 + srand() * 26 | 0; rect(x, y, x + 5.4, y + 5.4, 'rgb(' + v + ',' + (v - 6) + ',' + (v - 16) + ')'); }
-    // 街區裡的雪（街道上的被掃開了）
-    for (let i = 0; i < 1500; i++) { const sx = tx0 + srand() * (tx1 - tx0), sy = ty0 + srand() * (ty1 - ty0); g.fillStyle = 'rgba(236,242,246,' + (0.5 + srand() * 0.4).toFixed(2) + ')'; g.fillRect(Math.floor(sx * k), Math.floor(sy * k), 2 + Math.floor(srand() * 7), 1 + Math.floor(srand() * 3)); }
-    // 石板路
-    G.streets.forEach(p => { poly(p, 11, '#8E8676', 'butt'); for (let i = 0; i < p.length - 1; i++) { const [ax, ay] = p[i], [bx, by] = p[i + 1], L = Math.hypot(bx - ax, by - ay); for (let s2 = 0; s2 < L; s2 += 3) { const x = ax + (bx - ax) * s2 / L, y = ay + (by - ay) * s2 / L, v = 128 + srand() * 30 | 0; g.fillStyle = 'rgb(' + v + ',' + (v - 4) + ',' + (v - 12) + ')'; g.fillRect(Math.floor((x + (srand() - 0.5) * 9) * k), Math.floor((y + (srand() - 0.5) * 9) * k), 4, 3); } } });
-    // 柏油大馬路：深灰、白色的虛線、兩邊的人行道
-    G.avenues.forEach(p => { poly(p, 26, '#9A968E', 'butt'); poly(p, 20, '#4A4C52', 'butt'); });
-    for (let i = 0; i < 5000; i++) { const a = G.avenues[i % 2], t = srand(), x = a[0][0] + (a[1][0] - a[0][0]) * t + (a[0][0] === a[1][0] ? (srand() - 0.5) * 19 : 0), y = a[0][1] + (a[1][1] - a[0][1]) * t + (a[0][1] === a[1][1] ? (srand() - 0.5) * 19 : 0); const v = 70 + srand() * 22 | 0; g.fillStyle = 'rgb(' + v + ',' + v + ',' + (v + 6) + ')'; g.fillRect(Math.floor(x * k), Math.floor(y * k), 1, 1); }
-    for (let y = G.town[1] + 4; y < G.town[3]; y += 16) if (Math.abs(y - 650) > 30) rect(599.3, y, 600.7, y + 8, '#E8E4D8');
-    for (let x = G.town[0] + 4; x < G.town[2]; x += 16) if (Math.abs(x - 600) > 30) rect(x, 649.3, x + 8, 650.7, '#E8E4D8');
-    // 斑馬線
-    [[600, 604], [600, 696], [554, 650], [646, 650]].forEach(([cx, cy]) => { const vert = cy === 650; for (let i = -4; i <= 4; i++) { if (vert) rect(cx + i * 2.2 - 0.7, cy - 8, cx + i * 2.2 + 0.7, cy + 8, '#E8E4D8'); else rect(cx - 8, cy + i * 2.2 - 0.7, cx + 8, cy + i * 2.2 + 0.7, '#E8E4D8'); } });
-    // 西市口廣場：圓形的石板，中間一圈花崗岩
-    const [px, py, prx, pry] = G.plaza; g.fillStyle = '#A49C8C'; g.beginPath(); g.ellipse(px * k, py * k, prx * k, pry * k, 0, 0, 7); g.fill();
-    for (let r = 4; r < prx; r += 5) { g.strokeStyle = r % 10 < 5 ? '#958D7C' : '#B2AA98'; g.lineWidth = 2; g.beginPath(); g.ellipse(px * k, py * k, r * k, r * pry / prx * k, 0, 0, 7); g.stroke(); }
-    g.fillStyle = '#8A8478'; g.beginPath(); g.ellipse(px * k, py * k, 9 * k, 8 * k, 0, 0, 7); g.fill();
-    // 後巷：泥地
-    rect(400, 554, 494, 570, '#8A7E6C');
-    // 神社：參道的石板、砂地
-    rect(436, 440, 476, 508, '#C8C0AE'); rect(450, 470, 462, 532, '#9A9284');
-    // 道場的庭院：踩實的砂地
-    rect(737, 712, 803, 740, '#C8B898');
-    // 選礦廠的地：混凝土
-    rect(840, 430, 950, 514, '#8E8E8A'); for (let x = 846; x < 950; x += 12) rect(x, 430, x + 0.6, 514, '#7A7A76');
-    // 水：霜溪、西河岸、北渠、南渠（邊上結了薄冰）
-    poly(G.stream, 20, '#E6F2F6'); poly(G.stream, 15, '#6E9AAE');
-    poly(G.river, 48, '#E6F2F6'); poly(G.river, 42, '#5E8CA2');
-    poly([[G.town[0], G.canal], [G.town[2], G.canal]], 11, '#7A766C', 'butt'); poly([[G.town[0], G.canal], [G.town[2], G.canal]], 8, '#5E8CA2', 'butt');
-    poly([[335, G.southCanal], [1000, G.southCanal - 6]], 16, '#E6F2F6', 'butt'); poly([[335, G.southCanal], [1000, G.southCanal - 6]], 12, '#6E9AAE', 'butt');
-    for (let i = 0; i < 60; i++) { const p = G.stream[Math.floor(srand() * (G.stream.length - 1))]; g.fillStyle = 'rgba(235,246,250,.7)'; g.fillRect(Math.floor((p[0] + srand() * 60 - 30) * k), Math.floor((p[1] + srand() * 8 - 4) * k), 6 + Math.floor(srand() * 12), 2); }
-    // 湯山村的溫泉
-    g.fillStyle = '#7FB8BC'; g.beginPath(); g.ellipse(200 * k, 112 * k, 28 * k, 16 * k, 0, 0, 7); g.fill();
-    // 橋（地圖上的顏色）
-    bridges.forEach(b => { g.save(); g.translate(b.sx * k, b.sy * k); g.rotate(b.ang); g.fillStyle = b.ok ? '#8A6A44' : '#7A3A2A'; g.fillRect(-b.len / 2 * k, -b.wid / 2 * k, b.len * k, b.wid * k); g.restore(); });
-    if (R.paintSuburbs) R.paintSuburbs(g, k);
-    // 最後：每個像素一點點雜訊（像點陣圖，不是平滑的漸層）
-    const img = g.getImageData(0, 0, N, N), d = img.data; let h = 12345;
-    for (let i = 0; i < d.length; i += 4) { h = (h * 1103515245 + 12345) & 0x7fffffff; const n = ((h >> 16) & 15) - 7; d[i] = Math.max(0, Math.min(255, d[i] + n)); d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + n)); d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + n)); }
-    g.putImageData(img, 0, 0);
-    return c;
-  };
+  // ---------- 小地圖的底圖（只畫一次） ----------
+  let mapCanvas = null;
 
   // ---------- 合併繪製：同一種材質的零件合成一個 mesh（幾百個 draw call 變成幾十個） ----------
+  const CH = 40;   // 區塊大小（公尺）
   const Batch = () => {
-    const TH = T(), map = new Map(), m4 = new TH.Matrix4(), q = new TH.Quaternion(), e = new TH.Euler(), p = new TH.Vector3(), s = new TH.Vector3();
+    const TH = T(), map = new Map(), m4 = new TH.Matrix4(), nm = new TH.Matrix3(), q = new TH.Quaternion(), e = new TH.Euler(), p = new TH.Vector3(), s = new TH.Vector3();
     let parent = null;
+    // 每個基本形狀只拆一次（非索引的頂點陣列）
+    const base = geo => geo.userData.ni || (geo.userData.ni = (() => { const g = geo.index ? geo.toNonIndexed() : geo; return { P: g.attributes.position.array, N: g.attributes.normal.array, U: g.attributes.uv.array, n: g.attributes.position.count }; })());
     return {
       // 之後加的零件都放在 (x, z)、轉 ry
       at(x, z, ry) { parent = x == null ? null : new TH.Matrix4().compose(new TH.Vector3(x, 0, z), new TH.Quaternion().setFromEuler(new TH.Euler(0, ry || 0, 0)), new TH.Vector3(1, 1, 1)); },
-      add(geo, mat, x, y, z, sx, sy, sz, rx, ry, rz) { e.set(rx || 0, ry || 0, rz || 0); q.setFromEuler(e); p.set(x, y, z); s.set(sx, sy, sz); m4.compose(p, q, s); if (parent) m4.premultiply(parent); const g2 = (geo.index ? geo.toNonIndexed() : geo.clone()).applyMatrix4(m4); if (!map.has(mat)) map.set(mat, []); map.get(mat).push(g2); },
+      add(geo, mat, x, y, z, sx, sy, sz, rx, ry, rz) {
+        e.set(rx || 0, ry || 0, rz || 0); q.setFromEuler(e); p.set(x, y, z); s.set(sx, sy, sz); m4.compose(p, q, s); if (parent) m4.premultiply(parent);
+        nm.getNormalMatrix(m4);
+        const b = base(geo), me = m4.elements, ne = nm.elements, ck = parent ? parent.elements : me;
+        const key = Math.floor((ck[12] + 400) / CH) * 1000 + Math.floor((ck[14] + 400) / CH);
+        let bucket = map.get(mat); if (!bucket) map.set(mat, bucket = new Map());
+        let A = bucket.get(key); if (!A) bucket.set(key, A = { P: [], N: [], U: [] });
+        const BP = b.P, BN = b.N, BU = b.U, P2 = A.P, N2 = A.N, U2 = A.U;
+        for (let i = 0; i < b.n; i++) {
+          const i3 = i * 3, px = BP[i3], py = BP[i3 + 1], pz = BP[i3 + 2];
+          P2.push(me[0] * px + me[4] * py + me[8] * pz + me[12], me[1] * px + me[5] * py + me[9] * pz + me[13], me[2] * px + me[6] * py + me[10] * pz + me[14]);
+          const nx = BN[i3], ny = BN[i3 + 1], nz = BN[i3 + 2], ox = ne[0] * nx + ne[3] * ny + ne[6] * nz, oy = ne[1] * nx + ne[4] * ny + ne[7] * nz, oz = ne[2] * nx + ne[5] * ny + ne[8] * nz, l = Math.hypot(ox, oy, oz) || 1;
+          N2.push(ox / l, oy / l, oz / l); U2.push(BU[i * 2], BU[i * 2 + 1]);
+        }
+      },
       flush(par, noShadow) {
-        map.forEach((list, mat) => {
-          const n = list.reduce((a, g) => a + g.attributes.position.count, 0), P2 = new Float32Array(n * 3), N2 = new Float32Array(n * 3), U2 = new Float32Array(n * 2); let o = 0;
-          list.forEach(g => { P2.set(g.attributes.position.array, o * 3); N2.set(g.attributes.normal.array, o * 3); U2.set(g.attributes.uv.array, o * 2); o += g.attributes.position.count; g.dispose(); });
-          const geo = new TH.BufferGeometry(); geo.setAttribute('position', new TH.BufferAttribute(P2, 3)); geo.setAttribute('normal', new TH.BufferAttribute(N2, 3)); geo.setAttribute('uv', new TH.BufferAttribute(U2, 2)); geo.computeBoundingSphere();
-          const mesh = new TH.Mesh(geo, mat); mesh.castShadow = !noShadow && !mat.emissive.getHex(); mesh.receiveShadow = true; par.add(mesh);
-        });
+        map.forEach((bucket, mat) => bucket.forEach(A => {
+          const geo = new TH.BufferGeometry(); geo.setAttribute('position', new TH.BufferAttribute(new Float32Array(A.P), 3)); geo.setAttribute('normal', new TH.BufferAttribute(new Float32Array(A.N), 3)); geo.setAttribute('uv', new TH.BufferAttribute(new Float32Array(A.U), 2)); geo.computeBoundingSphere();
+          const mesh = new TH.Mesh(geo, mat); mesh.castShadow = !noShadow && !(mat.emissive && mat.emissive.getHex()); mesh.receiveShadow = true; par.add(mesh);
+        }));
         map.clear(); parent = null;
       }
     };
@@ -198,57 +125,23 @@
     const inter = (x, z, r, label, act, o) => { const it = Object.assign({ x, z, r, label, act }, o || {}); tw.inter.push(it); return it; };
     const talk = R.townTalk;
 
-    // --- 橋：道路和水交叉的地方 ---
-    const bridges = [{ sx: 334, sy: 399, ang: 0, len: 64, wid: 14, ok: true, name: '北橋' }, { sx: 334, sy: 650, ang: 0, len: 64, wid: 14, ok: false, name: '西橋' }, { sx: 600, sy: G.southCanal - 3, ang: Math.PI / 2, len: 26, wid: 22, ok: true, name: '南橋', big: 1 }];
-    G.roads.forEach(rd => { for (let i = 0; i < rd.length - 1; i++) for (let j = 0; j < G.stream.length - 1; j++) { const h = segX(rd[i], rd[i + 1], G.stream[j], G.stream[j + 1]); if (h && !bridges.some(b => Math.hypot(b.sx - h[0], b.sy - h[1]) < 30)) bridges.push({ sx: h[0], sy: h[1], ang: h[2], len: 34, wid: 14, ok: true, stream: 1 }); } });
-    [[505, G.canal], [600, G.canal], [700, G.canal], [800, G.canal]].forEach(([x, y]) => bridges.push({ sx: x, sy: y, ang: Math.PI / 2, len: 18, wid: x === 600 ? 24 : 12, ok: true, canal: 1 }));
-
-    // --- 地面（畫布只畫一次，之後重複用） ---
-    if (!ground) {
-      const gc = paintGround(bridges), tex = new TH.CanvasTexture(gc); tex.encoding = TH.sRGBEncoding; tex.magFilter = TH.NearestFilter; tex.minFilter = TH.LinearMipmapLinearFilter; tex.anisotropy = 4;
-      const gm = new TH.MeshLambertMaterial({ map: tex }); gm.userData.shared = true; tex.userData.shared = true;
-      const gg = new TH.PlaneGeometry(HALF * 2, HALF * 2); gg.userData.shared = true;
-      ground = { gc, tex, gm, gg };
-    }
-    tw.groundCanvas = ground.gc;
-    const gmesh = new TH.Mesh(ground.gg, ground.gm); gmesh.rotation.x = -Math.PI / 2; gmesh.receiveShadow = true; group.add(gmesh);
+    // --- 地面：雪地（路面、水、橋在 cityscape.js） ---
+    if (!mapCanvas) mapCanvas = C.paintMap(1024);
+    tw.groundCanvas = mapCanvas;
+    const snowG = new TH.Mesh(new TH.PlaneGeometry(HALF * 2, HALF * 2), lam('#E6ECEF', { tex: 'ground' })); snowG.rotation.x = -Math.PI / 2; snowG.receiveShadow = true; group.add(snowG);
     const outer = new TH.Mesh(new TH.PlaneGeometry(HALF * 6, HALF * 6), lam('#D6DEE2', { tex: 'ground' })); outer.rotation.x = -Math.PI / 2; outer.position.y = -0.05; group.add(outer);
     block(-HALF - 5, -HALF, -HALF - 5, HALF + 5, 'edge'); block(HALF, HALF + 5, -HALF - 5, HALF + 5, 'edge'); block(-HALF - 5, HALF + 5, -HALF - 5, -HALF, 'edge'); block(-HALF - 5, HALF + 5, HALF, HALF + 5, 'edge');
-
-    // --- 水：擋住人，除了橋 ---
-    const waterBlock = (pts, w) => {
-      for (let i = 0; i < pts.length - 1; i++) {
-        const [ax, ay] = pts[i], [bx2, by] = pts[i + 1], len = Math.hypot(bx2 - ax, by - ay), n = Math.ceil(len / 4), vert = Math.abs(by - ay) > Math.abs(bx2 - ax);
-        for (let k = 0; k <= n; k++) {
-          const sx = ax + (bx2 - ax) * k / n, sy = ay + (by - ay) * k / n;
-          if (bridges.some(b => b.ok && Math.hypot(b.sx - sx, b.sy - sy) < (b.big ? 13 : 8))) continue;
-          const x = WX(sx), z = WZ(sy), hw = w * S / 2, ht = 3 * S;
-          if (vert) block(x - hw, x + hw, z - ht, z + ht, 'water'); else block(x - ht, x + ht, z - hw, z + hw, 'water');
-        }
-      }
-    };
-    waterBlock(G.stream, 14); waterBlock(G.river, 40); waterBlock([[335, G.southCanal], [1000, G.southCanal - 6]], 12);
-    for (let sx = G.town[0]; sx < G.town[2]; sx += 6) { if (bridges.some(b => b.canal && Math.abs(b.sx - sx) < b.wid / 2 + 3)) continue; block(WX(sx), WX(sx + 6), WZ(G.canal - 4), WZ(G.canal + 4), 'water'); }
-    // 渠的石砌護岸
-    [-1, 1].forEach(sd => SB.add(G3.box, lam('#8C8A82', { tex: 'cap' }), WX(650), 0.12, WZ(G.canal + sd * 4.6), (G.town[2] - G.town[0]) * S, 0.24, 0.3));
-    // 橋
-    bridges.forEach(b => {
-      const x = WX(b.sx), z = WZ(b.sy), len = b.len * S, wid = b.wid * S, gB = Batch(); gB.at(x, z, -b.ang);
-      gB.add(G3.box, lam(b.ok ? '#8A6A44' : '#6A4A34', { tex: 'planks' }), 0, 0.15, 0, len, 0.3, wid);
-      [-1, 1].forEach(o => { gB.add(G3.box, lam('#5A3E26', { tex: 'planks' }), 0, 0.9, o * (wid / 2 - 0.05), len, 0.12, 0.12); for (let p = -len / 2; p <= len / 2 + 0.01; p += len / 4) gB.add(G3.box, lam('#5A3E26', { tex: 'planks' }), p, 0.45, o * (wid / 2 - 0.05), 0.18, 0.9, 0.18); });
-      if (!b.ok) { gB.add(G3.box, lam('#B8322A', { tex: 0 }), -len / 2 + 0.5, 0.6, 0, 0.3, 1.2, wid); gB.add(G3.box, lam('#B8322A', { tex: 0 }), len / 2 - 0.5, 0.6, 0, 0.3, 1.2, wid); block(x - 1.5, x + 1.5, z - 1.8, z + 1.8, 'water'); }
-      gB.flush(group);
-    });
 
     // --- 城牆與城門 ---
     const [tx0, ty0, tx1, ty1] = [WX(G.town[0]), WZ(G.town[1]), WX(G.town[2]), WZ(G.town[3])];
     const wallM = B_('#8E8A80', { tex: 'wall' }), capM = B_('#EEF2F4', { tex: 'cap' });
     const wallRun = (x0, z0, x1, z1) => { const w = Math.abs(x1 - x0) || 1.4, d = Math.abs(z1 - z0) || 1.4, x = (x0 + x1) / 2, z = (z0 + z1) / 2; HB.add(G3.box, wallM, x, 1.6, z, w, 3.2, d); HB.add(G3.box, capM, x, 3.35, z, w + 0.2, 0.3, d + 0.2); block(x - w / 2, x + w / 2, z - d / 2, z + d / 2, 'wall'); };
-    const gates = { n: [600], s: [600], w: [480, 650], e: [650] }, GW = 22;
+    const gates = C.GATES, GW = C.GW;
     const side = (fixed, from, to, horiz, list) => { let a = from; list.slice().sort((p, q) => p - q).forEach(gp => { if (horiz) wallRun(WX(a), fixed, WX(gp - GW / 2), fixed); else wallRun(fixed, WZ(a), fixed, WZ(gp - GW / 2)); a = gp + GW / 2; }); if (horiz) wallRun(WX(a), fixed, WX(to), fixed); else wallRun(fixed, WZ(a), fixed, WZ(to)); };
     side(ty0, G.town[0], G.town[2], true, gates.n); side(ty1, G.town[0], G.town[2], true, gates.s); side(tx0, G.town[1], G.town[3], false, gates.w); side(tx1, G.town[1], G.town[3], false, gates.e);
-    const gateHouse = (x, z, rot) => { HB.at(x, z, rot); [-3, 3].forEach(o => HB.add(G3.box, wallM, o, 2.3, 0, 1.3, 4.6, 1.8)); HB.add(G3.box, B_('#5A3E2E', { tex: 'planks' }), 0, 4.7, 0, 7.6, 1, 2.2); HB.add(G3.box, B_('#3A3A44', { tex: 'cap' }), 0, 5.6, 0, 8.4, 0.5, 3); HB.add(G3.box, capM, 0, 5.95, 0, 8.2, 0.2, 2.8); HB.at(null); };
-    gateHouse(WX(600), ty0, 0); gateHouse(WX(600), ty1, 0); gateHouse(tx0, WZ(650), Math.PI / 2); gateHouse(tx1, WZ(650), Math.PI / 2); gateHouse(tx0, WZ(480), Math.PI / 2);
+    const gw = GW * S / 2;
+    const gateHouse = (x, z, rot) => { HB.at(x, z, rot); [-gw - 0.4, gw + 0.4].forEach(o => HB.add(G3.box, wallM, o, 2.6, 0, 1.5, 5.2, 2.0)); HB.add(G3.box, B_('#5A3E2E', { tex: 'planks' }), 0, 5.3, 0, gw * 2 + 2.4, 1, 2.2); HB.add(G3.box, B_('#3A3A44', { tex: 'cap' }), 0, 6.2, 0, gw * 2 + 3.4, 0.5, 3); HB.add(G3.box, capM, 0, 6.55, 0, gw * 2 + 3.2, 0.2, 2.8); HB.at(null); };
+    gates.n.forEach(gx => gateHouse(WX(gx), ty0, 0)); gates.s.forEach(gx => gateHouse(WX(gx), ty1, 0)); gates.w.forEach(gy => gateHouse(tx0, WZ(gy), Math.PI / 2)); gates.e.forEach(gy => gateHouse(tx1, WZ(gy), Math.PI / 2));
 
     // ---------- 房子 ----------
     const ROOFS = ['#3A3A44', '#4A3A34', '#2E3A48', '#44403A', '#5A3A2E', '#3A4A44'];
@@ -306,22 +199,14 @@
       const f = face ? -1 : 1;
       if (o.chimney || srand() < 0.4) { const cx = (srand() - 0.5) * w * 0.5, top = (two ? h + 2.2 * ((o.floors || 2) - 1) : h) + 1.7; B.add(G3.box, B_('#6A6460', { tex: 'wall' }), cx, top - 0.5, -d * 0.15, 0.6, 1.8, 0.6); B.add(G3.box, B_('#F2F6F8', { tex: 'ground' }), cx, top + 0.42, -d * 0.15, 0.66, 0.08, 0.66); tw.smokes.push({ x: x + cx * f, y: top + 0.6, z: z - d * 0.15 * f }); }
       B.at(null);
-      block(x - w / 2, x + w / 2, z - d / 2, z + d / 2, 'house');
-      SB.add(G3.sph, lam('#F2F6F8', { tex: 'ground' }), x - w / 2 + 0.6 + srand() * (w - 1.2), 0, z + (d / 2 + 0.4) * f, 1.1 + srand() * 0.8, 0.3, 0.5);
-      return { x, z, w, d, doorX: x + doorX * f, doorZ: z + (d / 2 + 0.9) * f };
+      const side90 = Math.abs(Math.sin(face || 0)) > 0.5, bw = side90 ? d : w, bd = side90 ? w : d;
+      block(x - bw / 2, x + bw / 2, z - bd / 2, z + bd / 2, 'house');
+      const c0 = Math.cos(face || 0), s0 = Math.sin(face || 0), sx2 = -w / 2 + 0.6 + srand() * (w - 1.2), sz2 = d / 2 + 0.4;
+      SB.add(G3.sph, lam('#F2F6F8', { tex: 'ground' }), x + c0 * sx2 + s0 * sz2, 0, z - s0 * sx2 + c0 * sz2, 1.1 + srand() * 0.8, 0.3, 0.5, 0, face || 0, 0);
+      return { x, z, w, d, doorX: x + c0 * doorX + s0 * (d / 2 + 0.9), doorZ: z - s0 * doorX + c0 * (d / 2 + 0.9) };
     };
-    // 把一塊地蓋滿房子（避開 reserved），門朝南（north=false）或朝北
-    const reserved = [];
-    const reserve = (x0, y0, x1, y1) => reserved.push([x0, y0, x1, y1]);
-    const fillBlockOld = (x0, y0, x1, y1, north) => {
-      let x = x0 + 2;
-      while (x < x1 - 18) {
-        const w = 22 + Math.floor(srand() * 16), ww = Math.min(w, x1 - 2 - x); if (ww < 18) break;
-        const dep = Math.min(y1 - y0 - 4, 22 + Math.floor(srand() * 8)), cy = north ? y0 + 2 + dep / 2 : y1 - 2 - dep / 2, cx = x + ww / 2;
-        if (!reserved.some(([a, b, c, d2]) => x < c && x + ww > a && cy - dep / 2 < d2 && cy + dep / 2 > b)) house(cx, cy, ww * S - 0.5, dep * S, 2.8 + srand() * 1, houseCols[Math.floor(srand() * houseCols.length)], north ? Math.PI : 0);
-        x += ww + 3 + Math.floor(srand() * 4);
-      }
-    };
+    const reserve = () => {};   // 舊的保留區（現在由 city.js 的格子處理）
+    const FAC = C.FAC, at2 = k => [WX(FAC[k][0]), WZ(FAC[k][1])];
 
     // ---------- 設施 ----------
     const sign = (x, y, z, rotY, txt, col, w) => {   // 招牌（點陣字）
@@ -337,7 +222,7 @@
     const propBox = (x, z, r2) => block(x - r2, x + r2, z - r2, z + r2, 'deco');
 
     // 公會東鶴分館：西市口的三層石樓、綠旗、門口銅牌（《東鶴初心》）；旗子上是公會的徽章
-    { const x = WX(552), z = WZ(600), w = 13, d = 9.5, fh = 3.3, B = HB; B.at(x, z, 0);
+    { const [x, z] = at2('guild'), w = 13, d = 9.5, fh = 3.3, B = HB; B.at(x, z, 0);
       const stone = B_('#9C978D', { tex: 'wall' }), ledge = B_('#EEF2F4', { tex: 'cap' });
       for (let f = 0; f < 3; f++) { B.add(G3.box, stone, 0, f * fh + fh / 2, 0, w - f * 0.4, fh, d - f * 0.4); B.add(G3.box, ledge, 0, (f + 1) * fh + 0.05, 0, w - f * 0.4 + 0.3, 0.16, d - f * 0.4 + 0.3); }
       B.add(G3.box, B_('#34383F', { tex: 'cap' }), 0, 3 * fh + 0.55, 0, w - 0.6, 0.8, d - 0.6); B.add(G3.box, B_('#F2F6F8', { tex: 'ground' }), 0, 3 * fh + 1.0, 0, w - 0.8, 0.12, d - 0.8);
@@ -351,15 +236,15 @@
       const banner = new TH.Mesh(new TH.PlaneGeometry(2.4, 3.4), R.seeThrough(new TH.MeshLambertMaterial({ map: R.guildFlagTex(29, 41, 1) }))); banner.position.set(x, 6.6, z + d / 2 + 0.06); group.add(banner);
       sign(x, 3.9, z + d / 2 + 0.26, 0, '公會東鶴分館', '#2E4A34', 3.2);
       inter(x, z + d / 2 + 1.4, 2.6, '走進公會東鶴分館', () => R.enterInterior('guild'), { door: 1 });
-      reserve(518, 574, 586, 628); }
+    }
     // 委託的告示板、瓦版（東鶴日報）
-    { const x = WX(528), z = WZ(636); SB.add(G3.box, lam('#5A3E26', { tex: 'planks' }), x - 1.1, 1.1, z, 0.2, 2.2, 0.2); SB.add(G3.box, lam('#5A3E26', { tex: 'planks' }), x + 1.1, 1.1, z, 0.2, 2.2, 0.2); SB.add(G3.box, lam('#8A6A44', { tex: 'planks' }), x, 1.7, z, 2.6, 1.3, 0.12);
+    { const [x, z] = at2('board'); SB.add(G3.box, lam('#5A3E26', { tex: 'planks' }), x - 1.1, 1.1, z, 0.2, 2.2, 0.2); SB.add(G3.box, lam('#5A3E26', { tex: 'planks' }), x + 1.1, 1.1, z, 0.2, 2.2, 0.2); SB.add(G3.box, lam('#8A6A44', { tex: 'planks' }), x, 1.7, z, 2.6, 1.3, 0.12);
       for (let i = 0; i < 5; i++) SB.add(G3.box, lam('#F4E9CD', { tex: 0 }), x - 0.9 + i * 0.45, 1.7 + (i % 2 ? 0.2 : -0.2), z + 0.08, 0.5, 0.55, 0.02); block(x - 1.3, x + 1.3, z - 0.2, z + 0.2); inter(x, z + 1, 2, '看公會的委託', () => R.openHub('guild', 'quests')); }
-    { const x = WX(624), z = WZ(628); SB.add(G3.box, lam('#3A2A1C', { tex: 'planks' }), x, 1.2, z, 2.4, 2.4, 0.16); SB.add(G3.box, lam('#EDE4CC', { tex: 0 }), x, 1.35, z + 0.09, 2.1, 1.6, 0.02); SB.add(G3.box, lam('#3A3A44', { tex: 'cap' }), x, 2.5, z + 0.1, 2.7, 0.14, 0.5, 0.3, 0, 0);
+    { const [x, z] = at2('news'); SB.add(G3.box, lam('#3A2A1C', { tex: 'planks' }), x, 1.2, z, 2.4, 2.4, 0.16); SB.add(G3.box, lam('#EDE4CC', { tex: 0 }), x, 1.35, z + 0.09, 2.1, 1.6, 0.02); SB.add(G3.box, lam('#3A3A44', { tex: 'cap' }), x, 2.5, z + 0.1, 2.7, 0.14, 0.5, 0.3, 0, 0);
       for (let i = 0; i < 6; i++) SB.add(G3.box, lam('#5A5040', { tex: 0 }), x - 0.8 + (i % 3) * 0.8, 1.7 - Math.floor(i / 3) * 0.6, z + 0.1, 0.6, 0.04, 0.01);
       block(x - 1.2, x + 1.2, z - 0.15, z + 0.15); inter(x, z + 1.1, 2.1, '看瓦版（東鶴日報：今天的新聞）', () => R.newsSheet && R.newsSheet()); }
     // 老岩的鐵匠鋪：煙囪冒煙、門口有鐵砧；旁邊停著老岩的礦車（可以偷礦石——學徒看著）
-    { const x = WX(660), z = WZ(712), B = HB; B.at(x, z, 0);
+    { const [x, z] = at2('smith'), B = HB; B.at(x, z, 0);
       B.add(G3.box, B_('#6A5040', { tex: 'wall' }), 0, 1.8, 0, 8, 3.6, 6); gableB(B, 8, 6, 3.6, 0, '#6A5040');
       B.add(G3.box, B_('#5A5652', { tex: 'wall' }), 2.6, 5, -1.2, 1, 3.4, 1); B.add(G3.box, B_('#FF8A3A', { em: '#FF5A1A', ei: 1 }), -1.8, 1.2, 3.03, 2.4, 1.6, 0.1);
       B.add(G3.box, B_('#3A2A1C', { tex: 'planks' }), 1.2, 1.2, 3.04, 1.2, 2.2, 0.08);
@@ -375,58 +260,58 @@
         [-0.6, 0.6].forEach(o => SB.add(G3.cyl, lam('#2A2A30', { tex: 0 }), cx + o * 1.12, 0.3, cz, 0.6, 0.12, 0.6, 0, 0, Math.PI / 2));
         block(cx - 0.75, cx + 0.75, cz - 1, cz + 1, 'deco');
         if (R.addSteal) R.addSteal({ x: cx, z: cz + 1.4, r: 1.9, label: '偷老岩礦車裡的礦石', owner: 'smith', time: 1.4, loot: () => (Math.random() < 0.3 ? { mat: 'manaore', n: 1 } : { mat: 'iron', n: 1 + (Math.random() < 0.4 ? 1 : 0) }), max: 3 }); }
-      reserve(638, 694, 694, 730); }
+    }
     // 白藤堂：城西的藥鋪，屋簷掛著白色的藤花
-    { const x = WX(470), z = WZ(607), B = HB; B.at(x, z, 0); B.add(G3.box, B_('#E6E0D2'), 0, 1.7, 0, 7, 3.4, 5.5); gableB(B, 7, 5.5, 3.4, 0, '#E6E0D2');
+    { const [x, z] = at2('pharmacy'), B = HB; B.at(x, z, 0); B.add(G3.box, B_('#E6E0D2'), 0, 1.7, 0, 7, 3.4, 5.5); gableB(B, 7, 5.5, 3.4, 0, '#E6E0D2');
       for (let i = 0; i < 9; i++) B.add(G3.box, B_('#F4F0FF', { tex: 0 }), -3 + i * 0.75, 2.9, 3, 0.22, 0.6 + (i % 3) * 0.2, 0.22);
       B.add(G3.box, B_('#5A3E26', { tex: 'planks' }), 0, 1.15, 2.79, 1.2, 1.9, 0.08); [-2.2, 2.2].forEach(o => B.add(G3.box, glowW, o, 1.7, 2.78, 1.1, 0.8, 0.05));
       B.at(null); block(x - 3.5, x + 3.5, z - 2.75, z + 2.75, 'house');
-      sign(x, 3.0, z + 2.85, 0, '白藤堂', '#4A3A5A'); inter(x, z + 3.9, 2.4, '走進白藤堂（藥鋪）', () => R.enterInterior('pharmacy'), { door: 1 }); reserve(452, 592, 488, 624); }
+      sign(x, 3.0, z + 2.85, 0, '白藤堂', '#4A3A5A'); inter(x, z + 3.9, 2.4, '走進白藤堂（藥鋪）', () => R.enterInterior('pharmacy'), { door: 1 }); }
     // 赤提燈：居酒屋（樓上是宿屋），門口一排紅提燈
-    { const x = WX(420), z = WZ(604); house(420, 604, 9, 7.5, 3.4, '#8E7A62', 0, { two: true, shop: true, noren: '#8A2A24', doorX: 0, noLantern: true, chimney: true });
+    { const [x, z] = at2('tavern'); house(FAC.tavern[0], FAC.tavern[1], 9, 7.5, 3.4, '#8E7A62', 0, { two: true, shop: true, noren: '#8A2A24', doorX: 0, noLantern: true, chimney: true });
       for (let i = 0; i < 5; i++) SB.add(G3.cyl, lam('#E04A3A', { em: '#C02818', ei: 0.95 }), x - 3.2 + i * 1.6, 2.6, z + 3.95, 0.42, 0.6, 0.42);
       SB.add(G3.box, lam('#3A2A1C', { tex: 'planks' }), x, 2.95, z + 3.95, 8.2, 0.06, 0.06);
-      sign(x, 3.6, z + 3.9, 0, '赤提燈', '#5A1E1C'); inter(x, z + 4.9, 2.4, '走進赤提燈（居酒屋・宿屋）', () => R.enterInterior('tavern'), { door: 1 }); reserve(396, 584, 446, 626); }
+      sign(x, 3.6, z + 3.9, 0, '赤提燈', '#5A1E1C'); inter(x, z + 4.9, 2.4, '走進赤提燈（居酒屋・宿屋）', () => R.enterInterior('tavern'), { door: 1 }); }
     // 倉庫：白牆黑瓦的土藏
-    { const x = WX(645), z = WZ(605), B = HB; B.at(x, z, 0); B.add(G3.box, B_('#F0ECE2'), 0, 2.2, 0, 7, 4.4, 6); B.add(G3.box, B_('#2E2A2A', { tex: 0 }), 0, 0.6, 0, 7.1, 1.2, 6.1); gableB(B, 7, 6, 4.4, 0, '#F0ECE2');
+    { const [x, z] = at2('store'), B = HB; B.at(x, z, 0); B.add(G3.box, B_('#F0ECE2'), 0, 2.2, 0, 7, 4.4, 6); B.add(G3.box, B_('#2E2A2A', { tex: 0 }), 0, 0.6, 0, 7.1, 1.2, 6.1); gableB(B, 7, 6, 4.4, 0, '#F0ECE2');
       B.add(G3.box, B_('#3A3232', { tex: 'planks' }), 0, 1.2, 3.03, 1.8, 2.4, 0.1); B.at(null); block(x - 3.5, x + 3.5, z - 3, z + 3, 'house');
-      sign(x, 3.0, z + 3.1, 0, '倉庫', '#2E2A2A'); inter(x, z + 4.2, 2.4, '走進倉庫（換裝備）', () => R.enterInterior('store'), { door: 1 }); reserve(626, 590, 664, 622); }
+      sign(x, 3.0, z + 3.1, 0, '倉庫', '#2E2A2A'); inter(x, z + 4.2, 2.4, '走進倉庫（換裝備）', () => R.enterInterior('store'), { door: 1 }); }
     // 驛站：馬車、德克斯凡的貨車，往全國的遺跡
-    { const x = WX(658), z = WZ(474), B = HB; B.at(x, z, 0); B.add(G3.box, B_('#8A6A4A', { tex: 'planks' }), 0, 1.6, 0, 9, 3.2, 6); gableB(B, 9, 6, 3.2, 0, '#8A6A4A');
+    { const [x, z] = at2('coach'), B = HB; B.at(x, z, 0); B.add(G3.box, B_('#8A6A4A', { tex: 'planks' }), 0, 1.6, 0, 9, 3.2, 6); gableB(B, 9, 6, 3.2, 0, '#8A6A4A');
       B.add(G3.box, B_('#5A3E26', { tex: 'planks' }), 0, 1.2, 3.03, 1.6, 2.2, 0.08); [-3, 3].forEach(o => B.add(G3.box, glowW, o, 1.8, 3.02, 1.2, 0.8, 0.05)); B.at(null);
       block(x - 4.5, x + 4.5, z - 3, z + 3, 'house'); sign(x, 3.0, z + 3.1, 0, '驛站', '#3A2A1C');
       inter(x, z + 4.2, 2.4, '走進驛站（馬車、貨車：昭旭全國的遺跡）', () => R.enterInterior('station'), { door: 1 });
-      cart(x - 7.5, z + 1.5, 0.2); truck(x + 6.4, z + 2.2, 0); reserve(624, 446, 704, 508); }
+      cart(x - 7.5, z + 1.5, 0.2); truck(x + 6.4, z + 2.2, 0); crates(x - 6.2, z - 1.8); }
     // 東鶴神社：鳥居、參道、石燈籠、拜殿、籤筒
-    { const x = WX(456), z = WZ(466), B = HB; B.at(x, z, 0);
+    { const [x, z] = at2('shrine'), B = HB; B.at(x, z, 0);
       B.add(G3.box, B_('#E6E0D2'), 0, 1.6, 0, 6, 3.2, 4.6); B.add(G3.box, B_('#8A2A24', { tex: 'planks' }), 0, 1.6, 2.32, 6, 3.2, 0.06);
       gableB(B, 6, 4.6, 3.2, 0, '#E6E0D2'); B.add(G3.box, B_('#C9A13A', { em: '#5A4010', ei: 0.3 }), 0, 2.6, 2.4, 0.5, 0.5, 0.05); B.add(G3.box, B_('#6A6462', { tex: 'wall' }), 0, 0.2, 2.9, 3, 0.4, 1);
       B.at(null); block(x - 3, x + 3, z - 2.3, z + 2.3, 'house');
-      const tz = WZ(504); [-1.7, 1.7].forEach(o => SB.add(G3.cyl, lam('#C8322A', { tex: 0 }), x + o, 1.7, tz, 0.34, 3.4, 0.34)); SB.add(G3.box, lam('#1A1A1A', { tex: 0 }), x, 3.55, tz, 5.2, 0.32, 0.4); SB.add(G3.box, lam('#C8322A', { tex: 0 }), x, 3.0, tz, 4.2, 0.22, 0.3); SB.add(G3.box, lam('#F2F6F8', { tex: 'ground' }), x, 3.75, tz, 5.0, 0.08, 0.36);
+      const tz = z + 8.4; [-1.7, 1.7].forEach(o => SB.add(G3.cyl, lam('#C8322A', { tex: 0 }), x + o, 1.7, tz, 0.34, 3.4, 0.34)); SB.add(G3.box, lam('#1A1A1A', { tex: 0 }), x, 3.55, tz, 5.2, 0.32, 0.4); SB.add(G3.box, lam('#C8322A', { tex: 0 }), x, 3.0, tz, 4.2, 0.22, 0.3); SB.add(G3.box, lam('#F2F6F8', { tex: 'ground' }), x, 3.75, tz, 5.0, 0.08, 0.36);
       [-1.7, 1.7].forEach(o => block(x + o - 0.2, x + o + 0.2, tz - 0.2, tz + 0.2, 'deco'));
       [[-2.4, 3.4], [2.4, 3.4], [-2.4, 6.4], [2.4, 6.4]].forEach(([a, b2]) => stoneLantern(x + a, z + b2));
       inter(x, z + 3.6, 2.2, '參拜（投一點香油錢）', () => R.shrinePray && R.shrinePray());
       SB.add(G3.box, lam('#6A4A2E', { tex: 'planks' }), x + 3.8, 0.6, z + 3.4, 0.7, 1.2, 0.5); SB.add(G3.box, lam('#F4E9CD', { tex: 0 }), x + 3.8, 1.25, z + 3.4, 0.5, 0.1, 0.3); block(x + 3.4, x + 4.2, z + 3.1, z + 3.7, 'deco');
       inter(x + 3.8, z + 4.4, 1.8, '抽籤（5 費拉）', () => R.omikuji && R.omikuji());
       for (let i = 0; i < 5; i++) pineAt(x - 6 + (i % 2) * 12, z - 3 + i * 1.6, 0.9);
-      reserve(430, 438, 482, 510); }
+    }
     // 西市兌換所：廣場西南角的小亭子（換錢、驗貨幣）
-    { const x = WX(560), z = WZ(684); SB.add(G3.box, lam('#6A5040', { tex: 'planks' }), x, 1.2, z, 2.6, 2.4, 2); SB.add(G3.box, lam('#3A3A44', { tex: 'cap' }), x, 2.55, z, 3.2, 0.2, 2.6); SB.add(G3.box, lam('#F2F6F8', { tex: 'ground' }), x, 2.7, z, 3.0, 0.1, 2.4);
+    { const [x, z] = at2('exchange'); SB.add(G3.box, lam('#6A5040', { tex: 'planks' }), x, 1.2, z, 2.6, 2.4, 2); SB.add(G3.box, lam('#3A3A44', { tex: 'cap' }), x, 2.55, z, 3.2, 0.2, 2.6); SB.add(G3.box, lam('#F2F6F8', { tex: 'ground' }), x, 2.7, z, 3.0, 0.1, 2.4);
       SB.add(G3.box, lam('#FFE0A0', { em: '#FFB050', ei: 0.7 }), x, 1.5, z - 1.02, 1.6, 0.8, 0.05); block(x - 1.3, x + 1.3, z - 1, z + 1, 'deco');
       sign(x, 2.95, z - 1.32, Math.PI, '西市兌換所', '#2E3A48', 2.2);
       inter(x, z - 2.0, 2.0, '西市兌換所（驗貨幣、換錢）', () => R.exchangeSheet ? R.exchangeSheet() : talk('西市兌換所', ['「赤金要看鳴文：紅色的漩渦才是真的。」', '「昭旭的舊銅錢，這個月又跌了。」'])); }
     // 望月家道場：圍牆、正門、庭院（練習用的木樁）、主屋
-    { const x0 = WX(733), x1 = WX(806), z0 = WZ(684), z1 = WZ(742), cx = (x0 + x1) / 2;
+    { const x0 = WX(FAC.dojo[0]), x1 = WX(FAC.dojo[2]), z0 = WZ(FAC.dojo[1]), z1 = WZ(FAC.dojo[3]), cx = (x0 + x1) / 2;
       const fence = B_('#D8D0BE'), roofE = B_('#3A3A44', { tex: 'cap' });
       const fenceRun = (ax, az, bx2, bz) => { const w = Math.abs(bx2 - ax) || 0.4, d = Math.abs(bz - az) || 0.4, mx = (ax + bx2) / 2, mz = (az + bz) / 2; HB.add(G3.box, fence, mx, 1.0, mz, w, 2, d); HB.add(G3.box, roofE, mx, 2.1, mz, w + 0.3, 0.2, d + 0.3); block(mx - w / 2, mx + w / 2, mz - d / 2, mz + d / 2, 'wall'); };
       fenceRun(x0, z0, x1, z0); fenceRun(x0, z0, x0, z1); fenceRun(x1, z0, x1, z1); fenceRun(x0, z1, cx - 1.6, z1); fenceRun(cx + 1.6, z1, x1, z1);
       HB.at(cx, z1, 0); [-1.7, 1.7].forEach(o => HB.add(G3.box, woodM, o, 1.5, 0, 0.3, 3, 0.3)); HB.add(G3.box, roofE, 0, 3.1, 0, 4.4, 0.3, 1.2); HB.add(G3.box, B_('#F2F6F8', { tex: 'ground' }), 0, 3.3, 0, 4.2, 0.1, 1.1); HB.at(null);
       sign(cx, 2.5, z1 + 0.25, 0, '望月家道場', '#3A2A1C', 2.2);
-      house(769, 700, 12, 6, 3.4, '#CFC2A8', 0, { two: false, shop: false, doorX: 0, chimney: true });
-      [-3.5, -1.5, 2].forEach(a => { const pz = WZ(724); SB.add(G3.cyl, lam('#8A6A44', { tex: 'planks' }), cx + a, 0.8, pz, 0.3, 1.6, 0.3); SB.add(G3.box, lam('#D8C8A0', { tex: 0 }), cx + a, 1.2, pz, 0.42, 0.3, 0.42); block(cx + a - 0.2, cx + a + 0.2, pz - 0.2, pz + 0.2, 'deco'); });
+      house((FAC.dojo[0] + FAC.dojo[2]) / 2, FAC.dojo[1] + 12, 12, 6, 3.4, '#CFC2A8', 0, { two: false, shop: false, doorX: 0, chimney: true });
+      [-3.5, -1.5, 2].forEach(a => { const pz = z1 - 4; SB.add(G3.cyl, lam('#8A6A44', { tex: 'planks' }), cx + a, 0.8, pz, 0.3, 1.6, 0.3); SB.add(G3.box, lam('#D8C8A0', { tex: 0 }), cx + a, 1.2, pz, 0.42, 0.3, 0.42); block(cx + a - 0.2, cx + a + 0.2, pz - 0.2, pz + 0.2, 'deco'); });
       inter(cx, z1 + 1.4, 2.4, '望月家道場的大門', () => (R.dojoGate ? R.dojoGate() : talk('望月家道場', ['門裡傳來木刀相擊的聲音。', '門口掛著「望月」的木牌。'])));
-      tw.dojo = { x: cx, z: WZ(728), z1 };
-      reserve(728, 680, 812, 748); }
+      tw.dojo = { x: cx, z: z1 - 3, z1 };
+    }
     // 新商區：德克斯凡的店（玻璃櫥窗、發亮的招牌）；門口的自動販賣機
     const dexShop = (sx, sy, w, d, name, col, glow) => {
       const x = WX(sx), z = WZ(sy), B = HB; B.at(x, z, 0);
@@ -436,17 +321,17 @@
       B.at(null); block(x - w / 2, x + w / 2, z - d / 2, z + d / 2, 'house'); sign(x, 3.5, z + d / 2 + 0.1, 0, name, '#1E2A3A', Math.min(w - 0.8, 3.4));
       return { x, z, door: [x + w / 4, z + d / 2 + 1] };
     };
-    { const a = dexShop(858, 606, 8, 6, '德克斯凡商行', '#3A8ACF'), b = dexShop(902, 608, 6, 5.5, '魔導燈具・零件', '#E8A03A', '#8A6A2A');
+    { const a = dexShop(FAC.dexTrade[0], FAC.dexTrade[1], 8, 6, '德克斯凡商行', '#3A8ACF'), b = dexShop(FAC.dexParts[0], FAC.dexParts[1], 6, 5.5, '魔導燈具・零件', '#E8A03A', '#8A6A2A');
       inter(a.door[0], a.door[1], 2.0, '德克斯凡商行', () => R.dexShop ? R.dexShop('trade') : talk('德克斯凡商行', ['門上貼著公告：「本店經理遇害，暫停營業。」']));
       inter(b.door[0], b.door[1], 2.0, '魔導燈具・零件行（機油、零件、溫室玫瑰）', () => (R.dexShop ? R.dexShop('parts') : null));
-      vending(WX(882), WZ(632)); vending(WX(614), WZ(678));
+      vending(a.door[0] - 3.2, a.door[1] - 0.2);
       const clerk = npc(b.door[0] - 1.8, b.door[1] + 0.4, { top: '#2E3A4A', hair: '#E9D8A6', cloak: '#3A4A5A' }, '零件行的店員', 0.3); clerk.watch = { range: 8, fov: 1.1 }; tw.watchers.push(clerk);
       SB.add(G3.box, lam('#6A7A8A', { tex: 0 }), b.door[0] + 1.8, 0.5, b.door[1] - 0.2, 1, 1, 0.8); block(b.door[0] + 1.3, b.door[0] + 2.3, b.door[1] - 0.6, b.door[1] + 0.2, 'deco');
       if (R.addSteal) R.addSteal({ x: b.door[0] + 1.8, z: b.door[1] + 0.8, r: 1.6, label: '順手拿走門口箱子裡的零件', owner: 'parts', time: 1.1, loot: () => ({ gift: 'parts', n: 1 }), max: 2 });
-      reserve(830, 588, 924, 628); }
-    { const p = dexShop(872, 712, 9, 6, '德克斯凡咖啡館', '#C83A6A', '#8A2A4A'); inter(p.door[0], p.door[1], 2.0, '德克斯凡咖啡館（熱飲：下一趟遺跡的加成）', () => (R.cafeSheet ? R.cafeSheet() : null)); reserve(848, 696, 896, 730); }
+    }
+    { const p = dexShop(FAC.cafe[0], FAC.cafe[1], 9, 6, '德克斯凡咖啡館', '#C83A6A', '#8A2A4A'); inter(p.door[0], p.door[1], 2.0, '德克斯凡咖啡館（熱飲：下一趟遺跡的加成）', () => (R.cafeSheet ? R.cafeSheet() : null)); }
     // 德克斯凡礦務公司・東鶴選礦廠：鋸齒屋頂、兩根大煙囪、圍起來的貨場
-    { const x = WX(892), z = WZ(462), w = 16, d = 9, B = HB; B.at(x, z, 0);
+    { const [x, z] = at2('factory'), w = 16, d = 9, B = HB; B.at(x, z, 0);
       B.add(G3.box, B_('#8A5A44', { tex: 'wall' }), 0, 2.8, 0, w, 5.6, d);
       for (let i = 0; i < 4; i++) { const ox = -w / 2 + 2 + i * 4; B.add(G3.box, B_('#4A4C52', { tex: 'cap' }), ox, 6.6, 0, 4, 0.2, d + 0.3, 0, 0, -0.45); B.add(G3.box, B_('#9AC8E8', { em: '#3A5A6A', ei: 0.4 }), ox + 1.8, 6.7, 0, 0.1, 1.6, d - 0.4); B.add(G3.box, B_('#F2F6F8', { tex: 'ground' }), ox, 6.75, 0, 3.6, 0.08, d, 0, 0, -0.45); }
       [-5, 4].forEach(o => { B.add(G3.cyl, B_('#6A4A3A', { tex: 'wall' }), o, 8, -2.6, 1.3, 10, 1.3); B.add(G3.cyl, B_('#3A3A40', { tex: 0 }), o, 13.1, -2.6, 1.45, 0.4, 1.45); tw.smokes.push({ x: x + o, y: 13.6, z: z - 2.6, big: 1 }); });
@@ -458,16 +343,16 @@
       if (R.addSteal) R.addSteal({ x: x + 5, z: z + 8.8, r: 2, label: '撬開選礦廠的木箱（魔晶礦）', owner: 'factory', time: 1.8, loot: () => ({ mat: 'manaore', n: 1 + (Math.random() < 0.3 ? 1 : 0) }), max: 3 });
       const g2 = npc(x + 2, z + 10.6, { top: '#3A4A5A', hair: '#2A2420', cloak: '#2E3A48' }, '選礦廠的警衛', Math.PI * 0.85, 'rifle', 'gunner'); g2.watch = { range: 12, fov: 1.0, guard: 1 }; tw.watchers.push(g2);
       inter(x + 2, z + 11.6, 1.8, '和選礦廠的警衛說話', () => talk('選礦廠的警衛', ['「這裡是德克斯凡礦務公司的地。閒人別靠近貨場。」', R.today && R.today().abs >= R.absOf(2836, 10, 19) ? '「……上面在查爆裂核心的數量。少了幾顆，大家都被問了一輪。」' : '「北山礦坑挖出來的礦，都在這裡選。」']));
-      reserve(840, 420, 954, 516); }
+    }
     // 後巷：堆著木箱、垃圾桶；賣斗篷的人、算命的人、私人委託的木板（jobs.js、props.js）
-    { const ay = WZ(562); [[408, 0], [436, 1], [484, 0]].forEach(([sx, s2]) => crates(WX(sx), ay + (s2 ? 1.1 : -1.0)));
-      [[424, 1.2], [490, -1.2]].forEach(([sx, o]) => { const x = WX(sx), z = ay + o; SB.add(G3.cyl, lam('#4A4A50', { tex: 0 }), x, 0.45, z, 0.7, 0.9, 0.7); SB.add(G3.cyl, lam('#3A3A40', { tex: 0 }), x, 0.92, z, 0.74, 0.06, 0.74); propBox(x, z, 0.4); inter(x, z + (o > 0 ? -1 : 1), 1.4, '翻垃圾桶', () => (R.searchTrash ? R.searchTrash(sx) : null)); });
-      tw.alley = { x: WX(446), z: ay };
-      const board = [WX(456), ay - 1.6]; SB.add(G3.box, lam('#5A4A3A', { tex: 'planks' }), board[0], 1.5, board[1], 2.2, 1.4, 0.1); for (let i = 0; i < 4; i++) SB.add(G3.box, lam('#E8DCC0', { tex: 0 }), board[0] - 0.7 + i * 0.48, 1.5 + (i % 2 ? 0.15 : -0.15), board[1] + 0.06, 0.4, 0.5, 0.02);
+    { const ay = WZ(FAC.alley[2]); [[412, 0], [452, 1], [522, 0]].forEach(([sx, s2]) => crates(WX(sx), ay + (s2 ? 1.6 : -1.6)));
+      [[432, 1.7], [508, -1.7]].forEach(([sx, o]) => { const x = WX(sx), z = ay + o; SB.add(G3.cyl, lam('#4A4A50', { tex: 0 }), x, 0.45, z, 0.7, 0.9, 0.7); SB.add(G3.cyl, lam('#3A3A40', { tex: 0 }), x, 0.92, z, 0.74, 0.06, 0.74); propBox(x, z, 0.4); inter(x, z + (o > 0 ? -1 : 1), 1.4, '翻垃圾桶', () => (R.searchTrash ? R.searchTrash(sx) : null)); });
+      tw.alley = { x: WX(466), z: ay };
+      const board = [WX(484), ay - 2.2]; SB.add(G3.box, lam('#5A4A3A', { tex: 'planks' }), board[0], 1.5, board[1], 2.2, 1.4, 0.1); for (let i = 0; i < 4; i++) SB.add(G3.box, lam('#E8DCC0', { tex: 0 }), board[0] - 0.7 + i * 0.48, 1.5 + (i % 2 ? 0.15 : -0.15), board[1] + 0.06, 0.4, 0.5, 0.02);
       inter(board[0], board[1] + 1.1, 1.8, '私人委託的木板（不是公會的委託）', () => (R.privateBoard ? R.privateBoard() : talk('私人委託', ['木板上貼著幾張手寫的紙。', '最上面一張用紅筆寫著：「公會不保障私人委託。被騙了別哭。」'])));
-      reserve(396, 548, 494, 576); }
+    }
     // 菅婆婆的糰子攤：烤爐在前面，菅婆婆站在後面，紅傘插在她後面（從鏡頭看不會擋住人）
-    { const x = WX(642), z = WZ(676);
+    { const [x, z] = at2('suga');
       SB.add(G3.box, lam('#6A4A2E', { tex: 'planks' }), x, 0.5, z, 2.2, 1, 0.8); SB.add(G3.box, lam('#2A2A2A', { tex: 0 }), x - 0.3, 1.02, z, 1.2, 0.08, 0.6); SB.add(G3.box, lam('#FF8A3A', { em: '#C04A10', ei: 0.9 }), x - 0.3, 1.08, z, 1.0, 0.04, 0.4);
       for (let i = 0; i < 4; i++) SB.add(G3.box, lam('#E8D8B0', { tex: 0 }), x - 0.7 + i * 0.28, 1.14, z, 0.06, 0.06, 0.5);
       propSprite(wagasa(), x + 0.7, z - 1.7, group);
@@ -489,21 +374,11 @@
       inter(x, z + 1.3, 2.2, '和' + who + '說話', () => (R.stallSheet ? R.stallSheet(who, lines) : talk(who, lines)));
       if (steal && R.addSteal) R.addSteal(Object.assign({ x: x + 1.1, z: z + 1.0, r: 1.3, time: 1.0, owner: who, max: 2 }, steal));
     };
-    stall(684, 632, '#2E4A6A', [['#A8B8C8', 'fish'], ['#C8D0D8', 'fish'], ['#9AA8B8', 'fish'], ['#B8C4D0', 'fish'], ['#A8B8C8', 'fish']], '魚販', { top: '#3E5A6E', hair: '#2A2420', cloak: '#2E4A5A' }, ['「霜溪今天結了薄冰，魚倒是肥的。」', '「霜背鮒最便宜，一條五費拉。」'], { label: '摸走一條魚', loot: () => ({ gift: 'fish', n: 1 }) });
-    stall(746, 632, '#3E5A3A', [['#F0ECE2', 'ball'], ['#E8823A', 'ball'], ['#5A8A4A', 'ball'], ['#C8323A', 'ball'], ['#F0ECE2', 'ball']], '菜攤的大叔', { top: '#6A5A3A', hair: '#8A6A4A', cloak: '#4A3A2A' }, ['「冬天的蘿蔔最甜。」', '「北郊的農家說冰鼬又來偷雞了，菜倒是沒偷。」']);
-    stall(784, 632, '#8A2A24', [['#8A6A4A', 'pot'], ['#5A4A3A', 'pot'], ['#C8B898', 'pot'], ['#7A5A3A', 'pot'], ['#9A8A6A', 'pot']], '雜貨店的老闆', { top: '#5A3A5A', hair: '#D8D2C4', cloak: '#4A2A4A' }, ['「繩子、火石、燈油，下遺跡的都會買。」', '「記事本、三味線的弦、釣具，要的話這裡也有。」'], { label: '順手拿一本記事本', loot: () => ({ gift: 'notebook', n: 1 }) });
-    reserve(668, 618, 800, 640);
+    stall(FAC.stalls[0][0], FAC.stalls[0][1], '#2E4A6A', [['#A8B8C8', 'fish'], ['#C8D0D8', 'fish'], ['#9AA8B8', 'fish'], ['#B8C4D0', 'fish'], ['#A8B8C8', 'fish']], '魚販', { top: '#3E5A6E', hair: '#2A2420', cloak: '#2E4A5A' }, ['「霜溪今天結了薄冰，魚倒是肥的。」', '「霜背鮒最便宜，一條五費拉。」'], { label: '摸走一條魚', loot: () => ({ gift: 'fish', n: 1 }) });
+    stall(FAC.stalls[1][0], FAC.stalls[1][1], '#3E5A3A', [['#F0ECE2', 'ball'], ['#E8823A', 'ball'], ['#5A8A4A', 'ball'], ['#C8323A', 'ball'], ['#F0ECE2', 'ball']], '菜攤的大叔', { top: '#6A5A3A', hair: '#8A6A4A', cloak: '#4A3A2A' }, ['「冬天的蘿蔔最甜。」', '「北郊的農家說冰鼬又來偷雞了，菜倒是沒偷。」']);
+    stall(FAC.stalls[2][0], FAC.stalls[2][1], '#8A2A24', [['#8A6A4A', 'pot'], ['#5A4A3A', 'pot'], ['#C8B898', 'pot'], ['#7A5A3A', 'pot'], ['#9A8A6A', 'pot']], '雜貨店的老闆', { top: '#5A3A5A', hair: '#D8D2C4', cloak: '#4A2A4A' }, ['「繩子、火石、燈油，下遺跡的都會買。」', '「記事本、三味線的弦、釣具，要的話這裡也有。」'], { label: '順手拿一本記事本', loot: () => ({ gift: 'notebook', n: 1 }) });
 
-    // --- 街景：路燈、水井、長椅、雪人、路牌、木箱、推車、自行車 ---
-    for (let sy = G.town[1] + 30; sy < G.town[3] - 10; sy += 44) { if (Math.abs(sy - 650) < 30 || Math.abs(sy - G.canal) < 10) continue; lampPost(WX(587), WZ(sy)); lampPost(WX(613), WZ(sy) + 2); }
-    for (let sx = G.town[0] + 30; sx < G.town[2] - 10; sx += 44) { if (Math.abs(sx - 600) < 30) continue; lampPost(WX(sx), WZ(638.5)); lampPost(WX(sx) + 2, WZ(661.5)); }
-    { const PM = lam('#4A3A2E', { tex: 'planks' }), WM = lam('#1E1A18', { tex: 0 });
-      const poleRun = (ax, ay, bx2, by, side) => { const L = Math.hypot(bx2 - ax, by - ay), n = Math.max(1, Math.round(L / 40)), ux = (bx2 - ax) / L, uy = (by - ay) / L, ox = -uy * side, oy = ux * side; let prev = null;
-        for (let i = 0; i <= n; i++) { const sx = ax + ux * L * i / n + ox, sy = ay + uy * L * i / n + oy; if (reserved.some(([a, b, c, d2]) => sx > a - 1 && sx < c + 1 && sy > b - 1 && sy < d2 + 1 && !(c - a > 300 || d2 - b > 300))) { prev = null; continue; } const x = WX(sx), z = WZ(sy);
-          SB.add(G3.cyl, PM, x, 3.3, z, 0.22, 6.6, 0.22); SB.add(G3.box, PM, x, 6.2, z, 1.4, 0.1, 0.12, 0, Math.atan2(uy, ux) * -1, 0); block(x - 0.14, x + 0.14, z - 0.14, z + 0.14, 'deco');
-          if (prev) { const mx = (prev[0] + x) / 2, mz = (prev[1] + z) / 2, len = Math.hypot(x - prev[0], z - prev[1]), a = Math.atan2(x - prev[0], z - prev[1]); [-0.5, 0.5].forEach(o => SB.add(G3.box, WM, mx + Math.cos(a) * o, 6.05, mz - Math.sin(a) * o, 0.03, 0.03, len, 0, a, 0)); }
-          prev = [x, z]; } };
-      poleRun(400, 541, 950, 541, 0); poleRun(400, 768, 950, 768, 0); poleRun(492, 545, 492, 870, 0); poleRun(704, 545, 704, 870, 0); poleRun(828, 545, 828, 870, 0); }
+    // --- 街景：水井、長椅、雪人、路牌、木箱、推車、自行車（路燈、電線桿在 cityscape.js） ---
     function well(x, z) { SB.add(G3.cyl, lam('#8C8A82', { tex: 'wall' }), x, 0.4, z, 1.8, 0.8, 1.8); SB.add(G3.cyl, lam('#1A2A3A', { tex: 0 }), x, 0.81, z, 1.5, 0.02, 1.5); [-0.95, 0.95].forEach(o => SB.add(G3.box, lam('#5A3E26', { tex: 0 }), x + o, 1.2, z, 0.14, 2.4, 0.14)); SB.add(G3.box, lam('#4A3A34', { tex: 'cap' }), x, 2.5, z, 2.6, 0.12, 1.6, 0.2, 0, 0); SB.add(G3.box, lam('#F2F6F8', { tex: 'ground' }), x, 2.6, z, 2.5, 0.08, 1.5, 0.2, 0, 0); SB.add(G3.box, lam('#6A4A2E', { tex: 0 }), x, 1.6, z, 0.3, 0.3, 0.3); propBox(x, z, 1); inter(x, z + 1.6, 1.6, '打一桶井水來喝', () => R.townToast('井水冰得刺骨。精神好多了。')); }
     function bench(x, z, rotY) { const c = Math.cos(rotY), s = Math.sin(rotY); SB.add(G3.box, lam('#6A4A2E', { tex: 'planks' }), x, 0.48, z, 2.2, 0.1, 0.5, 0, rotY, 0); [-0.9, 0.9].forEach(o => SB.add(G3.box, lam('#4A3424', { tex: 0 }), x + c * o, 0.24, z - s * o, 0.12, 0.48, 0.4, 0, rotY, 0)); SB.add(G3.box, lam('#F2F6F8', { tex: 'ground' }), x, 0.55, z, 2.0, 0.05, 0.4, 0, rotY, 0); block(x - 1.1, x + 1.1, z - 0.3, z + 0.3, 'deco'); inter(x, z + 0.8, 1.4, '坐一下', () => R.sitDown && R.sitDown(x, z + 0.32)); }
     function snowman(x, z) { const sw = lam('#F4F8FA', { tex: 'ground' }); SB.add(G3.sph, sw, x, 0.55, z, 1.1, 1.0, 1.1); SB.add(G3.sph, sw, x, 1.3, z, 0.78, 0.74, 0.78); SB.add(G3.sph, sw, x, 1.85, z, 0.52, 0.5, 0.52); SB.add(G3.cyl, lam('#3A3A40', { tex: 0 }), x, 2.17, z, 0.42, 0.3, 0.42); SB.add(G3.cone, lam('#E8823A', { tex: 0 }), x, 1.85, z + 0.3, 0.1, 0.3, 0.1, Math.PI / 2, 0, 0); [-0.1, 0.1].forEach(o => SB.add(G3.sph, lam('#1A1A1A', { tex: 0 }), x + o, 1.92, z + 0.23, 0.07, 0.07, 0.07)); SB.add(G3.box, lam('#C8323A', { tex: 0 }), x, 1.6, z, 0.62, 0.12, 0.62); propBox(x, z, 0.55); inter(x, z + 1.1, 1.4, '雪人', () => R.townToast('不知道是誰堆的雪人。圍巾是紅的。')); }
@@ -521,37 +396,17 @@
     function vending(x, z) { SB.add(G3.box, lam('#C83A3A', { tex: 0 }), x, 1.0, z, 1, 2, 0.8); SB.add(G3.box, lam('#BFD8E8', { em: '#3A6A8A', ei: 0.8 }), x, 1.3, z + 0.41, 0.8, 0.9, 0.02); SB.add(G3.box, lam('#2A2A30', { tex: 0 }), x, 0.4, z + 0.41, 0.6, 0.2, 0.02); propBox(x, z, 0.5); inter(x, z + 1.2, 1.5, '德克斯凡的自動販賣機（熱飲 6 費拉）', () => (R.vendingBuy ? R.vendingBuy() : null)); }
     function bike(x, z, rotY) { const c = Math.cos(rotY), s = Math.sin(rotY); [-0.55, 0.55].forEach(o => SB.add(G3.cyl, lam('#1E1E22', { tex: 0 }), x + s * o, 0.36, z + c * o, 0.72, 0.06, 0.72, 0, rotY, Math.PI / 2)); SB.add(G3.box, lam('#3A6A4A', { tex: 0 }), x, 0.62, z, 0.06, 0.06, 1.0, 0, rotY, 0); SB.add(G3.box, lam('#2A2A2A', { tex: 0 }), x, 0.82, z, 0.4, 0.06, 0.06, 0, rotY, 0); propBox(x, z, 0.3); }
     function pineAt(x, z, s) { const sp = R.pineSprite(s); sp.position.set(x, 0, z); group.add(sp); block(x - 0.45, x + 0.45, z - 0.45, z + 0.45, 'tree'); }
-    // 廣場旁的小公園（中央大道西邊）：水井、長椅、雪人
-    well(WX(560), WZ(712)); bench(WX(568), WZ(734), 0); snowman(WX(552), WZ(744)); reserve(542, 690, 588, 752);
-    bench(WX(760), WZ(560), 0); well(WX(690), WZ(562)); reserve(680, 550, 772, 574);
-    snowman(WX(626), WZ(704)); reserve(618, 696, 636, 714);
-    signpost(WX(616), WZ(446), ['北門外：東鶴站和站前商店街。過了平交道是大路：往北是北山礦坑；往東過霜溪是霜溪石窟。', '更遠的遺跡，到驛站搭車，或到東鶴站搭魔導電車。']); signpost(WX(616), WZ(846), ['南門外：過了南渠的南橋，是往皇嶺的南官道。']); signpost(WX(414), WZ(664), ['西門外：西橋整修中，暫停通行。', '往城西遺跡，從北邊的崙腳門出去、過北橋。']); signpost(WX(884), WZ(664), ['東門外：往皇嶺的官道。']);
-    crates(WX(676), WZ(498)); bike(WX(580), WZ(632), 0.2); bike(WX(806), WZ(634), 1.5);
+    // 舊城裡的小公園：水井、長椅、雪人；外濠邊的長椅
+    { const [px, py] = FAC.park; well(WX(px - 8), WZ(py - 10)); bench(WX(px + 8), WZ(py + 14), 0); snowman(WX(px - 14), WZ(py + 22)); }
+    bench(WX(520), WZ(465.5), 0); bench(WX(690), WZ(465.5), 0); snowman(WX(636), WZ(650));
+    signpost(WX(630), WZ(482), ['北門外：外濠、國道一號，再往北是站前大通和東鶴站。', '站西通過了平交道是北口，再往北過霜溪是北山礦坑、霜溪石窟。更遠的遺跡，到東鶴站搭魔導電車，或到國道邊的驛站搭車。']);
+    signpost(WX(572), WZ(760), ['南門外：南門通、寺町。過了南渠的南橋，是往皇嶺的南官道。']);
+    signpost(WX(410), WZ(652), ['西門外：城西的住宅區。西橋整修中，暫停通行。', '往河西、城西遺跡：走國道一號過新大橋。']);
+    signpost(WX(730), WZ(608), ['東門外：官廳街（縣廳、郵局、醫院）。往皇嶺的國道一號在北邊。']);
+    bike(WX(548), WZ(586), 0.2); bike(WX(818), WZ(312), 1.5);
 
-    // --- 陪都的設施：縣廳、銀行、醫院、郵局……（civic.js；先保留位置，一般的房子就不會蓋在上面） ---
-    if (R.buildCivic) R.buildCivic({ group, npc, inter, block, talk, lam, SB, HB, G3, B_, glowW, darkW, woodM, gableB, house, sign, lampPost, pineAt, bench, vending, bike, reserve, WX, WZ, tw, E });
-    // --- 一般的房子：每個街區都塞滿（臨街的連棟房子；深的街區兩排，中間一條窄巷） ---
-    reserve(589, 400, 611, 880); reserve(390, 639, 960, 661); reserve(390, 512, 960, 541); reserve(390, 753, 960, 767); reserve(493, 400, 507, 880); reserve(705, 400, 719, 880); reserve(813, 400, 827, 880);
-    reserve(556, 610, 644, 690);   // 廣場
-    const XB = [[396, 493], [507, 589], [611, 705], [719, 813], [827, 954]], YB = [[404, 512], [541, 639], [661, 753], [767, 876]];
-    XB.forEach(([x0, x1], ci) => YB.forEach(([y0, y1], ri) => denseBlock(x0, y0, x1, y1, ci, ri)));
-    function denseBlock(x0, y0, x1, y1, ci, ri) {
-      const deep = y1 - y0 >= 84, center = Math.abs((x0 + x1) / 2 - 600) < 160 && ri > 0 && ri < 3, dex = ci === 4;
-      const rows = deep ? [[y0, y0 + 36, true], [y1 - 36, y1, false]] : ri === 0 ? [[y1 - 34, y1, false]] : ri === 3 ? [[y0, y0 + 34, true]] : [[y0, y0 + 34, true], [y1 - 34, y1, false]];
-      if (!deep && ri !== 0 && ri !== 3 && y1 - y0 < 72) rows.length = 1;
-      rows.forEach(([ra, rb, north]) => {
-        let x = x0 + 1;
-        while (x < x1 - 12) {
-          const w = Math.min(x1 - 1 - x, 16 + Math.floor(srand() * 16)); if (w < 12) break;
-          const dep = rb - ra - 2 - Math.floor(srand() * 6), cy = north ? ra + 1 + dep / 2 : rb - 1 - dep / 2, cx = x + w / 2;
-          if (!reserved.some(([a, b, c, d2]) => x < c && x + w > a && cy - dep / 2 < d2 && cy + dep / 2 > b)) {
-            if (dex && srand() < 0.75) dexBuilding(cx, cy, w * S - 0.3, dep * S, 3 + Math.floor(srand() * 3), north ? Math.PI : 0);
-            else house(cx, cy, w * S - 0.25, dep * S, 2.7 + srand() * 0.8, houseCols[Math.floor(srand() * houseCols.length)], north ? Math.PI : 0, { floors: center ? 2 + (srand() < 0.45 ? 1 : 0) : srand() < 0.5 ? 2 : 1 });
-          }
-          x += w + (srand() < 0.7 ? 1 : 3);
-        }
-      });
-    }
+    // --- 陪都的設施：縣廳、銀行、醫院、郵局、百貨……（civic.js） ---
+    if (R.buildCivic) R.buildCivic({ group, npc, inter, block, talk, lam, SB, HB, G3, B_, glowW, darkW, woodM, gableB, house, sign, lampPost, pineAt, bench, vending, bike, reserve, WX, WZ, tw, E, dexBuilding });
     // 德克斯凡的磚造大樓：平屋頂、女兒牆、整排的窗、屋頂的水塔、直立的霓虹招牌
     function dexBuilding(sx, sy, w, d, floors, face) {
       const x = WX(sx), z = WZ(sy), B = HB, fh = 3.0, H = floors * fh; B.at(x, z, face || 0);
@@ -569,11 +424,11 @@
       if (srand() < 0.35) { const nc = ['#3A8ACF', '#C83A6A', '#E8A03A'][Math.floor(srand() * 3)]; B.add(G3.box, B_('#2A2A30', { tex: 0 }), 0, H + 1.0, d / 2 - 0.3, w * 0.7, 0.1, 0.1); B.add(G3.box, B_(nc, { em: nc, ei: 0.7 }), 0, H + 2.0, d / 2 - 0.3, w * 0.7, 1.6, 0.12); }
       if (srand() < 0.6) { B.add(G3.cyl, B_('#6A6A70', { tex: 0 }), w * 0.2, H + 1.6, -d * 0.2, 1.4, 1.6, 1.4); B.add(G3.box, B_('#4A4A50', { tex: 0 }), w * 0.2, H + 0.75, -d * 0.2, 1.2, 0.8, 1.2); }
       if (srand() < 0.7) { const nc = pick2(['#3A8ACF', '#C83A6A', '#E8A03A', '#5AC88A']); B.add(G3.box, B_(nc, { em: nc, ei: 0.8 }), w / 2 - 0.4, H * 0.55, d / 2 + 0.35, 0.18, H * 0.5, 0.6); }
-      B.at(null); block(x - w / 2, x + w / 2, z - d / 2, z + d / 2, 'house');
+      B.at(null); const side90 = Math.abs(Math.sin(face || 0)) > 0.5; block(x - (side90 ? d : w) / 2, x + (side90 ? d : w) / 2, z - (side90 ? w : d) / 2, z + (side90 ? w : d) / 2, 'house');
     }
     function pick2(a) { return a[Math.floor(srand() * a.length)]; }
     // 鐘樓（新商區的地標）：時鐘會走
-    { const x = WX(940), z = WZ(578), B = HB; B.at(x, z, 0);
+    { const [x, z] = at2('clock'), B = HB; B.at(x, z, 0);
       B.add(G3.box, B_('#8A6A5A', { tex: 'wall' }), 0, 7, 0, 3.6, 14, 3.6); B.add(G3.box, B_('#C8C4BC', { tex: 'cap' }), 0, 14.3, 0, 4.2, 0.6, 4.2);
       B.add(G3.cone, B_('#3A4A5A', { tex: 'cap' }), 0, 16.2, 0, 4.4, 3.2, 4.4, 0, Math.PI / 4, 0); B.add(G3.box, B_('#3A3C42', { tex: 0 }), 0, 1.3, 1.82, 1.4, 2.6, 0.06);
       B.at(null); block(x - 1.8, x + 1.8, z - 1.8, z + 1.8, 'house');
@@ -581,26 +436,17 @@
       const hand = (len, wid) => { const m = new TH.Mesh(new TH.BoxGeometry(wid, len, 0.04), new TH.MeshBasicMaterial({ color: '#1A1414' })); m.geometry.translate(0, len / 2, 0); m.position.set(x, 11.6, z + 1.87); group.add(m); return m; };
       tw.clock = { h: hand(0.6, 0.1), m: hand(0.95, 0.07) };
       inter(x, z + 3, 1.8, '鐘樓', () => R.townToast('德克斯凡的工程師蓋的鐘樓。整點會響。'));
-      reserve(928, 566, 952, 590); }
+    }
     // 火之見櫓（城南的住宅區）：木頭的瞭望台，頂上掛著鐘
-    { const x = WX(762), z = WZ(808), B = HB; B.at(x, z, 0);
+    { const [x, z] = at2('firetower'), B = HB; B.at(x, z, 0);
       [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, b2]) => B.add(G3.box, woodM, a * 0.9, 4.5, b2 * 0.9, 0.22, 9, 0.22)); for (let i = 1; i < 4; i++) B.add(G3.box, woodM, 0, i * 2.2, 0, 2.0, 0.12, 2.0);
       B.add(G3.box, B_('#5A3E26', { tex: 'planks' }), 0, 9.1, 0, 2.6, 0.2, 2.6); B.add(G3.cone, B_('#3A3A44', { tex: 'cap' }), 0, 10.4, 0, 3.0, 1.4, 3.0, 0, Math.PI / 4, 0); B.add(G3.cyl, B_('#8A6A2A', { tex: 0 }), 0, 9.6, 0, 0.5, 0.6, 0.5);
-      B.at(null); block(x - 1.1, x + 1.1, z - 1.1, z + 1.1, 'deco'); reserve(752, 798, 772, 818); }
+      B.at(null); block(x - 1.1, x + 1.1, z - 1.1, z + 1.1, 'deco'); }
 
     // --- 城外 ---
-    for (let i = 0; i < 26; i++) { const sx = 380 + i * 25 + srand() * 10, sy = 20 + srand() * 30, h = 14 + srand() * 12; const m = new TH.Mesh(new TH.ConeGeometry(9 + srand() * 5, h, 7), lam('#7A8088', { tex: 'wall' })); m.position.set(WX(sx), h / 2, WZ(sy) - 6); m.castShadow = true; group.add(m); const cap = new TH.Mesh(new TH.ConeGeometry(4.2, h * 0.34, 7), lam('#F4F8FA', { tex: 'ground' })); cap.position.set(m.position.x, h - h * 0.17 + 0.2, m.position.z); group.add(cap); }
-    block(WX(360), HALF, -HALF, WZ(62), 'edge');
-    for (let i = 0; i < 9; i++) { const sx = 180 + i * 34, sy = 190 + (srand() - 0.5) * 30; const m = new TH.Mesh(new TH.SphereGeometry(5 + srand() * 2, 10, 6), lam('#E6ECEE', { tex: 'ground' })); m.scale.y = 0.45; m.position.set(WX(sx), 0, WZ(sy)); group.add(m); block(WX(sx) - 3.4, WX(sx) + 3.4, WZ(sy) - 3.4, WZ(sy) + 3.4, 'hill'); }
-    let pines = 0;
-    for (let i = 0; i < 1200 && pines < 320; i++) {
-      const sx = srand() * 1000, sy = 60 + srand() * 940;
-      if (inTown(sx, sy, 20) || (R.suburbBusy && R.suburbBusy(sx, sy))) continue;
-      if (G.roads.some(rd => lineDist(sx, sy, rd) < 22) || lineDist(sx, sy, G.stream) < 24 || lineDist(sx, sy, G.river) < 40 || Math.abs(sy - G.southCanal) < 18) continue;
-      if (sx > G.field[0] - 20 && sx < G.field[2] + 20 && sy > G.field[1] - 20 && sy < G.field[3] + 20) continue;
-      if (AREAS.slice(0, 8).some(a => Math.hypot(a.x - sx, a.y - sy) < 55)) continue;
-      pineAt(WX(sx), WZ(sy), 0.8 + srand() * 0.6); pines++;
-    }
+    for (let i = 0; i < 42; i++) { const sx = i * 25 + srand() * 10, sy = 4 + srand() * 22, h = 18 + srand() * 14; const m = new TH.Mesh(new TH.ConeGeometry(12 + srand() * 6, h, 7), lam('#7A8088', { tex: 'wall' })); m.position.set(WX(sx), h / 2, WZ(sy) - 8); m.castShadow = true; group.add(m); const cap = new TH.Mesh(new TH.ConeGeometry(5.4, h * 0.34, 7), lam('#F4F8FA', { tex: 'ground' })); cap.position.set(m.position.x, h - h * 0.17 + 0.2, m.position.z); group.add(cap); }
+    block(-HALF, HALF, -HALF, WZ(26), 'edge');
+    for (let i = 0; i < 7; i++) { const sx = 250 + i * 26, sy = 82 + (srand() - 0.5) * 16; const m = new TH.Mesh(new TH.SphereGeometry(5 + srand() * 2, 10, 6), lam('#E6ECEE', { tex: 'ground' })); m.scale.y = 0.45; m.position.set(WX(sx), 0, WZ(sy)); group.add(m); block(WX(sx) - 3.4, WX(sx) + 3.4, WZ(sy) - 3.4, WZ(sy) + 3.4, 'hill'); }
     // --- 遺跡的入口 ---
     const eyeMark = (x, z, y, col) => { const r = new TH.Mesh(new TH.TorusGeometry(0.9, 0.08, 6, 24), new TH.MeshBasicMaterial({ color: col })); r.position.set(x, y, z); group.add(r); const p = new TH.Mesh(new TH.SphereGeometry(0.34, 10, 8), new TH.MeshBasicMaterial({ color: col })); p.position.set(x, y, z); group.add(p); tw.fx.push({ kind: 'bob', m: r, y }); tw.fx.push({ kind: 'bob', m: p, y }); };
     const ruinGate = (siteId, sx, sy, build) => {
@@ -611,21 +457,21 @@
       inter(x, z + 2.8, 3, '進入' + s.name, () => askRuin(s));
       tw.gates = tw.gates || {}; tw.gates[siteId] = [x, z + 4];
     };
-    ruinGate('dh-sokkutsu', 745, 208, (x, z) => { for (let i = 0; i < 7; i++) { const r = new TH.Mesh(new TH.DodecahedronGeometry(2 + srand() * 1.6, 0), lam('#7A7E84', { tex: 'wall' })); r.position.set(x + (i - 3) * 2.2, 1.2 + srand(), z - 1.5 - srand() * 1.5); r.castShadow = true; group.add(r); } bx(3.2, 3, 0.4, lam('#0A080C', { tex: 0 }), x, 1.5, z + 0.3); block(x - 8, x + 8, z - 4, z + 0.4, 'rock'); });
-    ruinGate('dh-josai', 172, 438, (x, z) => { bx(1.2, 4.4, 1.2, lam('#6E6A60', { tex: 'wall' }), x - 2.4, 2.2, z); bx(1.2, 4.4, 1.2, lam('#6E6A60', { tex: 'wall' }), x + 2.4, 2.2, z); bx(6.4, 1, 1.4, lam('#5E5A52', { tex: 'wall' }), x, 4.6, z); bx(3.6, 3.8, 0.3, lam('#0A080C', { tex: 0 }), x, 1.9, z - 0.3); block(x - 3, x + 3, z - 0.8, z + 0.6, 'rock');
+    ruinGate('dh-sokkutsu', 800, 62, (x, z) => { for (let i = 0; i < 7; i++) { const r = new TH.Mesh(new TH.DodecahedronGeometry(2 + srand() * 1.6, 0), lam('#7A7E84', { tex: 'wall' })); r.position.set(x + (i - 3) * 2.2, 1.2 + srand(), z - 1.5 - srand() * 1.5); r.castShadow = true; group.add(r); } bx(3.2, 3, 0.4, lam('#0A080C', { tex: 0 }), x, 1.5, z + 0.3); block(x - 8, x + 8, z - 4, z + 0.4, 'rock'); });
+    ruinGate('dh-josai', 96, 318, (x, z) => { bx(1.2, 4.4, 1.2, lam('#6E6A60', { tex: 'wall' }), x - 2.4, 2.2, z); bx(1.2, 4.4, 1.2, lam('#6E6A60', { tex: 'wall' }), x + 2.4, 2.2, z); bx(6.4, 1, 1.4, lam('#5E5A52', { tex: 'wall' }), x, 4.6, z); bx(3.6, 3.8, 0.3, lam('#0A080C', { tex: 0 }), x, 1.9, z - 0.3); block(x - 3, x + 3, z - 0.8, z + 0.6, 'rock');
       const tent = new TH.Mesh(new TH.CylinderGeometry(0.05, 3, 2.6, 4, 1), lam('#C8B888', { tex: 0 })); tent.rotation.y = Math.PI / 4; tent.position.set(x + 7, 1.3, z + 3); tent.castShadow = true; group.add(tent); block(x + 5, x + 9, z + 1, z + 5);
       bx(0.1, 4, 0.1, lam('#5A4A3A', { tex: 0 }), x + 9.5, 2, z + 5.5); const sf = new TH.Mesh(new TH.PlaneGeometry(1.3, 0.9), new TH.MeshLambertMaterial({ map: R.guildFlagTex(16, 11), side: TH.DoubleSide })); sf.position.set(x + 10.2, 3.5, z + 5.5); group.add(sf);
       npc(x + 6, z + 6, { top: '#3E5A48', hair: '#2A2420', cloak: '#3E5A48' }, '真壁', Math.PI * 0.8); inter(x + 6, z + 7, 2.4, '和調查點主任真壁說話', () => talk('真壁', R.eventsToday && R.eventsToday().josaiSealed ? ['「封鎖中。總部的調查委員會還在裡面。」', '「……那天的事，我會一直記著。」'] : ['城西遺跡裡的魔力濃度，這幾天又往上升了。', '外圍第一層標出了十二處危險點。進去的話，別逞強。', '報告每天都要送回分館。……你要進去就去吧，我會記下來。']));
       tw.survey = { x: x + 3, z: z + 8 }; });
-    ruinGate('dh-kouzan', 580, 118, (x, z) => { bx(0.5, 4, 0.5, lam('#5A3E26', { tex: 'planks' }), x - 2.2, 2, z); bx(0.5, 4, 0.5, lam('#5A3E26', { tex: 'planks' }), x + 2.2, 2, z); bx(5.2, 0.6, 0.6, lam('#5A3E26', { tex: 'planks' }), x, 4.1, z); bx(3.8, 3.6, 0.3, lam('#0A080C', { tex: 0 }), x, 1.8, z - 0.3); bx(10, 6, 3, lam('#7A8088', { tex: 'wall' }), x, 3, z - 2.2); block(x - 5, x + 5, z - 3.7, z + 0.2, 'rock');
+    ruinGate('dh-kouzan', 560, 46, (x, z) => { bx(0.5, 4, 0.5, lam('#5A3E26', { tex: 'planks' }), x - 2.2, 2, z); bx(0.5, 4, 0.5, lam('#5A3E26', { tex: 'planks' }), x + 2.2, 2, z); bx(5.2, 0.6, 0.6, lam('#5A3E26', { tex: 'planks' }), x, 4.1, z); bx(3.8, 3.6, 0.3, lam('#0A080C', { tex: 0 }), x, 1.8, z - 0.3); bx(10, 6, 3, lam('#7A8088', { tex: 'wall' }), x, 3, z - 2.2); block(x - 5, x + 5, z - 3.7, z + 0.2, 'rock');
       [-0.6, 0.6].forEach(o => bx(0.12, 0.08, 9, lam('#6A6A70', { tex: 0 }), x + o, 0.05, z + 4.5)); bx(1.4, 0.9, 2, lam('#5A4A3A', { tex: 'planks' }), x, 0.6, z + 6); block(x - 0.8, x + 0.8, z + 5, z + 7); });
-    { const x = WX(200), z = WZ(112); for (let i = 0; i < 4; i++) house(150 + i * 32, 72 + (i % 2) * 10, 5, 4, 3, '#A8927A', 0, { two: false, shop: i === 1 });
+    { const x = WX(150), z = WZ(66); for (let i = 0; i < 4; i++) house(70 + i * 26, 34 + (i % 2) * 6, 5, 4, 3, '#A8927A', 0, { two: false, shop: i === 1 });
       block(x - 5.6, x + 5.6, z - 3.2, z + 3.2, 'water'); tw.steam = { x, z }; inter(x, z + 4.2, 3, '泡一下溫泉', () => (R.eventsToday && R.eventsToday().blizzard ? talk('湯山村', ['暴風雪。矮丘山口封了，今天到不了。']) : (R.onsen ? R.onsen() : talk('湯山村', ['熱水從腳趾一路暖到頭頂。'])))); }
-    { const p = house(785, 254, 6, 4.5, 3.2, '#9A7A5A', 0, { two: false, shop: false });
-      for (let i = 0; i < 14; i++) SB.add(G3.box, lam('#6A4A2E', { tex: 0 }), WX(G.field[0]) + i * 2.1, 0.45, WZ(G.field[3]) + 0.5, 0.15, 0.9, 0.15);
+    { const [fx, fy] = FAC.farmhouse, p = house(fx, fy, 6, 4.5, 3.2, '#9A7A5A', 0, { two: false, shop: false });
+      for (let i = 0; i < 14; i++) SB.add(G3.box, lam('#6A4A2E', { tex: 0 }), WX(fx + 14) + i * 2.1, 0.45, WZ(fy + 14), 0.15, 0.9, 0.15);
       inter(p.doorX, p.doorZ, 2.6, '敲北郊農舍的門', () => talk('北郊農舍', ['「冰鼬又來偷雞了……」屋裡的人嘆了一口氣。'])); }
     // 南渠、南橋：橋下可以釣魚（瀧常在這裡）
-    tw.fishSpot = [WX(584), WZ(G.southCanal - 10)];
+    tw.fishSpot = [WX(540), WZ(932)];
     inter(tw.fishSpot[0], tw.fishSpot[1], 1.8, '在南橋下釣魚', () => (R.fishing ? R.fishing() : R.townToast('南渠結了一層薄冰。')));
 
     // --- 城門的衛兵、巡邏的衛兵 ---
@@ -636,34 +482,40 @@
       if (lines) inter(x, z, 1.8, '和衛兵說話', () => talk('東鶴的衛兵', typeof lines === 'function' ? lines() : lines), { follow: n });
       return n;
     };
-    guard(WX(600) - 2.6, ty0 + 2.4, 0, () => (E.martial ? ['「今天是退位大典，全城戒嚴。出入城門要查勇者證。」'] : ['「出了北門就是大路。往北是北山礦坑，往東過霜溪是霜溪石窟。」', '「霜溪石窟是哈米莉亞級，裡面的生物不會主動攻擊人。第一次下遺跡，就從那裡開始吧。」']));
-    guard(WX(600) + 2.6, ty0 + 2.4, 0, null);
-    guard(WX(600) - 2.6, ty1 - 2.4, Math.PI, ['「南門外過了南橋，是往皇嶺的南官道，沒有遺跡。」', '「要去遠一點的遺跡，到驛站搭車。」']);
-    guard(WX(600) + 2.6, ty1 - 2.4, Math.PI, null);
-    guard(tx0 + 2.4, WZ(480) - 2, Math.PI / 2, ['「崙腳門。往城西遺跡，走這邊過北橋。」']);
-    guard(WX(613), WZ(600), 0, null, [[WX(613), WZ(450)], [WX(613), WZ(840)]]);
-    guard(WX(420), WZ(662), 0, null, [[WX(420), WZ(663)], [WX(880), WZ(663)]]);
-    if (E.martial) { guard(WX(560), WZ(662), 0, ['「戒嚴中。不要在街上逗留。」']); guard(WX(640), WZ(638), Math.PI, null); guard(WX(500), WZ(638), 0, null, [[WX(420), WZ(638)], [WX(780), WZ(638)]]); guard(WX(700), WZ(760), 0, null, [[WX(420), WZ(760)], [WX(880), WZ(760)]]); }
+    guard(WX(gates.n[0]) - 3.4, ty0 + 2.4, 0, () => (E.martial ? ['「今天是退位大典，全城戒嚴。出入城門要查勇者證。」'] : ['「出了北門是國道，再往北是東鶴站。去北山礦坑、霜溪石窟，走站西通過平交道、過霜溪。」', '「霜溪石窟是哈米莉亞級，裡面的生物不會主動攻擊人。第一次下遺跡，就從那裡開始吧。」']));
+    guard(WX(gates.n[0]) + 3.4, ty0 + 2.4, 0, null);
+    guard(WX(gates.s[0]) - 3.4, ty1 - 2.4, Math.PI, ['「南門外過了南橋，是往皇嶺的南官道，沒有遺跡。」', '「要去遠一點的遺跡，到東鶴站搭電車，或到國道邊的驛站搭車。」']);
+    guard(WX(gates.s[0]) + 3.4, ty1 - 2.4, Math.PI, null);
+    guard(tx0 + 2.4, WZ(gates.w[0]) - 3.4, Math.PI / 2, ['「西門。往城西遺跡，走國道過新大橋到河西。」']);
+    guard(WX(628), WZ(500), 0, null, [[WX(628), WZ(484)], [WX(628), WZ(566)]]);
+    guard(WX(420), WZ(648), 0, null, [[WX(420), WZ(648)], [WX(540), WZ(648)]]);
+    guard(WX(720), WZ(424), 0, null, [[WX(420), WZ(424)], [WX(760), WZ(424)]]);
+    if (E.martial) { guard(WX(570), WZ(650), 0, ['「戒嚴中。不要在街上逗留。」']); guard(WX(616), WZ(576), Math.PI, null); guard(WX(500), WZ(646), 0, null, [[WX(420), WZ(646)], [WX(540), WZ(646)]]); guard(WX(620), WZ(380), 0, null, [[WX(620), WZ(356)], [WX(620), WZ(430)]]); }
     // --- 在街上走的人（各種種族） ---
-    for (let sy = 420; sy <= 870; sy += 30) { tw.walkNodes.push([WX(600 + (sy % 60 ? -8 : 8)), WZ(sy)]); tw.walkNodes.push([WX(500), WZ(sy)]); tw.walkNodes.push([WX(712), WZ(sy)]); tw.walkNodes.push([WX(820), WZ(sy)]); }
-    for (let sx = 400; sx <= 950; sx += 30) { tw.walkNodes.push([WX(sx), WZ(650 + (sx % 60 ? -8 : 8))]); tw.walkNodes.push([WX(sx), WZ(760)]); tw.walkNodes.push([WX(sx), WZ(532)]); }
-    const nWalk = E.martial ? 12 : E.blizzard ? 8 : dd && dd.rest ? 56 : 44;
+    C.nodes.forEach(([sx, sy]) => { if (sy > 280 && sy < 900) tw.walkNodes.push([WX(sx), WZ(sy)]); });
+    const nextNode = n => { const nb = C.adj[n.ni]; if (nb && nb.length) { let k = nb[Math.floor(Math.random() * nb.length)]; if (nb.length > 1 && k === n.prev) k = nb[Math.floor(Math.random() * nb.length)]; n.prev = n.ni; n.ni = k; } const [sx, sy] = C.nodes[n.ni]; return [WX(sx + (Math.random() - 0.5) * 3), WZ(sy + (Math.random() - 0.5) * 3)]; };
+    const busy = C.nodes.map((p, i) => i).filter(i => { const [sx, sy] = C.nodes[i]; return sy > 280 && sy < 900 && sx > 230; });
+    const nWalk = E.martial ? 16 : E.blizzard ? 12 : dd && dd.rest ? 90 : 72;
     for (let i = 0; i < nWalk; i++) {
-      const [x, z] = tw.walkNodes[Math.floor(srand() * tw.walkNodes.length)], race = R.randomRace ? R.randomRace() : 'human', rc = R.RACES ? R.RACES[race] : null;
-      const look = { top: houseCols.concat(['#3E5A6E', '#7A5A6A', '#8A3A2E', '#2E4A6A', '#5A6A4A'])[Math.floor(srand() * 11)], hair: rc && rc.hairs ? rc.hairs[0] : ['#2A2420', '#6A4A2E', '#1A1714', '#8A5A2E', '#D8D2C4'][Math.floor(srand() * 5)], cloak: ['#4A3A30', '#3A3A44', '#5A4A3A', '#2E3A48'][Math.floor(srand() * 4)], race, skin: rc ? rc.skins[Math.floor(srand() * rc.skins.length)] : undefined, hs: ['short', 'long', 'ponytail', 'bun', 'bob', 'crop', 'spiky'][Math.floor(srand() * 7)], acc: srand() < 0.25 ? ['scarf', 'glasses', 'headband'][Math.floor(srand() * 3)] : null, accCol: ['#C8323A', '#2E5A8A', '#3E7A48'][Math.floor(srand() * 3)] };
-      const n = npc(x, z, look, null, 0); n.walk = true; n.tx = n.x; n.tz = n.z; n.speed = 1.6 + srand() * 0.6; n.watch = { range: 6, fov: 1.0, civ: 1 }; tw.watchers.push(n);
+      const ni = busy[Math.floor(srand() * busy.length)], x = WX(C.nodes[ni][0]), z = WZ(C.nodes[ni][1]), race = R.randomRace ? R.randomRace() : 'human', rc = R.RACES ? R.RACES[race] : null;
+      const pi = Math.floor(srand() * 24), look = { pool: 'walker' + pi, lite: 1, top: houseCols.concat(['#3E5A6E', '#7A5A6A', '#8A3A2E', '#2E4A6A', '#5A6A4A'])[Math.floor(srand() * 11)], hair: rc && rc.hairs ? rc.hairs[0] : ['#2A2420', '#6A4A2E', '#1A1714', '#8A5A2E', '#D8D2C4'][Math.floor(srand() * 5)], cloak: ['#4A3A30', '#3A3A44', '#5A4A3A', '#2E3A48'][Math.floor(srand() * 4)], race, skin: rc ? rc.skins[Math.floor(srand() * rc.skins.length)] : undefined, hs: ['short', 'long', 'ponytail', 'bun', 'bob', 'crop', 'spiky'][Math.floor(srand() * 7)], acc: srand() < 0.25 ? ['scarf', 'glasses', 'headband'][Math.floor(srand() * 3)] : null, accCol: ['#C8323A', '#2E5A8A', '#3E7A48'][Math.floor(srand() * 3)] };
+      const n = npc(x, z, look, null, 0); n.walk = true; n.ni = ni; n.next = nextNode; [n.tx, n.tz] = nextNode(n); n.speed = 1.6 + srand() * 0.6; n.watch = { range: 6, fov: 1.0, civ: 1 }; tw.watchers.push(n);
     }
     // 會開的德克斯凡貨車：沿著兩條大馬路來回開（前面有人就停）
     tw.cars = [];
     const car = (path, col) => { const g = new TH.Group(), cb = Batch(); cb.add(G3.box, lam(col, { tex: 0 }), 0, 1.4, 0.6, 2.2, 1.8, 3.6); cb.add(G3.box, lam(col, { tex: 0 }), 0, 1.25, -1.9, 2.1, 1.5, 1.6); cb.add(G3.box, lam('#BFD8E8', { em: '#203040', ei: 0.3 }), 0, 1.55, -2.72, 1.8, 0.6, 0.05); cb.add(G3.box, lam('#F2F6F8', { tex: 'ground' }), 0, 2.33, 0.6, 2.1, 0.08, 3.5); [[-1.1, -1.8], [1.1, -1.8], [-1.1, 1.4], [1.1, 1.4]].forEach(([a, b2]) => cb.add(G3.cyl, lam('#1E1E22', { tex: 0 }), a, 0.42, b2, 0.84, 0.3, 0.84, 0, 0, Math.PI / 2)); cb.add(G3.box, lam('#FFF4D8', { em: '#FFE0A0', ei: 1 }), -0.7, 0.9, -2.72, 0.3, 0.2, 0.05); cb.add(G3.box, lam('#FFF4D8', { em: '#FFE0A0', ei: 1 }), 0.7, 0.9, -2.72, 0.3, 0.2, 0.05); cb.flush(g); group.add(g);
-      const c = { g, path: path.map(([a, b2]) => [WX(a), WZ(b2)]), i: 0, t: 0, x: 0, z: 0 }; c.x = c.path[0][0]; c.z = c.path[0][1]; g.position.set(c.x, 0, c.z); tw.cars.push(c); };
-    if (!E.martial && !E.blizzard) { car([[595, 410], [595, 870], [605, 870], [605, 410]], '#4A6A8A'); car([[400, 646], [950, 646], [950, 654], [400, 654]], '#8A4A3A'); car([[605, 860], [605, 420], [595, 420], [595, 860]], '#3A5A4A'); }
+      const c = { g, path: path.map(([a, b2]) => [WX(a), WZ(b2)]), i: 0, t: 0, x: 0, z: 0 }; c.x = c.path[0][0]; c.z = c.path[0][1]; g.position.set(c.x, 0, c.z); tw.cars.push(c); return c; };
+    { const CC = ['#4A6A8A', '#8A4A3A', '#3A5A4A', '#E8E8EC', '#C8B040', '#2A2A30', '#6A4A7A'];
+      const k = E.martial ? 0 : E.blizzard ? 0.4 : 1;
+      C.carRoutes.forEach(rt => { const n = Math.round(rt.n * k); for (let i = 0; i < n; i++) { const c = car(rt.path, CC[Math.floor(srand() * CC.length)]); const j = Math.floor(srand() * (rt.path.length - 1)); c.i = j; c.x = WX(rt.path[j][0]); c.z = WZ(rt.path[j][1]); c.g.position.set(c.x, 0, c.z); } }); }
     // 劇情人物、固定日期出現的人、私人委託的委託人（people.js、jobs.js）
     const api = { group, npc, inter, block, talk, lam, SB, G3, WX, WZ, spot: (sx, sy) => [WX(sx), WZ(sy)] };
     if (R.placePeople) R.placePeople('town', api);
     if (R.placeJobs) R.placeJobs('town', api);
 
-    // 城外的郊區、鐵路、東鶴站（suburbs.js）
+    // 街景：路面、標線、紅綠燈、路燈、電線桿、行道樹（cityscape.js）
+    if (R.buildCityscape) R.buildCityscape(Object.assign({}, api, { HB, B_, glowW, darkW, woodM, lampPost, vending, bike, sign, pineAt, tw, E }));
+    // 每一塊地的房子、鐵路、東鶴站（suburbs.js）
     if (R.buildSuburbs) R.buildSuburbs(Object.assign({}, api, { HB, B_, glowW, darkW, woodM, gableB, house, sign, lampPost, pineAt, bench, vending, bike, crates, truck, well, snowman, signpost, stoneLantern, propSprite, dexBuilding, houseCols, ROOFS, srand, tw, E }));
 
     // 雪（暴風雪那天特別多）
@@ -718,7 +570,7 @@
     R.buildTown(W.scene);
     const cls = R.S.cls, eq = R.equipped(cls), P = { cls, speed: R.CLASSES[cls].speed * 1.05, h: R.makePlayerHero(cls, eq.weapon ? eq.weapon.base : R.STARTER[cls], eq), aimA: Math.PI, yaw: Math.PI };
     W.P = P; W.scene.add(P.h.g);
-    const spot = at || (from && W.town.gates && W.town.gates[from] ? W.town.gates[from] : [WX(600), WZ(668)]);
+    const spot = at || (from && W.town.gates && W.town.gates[from] ? W.town.gates[from] : [WX(592), WZ(656)]);
     P.x = spot[0]; P.z = spot[1];
     R.spawnTownAllies();
     R.showScreen('run'); document.getElementById('run').classList.add('town'); W.paused = false;
@@ -772,7 +624,19 @@
     if (R.crimeStep) R.crimeStep(dt, tw.watchers, tw);
     if (R.peopleStep) R.peopleStep(dt);
     // 貨車：照路線開，前面有人就停
-    (tw.cars || []).forEach(c => { const [tx, tz] = c.path[(c.i + 1) % c.path.length], dx = tx - c.x, dz = tz - c.z, d = Math.hypot(dx, dz); if (d < 0.5) { c.i = (c.i + 1) % c.path.length; return; } const ux = dx / d, uz = dz / d, ahead = [P].concat(tw.npcs.filter(n => n.walk)).some(o => { const ox = o.x - c.x, oz = o.z - c.z, al = ox * ux + oz * uz, sd = Math.abs(ox * uz - oz * ux); return al > 0 && al < 6 && sd < 1.6; }); if (!ahead) { const sp = 6; c.x += ux * sp * dt; c.z += uz * sp * dt; } c.g.position.set(c.x, 0, c.z); c.g.rotation.y = Math.atan2(-ux, -uz); });
+    (tw.cars || []).forEach(c => {
+      const [tx, tz] = c.path[(c.i + 1) % c.path.length], dx = tx - c.x, dz = tz - c.z, d = Math.hypot(dx, dz); if (d < 0.5) { c.i = (c.i + 1) % c.path.length; return; }
+      const ux = dx / d, uz = dz / d;
+      let stop = [P].concat(tw.npcs.filter(n => n.walk), tw.cars.filter(o => o !== c).map(o => ({ x: o.x, z: o.z }))).some(o => { const ox = o.x - c.x, oz = o.z - c.z, al = ox * ux + oz * uz, sd = Math.abs(ox * uz - oz * ux); return al > 0.5 && al < 6.5 && sd < 1.6; });
+      // 紅燈：開往路口、還沒進路口
+      if (!stop) stop = (tw.signals || []).some(sg => { const ox = sg.x - c.x, oz = sg.z - c.z, al = ox * ux + oz * uz, sd = Math.abs(ox * uz - oz * ux); if (al < 6 || al > 16 || sd > 9) return false; const a = Math.atan2(-uz, -ux), dA = Math.abs(Math.sin(a + sg.J.angA)), axis = dA < 0.5 ? 'A' : 'B'; return R.signalState(tw.t, axis) !== 'g'; });
+      // 平交道的柵欄放下來了
+      if (!stop) stop = (tw.crossings || []).some(cr => { if (cr.k < 0.1) return false; const ox = cr.x - c.x, oz = (tw.railZ || 0) - c.z, al = ox * ux + oz * uz; return al > 4 && al < 16 && Math.abs(ox * uz - oz * ux) < 6; });
+      c.v = Math.max(0, Math.min(7, (c.v || 0) + (stop ? -14 : 4) * dt)); c.x += ux * c.v * dt; c.z += uz * c.v * dt;
+      c.g.position.set(c.x, 0, c.z); c.g.rotation.y = Math.atan2(-ux, -uz);
+    });
+    if (R.cityscapeStep) R.cityscapeStep(dt, tw);
+    if (tw.trees) tw.trees.update(W.cam.yaw);
     if (R.suburbStep) R.suburbStep(dt, tw, P);
     if (tw.clock) { const now = new Date(), hh = now.getHours() % 12 + now.getMinutes() / 60, mm = now.getMinutes() + now.getSeconds() / 60; tw.clock.h.rotation.z = -hh / 12 * Math.PI * 2; tw.clock.m.rotation.z = -mm / 60 * Math.PI * 2; }
     // 煙（重複使用，不會一直做新的）、溫泉的蒸氣、旗子、漂浮的眼睛記號
@@ -787,6 +651,7 @@
     tw.fx = tw.fx.filter(f => {
       if (f.kind === 'bob') { f.m.position.y = f.y + Math.sin(tw.t * 1.6) * 0.2; f.m.rotation.y += dt; return true; }
       if (f.kind === 'flag') { f.m.rotation.y = Math.sin(tw.t * 1.3 + f.ph) * 0.25; return true; }
+      if (f.kind === 'spin') { f.m.rotation.z += dt * (f.sp || 0.3); return true; }
       f.life -= dt; f.m.position.y += dt * (f.big ? 2 : 1.2); f.m.scale.multiplyScalar(1 + dt * 0.5); f.m.material.opacity = Math.max(0, f.life / 3 * 0.55);
       if (f.life <= 0) { f.m.visible = false; tw.pool.push(f.m); return false; } return true;
     });
@@ -806,7 +671,7 @@
   R.townNear = () => { const P = W.P; let best = null, bd = 1e9; W.town.inter.forEach(it => { const ix = it.follow ? it.follow.x : it.x, iz = it.follow ? it.follow.z + 1.1 : it.z; const d = Math.hypot(ix - P.x, iz - P.z); if (d < it.r && d < bd && (!it.when || it.when())) { bd = d; best = it; } }); return best; };
   R.townInteract = () => { if (W.P && W.P.sit) { W.P.sit = false; W.P.h.sit = false; return; } const it = W.inside ? R.interiorNear() : R.townNear(); if (it) it.act(); };
   R.townMenu = () => {
-    R.sheet('<h2>東鶴</h2><p class="note">' + (R.today ? R.esc(R.dateLabel()) : '') + '</p><p class="note">' + (R.touch ? '左搖桿移動・「跑步」開關・右上角的箭頭轉動視角・靠近門口或人點提示就能互動' : 'WASD 移動・按住 Shift 跑步・空白鍵進門或說話・Q／E 轉視角・滾輪拉近拉遠・Tab 地圖') + '</p><p class="note">出了北門是東鶴站和站前商店街；過了平交道，大路往北通到霜溪石窟、北山礦坑。從崙腳門出去過北橋，往西是河西住宅區和城西遺跡。更遠的遺跡，到驛站搭車，或到東鶴站搭魔導電車。</p>',
+    R.sheet('<h2>東鶴</h2><p class="note">' + (R.today ? R.esc(R.dateLabel()) : '') + '</p><p class="note">' + (R.touch ? '左搖桿移動・「跑步」開關・右上角的箭頭轉動視角・靠近門口或人點提示就能互動' : 'WASD 移動・按住 Shift 跑步・空白鍵進門或說話・Q／E 轉視角・滾輪拉近拉遠・Tab 地圖') + '</p><p class="note">舊城的北門外是外濠和國道一號；站前大通往北是東鶴站、站前廣場、拱廊商店街和德克斯凡百貨。站西通過了平交道是北口，再往北過霜溪是北山礦坑、霜溪石窟。國道往西過新大橋是河西和城西遺跡；東邊是官廳街、新商區。更遠的遺跡，到東鶴站搭魔導電車，或到國道邊的驛站搭車。</p>',
       '<div class="row"><button type="button" class="btn pri" id="tm-x">繼續</button>' + (R.questLog ? '<button type="button" class="btn" id="tm-log">手上的委託</button>' : '') + (R.newsSheet ? '<button type="button" class="btn" id="tm-news">瓦版</button>' : '') + (R.S.hood ? '<button type="button" class="btn" id="tm-hood">' + (R.S.hoodOn ? '拿下兜帽' : '戴上兜帽') + '</button>' : '') + '<button type="button" class="btn" id="tm-map">攤開地圖</button><button type="button" class="btn" id="tm-title">存檔，回到標題</button></div>');
     $('tm-x').onclick = R.closeSheet; $('tm-map').onclick = () => { R.closeSheet(); W.paused = true; R.openMap('donghe', 'dh-town'); };
     if ($('tm-log')) $('tm-log').onclick = () => R.questLog(); if ($('tm-hood')) $('tm-hood').onclick = () => { R.toggleHood(); R.townMenu(); }; if ($('tm-news')) $('tm-news').onclick = () => R.newsSheet();
@@ -817,9 +682,7 @@
   let slow = 0, lastArea = '';
   R.townArea = () => {
     const P = W.outside || W.P, sx = P.x / S + 500, sy = P.z / S + 500;
-    if (inTown(sx, sy)) { const d = DISTRICTS.filter(v => Math.hypot(v.x - sx, v.y - sy) < v.r).sort((p, q) => Math.hypot(p.x - sx, p.y - sy) - Math.hypot(q.x - sx, q.y - sy))[0]; return '東鶴・' + (d ? d.n : '城內'); }
-    const a = AREAS.filter(v => Math.hypot(v.x - sx, v.y - sy) < v.r).sort((p, q) => Math.hypot(p.x - sx, p.y - sy) - Math.hypot(q.x - sx, q.y - sy))[0];
-    return a ? a.n : '東鶴近郊';
+    return C.areaName(sx, sy);
   };
   R.townHud = (force, dt) => {
     slow += dt || 0; if (!force && slow < 0.2) return; slow = 0;

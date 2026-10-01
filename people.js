@@ -134,7 +134,7 @@
   };
   R.PEOPLE = P;
   // 城裡的位置（示意圖座標）、朝向
-  const SPOTS = {
+  const SPOTS = R.CITY ? R.CITY.SPOTS : {
     nanbashi: [578, 917, 0], dojo: [762, 722, Math.PI], dojoGate: [778, 750, 0], plaza: [586, 664, 0], plazaW: [566, 628, 0], market: [730, 646, Math.PI],
     northGate: [622, 420, 0], wallN: [560, 410, 0], survey: [186, 466, Math.PI * 0.8], survey2: [196, 470, Math.PI], survey3: [160, 470, Math.PI * 0.5],
     alley: [430, 562, 0], alley2: [470, 562, Math.PI], sugaSide: [652, 672, 0]

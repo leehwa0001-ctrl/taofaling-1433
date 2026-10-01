@@ -3,189 +3,25 @@
 // 鐵路（德克斯凡技術的魔導電車、平交道、鐵橋）與東鶴站、站前廣場、站前商店街、站東的住宅區；
 // 河西住宅區（小學、兒童公園、鎮守的小祠、墓地、超市）；城南沿著城牆的住宅、南渠外的田；北郊的倉庫、農家、溫室；
 // 地圖外看得到的遠方街景（走不到）。
-// 房子、路先在這裡排好（固定的亂數種子）：地面（town.js 的 paintGround 呼叫 R.paintSuburbs）和 3D（R.buildSuburbs）照同一份。
-// 座標和 town.js 一樣：示意圖的 1 單位＝0.22 公尺。
+// 每一塊地（R.CITY.lots）、鐵路、車站的位置都在 city.js；這裡負責把它們蓋出來（各種房子、站房、月台、電車、平交道）。
+// 座標和 town.js 一樣：示意圖的 1 單位＝0.44 公尺。
 (function (R) {
-  const S = 0.22, WX = sx => (sx - 500) * S, WZ = sy => (sy - 500) * S, HALF = 500 * S;
+  const C = R.CITY, S = C.S, WX = C.WX, WZ = C.WZ, HALF = C.HALF;
   let seed = 1; const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
   const pick = a => a[Math.floor(rnd() * a.length)];
   const hit = (a, b, m) => { m = m || 0; return a[0] < b[2] + m && a[2] > b[0] - m && a[1] < b[3] + m && a[3] > b[1] - m; };
   // 一塊地離一條路（折線）近不近
   const nearLine = (r, pts, m) => { for (let i = 0; i < pts.length - 1; i++) { const [ax, ay] = pts[i], [bx, by] = pts[i + 1], n = Math.ceil(Math.hypot(bx - ax, by - ay) / 3); for (let j = 0; j <= n; j++) { const x = ax + (bx - ax) * j / n, y = ay + (by - ay) * j / n; if (x > r[0] - m && x < r[2] + m && y > r[1] - m && y < r[3] + m) return true; } } return false; };
 
-  // ---------- 鐵路、車站 ----------
-  const G0 = R.TOWN_G;
-  const RAIL = { y: 305, y0: 286, y1: 324, t: [294, 316], fn: 283, fs: 327 };   // 道碴的範圍、兩條軌道、南北兩道圍籬
-  const PLAT = [612, 300, 752, 310], STATION = [632, 329, 724, 353], PLAZA = [608, 355, 772, 396];
-  const BRIDGE = [304, 357];
-  // 平交道：路和鐵路交叉的地方（大路、崙腳）
-  const CROSS = [];
-  G0.roads.forEach(rd => { for (let i = 0; i < rd.length - 1; i++) { const [ax, ay] = rd[i], [bx, by] = rd[i + 1]; if ((ay - RAIL.y) * (by - RAIL.y) < 0) CROSS.push(ax + (bx - ax) * (RAIL.y - ay) / (by - ay)); } });
-  const NB_RD = [[302, 399], [260, 420], [244, 424]];   // 北橋 → 城西遺跡（河西的那一段）
-
-  // ---------- 河西：巷子的格子與特別的區域 ----------
-  const KX = [30, 105, 180, 255], KY = [335, 420, 505, 590, 675, 760, 845, 930];
-  const Z = { ruins: [112, 393, 248, 500], school: [37, 511, 173, 669], park: [187, 511, 248, 584], grove: [187, 766, 248, 839], grave: [261, 766, 303, 839], market: [111, 851, 248, 924] };
-  const ZL = Object.values(Z);
-  const PADDY = [[345, 941, 588, 996], [612, 941, 1000, 996]], FIELD_N = [455, 160, 560, 232], GREEN_N = [640, 168, 700, 205], GREEN_S = [700, 950, 790, 990];
-
-  // ---------- 規劃 ----------
-  const plan = { lots: [], streets: [], nodes: [], adj: [] };
-  const street = (pts, w, kind) => plan.streets.push({ pts, w, kind: kind || 'lane' });
+  // ---------- 鐵路、車站、河西的區域、每一塊地：city.js ----------
+  const RAIL = C.RAIL, PLAT = C.PLAT, STATION = C.STATION, PLAZA = C.PLAZA, BRIDGE = C.BRIDGE, CROSS = C.CROSS, Z = C.Z;
+  const plan = { lots: C.lots, nodes: C.nodes, adj: C.adj };
   const WALLS = ['#E8E2D4', '#D8D2C4', '#C8CCD0', '#E0D6C0', '#B8BCC2', '#D4C8B4', '#F0ECE4', '#C4B8A4'];
-  const lot = o => { plan.lots.push(o); return o; };
-  seed = 20361;
-  street([[600, 400], [600, 283]], 14, 'main');
-  street([[600, 283], [620, 262], [620, 238]], 13, 'main');
-  street([[390, 480], [378, 380], [366, 300], [361, 280]], 12, 'main');
-  street([[372, 366], [593, 366]], 18, 'main'); street([[772, 366], [962, 366]], 18, 'main');   // 站前大街（中間是廣場）
-  street([[372, 332], [594, 332]], 8); street([[776, 332], [962, 332]], 8);
-  street([[372, 891], [962, 891]], 10);
-  street([[968, 398], [968, 884]], 8);
-  street(NB_RD, 12, 'main');
-  // 河西的巷子：碰到小學、公園、遺跡這些區域就斷開
-  const cutRun = (horiz, c, a0, a1, w) => {
-    let s = a0; const segs = [];
-    ZL.filter(z => (horiz ? c > z[1] && c < z[3] : c > z[0] && c < z[2])).map(z => (horiz ? [z[0], z[2]] : [z[1], z[3]])).sort((p, q) => p[0] - q[0])
-      .forEach(([u0, u1]) => { if (u0 > s) segs.push([s, Math.min(u0, a1)]); s = Math.max(s, u1); });
-    if (s < a1) segs.push([s, a1]);
-    segs.forEach(([u0, u1]) => { if (u1 - u0 > 8) street(horiz ? [[u0, c], [u1, c]] : [[c, u0], [c, u1]], w); });
-    return segs;
-  };
-  const runsH = KY.map(y => [y, cutRun(true, y, 18, 304, 12)]), runsV = KX.map(x => [x, cutRun(false, x, 329, 996, 12)]);
-
-  // 一般的房子（一塊地裡）：f 門朝哪邊（0 南、1 北、2 西、3 東）
-  // tight：地很淺（城牆外那一排）——房子貼著路蓋
-  const houseLot = (L, f, tight, one) => {
-    const horiz = f < 2, front = horiz ? L[2] - L[0] : L[3] - L[1], depth = horiz ? L[3] - L[1] : L[2] - L[0];
-    const r0 = rnd();
-    if (r0 < 0.05 && front > 26) { lot({ type: 'parking', r: L.slice(), f }); return; }   // 月租停車場
-    if (r0 < 0.09 && !tight) { lot({ type: 'garden', r: L.slice(), f }); return; }       // 家庭菜園
-    const w = Math.min(front - 6, 21 + rnd() * 6), d = tight ? depth - 5 : Math.min(depth - 10, 19 + rnd() * 5), set = tight ? 3 : 6 + rnd() * 2, m = 2 + rnd() * Math.max(0, front - w - 4);
-    let r;
-    if (f === 0) r = [L[0] + m, L[3] - set - d, L[0] + m + w, L[3] - set];
-    else if (f === 1) r = [L[0] + m, L[1] + set, L[0] + m + w, L[1] + set + d];
-    else if (f === 2) r = [L[0] + set, L[1] + m, L[0] + set + d, L[1] + m + w];
-    else r = [L[2] - set - d, L[1] + m, L[2] - set, L[1] + m + w];
-    // 房子靠一邊蓋，另一邊空著的地停車或種樹（spot：那塊空地的中心）
-    const free = horiz ? L[2] - r[2] : L[3] - r[3], spot = horiz ? [r[2] + free / 2, f === 0 ? r[3] - 7 : r[1] + 7] : [f === 2 ? r[0] + 7 : r[2] - 7, r[3] + free / 2];
-    lot({ type: 'house', r, f, lot: L.slice(), floors: one ? 1 : rnd() < 0.85 ? 2 : 1, col: pick(WALLS), car: free > 12 && rnd() < 0.6, spot: free > 9 ? spot : null, yard: rnd(), tight });
-  };
-  // 河西的街區
-  const XB = [[36, 99], [111, 174], [186, 249], [261, 303]], YB = [[341, 414], [426, 499], [511, 584], [596, 669], [681, 754], [766, 839], [851, 924], [936, 992]];
-  XB.forEach(([x0, x1]) => YB.forEach(([y0, y1]) => {
-    const mid = (y0 + y1) / 2;
-    [[y0, mid, 1], [mid, y1, 0]].forEach(([ra, rb, north]) => {
-      const rowR = [x0, ra, x1, rb];
-      if (ZL.some(z => hit(rowR, z, 1))) { // 有一部分在特別的區域：一塊一塊看
-        const n = Math.max(1, Math.round((x1 - x0) / 31)), lw = (x1 - x0) / n;
-        for (let i = 0; i < n; i++) { const L = [x0 + i * lw, ra, x0 + (i + 1) * lw, rb]; if (!ZL.some(z => hit(L, z, 1)) && !nearLine(L, NB_RD, 8)) houseLot(L, north ? 1 : 0); }
-        return;
-      }
-      if (x1 - x0 > 55 && rnd() < 0.16 && !nearLine(rowR, NB_RD, 8)) {   // 公寓（整排）
-        const d = 24, r = north ? [x0 + 4, ra + 6, x1 - 4, ra + 6 + d] : [x0 + 4, rb - 6 - d, x1 - 4, rb - 6];
-        lot({ type: 'apt', r, f: north ? 1 : 0, floors: rnd() < 0.5 ? 3 : 2, col: pick(['#D8D2C4', '#C8CCD0', '#E0D6C0', '#B8A898']) }); return;
-      }
-      const n = Math.max(1, Math.round((x1 - x0) / 31)), lw = (x1 - x0) / n;
-      for (let i = 0; i < n; i++) { const L = [x0 + i * lw, ra, x0 + (i + 1) * lw, rb]; if (!nearLine(L, NB_RD, 8)) houseLot(L, north ? 1 : 0); }
-    });
-  }));
-  // 城東：沿著城牆外的小路，房子門朝西
-  for (let y = 402; y < 878; y += 30) { if (y > 626 && y < 668) continue; houseLot([973, y, 1000, y + 29], 2, true); }
-  // 城南：城牆和南渠中間，門朝北（南橋一帶留空：瀧在那裡釣魚）
-  for (let x = 401; x < 956; x += 30) { if (x > 528 && x < 668) continue; houseLot([x, 897, Math.min(x + 29, 958), 925], 1, true); }
-  // 站前：商店街（西）、住宅區（東）；北排門朝南、南排門朝北
-  const SHOPS = [['甘味處・和菓子', '#8A2A24', 'wagashi'], ['東鶴書房', '#2E4A3A', 'book'], ['理髮店', '#2E3A5A', 'barber'], ['定食屋・小町', '#5A3A1E', 'diner'], ['時計・眼鏡', '#3A3A44', 'watch'], ['八百屋', '#3E5A2E'], ['寫真館', '#4A3A5A', 'photo'],
-    ['魚屋', '#2E4A6A'], ['德克斯凡家電', '#1E3A5A', 'dex'], ['酒屋', '#5A2A2A'], ['金物店', '#4A4A40'], ['布團店', '#5A4A6A'], ['麵包坊', '#7A4A2A'], ['花屋', '#3A5A4A']];
-  let si = 0;
-  // 南排（門朝北）背對鏡頭：一層樓、平屋頂，街才看得到
-  [[337, 356, 0], [376, 395, 1]].forEach(([ya, yb, f]) => {
-    let x = 398;
-    while (x < 586) { const w = Math.min(586 - x, 26 + Math.floor(rnd() * 9)); if (w < 18) break; const s = SHOPS[si++ % SHOPS.length]; lot({ type: 'shop', r: [x + 1, ya + (f ? 0 : 1), x + w - 1, yb - (f ? 1 : 0)], f, name: s[0], sc: s[1], kind: s[2], low: f === 1, col: pick(['#D8D2C4', '#C8C0B0', '#E4DCCC', '#B8B0A4', '#D0C8BC']), awn: pick(['#8A2A24', '#2E5A3A', '#2E4A6A', '#C8823A', '#5A3A6A']) }); x += w; }
-  });
-  lot({ type: 'conbini', r: [779, 377, 822, 395], f: 1 });
-  lot({ type: 'parking', r: [778, 337, 830, 356], f: 0, big: 1 });
-  lot({ type: 'apt', r: [864, 377, 914, 395], f: 1, floors: 2, col: '#D8D2C4' });
-  lot({ type: 'clinic', r: [832, 337, 862, 356], f: 0 });
-  for (let x = 864; x < 956; x += 31) houseLot([x, 335, Math.min(x + 30, 960), 357], 0, true);
-  houseLot([824, 376, 862, 396], 1, true, true); houseLot([916, 376, 958, 396], 1, true, true);
-  // 北郊：鐵路北邊的倉庫、農家；霜溪北邊的農家、溫室
-  lot({ type: 'warehouse', r: [632, 270, 690, 282], f: 1 }); lot({ type: 'warehouse', r: [706, 270, 760, 282], f: 1 });
-  lot({ type: 'farm', r: [506, 202, 534, 224], f: 0 }); lot({ type: 'farm', r: [676, 214, 700, 232], f: 0 });
-  lot({ type: 'farm', r: [446, 954, 476, 980], f: 1 }); lot({ type: 'farm', r: [836, 954, 866, 980], f: 1 });
-  lot({ type: 'greens', r: GREEN_N.slice() }); lot({ type: 'greens', r: GREEN_S.slice() });
-
-  // 路人走的路線（巷子的交叉點連成網）
-  const nodeAt = (x, y) => { let i = plan.nodes.findIndex(([a, b]) => Math.abs(a - x) < 1 && Math.abs(b - y) < 1); if (i < 0) { i = plan.nodes.length; plan.nodes.push([x, y]); plan.adj.push([]); } return i; };
-  const linkRun = pts => { for (let i = 0; i < pts.length - 1; i++) { const a = nodeAt(...pts[i]), b = nodeAt(...pts[i + 1]); if (a !== b && !plan.adj[a].includes(b)) { plan.adj[a].push(b); plan.adj[b].push(a); } } };
-  runsH.forEach(([y, segs]) => segs.forEach(([u0, u1]) => { const xs = [u0 + 4].concat(KX.filter(x => x > u0 && x < u1)).concat([u1 - 4]); linkRun(xs.map(x => [x, y])); }));
-  runsV.forEach(([x, segs]) => segs.forEach(([u0, u1]) => { const ys = [u0 + 4].concat(KY.filter(y => y > u0 && y < u1)).concat([u1 - 4]); linkRun(ys.map(y => [x, y])); }));
-  const KASAI_N = plan.nodes.length;
-  const lineNodes = (ax, ay, bx, by, step) => { const n = Math.max(1, Math.round(Math.hypot(bx - ax, by - ay) / step)), pts = []; for (let i = 0; i <= n; i++) pts.push([ax + (bx - ax) * i / n, ay + (by - ay) * i / n]); linkRun(pts); };
-  lineNodes(380, 366, 955, 366, 26);               // 站前大街
-  lineNodes(600, 396, 600, 366, 16); lineNodes(678, 366, 678, 358, 4); // 北門、車站門口
-  lineNodes(401, 891, 955, 891, 28); lineNodes(968, 402, 968, 880, 28);
-
-  // 松樹別種在這些地方
-  R.suburbBusy = (sx, sy) => (sy > 274 && sy < 404 && sx > 352) || (sx < 316 && sy > 274) || sy > 876 || (sx > 955 && sy > 395) || Math.abs(sy - RAIL.y) < 26
-    || plan.lots.some(l => sx > l.r[0] - 14 && sx < l.r[2] + 14 && sy > l.r[1] - 14 && sy < l.r[3] + 14) || hit([sx, sy, sx, sy], FIELD_N, 12);
-
-  // ---------- 地面 ----------
-  R.paintSuburbs = (g, k) => {
-    seed = 777;
-    const rect = (x0, y0, x1, y1, col) => { g.fillStyle = col; g.fillRect(Math.round(x0 * k), Math.round(y0 * k), Math.max(1, Math.round((x1 - x0) * k)), Math.max(1, Math.round((y1 - y0) * k))); };
-    const poly = (pts, w, col, cap) => { g.strokeStyle = col; g.lineWidth = w * k; g.lineCap = cap || 'butt'; g.lineJoin = 'round'; g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x * k, y * k) : g.moveTo(x * k, y * k))); g.stroke(); };
-    const speckle = (r, n, cols) => { for (let i = 0; i < n; i++) { g.fillStyle = cols[Math.floor(rnd() * cols.length)]; g.fillRect(Math.floor((r[0] + rnd() * (r[2] - r[0])) * k), Math.floor((r[1] + rnd() * (r[3] - r[1])) * k), 1 + Math.floor(rnd() * 2), 1); } };
-    // 田：雪下的一格一格水田，田埂
-    const paddy = (r, cell) => { rect(...r, '#DCE2E2'); for (let x = r[0]; x <= r[2]; x += cell) rect(x - 0.8, r[1], x + 0.8, r[3], '#B4AA98'); for (let y = r[1]; y <= r[3]; y += cell * 0.7) rect(r[0], y - 0.8, r[2], y + 0.8, '#B4AA98'); speckle(r, 400, ['rgba(150,160,130,.5)', 'rgba(240,246,248,.9)']); };
-    PADDY.forEach(r => paddy(r, 36)); paddy(FIELD_N, 26);
-    // 特別的區域
-    rect(...Z.ruins, '#B8AE9C'); speckle(Z.ruins, 500, ['rgba(120,110,96,.6)', 'rgba(236,240,242,.8)']);
-    { const r = Z.school; rect(...r, '#CEC4AC'); rect(r[0], r[1], r[2], r[1] + 26, '#A8A49C'); g.strokeStyle = '#F4F0E6'; g.lineWidth = 2; g.beginPath(); g.ellipse((r[0] + r[2]) / 2 * k, (r[1] + 40 + r[3]) / 2 * k, (r[2] - r[0]) / 2.6 * k, (r[3] - r[1] - 40) / 2.6 * k, 0, 0, 7); g.stroke(); speckle(r, 300, ['rgba(240,246,248,.9)']); }
-    rect(...Z.park, '#D2D8C8'); rect(Z.park[0] + 8, Z.park[1] + 8, Z.park[0] + 24, Z.park[1] + 22, '#D8C8A0');
-    rect(...Z.grove, '#C8C0AE'); rect((Z.grove[0] + Z.grove[2]) / 2 - 4, Z.grove[1] + 10, (Z.grove[0] + Z.grove[2]) / 2 + 4, Z.grove[3], '#A8A090');
-    rect(...Z.grave, '#B4B0A8');
-    { const r = Z.market; rect(...r, '#5A5C62'); for (let x = r[0] + 6; x < r[2] - 40; x += 11) rect(x, r[1] + 30, x + 0.8, r[3] - 4, '#E8E4D8'); }
-    // 車站前的廣場、月台
-    rect(...PLAZA, '#ABA79F'); for (let y = PLAZA[1]; y < PLAZA[3]; y += 5) for (let x = PLAZA[0] + ((y / 5) % 2) * 2.5; x < PLAZA[2]; x += 5) { const v = 160 + rnd() * 20 | 0; rect(x, y, x + 4.4, y + 4.4, 'rgb(' + v + ',' + (v - 4) + ',' + (v - 10) + ')'); }
-    rect(PLAZA[0], PLAZA[1], PLAZA[2], PLAZA[1] + 8, '#55575C'); for (let x = PLAZA[0] + 6; x < PLAZA[2]; x += 14) rect(x, PLAZA[1] + 3.6, x + 7, PLAZA[1] + 4.4, '#E8E4D8');
-    g.fillStyle = '#9A968C'; g.beginPath(); g.ellipse(690 * k, 381 * k, 18 * k, 8 * k, 0, 0, 7); g.fill();
-    // 停車場、菜園、工地的地面
-    plan.lots.forEach(l => {
-      if (l.type === 'parking') { rect(...l.r, '#5E6066'); for (let x = l.r[0] + 3; x < l.r[2] - 3; x += 10) rect(x, l.r[1] + 2, x + 0.7, l.r[3] - 2, '#E8E4D8'); }
-      else if (l.type === 'garden') { rect(l.r[0] + 3, l.r[1] + 3, l.r[2] - 3, l.r[3] - 3, '#8A7A62'); for (let y = l.r[1] + 6; y < l.r[3] - 3; y += 4) rect(l.r[0] + 4, y, l.r[2] - 4, y + 1.2, '#E8EEF0'); }
-      else if (l.type === 'house' && l.lot) { const L = l.lot, r = l.r; // 車道、門前的水泥地
-        if (l.f === 0) rect(r[0] + 2, r[3], r[0] + 10, L[3], '#A8A69E'); else if (l.f === 1) rect(r[0] + 2, L[1], r[0] + 10, r[1], '#A8A69E'); else if (l.f === 2) rect(L[0], r[1] + 2, r[0], r[1] + 10, '#A8A69E'); else rect(r[2], r[1] + 2, L[2], r[1] + 10, '#A8A69E'); }
-      else if (l.type === 'conbini' || l.type === 'clinic') rect(l.r[0] - 2, l.r[1] - 2, l.r[2] + 2, l.r[3] + 2, '#9A989A');
-    });
-    // 街道：柏油、人行道邊緣；大街畫中線，小巷畫兩邊的白線
-    plan.streets.forEach(s => poly(s.pts, s.w + 3, '#9A968E', 'square'));
-    plan.streets.forEach(s => poly(s.pts, s.w, '#4E5056', 'square'));
-    for (let i = 0; i < 6000; i++) { const s = plan.streets[Math.floor(rnd() * plan.streets.length)], j = Math.floor(rnd() * (s.pts.length - 1)), [ax, ay] = s.pts[j], [bx, by] = s.pts[j + 1], t = rnd(), L = Math.hypot(bx - ax, by - ay) || 1, o = (rnd() - 0.5) * s.w; const x = ax + (bx - ax) * t - (by - ay) / L * o, y = ay + (by - ay) * t + (bx - ax) / L * o, v = 66 + rnd() * 24 | 0; g.fillStyle = 'rgb(' + v + ',' + v + ',' + (v + 6) + ')'; g.fillRect(Math.floor(x * k), Math.floor(y * k), 1, 1); }
-    plan.streets.forEach(s => { for (let i = 0; i < s.pts.length - 1; i++) { const [ax, ay] = s.pts[i], [bx, by] = s.pts[i + 1], L = Math.hypot(bx - ax, by - ay), ux = (bx - ax) / L, uy = (by - ay) / L, nx = -uy, ny = ux;
-      if (s.kind === 'main') { for (let t = 4; t < L - 4; t += 12) poly([[ax + ux * t, ay + uy * t], [ax + ux * (t + 6), ay + uy * (t + 6)]], 0.8, '#E8E4D8'); }
-      else [-1, 1].forEach(sd => poly([[ax + nx * sd * (s.w / 2 - 1.2), ay + ny * sd * (s.w / 2 - 1.2)], [bx + nx * sd * (s.w / 2 - 1.2), by + ny * sd * (s.w / 2 - 1.2)]], 0.6, '#D8D4C8'));
-    } });
-    // 河西的十字路口：路面寫著「停」
-    g.fillStyle = '#E8E4D8'; g.font = 'bold ' + Math.round(7 * k) + 'px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    runsV.forEach(([x, segs]) => segs.forEach(([u0, u1]) => KY.forEach(y => { if (y > u0 + 10 && y < u1 - 10 && rnd() < 0.5) g.fillText('停', x * k, (y - 11) * k); })));
-    // 鐵路：道碴、枕木、鐵軌；過河的地方是鐵橋
-    const [r0, r1] = [RAIL.y0, RAIL.y1];
-    [[0, BRIDGE[0]], [BRIDGE[1], 1000]].forEach(([x0, x1]) => { rect(x0, r0, x1, r1, '#8E8A84'); speckle([x0, r0, x1, r1], 2600, ['#7A7670', '#A29E98', '#6E6A66']); });
-    rect(BRIDGE[0], r0 + 3, BRIDGE[1], r1 - 3, '#3E3E46'); for (let x = BRIDGE[0]; x < BRIDGE[1]; x += 6) rect(x, r0 + 3, x + 1, r1 - 3, '#2A2A30');
-    RAIL.t.forEach(ty => { for (let x = 0; x < 1000; x += 3) rect(x, ty - 4.6, x + 1.3, ty + 4.6, x > BRIDGE[0] && x < BRIDGE[1] ? '#2A2420' : '#5A4A3C'); [-2.45, 2.45].forEach(o => rect(0, ty + o - 0.45, 1000, ty + o + 0.45, '#5A5A62')); [-2.45, 2.45].forEach(o => rect(0, ty + o - 0.45, 1000, ty + o - 0.1, '#A8A8B0')); });
-    // 平交道：路面鋪過軌道
-    CROSS.forEach(cx => { rect(cx - 7, r0, cx + 7, r1, '#4E5056'); rect(cx - 7.5, r0, cx - 6.5, r1, '#E8C03A'); rect(cx + 6.5, r0, cx + 7.5, r1, '#E8C03A'); RAIL.t.forEach(ty => [-2.45, 2.45].forEach(o => rect(cx - 7, ty + o - 0.45, cx + 7, ty + o + 0.45, '#8A8A92'))); });
-    // 月台
-    rect(...PLAT, '#B4B0A6'); rect(PLAT[0], PLAT[1], PLAT[2], PLAT[1] + 1, '#E8C040'); rect(PLAT[0], PLAT[3] - 1, PLAT[2], PLAT[3], '#E8C040');
-    // 房子的屋頂（小地圖、大地圖上看得到房子）
-    plan.lots.forEach(l => { if (['house', 'apt', 'shop', 'conbini', 'clinic', 'warehouse', 'farm'].includes(l.type)) rect(...l.r, l.type === 'shop' ? '#6A5A50' : l.type === 'apt' ? '#7A7C82' : '#5A5456'); });
-    rect(...STATION, '#6A6C72');
-  };
+  R.suburbBusy = () => false;
 
   // ---------- 3D ----------
   R.buildSuburbs = api => {
-    const { group, npc, inter, block, talk, lam, SB, HB, G3, B_, glowW, darkW, woodM, gableB, sign, lampPost, pineAt, bench, vending, bike, tw, E } = api;
+    const { group, npc, inter, block, talk, lam, SB, HB, G3, B_, glowW, darkW, woodM, gableB, sign, lampPost, pineAt, bench, vending, bike, tw, E, house, dexBuilding } = api;
     const TH = THREE; seed = 99;
     const ROT = [0, Math.PI, -Math.PI / 2, Math.PI / 2];
     const bigSign = (x, y, z, ry, txt, bg, fg, w, h) => { const t = R.pixCanvasTex(Math.round(w * 24), Math.round(h * 24), (g, W0, H0) => { g.fillStyle = bg; g.fillRect(0, 0, W0, H0); g.fillStyle = fg; g.font = 'bold ' + Math.round(H0 * 0.66) + 'px "Noto Serif TC", serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, W0 / 2, H0 / 2 + 1); }); const m = new TH.Mesh(new TH.PlaneGeometry(w, h), R.seeThrough(new TH.MeshBasicMaterial({ map: t }))); m.position.set(x, y, z); m.rotation.y = ry; group.add(m); return m; };
@@ -288,7 +124,7 @@
       B.add(G3.box, B_('#5A5C62', { tex: 'cap' }), 0, H + 0.08, 0, w + 0.2, 0.16, d + 0.2); B.add(G3.box, snowM, 0, H + 0.2, 0, w - 0.4, 0.06, d - 0.4);
       B.at(null); rblock(l.r);
       const [sx, sz] = toW(fr, 0, d / 2 + 0.1); sign(sx, 4.2, sz, fr.ry, '德克斯凡便利商店', '#1E3A2E', Math.min(w - 0.5, 3.4));
-      const [vx, vz] = toW(fr, w / 2 - 0.7, d / 2 + 0.9); vending(vx, vz);
+      if (l.f === 0) { const [vx, vz] = toW(fr, w / 2 - 0.7, d / 2 + 0.9); vending(vx, vz); }
       const [ix, iz] = toW(fr, -0.6, d / 2 + 1.5); inter(ix, iz, 2.0, '德克斯凡便利商店（熱飲 6 費拉）', () => (R.vendingBuy ? R.vendingBuy() : null));
     };
     const clinic = l => {
@@ -308,7 +144,34 @@
     const parking = l => { const r = l.r, n = Math.floor((r[2] - r[0] - 6) / 10); for (let i = 0; i < n; i++) if (rnd() < (l.big ? 0.7 : 0.5)) carAt(WX(r[0] + 8 + i * 10), WZ((r[1] + r[3]) / 2), l.f === 1 ? Math.PI : 0); };
     const garden = l => { const r = l.r; [[r[0] + 2, r[1] + 2, r[2] - 2, r[1] + 2], [r[0] + 2, r[3] - 2, r[2] - 2, r[3] - 2]].forEach(([a, b, c]) => { SB.add(G3.box, woodM, WX((a + c) / 2), 0.5, WZ(b), (c - a) * S, 0.06, 0.06); }); for (let x = r[0] + 2; x <= r[2] - 2; x += 8) [r[1] + 2, r[3] - 2].forEach(y => SB.add(G3.box, woodM, WX(x), 0.4, WZ(y), 0.08, 0.8, 0.08)); };
 
-    plan.lots.forEach(l => ({ house: jhouse, apt, shop, conbini, clinic, warehouse, farm, greens, parking, garden })[l.type](l));
+    // 直立的招牌：一棟雜居大樓裡的店家，一個字一個字往下寫（90 年代的站前）
+    const TENANT = ['麻雀・東風', '酒場・夜蝶', '英語教室', '牙醫診所', '補習班', '當鋪', '卡拉OK', '按摩', '電器修理', '茶房', '理容', '設計事務所', '小酒館', '撞球', '旅行社', '算盤教室'];
+    const vsign = (x, y, z, ry, n) => {
+      const names = []; for (let i = 0; i < n; i++) names.push(pick(TENANT));
+      const cols = ['#C83A3A', '#2E5A8A', '#E8C03A', '#3E7A48', '#6A3A8A', '#E87A3A'];
+      const t = R.pixCanvasTex(14, 30 * n, (g, W0, H0) => { names.forEach((nm, i) => { g.fillStyle = cols[(i + nm.length) % cols.length]; g.fillRect(0, i * 30, W0, 29); g.fillStyle = '#F8F4EA'; g.font = 'bold 6px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; [...nm].slice(0, 4).forEach((ch, j) => g.fillText(ch, W0 / 2, i * 30 + 4 + j * 7)); }); });
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 1.3 * n), R.seeThrough(new THREE.MeshLambertMaterial({ map: t, emissive: '#FFFFFF', emissiveMap: t, emissiveIntensity: 0.5, side: THREE.DoubleSide }))); m.position.set(x, y, z); m.rotation.y = ry; group.add(m);
+    };
+    const oldhouse = l => { const fr = frame(l.r, l.f); house(fr.x / S + 500, fr.z / S + 500, fr.w - 0.4, fr.d - 0.4, 2.7 + rnd() * 0.6, l.col, fr.ry, { floors: l.floors || 1, shop: !!l.shop }); };
+    const kura = l => { const fr = frame(l.r, l.f), B = HB, w = fr.w - 0.6, d = fr.d - 0.6, H = 4.6; B.at(fr.x, fr.z, fr.ry); B.add(G3.box, B_('#F0ECE2', { tex: 'plaster' }), 0, H / 2, 0, w, H, d); B.add(G3.box, B_('#2E2A2A', { tex: 0 }), 0, 0.6, 0, w + 0.06, 1.2, d + 0.06); gableB(B, w, d, H, 0, '#F0ECE2'); B.add(G3.box, B_('#3A3232', { tex: 'planks' }), 0, 1.3, d / 2 + 0.04, 1.4, 2.4, 0.1); B.add(G3.box, B_('#2E2A2A', { tex: 0 }), 0, 3.4, d / 2 + 0.04, 0.8, 0.6, 0.08); B.at(null); rblock(l.r); };
+    const midrise = l => { const fr = frame(l.r, l.f), fl = Math.min(6, l.floors || 4); dexBuilding(fr.x / S + 500, fr.z / S + 500, fr.w - 0.4, fr.d - 0.4, fl, fr.ry);
+      if (rnd() < 0.75) { const [sx, sz] = toW(fr, fr.w / 2 - 0.5, fr.d / 2 + 0.7); vsign(sx, 3.0 + fl * 0.9, sz, fr.ry + Math.PI / 2, Math.min(fl, 2 + Math.floor(rnd() * 3))); }
+      if (rnd() < 0.5) { const [ax, az] = toW(fr, 0, fr.d / 2 + 0.6); SB.add(G3.box, lam(pick(['#C83A3A', '#3A6A8A', '#E8A03A', '#3E7A48']), { tex: 0 }), ax, 2.6, az, fr.w - 0.8, 0.08, 1.1, 0, fr.ry, 0); } };
+    const OFFICES = ['東鶴信用金庫', '昭旭保險', '東鶴建設', '皇嶺新聞・東鶴支局', '德克斯凡商會', '東鶴電力', '昭旭鐵道・東鶴營業所', '東鶴商工會議所', '天宮海運', '東鶴不動產'];
+    const office = l => { const fr = frame(l.r, l.f), B = HB, w = fr.w - 0.4, d = fr.d - 0.4, fl = Math.min(6, l.floors || 4), fh = 3.2, H = fl * fh, wall = B_(pick(['#B8B8B4', '#C8C0B0', '#A8ACB0', '#D0C8BC']), { tex: 'wall' }); B.at(fr.x, fr.z, fr.ry);
+      B.add(G3.box, wall, 0, H / 2, 0, w, H, d);
+      for (let f = 0; f < fl; f++) { B.add(G3.box, rnd() < 0.6 ? glowW : darkW, 0, f * fh + 1.9, d / 2 + 0.03, w - 1.2, 1.1, 0.05); [-1, 1].forEach(sd => B.add(G3.box, rnd() < 0.5 ? glowW : darkW, sd * (w / 2 + 0.03), f * fh + 1.9, 0, 0.05, 1.1, d - 1.2)); }
+      B.add(G3.box, B_('#3A3C42', { tex: 0 }), 0, 1.2, d / 2 + 0.05, 2.4, 2.4, 0.06); B.add(G3.box, B_('#5A5C62', { tex: 'cap' }), 0, 2.7, d / 2 + 0.7, 3.4, 0.14, 1.4);
+      B.add(G3.box, B_('#4A4C52', { tex: 'cap' }), 0, H + 0.08, 0, w + 0.2, 0.16, d + 0.2); B.add(G3.box, snowM, 0, H + 0.2, 0, w - 0.4, 0.06, d - 0.4); B.add(G3.box, B_('#7A7C82', { tex: 'cap' }), 0, H + 0.5, d / 2, w + 0.2, 0.8, 0.2);
+      if (rnd() < 0.5) B.add(G3.cyl, B_('#6A6A70', { tex: 0 }), w * 0.25, H + 1.3, -d * 0.2, 1.4, 1.6, 1.4);
+      B.at(null); rblock(l.r); const [sx, sz] = toW(fr, 0, d / 2 + 0.1); sign(sx, 3.3, sz, fr.ry, pick(OFFICES), '#2E3A48', Math.min(w - 0.6, 3.6)); };
+    const factory = l => { const fr = frame(l.r, l.f), B = HB, w = fr.w - 0.4, d = fr.d - 0.4, H = 5; B.at(fr.x, fr.z, fr.ry); B.add(G3.box, B_('#9A8A7A', { tex: 'wall' }), 0, H / 2, 0, w, H, d);
+      const n = Math.max(2, Math.floor(w / 4)); for (let i = 0; i < n; i++) { const ox = -w / 2 + 2 + i * (w - 4) / Math.max(1, n - 1); B.add(G3.box, B_('#4A4C52', { tex: 'cap' }), ox, H + 0.8, 0, 3.6, 0.2, d + 0.2, 0, 0, -0.45); B.add(G3.box, snowM, ox, H + 0.95, 0, 3.2, 0.08, d, 0, 0, -0.45); }
+      B.add(G3.box, B_('#5A5C62', { tex: 'cap' }), -w / 4, 1.8, d / 2 + 0.04, w / 3, 3.6, 0.08); B.add(G3.cyl, B_('#6A4A3A', { tex: 'wall' }), w / 2 - 1.2, 6, -d / 2 + 1.2, 0.9, 12, 0.9); B.at(null); rblock(l.r);
+      const [cx, cz] = toW(fr, w / 2 - 1.2, -d / 2 + 1.2); tw.smokes.push({ x: cx, y: 12.3, z: cz }); };
+    const vacant = l => { const fr = frame(l.r, l.f), [sx, sz] = toW(fr, 0, fr.d / 2 - 1); SB.add(G3.box, woodM, sx - 0.6, 0.8, sz, 0.1, 1.6, 0.1); SB.add(G3.box, woodM, sx + 0.6, 0.8, sz, 0.1, 1.6, 0.1); sign(sx, 1.5, sz + 0.06 * Math.cos(fr.ry), fr.ry, '售地・東鶴不動產', '#8A2A24', 1.8); block(sx - 0.7, sx + 0.7, sz - 0.1, sz + 0.1, 'deco'); for (let i = 0; i < 3; i++) { const [hx, hz] = toW(fr, (rnd() - 0.5) * (fr.w - 2), (rnd() - 0.5) * (fr.d - 3)); SB.add(G3.sph, snowL, hx, 0, hz, 1.2 + rnd(), 0.4, 1 + rnd() * 0.6); } };
+    const B2 = { house: jhouse, apt, shop, conbini, clinic, warehouse, farm, greens, parking, garden, oldhouse, kura, midrise, office, factory, vacant };
+    plan.lots.forEach(l => { const f = B2[l.type]; if (f) f(l); });
 
     // ---------- 鐵路 ----------
     const railM = lam('#8A8A94', { tex: 0 }), fenceM = lam('#4A6A52', { tex: 0 });
@@ -376,35 +239,31 @@
       sign(px1 - 3, 2.5, pcz + 0.08, 0, '東鶴', '#2E3A48', 1.6);
     }
 
-    // ---------- 站前廣場：計程車、公車站、花壇、腳踏車、崗亭 ----------
-    { const P0 = PLAZA;
-      carAt(WX(640), WZ(358.5), Math.PI / 2, '#E8C03A'); carAt(WX(656), WZ(358.5), Math.PI / 2, '#E8C03A');
+    // ---------- 站前廣場：計程車、公車站、花壇、時鐘柱、腳踏車 ----------
+    { const P0 = PLAZA, FAC = C.FAC;
+      carAt(WX(P0[0] + 18), WZ(P0[3] - 12), Math.PI / 2, '#E8C03A'); carAt(WX(P0[0] + 30), WZ(P0[3] - 12), Math.PI / 2, '#E8C03A'); carAt(WX(P0[0] + 42), WZ(P0[3] - 12), Math.PI / 2, '#E8C03A');
       const shelter = (sx, sy) => { const x = WX(sx), z = WZ(sy); HB.add(G3.box, B_('#BFD8E8', { em: '#5A7A8A', ei: 0.25 }), x, 1.2, z - 0.7, 3, 1.8, 0.06); HB.add(G3.box, B_('#3A3C42', { tex: 'cap' }), x, 2.5, z, 3.4, 0.12, 1.8); HB.add(G3.box, snowM, x, 2.58, z, 3.2, 0.05, 1.6); [-1.5, 1.5].forEach(o => HB.add(G3.box, metal, x + o, 1.25, z - 0.7, 0.08, 2.5, 0.08)); HB.add(G3.box, woodM, x, 0.45, z - 0.4, 2.4, 0.1, 0.4); block(x - 1.6, x + 1.6, z - 0.8, z - 0.6, 'deco'); };
-      shelter(735, 360); shelter(756, 360);
-      SB.add(G3.box, metal, WX(746), 1.3, WZ(357.5), 0.08, 2.6, 0.08); SB.add(G3.box, lam('#2E5A8A', { tex: 0 }), WX(746), 2.5, WZ(357.5), 0.6, 0.6, 0.04);
-      inter(WX(746), WZ(364), 1.8, '公車站的站牌', () => talk('公車站', ['環城線：北門 → 西市口 → 南門 → 河西。', '往皇嶺的長途巴士：每天一班。']));
-      // 花壇與時鐘柱
-      { const x = WX(690), z = WZ(381); SB.add(G3.cyl, concrete, x, 0.3, z, 7.6, 0.6, 3.4); SB.add(G3.cyl, snowL, x, 0.62, z, 7.2, 0.06, 3.0); pineAt(x - 1.8, z, 0.8); pineAt(x + 1.8, z, 0.7); SB.add(G3.box, metal, x, 2.2, z, 0.16, 4.4, 0.16); SB.add(G3.box, lam('#F4ECD8', { em: '#FFE8B0', ei: 0.5 }), x, 4.4, z, 0.7, 0.7, 0.7); block(x - 3.6, x + 3.6, z - 1.5, z + 1.5, 'deco'); inter(x, z + 2.2, 1.8, '站前的時鐘柱', () => R.townToast('時鐘柱底下刻著：「魔導電車東鶴站 開業紀念」。')); }
-      for (let i = 0; i < 6; i++) bike(WX(764), WZ(368 + i * 4), Math.PI / 2);
-      vending(WX(636), WZ(369)); vending(WX(641), WZ(369));
-      bench(WX(660), WZ(392), 0); bench(WX(716), WZ(392), 0);
-      [[612, 360], [612, 392], [770, 392], [728, 372]].forEach(([sx, sy]) => lampPost(WX(sx), WZ(sy)));
-      // 衛兵的崗亭
-      { const x = WX(618), z = WZ(378); HB.add(G3.box, B_('#C8C4BC', { tex: 'wall' }), x, 1.3, z, 1.8, 2.6, 1.8); HB.add(G3.box, glowW, x + 0.92, 1.6, z, 0.05, 0.8, 1.2); HB.add(G3.box, B_('#3A3C42', { tex: 'cap' }), x, 2.7, z, 2.2, 0.16, 2.2); HB.add(G3.box, snowM, x, 2.8, z, 2, 0.06, 2); block(x - 0.9, x + 0.9, z - 0.9, z + 0.9, 'house');
-        const gd = npc(x + 1.6, z + 0.6, { top: '#3E4A5A', hair: '#2A2420', cloak: '#2E3A48', shield: true }, '站前崗亭的衛兵', Math.PI / 2, 'spear', 'knight'); gd.watch = { range: 11, fov: 1.0, guard: 1 }; tw.watchers.push(gd); gd.guard = true;
-        inter(x + 1.6, z + 1.4, 1.8, '和崗亭的衛兵說話', () => talk('站前崗亭的衛兵', [E.martial ? '「戒嚴中。電車停駛，車站也不讓人進。」' : pick(['「從皇嶺來的人越來越多，車站前要有人顧著。」', '「平交道別亂闖。上個月有個醉漢差點被電車撞。」'])]), { follow: gd }); }
-      // 商店街的牌樓（兩頭）
-      [398, 588].forEach(sx => { const x = WX(sx), za = WZ(356.5), zb = WZ(375.5); [za, zb].forEach(z => { HB.add(G3.box, B_('#8A2A24', { tex: 0 }), x, 2.2, z, 0.3, 4.4, 0.3); block(x - 0.2, x + 0.2, z - 0.2, z + 0.2, 'deco'); }); HB.add(G3.box, B_('#3A2A1C', { tex: 'planks' }), x, 4.5, (za + zb) / 2, 0.3, 0.6, zb - za + 0.6); HB.add(G3.box, snowM, x, 4.84, (za + zb) / 2, 0.36, 0.08, zb - za + 0.5); sign(x + (sx < 500 ? -0.18 : 0.18), 3.75, (za + zb) / 2, sx < 500 ? -Math.PI / 2 : Math.PI / 2, '站前商店街', '#5A1E1C', 2.8); });
-      // 商店街、站前大街的路燈
-      for (let sx = 412; sx < 960; sx += 34) { if (sx > 566 && sx < 776) continue; lampPost(WX(sx), WZ(357.6)); lampPost(WX(sx + 17), WZ(374.4)); }
+      FAC.busStop.forEach(([sx, sy]) => shelter(sx, sy));
+      { const bx = (FAC.busStop[0][0] + FAC.busStop[1][0]) / 2; SB.add(G3.box, metal, WX(bx), 1.3, WZ(FAC.busStop[0][1] - 2), 0.08, 2.6, 0.08); SB.add(G3.box, lam('#2E5A8A', { tex: 0 }), WX(bx), 2.5, WZ(FAC.busStop[0][1] - 2), 0.6, 0.6, 0.04);
+        inter(WX(bx), WZ(FAC.busStop[0][1] + 2), 1.8, '公車站的站牌', () => talk('公車站', ['環城線：東鶴站 → 北門 → 西市口 → 南門 → 寺町 → 河西。', '往皇嶺的長途巴士：每天一班，國道一號經由。'])); }
+      // 花壇與時鐘柱（環道中間的島）
+      { const x = WX((P0[0] + P0[2]) / 2), z = WZ(P0[3] - 19); SB.add(G3.box, concrete, x, 0.3, z, 30, 0.6, 2.6); SB.add(G3.box, snowL, x, 0.62, z, 29.6, 0.06, 2.2); for (let i = 0; i < 5; i++) pineAt(x - 12 + i * 6, z, 0.7); SB.add(G3.box, metal, x, 2.2, z, 0.16, 4.4, 0.16); SB.add(G3.box, lam('#F4ECD8', { em: '#FFE8B0', ei: 0.5 }), x, 4.4, z, 0.7, 0.7, 0.7); block(x - 15, x + 15, z - 1.3, z + 1.3, 'deco'); inter(x, z + 2, 1.8, '站前的時鐘柱', () => R.townToast('時鐘柱底下刻著：「魔導電車東鶴站 開業紀念」。')); }
+      for (let i = 0; i < 8; i++) bike(WX(P0[0] + 4), WZ(P0[1] + 8 + i * 4), Math.PI / 2);
+      vending(WX(STATION[0] + 6), WZ(STATION[3] + 3)); vending(WX(STATION[0] + 9), WZ(STATION[3] + 3));
+      bench(WX(P0[0] + 26), WZ(P0[1] + 10), 0); bench(WX(P0[2] - 26), WZ(P0[1] + 10), 0);
+      [[P0[0] + 6, P0[1] + 4], [P0[2] - 6, P0[1] + 4], [P0[0] + 6, P0[3] - 4], [P0[2] - 6, P0[3] - 4]].forEach(([sx, sy]) => lampPost(WX(sx), WZ(sy)));
     }
-
+    // ---------- 拱廊商店街：兩頭的牌樓、每隔一段的拱架、掛著的燈籠和年底大拍賣的旗子 ----------
+    { const rd = C.roads.find(r => r.kind === 'arcade'), [x0, y] = rd.pts[0], x1 = rd.pts[1][0], za = WZ(y - rd.w / 2 + 0.5), zb = WZ(y + rd.w / 2 - 0.5), arch = lam('#8A8C92', { tex: 0 });
+      [x0 + 2, x1 - 2].forEach(sx => { const x = WX(sx); [za, zb].forEach(z => { HB.add(G3.box, B_('#8A2A24', { tex: 0 }), x, 2.6, z, 0.3, 5.2, 0.3); block(x - 0.2, x + 0.2, z - 0.2, z + 0.2, 'deco'); }); HB.add(G3.box, B_('#3A2A1C', { tex: 'planks' }), x, 5.3, (za + zb) / 2, 0.3, 0.6, zb - za + 0.6); HB.add(G3.box, snowM, x, 5.64, (za + zb) / 2, 0.36, 0.08, zb - za + 0.5); sign(x + (sx < x1 - 10 ? -0.18 : 0.18), 4.5, (za + zb) / 2, sx < x1 - 10 ? -Math.PI / 2 : Math.PI / 2, '站前商店街', '#5A1E1C', 3.2); });
+      for (let sx = x0 + 14; sx < x1 - 8; sx += 16) { const x = WX(sx); HB.add(G3.box, arch, x, 6.4, (za + zb) / 2, 0.14, 0.14, zb - za); [za, zb].forEach(z => HB.add(G3.box, arch, x, 3.2, z, 0.12, 6.4, 0.12)); for (let k = -1; k <= 1; k += 2) SB.add(G3.cyl, lam('#E04A3A', { em: '#C02818', ei: 0.9 }), x, 5.4, (za + zb) / 2 + k * 1.6, 0.4, 0.55, 0.4); if ((sx / 16 | 0) % 2) SB.add(G3.box, lam(pick(['#C83A3A', '#E8C03A', '#2E5A8A']), { tex: 0 }), x, 4.9, (za + zb) / 2, 0.04, 1.2, zb - za - 2); }
+      for (let sx = x0 + 6; sx < x1; sx += 20) { lampPost(WX(sx), za + 0.6); lampPost(WX(sx + 10), zb - 0.6); } }
     // ---------- 河西：特別的區域 ----------
     // 城西遺跡・公會調查點：圍起來（東邊留一個入口給路）
     { const r = Z.ruins, fm = lam('#8A7A5A', { tex: 'planks' });
       const fence = (ax, ay, bx2, by) => { const x0 = WX(Math.min(ax, bx2)), x1 = WX(Math.max(ax, bx2)), z0 = WZ(Math.min(ay, by)), z1 = WZ(Math.max(ay, by)), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, wx = Math.max(0.1, x1 - x0), wz = Math.max(0.1, z1 - z0); SB.add(G3.box, fm, cx, 0.9, cz, wx, 0.1, wz); SB.add(G3.box, fm, cx, 0.5, cz, wx, 0.1, wz); const n = Math.max(1, Math.round(Math.max(wx, wz) / 1.6)); for (let i = 0; i <= n; i++) SB.add(G3.box, fm, x0 + (x1 - x0) * i / n, 0.55, z0 + (z1 - z0) * i / n, 0.1, 1.1, 0.1); block(x0 - 0.06, x1 + 0.06, z0 - 0.06, z1 + 0.06, 'wall'); };
-      fence(r[0], r[1], r[2], r[1]); fence(r[0], r[3], r[2], r[3]); fence(r[0], r[1], r[0], r[3]); fence(r[2], r[1], r[2], 412); fence(r[2], 436, r[2], r[3]);
-      sign(WX(r[2]) + 0.3, 1.6, WZ(424), Math.PI / 2, '公會調查點・閒人勿入', '#2E4A34', 2.6);
+      fence(r[0], r[1], r[2], r[1]); fence(r[0], r[3], 80, r[3]); fence(100, r[3], r[2], r[3]); fence(r[0], r[1], r[0], r[3]); fence(r[2], r[1], r[2], r[3]);
+      sign(WX(104), 1.6, WZ(r[3]) + 0.3, 0, '公會調查點・閒人勿入', '#2E4A34', 2.6);
       for (let i = 0; i < 5; i++) pineAt(WX(r[0] + 8 + i * 6), WZ(r[3] - 8 - (i % 2) * 6), 0.8); }
     // 河西小學：校舍、體育館、操場、校門
     { const r = Z.school, B = HB, cx = WX((r[0] + r[2]) / 2), bz = WZ(r[1] + 13), w = (r[2] - r[0] - 30) * S;
@@ -416,7 +275,7 @@
       // 圍牆、校門（東邊）
       const fz0 = WZ(r[1] + 1), fz1 = WZ(r[3] - 1), fx0 = WX(r[0] + 1), fx1 = WX(r[2] - 1);
       [[fx0, fz1, fx1, fz1], [fx0, fz0, fx0, fz1]].forEach(([a, b2, c, e]) => { const wx = Math.max(0.15, c - a), wz = Math.max(0.15, e - b2); SB.add(G3.box, concrete, (a + c) / 2, 0.6, (b2 + e) / 2, wx, 1.2, wz); block(a - 0.08, c + 0.08, b2 - 0.08, e + 0.08, 'wall'); });
-      const gm = WZ(590); [[fz0 + 5.6, gm - 1.4], [gm + 1.4, fz1]].forEach(([a, b2]) => { SB.add(G3.box, concrete, fx1, 0.6, (a + b2) / 2, 0.15, 1.2, b2 - a); block(fx1 - 0.08, fx1 + 0.08, a, b2, 'wall'); });
+      const gm = WZ((r[1] + r[3]) / 2); [[fz0 + 5.6, gm - 1.4], [gm + 1.4, fz1]].forEach(([a, b2]) => { SB.add(G3.box, concrete, fx1, 0.6, (a + b2) / 2, 0.15, 1.2, b2 - a); block(fx1 - 0.08, fx1 + 0.08, a, b2, 'wall'); });
       [gm - 1.5, gm + 1.5].forEach(z => SB.add(G3.box, concrete, fx1, 0.9, z, 0.4, 1.8, 0.4));
       inter(fx1 + 1, gm, 2.2, '河西小學的校門', () => talk('河西小學', ['寒假中，校門鎖著。', '操場上有人堆了一整排雪人。']));
       for (let i = 0; i < 5; i++) { const x = WX(r[0] + 50 + i * 16), z = WZ(r[3] - 22); SB.add(G3.sph, snowL, x, 0.5, z, 0.9, 0.9, 0.9); SB.add(G3.sph, snowL, x, 1.15, z, 0.6, 0.6, 0.6); } }
@@ -440,33 +299,22 @@
       for (let i = 0; i < 9; i++) if (rnd() < 0.6) carAt(WX(r[0] + 11 + i * 11), WZ(r[3] - 14), Math.PI);
       inter(x, z + d / 2 + 1.4, 2, '河西超市', () => talk('河西超市', [pick(['「冬天的白菜一顆三費拉，便宜喔！」', '「年底大特價，德克斯凡的罐頭買三送一。」'])])); }
 
-    // ---------- 電線桿（河西、城南、城東、站東）----------
-    { const PM = lam('#6A6A70', { tex: 0 }), WM = lam('#1E1A18', { tex: 0 });
-      const poleRun = (ax, ay, bx2, by, off) => { const L = Math.hypot(bx2 - ax, by - ay), n = Math.max(1, Math.round(L / 42)), ux = (bx2 - ax) / L, uy = (by - ay) / L; let prev = null;
-        for (let i = 0; i <= n; i++) { const sx = ax + ux * L * i / n - uy * off, sy = ay + uy * L * i / n + ux * off; if (plan.lots.some(l => sx > l.r[0] - 1 && sx < l.r[2] + 1 && sy > l.r[1] - 1 && sy < l.r[3] + 1) || ZL.some(z => sx > z[0] && sx < z[2] && sy > z[1] && sy < z[3])) { prev = null; continue; } const x = WX(sx), z = WZ(sy);
-          SB.add(G3.cyl, PM, x, 3.4, z, 0.22, 6.8, 0.22); SB.add(G3.box, PM, x, 6.3, z, 1.4, 0.1, 0.12, 0, -Math.atan2(uy, ux), 0); if (i % 3 === 1) SB.add(G3.cyl, lam('#8A8C92', { tex: 0 }), x + 0.3, 5.4, z, 0.5, 0.7, 0.5); block(x - 0.14, x + 0.14, z - 0.14, z + 0.14, 'deco');
-          if (prev) { const mx = (prev[0] + x) / 2, mz = (prev[1] + z) / 2, len = Math.hypot(x - prev[0], z - prev[1]), a = Math.atan2(x - prev[0], z - prev[1]); [-0.5, 0.5].forEach(o => SB.add(G3.box, WM, mx + Math.cos(a) * o, 6.15, mz - Math.sin(a) * o, 0.03, 0.03, len, 0, a, 0)); }
-          prev = [x, z]; } };
-      runsH.forEach(([y, segs]) => segs.forEach(([u0, u1]) => poleRun(u0, y, u1, y, 7.5)));
-      runsV.forEach(([x, segs]) => segs.forEach(([u0, u1]) => poleRun(x, u0, x, u1, 7.5)));
-      poleRun(401, 891, 958, 891, 6.2); poleRun(971, 400, 971, 882, -6.2); poleRun(776, 332, 960, 332, -5); poleRun(380, 332, 592, 332, -5); }
-
     // ---------- 地圖外：遠方的街景（走不到，只是看得到；東邊往新市街，有幾棟高樓）----------
     { const farHouse = (sx, sy, w, d, h) => { const x = WX(sx), z = WZ(sy), col = pick(WALLS); HB.at(x, z, 0); HB.add(G3.box, B_(col), 0, h / 2, 0, w, h, d); winRow(HB, h * 0.6, w, d / 2 + 0.03, Math.max(1, Math.floor(w / 2.2))); gableB(HB, w, d, h, 0, col); HB.at(null); };
       const tower = (sx, sy, w, d, fl) => { const x = WX(sx), z = WZ(sy), H = fl * 3; HB.at(x, z, 0); HB.add(G3.box, B_(pick(['#8A8C92', '#9A8A7A', '#7A7C82', '#A8A49C'])), 0, H / 2, 0, w, H, d); for (let f = 0; f < fl; f++) winRow(HB, f * 3 + 1.7, w, d / 2 + 0.03, Math.max(2, Math.floor(w / 1.8)), 1.0); HB.add(G3.box, snowM, 0, H + 0.06, 0, w - 0.3, 0.1, d - 0.3); HB.at(null); };
-      for (let sy = 300; sy < 1080; sy += 28) { farHouse(1014 + rnd() * 4, sy, 5 + rnd() * 1.5, 5, 5.6); farHouse(1046 + rnd() * 6, sy + 12, 5.5, 5, 5.6); if (rnd() < 0.3) tower(1080 + rnd() * 30, sy, 8, 8, 5 + Math.floor(rnd() * 6)); }
+      for (let sy = 300; sy < 1080; sy += 28) { farHouse(1014 + rnd() * 4, sy, 5 + rnd() * 1.5, 5, 5.6); farHouse(1046 + rnd() * 6, sy + 12, 5.5, 5, 5.6); if (rnd() < 0.3) tower(1080 + rnd() * 30, sy, 8, 8, 3 + Math.floor(rnd() * 4)); }
       for (let sx = 340; sx < 1000; sx += 30) { farHouse(sx, 1014 + rnd() * 4, 5.5, 5, 5.6); farHouse(sx + 14, 1044 + rnd() * 6, 5, 5, 5.6); }
       for (let sy = 330; sy < 1080; sy += 30) { farHouse(-14 - rnd() * 4, sy, 5, 5.5, 5.6); farHouse(-44 - rnd() * 6, sy + 14, 5.5, 5, 5.6); } }
 
     // ---------- 路人 ----------
-    const looks = () => { const race = R.randomRace ? R.randomRace() : 'human', rc = R.RACES ? R.RACES[race] : null; return { top: pick(['#B8A688', '#3E5A6E', '#7A5A6A', '#8A3A2E', '#2E4A6A', '#5A6A4A', '#C8BCA2', '#6A6A70']), hair: rc && rc.hairs ? rc.hairs[0] : pick(['#2A2420', '#6A4A2E', '#1A1714', '#8A5A2E', '#D8D2C4']), cloak: pick(['#4A3A30', '#3A3A44', '#5A4A3A', '#2E3A48']), race, skin: rc ? rc.skins[Math.floor(rnd() * rc.skins.length)] : undefined, hs: pick(['short', 'long', 'ponytail', 'bun', 'bob', 'crop', 'spiky']), acc: rnd() < 0.25 ? pick(['scarf', 'glasses', 'headband']) : null, accCol: pick(['#C8323A', '#2E5A8A', '#3E7A48']) }; };
+    const looks = () => { const race = R.randomRace ? R.randomRace() : 'human', rc = R.RACES ? R.RACES[race] : null; return { pool: 'kasai' + Math.floor(rnd() * 12), lite: 1, top: pick(['#B8A688', '#3E5A6E', '#7A5A6A', '#8A3A2E', '#2E4A6A', '#5A6A4A', '#C8BCA2', '#6A6A70']), hair: rc && rc.hairs ? rc.hairs[0] : pick(['#2A2420', '#6A4A2E', '#1A1714', '#8A5A2E', '#D8D2C4']), cloak: pick(['#4A3A30', '#3A3A44', '#5A4A3A', '#2E3A48']), race, skin: rc ? rc.skins[Math.floor(rnd() * rc.skins.length)] : undefined, hs: pick(['short', 'long', 'ponytail', 'bun', 'bob', 'crop', 'spiky']), acc: rnd() < 0.25 ? pick(['scarf', 'glasses', 'headband']) : null, accCol: pick(['#C8323A', '#2E5A8A', '#3E7A48']) }; };
     const nextNode = n => { const nb = plan.adj[n.ni]; if (nb && nb.length) n.ni = nb[Math.floor(Math.random() * nb.length)]; const [sx, sy] = plan.nodes[n.ni]; return [WX(sx + (Math.random() - 0.5) * 6), WZ(sy + (Math.random() - 0.5) * 6)]; };
     const walker = ni => { const [sx, sy] = plan.nodes[ni], n = npc(WX(sx), WZ(sy), looks(), null, 0); n.walk = true; n.ni = ni; n.next = nextNode; [n.tx, n.tz] = nextNode(n); n.speed = 1.5 + rnd() * 0.6; n.watch = { range: 6, fov: 1.0, civ: 1 }; tw.watchers.push(n); return n; };
     const many = E.martial ? 0.3 : E.blizzard ? 0.25 : 1;
-    for (let i = 0; i < Math.round(16 * many); i++) walker(Math.floor(rnd() * KASAI_N));
-    for (let i = 0; i < Math.round(18 * many); i++) walker(KASAI_N + Math.floor(rnd() * (plan.nodes.length - KASAI_N)));
+    const kasai = plan.nodes.map((p, i) => i).filter(i => plan.nodes[i][0] < 180 && plan.nodes[i][1] > 420);
+    for (let i = 0; i < Math.round(16 * many); i++) walker(kasai[Math.floor(rnd() * kasai.length)]);
     // 站在車站前、公車站等車的人
-    [[732, 362, '等公車的上班族', ['「德克斯凡的公司早上八點半就要打卡。」', '「下雪天，公車永遠都遲到。」']], [700, 361, '剛下電車的旅客', ['「從皇嶺來的。大典那邊人擠人，還是東鶴安靜。」']], [470, 366, '商店街的會長', ['「站前商店街，從電車通車那年就熱鬧起來了。」', '「年底的福引抽獎，頭獎是德克斯凡的魔導暖爐。」']]].forEach(([sx, sy, nm, lines], i) => { const n = npc(WX(sx), WZ(sy), looks(), nm, i === 2 ? 0 : Math.PI); n.watch = { range: 6, fov: 1.0, civ: 1 }; tw.watchers.push(n); inter(WX(sx), WZ(sy) + 1, 1.6, '和' + nm + '說話', () => talk(nm, lines), { follow: n }); });
+    [[C.FAC.busStop[0][0] + 6, C.FAC.busStop[0][1] - 4, '等公車的上班族', ['「德克斯凡的公司早上八點半就要打卡。」', '「下雪天，公車永遠都遲到。」']], [(STATION[0] + STATION[2]) / 2 + 12, STATION[3] + 8, '剛下電車的旅客', ['「從皇嶺來的。大典那邊人擠人，還是東鶴安靜。」']], [420, 330, '商店街的會長', ['「站前商店街，從電車通車那年就熱鬧起來了。」', '「年底的福引抽獎，頭獎是德克斯凡的魔導暖爐。」']]].forEach(([sx, sy, nm, lines], i) => { const n = npc(WX(sx), WZ(sy), looks(), nm, i === 2 ? 0 : Math.PI); n.watch = { range: 6, fov: 1.0, civ: 1 }; tw.watchers.push(n); inter(WX(sx), WZ(sy) + 1, 1.6, '和' + nm + '說話', () => talk(nm, lines), { follow: n }); });
 
     // ---------- 魔導電車 ----------
     { const g = new TH.Group(), CL = 8.6, GAP = 0.5, N = 3, len = N * CL + (N - 1) * GAP, cb = R.Batch();
@@ -484,16 +332,11 @@
       [-1, 1].forEach(sd => { const ex = sd * (len / 2 + 0.01); cb.add(G3.box, win, ex, 2.55, 0, 0.04, 0.9, 2.0); cb.add(G3.box, dest, ex, 3.2, 0, 0.04, 0.3, 1.2); [-0.75, 0.75].forEach(o => cb.add(G3.box, light, ex, 1.25, o, 0.05, 0.22, 0.3)); });
       cb.flush(g); g.visible = false; group.add(g);
       tw.train = { g, len, x: 0, z: 0, dir: -1, v: 0, mode: E.martial ? 'off' : 'wait', t: 3 + Math.random() * 6, served: false, cruise: E.blizzard ? 8 : 13 };
-      tw.trainStop = WX((PLAT[0] + PLAT[2]) / 2); }
+      tw.trainStop = WX((PLAT[0] + PLAT[2]) / 2); tw.railZ = WZ(RAIL.y); }
 
     // 城牆裡的空地補上小東西（civic.js）
     if (R.fillTown) R.fillTown(api);
 
-    // ---------- 地名 ----------
-    const A = R.TOWN_AREAS;
-    if (A && !A.some(a => a.n === '東鶴站')) A.push({ n: '東鶴站', x: 678, y: 330, r: 55 }, { n: '站前廣場', x: 690, y: 376, r: 45 }, { n: '站前商店街', x: 492, y: 363, r: 100 }, { n: '站東的住宅區', x: 868, y: 360, r: 95 }, { n: '平交道', x: 600, y: 305, r: 16 }, { n: '鐵橋', x: 330, y: 305, r: 30 },
-      { n: '河西住宅區', x: 160, y: 690, r: 340 }, { n: '河西小學', x: 105, y: 590, r: 70 }, { n: '河西兒童公園', x: 218, y: 548, r: 40 }, { n: '鎮守的小祠', x: 218, y: 802, r: 40 }, { n: '河西超市', x: 180, y: 888, r: 55 },
-      { n: '城南', x: 760, y: 905, r: 220 }, { n: '南渠外的田', x: 790, y: 968, r: 230 }, { n: '城東', x: 980, y: 640, r: 250 }, { n: '霜溪邊的溫室', x: 670, y: 186, r: 45 }, { n: '北郊的倉庫', x: 700, y: 276, r: 40 });
   };
 
   // ---------- 每一格：電車、平交道 ----------
