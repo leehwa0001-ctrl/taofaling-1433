@@ -390,6 +390,8 @@ body:not(.touch) #run.town #r-wp{position:fixed;left:16px;bottom:calc(max(16px,e
 @keyframes toast{0%{opacity:0}8%,85%{opacity:1}100%{opacity:0}}
 .veil{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .15s;z-index:1}
 #r-hurt{background:radial-gradient(ellipse at center,transparent 45%,rgba(184,20,20,.85) 100%)}
+/* 遺跡四周的黑（dread.js）：注意越高、生命越少越黑 */
+#r-dread{background:radial-gradient(ellipse at center,transparent 34%,rgba(4,2,8,.5) 62%,rgba(2,0,4,.96) 100%);transition:opacity .6s}
 #r-blind{background:radial-gradient(ellipse at center,rgba(184,154,106,.72) 0%,rgba(140,110,70,.97) 60%)}
 #r-field{background:radial-gradient(ellipse at center,transparent 18%,rgba(138,26,42,.5) 68%,rgba(40,0,20,.92) 100%)}
 #r-nums{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2}
@@ -725,6 +727,7 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <script src="vigilance.js"></script>
 <script src="punish.js"></script>
 <script src="monlabel.js"></script>
+<script src="dread.js"></script>
 <script src="taki.js"></script>
 <script src="expel.js"></script>
 <script src="storylooks.js"></script>
