@@ -153,8 +153,10 @@
     R.save();
   };
   const arrest = g => {
-    const fine = 60 * C.heat + 20, S0 = S();
+    const fine = 60 * C.heat + 20, S0 = S(), heat = C.heat;
     C.heat = 0; C.lostT = 0; if (W.town) (W.town.watchers || []).forEach(n => { n.chase = false; });
+    // 嚴重的懲罰（punish.js）：罰金、拘留、停權……；R.onArrest 要在後面（它會把被抓的次數加一）
+    if (R.arrestPunish) { R.arrestPunish(heat, g); if (R.onArrest) R.onArrest(); R.save(); if (R.townHud) R.townHud(true); return; }
     if (S0.gold >= fine) { S0.gold -= fine; R.townTalk('東鶴的衛兵', ['「抓到了。」', '（被押到衛兵所，罰了 ' + fine + ' 費拉。）', '「再有下次，就送公會的懲戒委員會。」']); }
     else { S0.gold = 0; R.townTalk('東鶴的衛兵', ['「抓到了。……錢不夠？那就在拘留所待一晚。」', '（在拘留所過了一晚。）']); if (R.advanceDays) R.advanceDays(1); }
     if (R.addDeed) R.addDeed('西市口的竊案嫌犯被衛兵當場逮捕。據說是一名勇者。');
