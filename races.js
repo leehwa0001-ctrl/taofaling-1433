@@ -1,0 +1,138 @@
+// 討伐令 1433：種族（登記時抽）
+// 種族照《公會館員日誌》的種族表（出身地、族種）；長相照它的肖像規則（耳朵、膚色、角、翅膀……）。
+// 稀有度：N、R、SR、SSR，還有一個藏起來的 UR：魔族。
+// 魔族：加成很多很強，但東鶴的人怕牠們——店家不賣、路人躲開、同行的勇者大多不肯一起走，還會有私人賞金獵人追殺。
+//  公會的分類是「神魔族」；登記過的會列為「受監視對象」，公會不受理針對智慧種的懸賞（所以追殺你的都是非法的私人懸賞）。
+// 昭旭排外（國民黨「東鶴的飯碗，東鶴人自己端」）：越不像本地人，價錢越貴、閒話越多。戴上兜帽可以遮住（戒嚴那天會被盤查）。
+(function (R) {
+  const $ = id => document.getElementById(id);
+  const esc = s => R.esc(s);
+  R.TIERS = {
+    N: { name: 'N', w: 46, color: '#B9BEC7' },
+    R: { name: 'R', w: 32, color: '#62CB7E' },
+    SR: { name: 'SR', w: 16, color: '#5BA8F2' },
+    SSR: { name: 'SSR', w: 5.2, color: '#F2B64C' },
+    UR: { name: 'UR', w: 0.8, color: '#E04A6A', hidden: 1 }
+  };
+  // b：加成（hp、mp 是倍率；def 是加上去的防禦；speed、dmg、melee、magic、ranged 倍率；crit 暴擊率；critMult 暴擊傷害；dodge、skillCd 冷卻縮短；regen 每秒回復；calm 佩特拉的注意變慢；xp 經驗；vamp 吸血；ignite 點燃機率；thorns 反傷；guard 隊友少受傷；crystal 多掉魔力水晶；immune 免疫）
+  // xeno：在東鶴被排擠的程度 0～3
+  R.RACES = {
+    human: { name: '大陸人族', tier: 'N', from: '地表平原・大陸族種', xeno: 0, skins: ['#F1C9A5', '#D9A47C', '#A8714D', '#7A4E33'], b: { xp: 0.1 }, line: '最常見的種族。學什麼都快。', look: {} },
+    dog: { name: '犬人族', tier: 'N', from: '地表平原・獸人族種', xeno: 2, skins: ['#EFCFAE', '#DDB38E'], hairs: ['#B7874E', '#8B6238', '#D8B888'], b: { speed: 0.06, guard: 0.1 }, line: '垂耳的犬族。和同伴站在一起的時候特別可靠。', look: { ears: 'dog', tail: 'dog' } },
+    cat: { name: '貓人族', tier: 'N', from: '地表高地・獸人族種', xeno: 2, skins: ['#F0CFAE', '#DDB08A'], b: { dodge: 0.2, crit: 0.04 }, line: '身手輕巧，翻滾回得快。', look: { ears: 'cat', tail: 'cat', whisk: 1 } },
+    elf: { name: '精靈族', tier: 'R', from: '地表森林・精靈族種', xeno: 1, skins: ['#F4DCC4', '#EBD0B5'], hairs: ['#E9D8A6', '#C9C3B6', '#6B4A2E'], b: { mp: 0.2, skillCd: 0.1 }, line: '魔力多，技能轉得快。', look: { ears: 'elf' } },
+    fox: { name: '狐人族', tier: 'R', from: '地表平原・獸妖族種', xeno: 2, skins: ['#F2D2B4'], hairs: ['#D2692A', '#E08A3C', '#EFE3D2'], b: { magic: 0.12, calm: 0.1 }, line: '對魔力質很敏感。法術打得重，也比較不容易被佩特拉注意。', look: { ears: 'fox', tail: 'fox' } },
+    wolf: { name: '狼人族', tier: 'R', from: '地表森林・獸人族種', xeno: 2, skins: ['#E6C4A2', '#CFA27E'], hairs: ['#6D6A66', '#3E3B38', '#A9A39A'], b: { hp: 0.1, melee: 0.1 }, line: '耐打，近身的時候最兇。', look: { ears: 'wolf', tail: 'wolf' } },
+    sand: { name: '沙人族', tier: 'R', from: '地表沙漠・岩礦族種', xeno: 1, skins: ['#D8B98A', '#C9A673'], b: { def: 3, immune: { blind: 1 } }, line: '習慣風沙：砂幕蒙不了眼。', look: { hood: 1, hoodCol: '#C8A870' } },
+    fin: { name: '鰭人族', tier: 'R', from: '淺海珊瑚礁區・鰭人族種', xeno: 1, skins: ['#7FB6B0', '#6AA3A8'], b: { regen: 0.5, immune: { slow: 1 } }, line: '傷口癒合得快，寒氣也凍不住。', look: { ears: 'fin', fin: 1, bald: 1 } },
+    tree: { name: '樹人族', tier: 'R', from: '地表森林・植根族種', xeno: 1, skins: ['#8A6A48', '#7A5C3D'], hairCol: '#4E7A36', b: { hp: 0.18, regen: 0.6, speed: -0.05 }, line: '慢，但很難倒下。', look: { leaves: 1, ears: null } },
+    blackstone: { name: '黑石族', tier: 'SR', from: '地下岩域・岩礦族種', xeno: 2, skins: ['#5E6168', '#4B4E55'], b: { def: 8, hp: 0.1, speed: -0.06 }, line: '石頭一樣的皮膚。', look: { rock: 1, bald: 1 } },
+    winged: { name: '翼人族', tier: 'SR', from: '空島平原・翼人族種', xeno: 1, skins: ['#F3D6BC', '#E2B993'], b: { speed: 0.1, dodge: 0.25 }, line: '背上一對白色的翅膀，跑得快、閃得快。', look: { wings: 'feather' } },
+    giant: { name: '巨人族', tier: 'SR', from: '地表高林・巨人族種', xeno: 1, skins: ['#C98E66', '#B27B55'], b: { hp: 0.3, dmg: 0.1, speed: -0.08 }, line: '又高又壯，打得重。', look: { beard: 1 } },
+    flame: { name: '焰人族', tier: 'SR', from: '地表高山・氣流族種', xeno: 1, skins: ['#E39A5C', '#D88748'], hairCol: '#E85A2A', b: { dmg: 0.08, ignite: 0.15, immune: { burn: 1 } }, line: '頭髮是火。打到的東西有時會燒起來。', look: { flame: 1 } },
+    lava: { name: '熔岩人族', tier: 'SR', from: '地下溶漿洞・流體族種', xeno: 2, skins: ['#3A2C2A'], b: { def: 5, thorns: 0.2, immune: { burn: 1 } }, line: '皮膚底下是熔岩。貼身打你的會被燙到。', look: { cracks: 1, bald: 1 } },
+    phantom: { name: '幻魔族', tier: 'SR', from: '地表平原・擬態族種', xeno: 2, skins: ['#B9A6D6', '#A993C9'], hairs: ['#2B2340', '#E6E0F2'], b: { mp: 0.25, calm: 0.2 }, line: '頭頂一對小角。擅長擬態，佩特拉不太注意得到。', look: { ears: 'elf', horns: 'small' } },
+    spider: { name: '節肢蛛人族', tier: 'SR', from: '地下岩穴・節肢人族種', xeno: 2, skins: ['#9A8D86', '#857873'], hairs: ['#1A1A1A', '#3B3030'], b: { crit: 0.08, critMult: 0.25 }, line: '四隻眼睛，總是看得到要害。', look: { eyes4: 1 } },
+    crystal: { name: '黑水晶族', tier: 'SSR', from: '深域結晶皇宮・晶體族種', xeno: 2, skins: ['#4B3B66', '#3C2F55'], hairCol: '#1E1830', b: { mp: 0.3, skillCd: 0.2, crystal: 0.5 }, line: '額頭上長著水晶。和魔力水晶特別有緣。', look: { gem: 1 } },
+    dragon: { name: '龍人族', tier: 'SSR', from: '地表山地・節鱗族種', xeno: 2, skins: ['#C8553F', '#B2463A'], b: { hp: 0.2, dmg: 0.15, def: 4, immune: { burn: 1 } }, line: '鱗片、角、尾巴。很少見。', look: { horns: 'dragon', tail: 'dragon', scales: 1, bald: 1, crest: 1 } },
+    demon: { name: '魔族', tier: 'UR', from: '魔界・克拉克特斯（公會分類：神魔族）', xeno: 3, skins: ['#E8D8E0', '#C8B8D0'], hairs: ['#14101A', '#E8E4F0'], eye: '#C8323A',
+      b: { hp: 0.3, mp: 0.4, dmg: 0.3, def: 3, vamp: 0.04, skillCd: 0.25, regen: 1.2, calm: 0.15 },
+      line: '翅膀、光環、黑色雙角。人界的人怕你：店家不賣你東西、路人躲著走、私人賞金獵人會來找你。公會把你列為「受監視對象」——但也只有公會不准任何人討伐你。', look: { horns: 'demon', wings: 'demon', halo: 1 } }
+  };
+  R.RACE_IDS = Object.keys(R.RACES);
+  R.raceOf = () => (R.S && R.S.race ? R.RACES[R.S.race] : null);
+  // 長相（給 sprites.js）
+  R.raceLook = id => { const r = R.RACES[id]; if (!r) return null; return Object.assign({ skins: r.skins, hairCol: r.hairCol, eye: r.eye }, r.look); };
+  // 加成的說明文字
+  const PCT = v => Math.round(v * 100) + '%';
+  R.raceBonusText = id => {
+    const b = R.RACES[id].b, out = [];
+    if (b.hp) out.push('生命 ' + (b.hp > 0 ? '+' : '') + PCT(b.hp)); if (b.mp) out.push('魔力 +' + PCT(b.mp)); if (b.def) out.push('防禦 +' + b.def);
+    if (b.speed) out.push('移動 ' + (b.speed > 0 ? '+' : '') + PCT(b.speed)); if (b.dmg) out.push('傷害 +' + PCT(b.dmg)); if (b.melee) out.push('近戰傷害 +' + PCT(b.melee));
+    if (b.magic) out.push('法術傷害 +' + PCT(b.magic)); if (b.crit) out.push('暴擊率 +' + PCT(b.crit)); if (b.critMult) out.push('暴擊傷害 +' + PCT(b.critMult));
+    if (b.dodge) out.push('翻滾冷卻 −' + PCT(b.dodge)); if (b.skillCd) out.push('技能冷卻 −' + PCT(b.skillCd)); if (b.regen) out.push('每秒回復生命 ' + b.regen);
+    if (b.calm) out.push('佩特拉的注意 −' + PCT(b.calm)); if (b.xp) out.push('經驗值 +' + PCT(b.xp)); if (b.vamp) out.push('吸血 ' + PCT(b.vamp));
+    if (b.ignite) out.push(PCT(b.ignite) + ' 機率點燃'); if (b.thorns) out.push('貼身反傷 ' + PCT(b.thorns)); if (b.guard) out.push('隊友受到的傷害 −' + PCT(b.guard));
+    if (b.crystal) out.push('魔力水晶 +' + PCT(b.crystal)); if (b.immune) out.push('不怕' + Object.keys(b.immune).map(k => ({ blind: '砂幕', slow: '寒氣減速', burn: '燃燒' })[k]).join('、'));
+    return out;
+  };
+  R.XENO_TEXT = ['東鶴的人把你當自己人。', '有人會多看你兩眼；有些店收「外地人價」（貴一成）。', '昭旭排外：很多店收貴兩成，有人當面說難聽的話。', '整座城都怕你：大部分店不賣你東西，路人會躲開，私人賞金獵人會來找你。'];
+
+  // ---------- 抽 ----------
+  R.drawRace = () => {
+    const tiers = Object.keys(R.TIERS), tot = tiers.reduce((a, t) => a + R.TIERS[t].w, 0);
+    let r = Math.random() * tot, tier = 'N';
+    for (const t of tiers) { r -= R.TIERS[t].w; if (r <= 0) { tier = t; break; } }
+    const list = R.RACE_IDS.filter(id => R.RACES[id].tier === tier);
+    return list[Math.floor(Math.random() * list.length)];
+  };
+  // 抽種族的畫面：最多抽 4 次，從抽到的裡面選一個登記（host：放進哪個元素；done(id)：選好了）
+  R.raceGacha = (host, done, o) => {
+    o = o || {}; const got = [], MAX = o.max || 4;
+    const rates = '<div class="rates">' + Object.keys(R.TIERS).map(t => { const T0 = R.TIERS[t], names = R.RACE_IDS.filter(id => R.RACES[id].tier === t).map(id => R.RACES[id].name); return '<div class="rate" style="--c:' + T0.color + '"><b>' + T0.name + '</b><span>' + T0.w + '%</span><small>' + (T0.hidden ? '？？？' : esc(names.join('、'))) + '</small></div>'; }).join('') + '</div>';
+    const card = (id, i) => { const r = R.RACES[id], T0 = R.TIERS[r.tier]; return '<button type="button" class="race-card' + (o.pick === i ? ' sel' : '') + '" data-pick="' + i + '" style="--c:' + T0.color + '"><span class="tier">' + T0.name + '</span><b>' + esc(r.name) + '</b><small>' + esc(r.from) + '</small><span>' + esc(r.line) + '</span><em>' + esc(R.raceBonusText(id).join('・')) + '</em><i>' + esc(R.XENO_TEXT[r.xeno]) + '</i></button>'; };
+    const render = () => {
+      host.innerHTML = '<h2>' + (o.title || '種族登記') + '</h2><p class="note">' + esc(o.intro || '勇者證上要寫種族。你是哪一族？最多抽 ' + MAX + ' 次，從抽到的裡面選一個登記。') + '</p>' + rates
+        + '<div class="race-cards">' + (got.length ? got.map(card).join('') : '<p class="note">還沒抽。</p>') + '</div>'
+        + '<div class="row"><button type="button" class="btn pri" id="rg-draw"' + (got.length >= MAX ? ' disabled' : '') + '>' + (got.length ? '再抽一次（還剩 ' + (MAX - got.length) + ' 次）' : '抽') + '</button>'
+        + (o.pick != null ? '<button type="button" class="btn gold" id="rg-ok">登記為「' + esc(R.RACES[got[o.pick]].name) + '」</button>' : '') + (o.cancel ? '<button type="button" class="btn" id="rg-x">先不要</button>' : '') + '</div>';
+      $('rg-draw').onclick = () => {
+        if (got.length >= MAX) return;
+        const id = R.drawRace(), r = R.RACES[id]; got.push(id); o.pick = got.length - 1;
+        render(); const el = host.querySelector('[data-pick="' + o.pick + '"]'); if (el) { el.classList.add('flip'); if (r.tier === 'SSR' || r.tier === 'UR') el.classList.add('shine'); }
+      };
+      host.querySelectorAll('[data-pick]').forEach(b => { b.onclick = () => { o.pick = +b.dataset.pick; render(); }; });
+      if ($('rg-ok')) $('rg-ok').onclick = () => done(got[o.pick]);
+      if (o.cancel && $('rg-x')) $('rg-x').onclick = o.cancel;
+    };
+    render();
+  };
+
+  // ---------- 加成套進玩家的數值 ----------
+  const cp = R.calcPlayer;
+  R.calcPlayer = cls => {
+    const P = cp(cls), r = R.raceOf(); if (!r) return P;
+    const b = r.b;
+    if (b.hp) P.hpMax = Math.round(P.hpMax * (1 + b.hp)); if (b.mp) P.mpMax = Math.round(P.mpMax * (1 + b.mp));
+    if (b.def) P.def += b.def; if (b.speed) P.speed *= 1 + b.speed; if (b.dmg) P.dmgMult *= 1 + b.dmg;
+    const k = P.ws.kind;
+    if (b.melee && (k === 'melee' || k === 'thrust')) P.ws.dmg *= 1 + b.melee;
+    if (b.magic && k === 'magic') P.ws.dmg *= 1 + b.magic;
+    if (b.crit) P.ws.crit += b.crit; if (b.critMult) P.critMult += b.critMult;
+    if (b.dodge) P.dodgeCdMax *= 1 - b.dodge; if (b.skillCd) P.skillCdMult *= 1 - b.skillCd;
+    if (b.regen) P.regen += b.regen; if (b.calm) P.calm += b.calm;
+    P.race = R.S.race; P.raceB = b; P.immune = b.immune || {};
+    // 同行的戀人：多一點力氣（people.js 設定）
+    if (R.partyBond) R.partyBond(P);
+    return P;
+  };
+  const gx = R.gainXp;
+  R.gainXp = v => { const r = R.raceOf(); gx(r && r.b.xp ? Math.round(v * (1 + r.b.xp)) : v); };
+  const he = R.hurtEnemy;
+  R.hurtEnemy = (e, raw, o) => {
+    const d = he(e, raw, o), P = R.W.P, b = P && P.raceB;
+    if (b && d > 0) { if (b.vamp) R.healP(d * b.vamp, true); if (b.ignite && o && o.primary && Math.random() < b.ignite && !e.dead) e.st.burn = 3; }
+    return d;
+  };
+  const hp = R.hurtPlayer;
+  R.hurtPlayer = (raw, src, o) => {
+    const P = R.W.P, b = P && P.raceB;
+    if (b && b.immune && o) { o = Object.assign({}, o); if (b.immune.blind) o.blind = 0; if (b.immune.slow) o.slow = 0; }
+    const before = P ? P.hp : 0; hp(raw, src, o);
+    if (b && b.thorns && src && src.hp && !src.dead && P && P.hp < before && Math.hypot(src.x - P.x, src.z - P.z) < 2.6) { src.hp -= raw * b.thorns; R.num(src.x, 1.8 * src.def.size + 0.6, src.z, Math.round(raw * b.thorns), 'ally'); if (src.hp <= 0) R.killEnemy(src); }
+  };
+  const ha = R.hurtAlly;
+  R.hurtAlly = (a, raw, src) => { const r = R.raceOf(); ha(a, r && r.b.guard ? raw * (1 - r.b.guard) : raw, src); };
+  const ke = R.killEnemy;
+  R.killEnemy = (e, by) => { const wasDead = e.dead; ke(e, by); const r = R.raceOf(); if (!wasDead && r && r.b.crystal && !e.def.human && Math.random() < 0.34 * r.b.crystal) R.dropMat('crystal', 1, e.x, e.z); };
+
+  // ---------- 排外 ----------
+  // 戴著兜帽：看不出種族（戒嚴那天衛兵會要你拿下來）
+  R.hoodOn = () => !!(R.S && R.S.hood && R.S.hoodOn);
+  R.xenoLevel = () => { const r = R.raceOf(); if (!r) return 0; if (R.hoodOn() && !(R.eventsToday && R.eventsToday().martial)) return 0; return r.xeno; };
+  // 店家的價錢倍率（null：不賣）；老岩只看東西不看人
+  R.priceMul = shop => { const x = R.xenoLevel(); if (shop === 'smith' || shop === 'guild') return 1; if (x >= 3) return shop === 'suga' ? 1 : null; return 1 + [0, 0.1, 0.2][x]; };
+  R.isDemon = () => !!(R.S && R.S.race === 'demon');
+  // 玩家自己：捏角的外觀＋種族＋兜帽
+  R.playerLook = () => { const S = R.S; if (!S) return null; return Object.assign({}, S.look || {}, { race: S.race, hood: R.hoodOn() }); };
+})(window.R);

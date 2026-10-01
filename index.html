@@ -1,0 +1,594 @@
+<title>討伐令 1433</title>
+<meta name="description" content="艾菲爾斯特・昭旭聯合王國的 2.5D 遺跡肉鴿：在東鶴選職業，下遺跡開寶箱、掘礦，帶著未鑑定的武器回到鐵匠鋪。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@600;700;900&family=LXGW+WenKai+TC:wght@400;700&family=DotGothic16&display=swap">
+<style>
+/* 版面：遺跡是暗的、地圖是公會測繪部印的羊皮紙。整個遊戲固定用暗色介面。
+   左邊地圖、右邊一份遺跡資料（公會文件的樣子）；手機時資料改成從下面拉上來。 */
+:root{
+  color-scheme:dark;
+  --bg:#110E14; --bg2:#1A1620; --line:rgba(237,230,214,.14); --ink:#EDE6D6; --dim:#A79E8C;
+  --gold:#C9A13A; --red:#B8322A; --green:#3E7A48;
+  --paper:#F4E9CD; --paper-ink:#2A2418; --paper-dim:#6F634B; --paper-line:#D6C6A2; --hand-ink:#1C2A62;
+  --hamilia:#4E9A5A; --amile:#C98A2E; --mors:#7A4FC8; --kesent:#C8323A;
+  --serif:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --hand:"LXGW WenKai TC","Kaiti TC","BiauKai","DFKai-SB",var(--serif);
+}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.6;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column}
+.screen[hidden]{display:none}
+
+/* ---------- 標題 ---------- */
+#title{align-items:center;justify-content:center;padding:24px 16px;background:radial-gradient(90% 70% at 50% 42%,#2A1E2A 0%,var(--bg) 70%);overflow:auto}
+.t-wrap{width:min(760px,100%);display:grid;gap:18px;justify-items:center;text-align:center}
+.t-eye{width:min(300px,62vw);height:auto;filter:drop-shadow(0 0 30px rgba(184,50,42,.35))}
+.t-eye .pupil{transform-origin:150px 90px;animation:look 7s ease-in-out infinite}
+@keyframes look{0%,100%{transform:translate(0,0)}30%{transform:translate(-14px,2px)}60%{transform:translate(12px,-3px)}}
+.t-kicker{font-size:12px;letter-spacing:.28em;color:var(--dim)}
+.t-name{margin:0;font-family:var(--serif);font-weight:900;font-size:clamp(46px,11vw,96px);letter-spacing:.12em;line-height:1.05}
+.t-name small{display:block;font-size:.3em;letter-spacing:.5em;color:var(--gold);margin-top:10px;font-weight:700}
+.t-sub{margin:0;max-width:36em;color:#D6CCB8;font-size:15px}
+.t-btns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.t-btns button{min-width:170px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 16px;font-weight:900;font-size:16px;text-align:left}
+.t-btns button small{font-weight:500;font-size:12px;color:var(--dim)}
+.t-btns .pri{background:#5A1E1C;border-color:var(--red)}
+.wip{font-size:12.5px;color:var(--dim);border:1px dashed var(--line);border-radius:8px;padding:6px 12px}
+.bigmap{width:100%;height:auto;display:block;border-radius:8px;image-rendering:pixelated;margin:6px 0}
+.t-toggle{background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:4px 16px;font-weight:700;font-size:13px}
+/* 像素風：狀態列改成方角、數字用點陣字 */
+body.pixel .glass,body.pixel .act,body.pixel .mini,body.pixel #r-toast,body.pixel #r-prompt,body.pixel #r-map,body.pixel .sheet,body.pixel .btn,body.pixel .t-toggle{border-radius:0;border-width:2px}
+body.pixel .meter,body.pixel .meter>i{border-radius:0}
+body.pixel .num,body.pixel .stat-row span:last-child,body.pixel .r-misc b,body.pixel #r-aware-t,body.pixel #r-banner b,body.pixel .t-toggle{font-family:"DotGothic16",var(--sans)}
+body.pixel .num{font-size:19px;text-shadow:2px 2px 0 #000}
+body.pixel .num.crit{font-size:25px}
+body.pixel #r-map,body.pixel #gl{image-rendering:pixelated}
+
+/* ---------- 地圖 ---------- */
+.bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top));background:var(--bg2);border-bottom:1px solid var(--line)}
+.bar h1{margin:0 8px 0 0;font-family:var(--serif);font-size:18px;letter-spacing:.08em}
+.tab{background:transparent;border:1px solid var(--line);border-radius:999px;padding:4px 14px;font-weight:700;font-size:13px}
+.tab[aria-selected="true"]{background:var(--gold);border-color:var(--gold);color:#1A140A}
+.bar .grow{flex:1}
+.iconbtn{background:transparent;border:1px solid var(--line);border-radius:8px;min-width:34px;height:32px;padding:0 10px;font-weight:700}
+.stage{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 380px}
+.map-wrap{position:relative;min-width:0;min-height:0;background:#C4D6D6;overflow:hidden}
+.map-wrap.inset{background:#EFE3C4}
+.map-wrap.inset .cartouche{top:auto;bottom:12px}
+.map-wrap.inset .legend{display:none}
+#map-host{position:absolute;inset:0}
+.map-svg{width:100%;height:100%;display:block;touch-action:none;cursor:grab;user-select:none}
+.map-svg:active{cursor:grabbing}
+.nation-name{font-family:var(--serif);font-weight:900;font-size:46px;letter-spacing:12px;fill:#6A2A22;opacity:.75}
+.island-name{font-family:var(--serif);font-weight:900;font-size:30px;letter-spacing:10px;fill:#1E3A5E;text-anchor:middle;opacity:.8;font-style:italic}
+.island-name.on-land{fill:#6A2A22;opacity:.55;font-size:34px}
+.neigh-name{font-family:var(--serif);font-size:15px;letter-spacing:3px;fill:#7A6A50;text-anchor:middle;font-weight:600}
+.area-name{font-family:var(--serif);font-size:24px;letter-spacing:6px;fill:#6A5A40;text-anchor:middle;font-weight:700}
+.area-name.small{font-size:16px;letter-spacing:3px}
+.note-name{font-family:var(--hand);font-size:17px;fill:#4A3A28;text-anchor:middle}
+.note-name.end{text-anchor:end}
+.site{cursor:pointer;outline:none}
+.site:focus-visible .mk{transform:scale(1.25)}
+.site:focus-visible .site-name{fill:#8A1E18;text-decoration:underline}
+.site .mk{transition:transform .15s;transform-box:fill-box;transform-origin:center}
+.site:hover .mk,.site:focus .mk,.site.sel .mk{transform:scale(1.25)}
+.site-name{font-family:var(--serif);font-weight:700;font-size:16px;fill:#2A2418;text-anchor:middle;paint-order:stroke;stroke:#F4E9CD;stroke-width:4px;stroke-linejoin:round}
+.k-capital .site-name{font-size:21px;fill:#8A1E18}
+.k-forbidden .site-name{fill:#8A1E18}
+.site.locked{opacity:.78}
+.site.sel .site-name{fill:#8A1E18}
+.pulse{animation:pulse 2.4s ease-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pulse{0%{transform:scale(.7);opacity:.9}100%{transform:scale(1.6);opacity:0}}
+/* 地圖上的固定裝飾：標題框、指北針、圖例 */
+.cartouche{position:absolute;left:12px;top:12px;max-width:min(300px,calc(100% - 24px));background:rgba(244,233,205,.94);color:var(--paper-ink);border:1px solid #8A7A5A;border-radius:4px;padding:10px 12px;box-shadow:0 6px 20px rgba(0,0,0,.25);display:flex;gap:10px;align-items:center;pointer-events:none}
+.cartouche svg,.cartouche .flag{flex:none;width:72px;height:54px;border:1px solid #8A7A5A;background:#FFFFFF;object-fit:cover}
+.flag-big{margin:10px 0;display:grid;gap:4px;justify-items:center}
+.flag-big img{width:100%;max-width:260px;height:auto;border:1px solid var(--paper-line);box-shadow:0 2px 8px rgba(0,0,0,.15);background:#FFFFFF}
+.flag-big figcaption{font-size:12px;color:var(--paper-dim)}
+.cartouche b{display:block;font-family:var(--serif);font-size:18px;letter-spacing:.12em}
+.cartouche small{display:block;font-size:11.5px;color:var(--paper-dim);line-height:1.5}
+.compass{position:absolute;right:12px;top:12px;width:64px;height:64px;pointer-events:none;opacity:.9}
+.legend{position:absolute;left:12px;bottom:12px;background:rgba(244,233,205,.94);color:var(--paper-ink);border:1px solid #8A7A5A;border-radius:4px;padding:8px 10px;font-size:12px;box-shadow:0 6px 20px rgba(0,0,0,.25);max-width:calc(100% - 24px)}
+.legend summary{cursor:pointer;font-weight:700;font-family:var(--serif)}
+.legend ul{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,auto);gap:3px 14px}
+.legend li{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:50%;border:2px solid currentColor}
+.zoom{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px}
+.zoom button{width:38px;height:38px;border-radius:8px;background:rgba(17,14,20,.82);border:1px solid var(--line);font-size:18px;font-weight:900}
+
+/* ---------- 遺跡資料（公會文件） ---------- */
+.panel{min-width:0;min-height:0;overflow:auto;background:var(--bg2);border-left:1px solid var(--line);padding:14px}
+.doc{background:var(--paper);color:var(--paper-ink);border-radius:2px;padding:16px 16px 14px;box-shadow:0 10px 30px rgba(0,0,0,.4);background-image:radial-gradient(circle at 85% 8%,rgba(120,90,40,.1),transparent 40%)}
+.doc .order{font-size:11px;letter-spacing:.14em;color:var(--paper-dim);border-bottom:1px solid var(--paper-line);padding-bottom:5px}
+.doc h2{margin:8px 0 2px;font-family:var(--serif);font-size:24px;letter-spacing:.06em;text-wrap:balance}
+.doc .src{font-size:11.5px;color:var(--paper-dim)}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.badge{font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;border:1.5px solid currentColor}
+.badge.fill{color:#fff}
+.doc dl{display:grid;grid-template-columns:auto 1fr;gap:0;margin:8px 0;font-size:13.5px}
+.doc dt{color:var(--paper-dim);font-size:12px;padding:5px 10px 5px 0;border-bottom:1px solid var(--paper-line)}
+.doc dd{margin:0;padding:4px 0;border-bottom:1px solid var(--paper-line)}
+.doc p{margin:8px 0;font-size:14px}
+.doc .hand{font-family:var(--hand);font-size:16px;color:var(--hand-ink);line-height:1.7}
+.doc h3{margin:14px 0 4px;font-family:var(--serif);font-size:15px;letter-spacing:.1em}
+.mons{display:flex;flex-wrap:wrap;gap:6px}
+.mon{font-size:12.5px;padding:3px 9px;border-radius:4px;background:#E6D8B6;border:1px solid var(--paper-line)}
+.mon small{color:var(--paper-dim);margin-left:4px}
+.stamp{display:inline-block;margin-top:10px;font-family:var(--serif);font-weight:900;letter-spacing:.2em;padding:4px 12px;border:3px double currentColor;transform:rotate(-4deg)}
+.stamp.open{color:var(--green)}.stamp.lock{color:#8A6A2E}.stamp.forbidden{color:var(--red)}
+.doc-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{border:1px solid #8A7A5A;background:#E6D8B6;color:var(--paper-ink);border-radius:6px;padding:7px 14px;font-weight:700}
+.btn.pri{background:#5A1E1C;border-color:#5A1E1C;color:#F4E9CD}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.hint{font-size:12.5px;color:var(--dim);margin:12px 2px 0}
+.fac{display:grid;gap:6px;margin:8px 0}
+.fac div{display:flex;gap:10px;align-items:baseline;border-bottom:1px dashed var(--paper-line);padding:4px 0}
+.fac b{flex:none;font-family:var(--serif);min-width:6.5em}
+
+/* ---------- 圖鑑 ---------- */
+#bestiary{overflow:hidden}
+.b-body{flex:1;overflow:auto;padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom))}
+.b-intro{max-width:60em;color:var(--dim);margin:0 0 14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;grid-template-columns:52px 1fr;gap:4px 12px;align-items:start}
+.card .em{grid-row:span 3;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:900;font-size:22px;color:#1A140A;box-shadow:inset 0 0 0 3px rgba(0,0,0,.25)}
+.card b{font-family:var(--serif);font-size:17px}
+.card small{color:var(--dim);font-size:12px}
+.card p{margin:4px 0 0;font-size:13px;color:#D6CCB8;grid-column:2}
+.card .where{grid-column:1 / -1;font-size:12px;color:var(--gold);border-top:1px dashed var(--line);padding-top:6px;margin-top:4px}
+.card.boss{border-color:rgba(184,50,42,.6)}
+
+/* ---------- 職業登記 ---------- */
+.cls-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.cls-card{display:grid;gap:4px;align-content:start;text-align:left;background:var(--bg2);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:10px;padding:12px 14px}
+.cls-card:hover,.cls-card:focus-visible{border-color:var(--c);background:#221C28}
+.cls-card b{font-family:var(--serif);font-size:21px;letter-spacing:.06em}
+.cls-card small{color:var(--dim);font-size:12px}
+.cls-card span{font-size:13px;color:#D6CCB8}
+.cls-card em{font-style:normal;font-size:12px;color:var(--gold)}
+.pick-body h2{font-family:var(--serif);font-size:22px;margin:4px 0}
+.cls-card.sel{border-color:var(--c);box-shadow:0 0 0 2px var(--c) inset;background:#221C28}
+/* ---------- 存檔、捏角、抽種族 ---------- */
+.t-slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;width:100%;text-align:left}
+.slot-card{display:grid;gap:3px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.slot-card.cur{border-color:var(--gold)}
+.slot-card b{font-family:var(--serif);font-size:14px;color:var(--gold)}
+.slot-card span{font-weight:700}
+.slot-card small{color:var(--dim);font-size:12px}
+.slot-card .row{margin-top:4px}
+.rates{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;margin:8px 0}
+.rate{display:grid;grid-template-columns:auto 1fr;gap:0 8px;align-items:baseline;background:var(--bg);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:6px;padding:5px 8px}
+.rate b{color:var(--c);font-family:"DotGothic16",var(--sans)}
+.rate span{color:var(--dim);font-size:12px}
+.rate small{grid-column:1 / -1;font-size:11.5px;color:#D6CCB8}
+.race-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin:10px 0}
+.race-card{position:relative;text-align:left;display:grid;gap:3px;align-content:start;background:var(--bg2);border:1px solid var(--line);border-top:4px solid var(--c);border-radius:10px;padding:10px 12px}
+.race-card.sel{box-shadow:0 0 0 2px var(--c) inset}
+.race-card .tier{position:absolute;right:10px;top:8px;font-family:"DotGothic16",var(--sans);color:var(--c);font-size:18px}
+.race-card b{font-family:var(--serif);font-size:19px}
+.race-card small{color:var(--dim);font-size:12px}
+.race-card span{font-size:13px;color:#D6CCB8}
+.race-card em{font-style:normal;font-size:12px;color:var(--gold)}
+.race-card i{font-style:normal;font-size:11.5px;color:#C8A0A0}
+.race-card.flip{animation:flip .5s ease}
+.race-card.shine{animation:flip .5s ease,shine 1.6s ease .5s 2}
+@keyframes flip{0%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
+@keyframes shine{50%{box-shadow:0 0 28px var(--c)}}
+.creator{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:16px;align-items:start}
+.cr-prev{position:sticky;top:0;background:#4A5A66;border:1px solid var(--line);border-radius:10px;padding:10px}
+.cr-prev canvas{width:100%;height:auto;image-rendering:pixelated;display:block}
+.cr-opts h3{font-family:var(--serif);font-size:14px;color:var(--gold);margin:12px 0 4px}
+.cr-opts input{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:5px 8px;min-width:0;width:12em}
+.swatches,.chips{display:flex;flex-wrap:wrap;gap:6px}
+.sw{width:28px;height:28px;border-radius:6px;border:2px solid rgba(255,255,255,.18);background:var(--c);padding:0}
+.sw.on{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
+.sw:disabled,.chip:disabled{opacity:.35;cursor:not-allowed}
+.chip{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:13px}
+.chip.on{background:var(--gold);color:#1A140A;border-color:var(--gold)}
+.hero-card{display:flex;gap:12px;align-items:flex-start;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:6px}
+.hero-card canvas{image-rendering:pixelated;background:#4A5A66;border-radius:6px;flex:none}
+.hero-card div{display:grid;gap:3px}
+.hero-card b{font-family:var(--serif);font-size:18px}
+.hero-card small{color:var(--dim);font-size:12.5px}
+.tag.red{background:#5A1E1C;color:#FFB0A8;border:1px solid var(--red);border-radius:999px;padding:1px 10px;font-size:12px;justify-self:start}
+.act.on{border-color:var(--gold);color:var(--gold)}
+@media (max-width:720px){.creator{grid-template-columns:1fr}.cr-prev{position:static}}
+
+/* ---------- 東鶴 ---------- */
+.hub-stat{display:flex;flex-wrap:wrap;gap:4px 18px;padding:8px 16px;font-size:13px;color:var(--dim);border-bottom:1px solid var(--line);background:var(--bg)}
+.hub-stat b{color:var(--gold);font-size:15px}
+.hub-body{flex:1;min-height:0;overflow:auto;padding:16px;padding-bottom:max(24px,env(safe-area-inset-bottom))}
+.panel-doc{max-width:1000px;margin:0 auto}
+.panel-doc h2{font-family:var(--serif);font-size:24px;letter-spacing:.08em;margin:0 0 4px}
+.panel-doc h3{font-family:var(--serif);font-size:16px;letter-spacing:.1em;margin:20px 0 8px;color:var(--gold)}
+.note{color:var(--dim);font-size:13px;margin:4px 0}
+.quests,.items,.recipes{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.quest,.recipe{display:grid;gap:4px;align-content:start;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.quest{border-left:4px solid var(--c)}
+.quest b{font-family:var(--serif);font-size:16px}
+.quest small,.recipe small{color:var(--dim);font-size:12.5px}
+.quest .btn,.recipe .btn{justify-self:start;margin-top:4px}
+.quests>.btn{align-self:center;justify-self:start}
+.cls-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.cls-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;background:var(--bg2);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:8px;padding:8px 10px}
+.cls-row b{font-family:var(--serif)}
+.cls-row small{color:var(--dim);margin-right:auto}
+.cls-row.cur{border-color:var(--gold);border-left-color:var(--c)}
+.tag{font-size:11.5px;color:#1A140A;background:var(--gold);border-radius:999px;padding:1px 8px;font-weight:700}
+.mini{font-size:12px;font-weight:700;background:rgba(17,14,20,.6);border:1px solid var(--line);border-radius:6px;padding:3px 9px}
+.mini.gold{border-color:var(--gold);color:var(--gold)}
+.mats{display:flex;flex-wrap:wrap;gap:6px}
+.mat{font-size:12.5px;padding:3px 10px;border-radius:999px;border:1px solid var(--c);background:color-mix(in srgb,var(--c) 16%,transparent)}
+.subtabs{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.subtabs .tab.on{background:var(--gold);border-color:var(--gold);color:#1A140A}
+.item-card{background:var(--bg2);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.item-card b{color:var(--c);font-size:15px}
+.item-card .rar{color:var(--dim);font-size:11.5px}
+.item-card ul{list-style:none;margin:4px 0 8px;padding:0;font-size:12.5px;color:#D6CCB8;display:grid;gap:1px}
+.item-card .row{margin-top:auto}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.field{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:8px 0 12px;font-size:13px;color:var(--dim)}
+.field select{font:inherit;color:var(--ink);background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+.slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.slot .mini{justify-self:start;margin-top:2px}
+.slot{background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;display:grid;gap:2px;min-width:0}
+.slot small{color:var(--dim);font-size:11.5px}
+.slot b{overflow-wrap:anywhere}
+.hub-msg{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);background:rgba(17,14,20,.95);border:1px solid var(--gold);border-radius:999px;padding:8px 18px;font-weight:700;pointer-events:none;opacity:0;max-width:calc(100% - 32px);text-align:center;z-index:50}
+.hub-msg.on{animation:msg 2.8s ease forwards}
+@keyframes msg{0%{opacity:0;transform:translate(-50%,8px)}10%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+.modal{position:fixed;inset:0;background:rgba(6,4,8,.7);display:grid;place-items:center;padding:16px;z-index:30}
+.sheet{width:min(560px,100%);max-height:min(86dvh,760px);overflow:auto;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.sheet h2{font-family:var(--serif);margin:0 0 6px;font-size:22px;letter-spacing:.05em}
+.sheet h3{font-family:var(--serif);font-size:15px;margin:14px 0 6px;color:var(--gold)}
+.sheet p{margin:6px 0}
+.sheet .kicker{font-size:12px;letter-spacing:.2em;color:var(--dim);margin:0}
+.sheet .hand{font-family:var(--hand);font-size:16px;color:#A9BCFF}
+.sheet .row{margin-top:14px}
+.promo{display:grid;gap:8px;margin-top:10px}
+.promo-card{text-align:left;display:grid;gap:3px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.promo-card small{color:var(--gold);font-size:11.5px}
+.promo-card b{font-family:var(--serif);font-size:18px}
+.promo-card span{font-size:13px;color:#D6CCB8}
+.promo-card.cur{border-color:var(--gold)}
+.promo-card:disabled{opacity:.55;cursor:not-allowed}
+ul.loot,ul.bag{list-style:none;padding:0;margin:6px 0;display:grid;gap:2px}
+ul.bag li{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;border-bottom:1px solid var(--line);padding:6px 0}
+ul.bag li span{margin-right:auto;font-weight:700}
+ul.bag li small{order:3;flex-basis:100%;color:var(--dim);font-size:12px}
+
+/* ---------- 遺跡裡 ---------- */
+#run{background:#000;user-select:none;-webkit-user-select:none;touch-action:none;overflow:hidden}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+.hud{position:absolute;pointer-events:none;z-index:2}
+.hud button{pointer-events:auto}
+.glass{background:rgba(10,8,14,.72);border:1px solid var(--line);border-radius:8px}
+#r-tl{left:12px;top:max(12px,env(safe-area-inset-top));display:grid;gap:6px;width:min(330px,calc(100% - 210px))}
+#r-where{padding:6px 10px}
+#r-where b{display:block;font-family:var(--serif);font-size:15px;line-height:1.3}
+#r-where small{font-size:12px;color:var(--dim)}
+#r-cls{position:relative;padding:3px 10px 6px;font-size:12.5px;overflow:hidden}
+#r-cls i{position:absolute;left:0;bottom:0;height:3px;background:var(--gold)}
+#r-tr{right:12px;top:max(12px,env(safe-area-inset-top));display:grid;gap:6px;justify-items:end}
+#r-map{width:160px;height:160px;border-radius:8px;border:1px solid var(--line);display:block}
+#r-aware-box{width:160px;padding:5px 8px;font-size:11.5px}
+#r-aware-box.hot{border-color:#B8322A;animation:hot 1s ease-in-out infinite}
+@keyframes hot{50%{box-shadow:0 0 14px rgba(184,50,42,.8)}}
+.meter{position:relative;height:12px;background:rgba(255,255,255,.1);border-radius:999px;overflow:hidden}
+.meter>i{position:absolute;left:0;top:0;bottom:0;border-radius:inherit}
+#r-aware-box .meter{height:6px;margin-top:4px}
+#r-hp{background:linear-gradient(90deg,#9A2A22,#E0584A)}
+#r-mp{background:linear-gradient(90deg,#34509E,#5F9AF2)}
+#r-aware{background:linear-gradient(90deg,#8A6A2E,#E0283A)}
+#r-bl{position:fixed;left:12px;bottom:max(12px,env(safe-area-inset-bottom));width:min(330px,calc(100% - 24px));display:grid;gap:5px;padding:8px 10px}
+.stat-row{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:8px;font-size:12px}
+.stat-row span:last-child{font-variant-numeric:tabular-nums;color:var(--dim);text-align:right}
+#r-weapon b{display:block;font-size:13.5px}
+#r-weapon small{font-size:12px;color:var(--dim)}
+.r-misc{display:flex;flex-wrap:wrap;gap:2px 12px;font-size:12px;color:var(--dim)}
+.r-misc b{color:var(--gold);font-weight:700}
+#r-br{right:12px;bottom:max(12px,env(safe-area-inset-bottom));display:flex;gap:8px;align-items:flex-end}
+.act{position:relative;width:64px;height:64px;border-radius:14px;background:rgba(10,8,14,.8);border:1px solid var(--line);display:grid;place-items:center;align-content:center;gap:2px;font-size:12px;font-weight:700;overflow:hidden;padding:2px;line-height:1.2}
+.act kbd{font-family:var(--sans);font-size:10.5px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.act.big{width:80px;height:80px;border-color:var(--gold);font-size:13px}
+.act .cd{position:absolute;left:0;right:0;bottom:0;height:0;background:rgba(0,0,0,.62);pointer-events:none}
+.act.sk{border-color:rgba(201,161,58,.55)}
+.act.locked{opacity:.42;border-style:dashed}
+#r-pause{padding:4px 10px}
+/* 在東鶴（陸地上）時，藏起遺跡用的狀態 */
+#run.town .dungeon-only,#run.town #joy-r{display:none!important}
+#run:not(.town) .town-only{display:none!important}
+#r-town{padding:6px 10px;font-size:12.5px}
+#r-town .wanted b{color:#FF5A4A;letter-spacing:.1em}
+#r-town .seen{display:inline-flex;align-items:center;gap:6px;color:#FFD04A}
+#r-town .seen i{display:inline-block;width:70px;height:7px;background:rgba(255,255,255,.15);border-radius:4px;overflow:hidden}
+#r-town .seen em{display:block;height:100%;background:linear-gradient(90deg,#E8A03A,#FF3A3A)}
+.iconbtn.street{border-color:var(--gold);color:var(--gold)}
+.r-cam{display:flex;gap:6px;align-items:center}
+.r-cam .ic{display:inline-flex;align-items:center;gap:3px;padding:3px 8px}
+.r-cam svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.r-cam .flip svg{transform:scaleX(-1)}
+.r-cam .key-only{font-size:11px;color:var(--dim)}
+#r-boss{left:50%;top:max(14px,env(safe-area-inset-top));transform:translateX(-50%);width:min(460px,calc(100% - 440px));text-align:center;font-family:var(--serif);font-size:14px;font-weight:700;text-shadow:0 1px 6px #000}
+#r-boss .meter{height:10px;margin-top:4px;border:1px solid rgba(255,255,255,.3)}
+#r-boss-hp{background:linear-gradient(90deg,#8A1A2A,#E0283A)}
+#r-banner{left:50%;top:24%;transform:translateX(-50%);text-align:center;width:min(640px,calc(100% - 32px));text-shadow:0 2px 14px rgba(0,0,0,.95)}
+#r-banner b{display:block;font-family:var(--serif);font-size:clamp(24px,5vw,40px);letter-spacing:.1em;line-height:1.25}
+#r-banner small{display:block;font-size:14px;color:#E6DCC4;margin-top:4px}
+#r-banner.on{animation:banner 3.4s ease forwards}
+@keyframes banner{0%{opacity:0;transform:translate(-50%,10px)}12%,78%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+#r-prompt{left:50%;bottom:150px;transform:translateX(-50%);background:rgba(10,8,14,.88);border:1px solid var(--gold);border-radius:999px;padding:6px 14px;font-size:13.5px;font-weight:700;white-space:nowrap}
+#r-prompt kbd{font-family:var(--sans);background:var(--gold);color:#1A140A;border-radius:4px;padding:0 6px;margin-right:8px}
+#r-toast{left:50%;bottom:104px;transform:translateX(-50%);background:rgba(10,8,14,.92);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:6px;padding:6px 14px;font-size:13.5px;max-width:min(520px,calc(100% - 32px))}
+#r-toast.on{animation:toast 2.6s ease forwards}
+@keyframes toast{0%{opacity:0}8%,85%{opacity:1}100%{opacity:0}}
+.veil{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .15s;z-index:1}
+#r-hurt{background:radial-gradient(ellipse at center,transparent 45%,rgba(184,20,20,.85) 100%)}
+#r-blind{background:radial-gradient(ellipse at center,rgba(184,154,106,.72) 0%,rgba(140,110,70,.97) 60%)}
+#r-field{background:radial-gradient(ellipse at center,transparent 18%,rgba(138,26,42,.5) 68%,rgba(40,0,20,.92) 100%)}
+#r-nums{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2}
+.num{position:absolute;left:0;top:0;font-weight:900;font-size:16px;color:#FFFFFF;text-shadow:0 1px 0 #000,0 0 6px rgba(0,0,0,.85);white-space:nowrap;will-change:transform}
+.num.crit{color:#FFD24A;font-size:22px}
+.num.hurt{color:#FF6A5A}
+.num.heal{color:#7FE08A}
+.num.ally{color:#BFE8FF;font-size:14px}
+#r-party{padding:5px 8px;display:grid;gap:4px;font-size:11.5px}
+#r-party .pm{display:grid;grid-template-columns:auto 1fr;gap:0 8px;align-items:center}
+#r-party .pm small{color:var(--dim);text-align:right}
+#r-party .pm .meter{grid-column:1 / -1;height:5px}
+#r-party .pm .meter>i{background:linear-gradient(90deg,#3E7A8A,#7FC8FF)}
+#r-party .pm.down{opacity:.6}
+#r-party .pm b{grid-column:1 / -1;color:#FF6A5A;font-size:11px}
+#r-party .ordnow{font-size:11.5px;color:var(--dim)}
+#r-party .ordnow b{color:var(--gold);margin-right:6px}
+#r-orders{left:50%;bottom:190px;transform:translateX(-50%);display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;background:rgba(10,8,14,.9);border:1px solid var(--gold);border-radius:10px;padding:8px 10px;pointer-events:auto;max-width:calc(100% - 24px)}
+#r-orders>b{width:100%;text-align:center;font-family:var(--serif);color:var(--gold)}
+#r-orders .ord{display:grid;justify-items:center;gap:1px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:5px 9px;font-weight:700;font-size:13px}
+#r-orders .ord.on{border-color:var(--gold);color:var(--gold)}
+#r-orders .ord small{font-weight:500;font-size:10.5px;color:var(--dim)}
+#r-orders kbd{font-size:10px;color:var(--dim)}
+.tag.gold{background:#5A4A1C;color:#FFE08A;border:1px solid var(--gold);border-radius:999px;padding:1px 10px;font-size:12px}
+.recruits{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin:6px 0 10px}
+.recruit{display:grid;gap:3px;align-content:start;background:var(--bg2);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:8px;padding:8px 10px}
+.recruit b{font-family:var(--serif);font-size:15px}
+.recruit small{color:var(--dim)}
+.recruit span{font-size:12.5px;color:#D6CCB8}
+.recruit .btn,.recruit .mini{justify-self:start;margin-top:4px}
+.sellmats{display:grid;gap:4px}
+.sellmat{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px}
+.sellmat span{margin-right:auto}
+#fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:40}
+#fade.on{animation:fade .8s ease}
+@keyframes fade{0%{opacity:0}45%,55%{opacity:1}100%{opacity:0}}
+.joy{position:absolute;bottom:max(18px,env(safe-area-inset-bottom));width:132px;height:132px;border-radius:50%;background:rgba(10,8,14,.35);border:2px solid rgba(237,230,214,.25);display:none;z-index:3;touch-action:none}
+.joy i{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(237,230,214,.35);border:2px solid rgba(237,230,214,.6);pointer-events:none}
+#joy-l{left:18px}
+#joy-r{right:18px}
+.touch-only{display:none}
+/* 觸控：搖桿在下面兩角，按鈕在右搖桿上面，狀態列移到左上 */
+body.touch .joy{display:block}
+body.touch .touch-only{display:grid}
+body.touch .r-cam .touch-only{display:inline-flex}
+body.touch .act kbd,body.touch .key-only{display:none}
+body.touch #r-tl{width:min(300px,calc(100% - 150px))}
+body.touch #r-bl{position:static;width:auto;padding:6px 8px;gap:3px}
+body.touch .stat-row{grid-template-columns:26px 1fr auto;gap:6px;font-size:11px}
+body.touch .meter{height:9px}
+body.touch #r-weapon b{font-size:12.5px}
+body.touch #r-weapon small,body.touch .r-misc{font-size:11px}
+body.touch #r-br{bottom:calc(max(18px,env(safe-area-inset-bottom)) + 142px);right:14px;width:208px;flex-wrap:wrap;justify-content:flex-end}
+body.touch .act{width:60px;height:60px}
+body.touch .act.big{width:72px;height:72px}
+body.touch #r-prompt{bottom:auto;top:58%;pointer-events:auto}
+body.touch #r-toast{bottom:auto;top:47%}
+body.touch #r-map{width:112px;height:112px}
+body.touch #r-aware-box{width:112px}
+@media (max-width:820px){
+  #r-boss{top:calc(max(12px,env(safe-area-inset-top)) + 196px);width:calc(100% - 32px)}
+}
+@media (max-height:520px){
+  body.touch #r-cls,body.touch #r-weapon small{display:none}
+  body.touch #r-map{width:86px;height:86px}
+  body.touch #r-aware-box{width:86px;font-size:10px}
+  body.touch .joy{width:112px;height:112px}
+  body.touch #r-br{bottom:calc(max(12px,env(safe-area-inset-bottom)) + 4px);right:148px;width:auto;flex-wrap:nowrap}
+  body.touch .act{width:52px;height:52px;font-size:11px}
+  body.touch .act.big{width:60px;height:60px}
+  #r-boss{top:max(8px,env(safe-area-inset-top));width:min(360px,calc(100% - 420px))}
+  #r-banner{top:18%}
+}
+
+@media (max-width:820px){
+  .stage{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}
+  .panel{border-left:0;border-top:1px solid var(--line);max-height:46dvh;padding-bottom:max(14px,env(safe-area-inset-bottom))}
+  .cartouche{padding:6px 8px}
+  .cartouche svg,.cartouche .flag{width:52px;height:40px}
+  .cartouche b{font-size:15px}
+  .cartouche small{display:none}
+  .compass{width:46px;height:46px}
+  .legend ul{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<!-- 標題 -->
+<section class="screen" id="title">
+  <div class="t-wrap">
+    <svg class="t-eye" viewBox="0 0 300 180" aria-hidden="true">
+      <path d="M40 90C20 60 6 44 0 20C40 30 60 50 76 70Z" fill="#3A2A30" stroke="#6A4A50" stroke-width="2"/>
+      <path d="M260 90C280 60 294 44 300 20C260 30 240 50 224 70Z" fill="#3A2A30" stroke="#6A4A50" stroke-width="2"/>
+      <path d="M50 110C28 130 18 150 14 176C44 160 62 140 78 120Z" fill="#2E2228" stroke="#5A3E44" stroke-width="2"/>
+      <path d="M250 110C272 130 282 150 286 176C256 160 238 140 222 120Z" fill="#2E2228" stroke="#5A3E44" stroke-width="2"/>
+      <ellipse cx="150" cy="90" rx="86" ry="72" fill="#EDE0D6"/>
+      <path d="M78 70C100 76 110 60 130 66M76 112C96 104 112 122 128 112M222 70C200 78 190 60 170 66M224 112C204 104 188 124 172 112" fill="none" stroke="#B8322A" stroke-width="2" opacity=".7"/>
+      <g class="pupil"><circle cx="150" cy="90" r="38" fill="#8A1A2A"/><circle cx="150" cy="90" r="18" fill="#1A0A0E"/><circle cx="160" cy="80" r="6" fill="#FFFFFF" opacity=".85"/></g>
+    </svg>
+    <div class="t-kicker">《艾菲爾斯特——公會特殊討伐令－遺跡》</div>
+    <h1 class="t-name">討伐令 1433<small>昭旭聯合王國・遺跡</small></h1>
+    <p class="t-sub">遺跡是佩特拉核心長出來的「可循環自然建築」。昭旭的島上到處都是。帶著公會的委託下去，把寶箱裡的東西帶回東鶴的鐵匠鋪鑑定——前提是你回得來。</p>
+    <div class="t-btns">
+      <button type="button" class="pri" id="t-go" hidden>回到東鶴<small></small></button>
+      <button type="button" id="t-new">新的冒險<small>抽種族、捏角、選職業</small></button>
+      <button type="button" id="t-map">攤開地圖<small>昭旭全國遺跡分布圖</small></button>
+      <button type="button" id="t-best">遺跡生物圖鑑<small>公會東鶴分館的圖鑑</small></button>
+    </div>
+    <div class="t-slots" id="t-slots"></div>
+    <p class="wip">電腦（按鍵照《飢荒》）：WASD 移動・Q／E 轉視角・空白鍵互動・左鍵或 F 攻擊・R 或右鍵技能（職業等級 3、6 再學會 3、4 兩個技能）・點一下 Shift 翻滾、按住 Shift 跑步・C 指揮隊友・Tab 地圖。手機：左搖桿移動、右搖桿瞄準並攻擊。</p>
+  </div>
+</section>
+
+<!-- 地圖 -->
+<section class="screen" id="map" hidden>
+  <div class="bar">
+    <h1>遺跡分布圖</h1>
+    <button type="button" class="tab" id="tab-nation" role="tab" aria-selected="true">昭旭全國</button>
+    <button type="button" class="tab" id="tab-donghe" role="tab" aria-selected="false">東鶴近郊</button>
+    <span class="grow"></span>
+    <button type="button" class="iconbtn" id="m-best">圖鑑</button>
+    <button type="button" class="iconbtn" id="m-back">標題</button>
+  </div>
+  <div class="stage">
+    <div class="map-wrap">
+      <div id="map-host"></div>
+      <div class="cartouche" id="cartouche"></div>
+      <svg class="compass" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="rgba(244,233,205,.9)" stroke="#8A7A5A"/><path d="M32 6L38 32L32 58L26 32Z" fill="#F4E9CD" stroke="#4A3A28" stroke-width="1.2"/><path d="M32 6L38 32H26Z" fill="#B8322A"/><path d="M6 32L32 27L58 32L32 37Z" fill="none" stroke="#4A3A28" stroke-width="1"/><text x="32" y="17" text-anchor="middle" font-size="9" font-weight="900" fill="#FFFFFF" font-family="serif">北</text></svg>
+      <details class="legend" id="legend" open>
+        <summary>圖例</summary>
+        <ul>
+          <li><i style="color:#B8322A;background:#B8322A"></i>首都</li>
+          <li><i style="color:#4A3A28"></i>城市・陪都</li>
+          <li><i style="color:var(--hamilia)"></i>哈米莉亞級（F）</li>
+          <li><i style="color:var(--amile)"></i>阿彌勒級（E～D）</li>
+          <li><i style="color:var(--mors)"></i>摩爾斯級（C～A）</li>
+          <li><i style="color:var(--kesent)"></i>克森特級（AA～SS）</li>
+          <li><span style="color:#8A5A32">- - -</span>道路</li>
+          <li><span style="color:#3E6A7A">· · ·</span>航路</li>
+        </ul>
+      </details>
+      <div class="zoom"><button type="button" id="z-in" aria-label="放大">＋</button><button type="button" id="z-out" aria-label="縮小">−</button><button type="button" id="z-reset" aria-label="回到全圖" style="font-size:12px">全</button></div>
+    </div>
+    <aside class="panel" id="panel" aria-live="polite"></aside>
+  </div>
+</section>
+
+<!-- 圖鑑 -->
+<section class="screen" id="bestiary" hidden>
+  <div class="bar"><h1>遺跡生物圖鑑</h1><span class="grow"></span><button type="button" class="iconbtn" id="b-map">地圖</button><button type="button" class="iconbtn" id="b-back">標題</button></div>
+  <div class="b-body">
+    <p class="b-intro">高階的佩特拉核心能生成遺跡生物；低階遺跡裡的，多半是被魔力質吸引、變得異常暴躁的生物。圖鑑上的名字是公會東鶴分館照牠們的樣子和習性取的；「礦殼」和「佩特拉核心」是公會正式文件裡的名字。</p>
+    <div class="cards" id="cards"></div>
+  </div>
+</section>
+
+<!-- 職業登記 -->
+<section class="screen" id="pick" hidden>
+  <div class="bar"><h1 id="pick-h">勇者登記</h1><span class="grow"></span><button type="button" class="iconbtn" id="p-back">標題</button></div>
+  <div class="b-body">
+    <p class="b-intro" id="pick-intro"></p>
+    <div class="pick-body" id="pick-cards"></div>
+  </div>
+</section>
+
+<!-- 東鶴 -->
+<section class="screen" id="hub" hidden>
+  <div class="bar">
+    <h1>東鶴</h1>
+    <button type="button" class="tab" data-htab="guild">公會</button>
+    <button type="button" class="tab" data-htab="smith">鐵匠鋪</button>
+    <button type="button" class="tab" data-htab="stash">倉庫</button>
+    <button type="button" class="tab" data-htab="shop">白藤堂</button>
+    <span class="grow"></span>
+    <button type="button" class="iconbtn street" id="h-street">回到街上</button>
+    <button type="button" class="iconbtn" id="h-map">地圖</button>
+    <button type="button" class="iconbtn" id="h-best">圖鑑</button>
+    <button type="button" class="iconbtn" id="h-title">標題</button>
+  </div>
+  <div class="hub-stat" id="hub-stat"></div>
+  <div class="hub-body" id="hub-body"></div>
+  <div class="modal" id="hub-modal" hidden><div class="sheet" id="hub-sheet" role="dialog" aria-modal="true"></div></div>
+</section>
+
+<!-- 遺跡裡 -->
+<section class="screen" id="run" hidden>
+  <canvas id="gl"></canvas>
+  <div class="veil" id="r-hurt"></div>
+  <div class="veil" id="r-blind"></div>
+  <div class="veil" id="r-field"></div>
+  <div id="r-nums"></div>
+  <div class="hud" id="r-tl">
+    <div class="glass" id="r-where"></div>
+    <div class="glass dungeon-only" id="r-cls"></div>
+    <div class="glass town-only r-misc" id="r-town"></div>
+    <div class="glass dungeon-only" id="r-bl">
+      <div class="stat-row"><span>生命</span><div class="meter"><i id="r-hp"></i></div><span id="r-hp-t"></span></div>
+      <div class="stat-row"><span>魔力</span><div class="meter"><i id="r-mp"></i></div><span id="r-mp-t"></span></div>
+      <div id="r-weapon"></div>
+      <div class="r-misc"><span>魔力水晶 <b id="r-gold">0</b></span><span>背包 <b id="r-bag">0</b></span><span id="r-pot"></span></div>
+    </div>
+    <div class="glass dungeon-only" id="r-party" hidden></div>
+  </div>
+  <div class="hud" id="r-tr">
+    <div class="r-cam">
+      <button type="button" class="mini ic" data-tact="rotl" aria-label="視角往左轉（Q）"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 7.5A6.5 6.5 0 1 1 5 13"/><path d="M2.8 3.8L6 7.8 10 6"/></svg><span class="key-only">Q</span></button>
+      <button type="button" class="mini ic flip" data-tact="rotr" aria-label="視角往右轉（E）"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 7.5A6.5 6.5 0 1 1 5 13"/><path d="M2.8 3.8L6 7.8 10 6"/></svg><span class="key-only">E</span></button>
+      <button type="button" class="mini touch-only" data-tact="zoom">遠近</button>
+      <button type="button" class="mini" id="r-pause" data-tact="pause">暫停<span class="key-only">（Esc）</span></button>
+    </div>
+    <canvas id="r-map" width="160" height="160"></canvas>
+    <div class="glass dungeon-only" id="r-aware-box"><span id="r-aware-t">佩特拉的注意 0</span><div class="meter"><i id="r-aware" style="width:0"></i></div></div>
+  </div>
+  <div class="hud" id="r-boss" hidden><span id="r-boss-n"></span><div class="meter"><i id="r-boss-hp"></i></div></div>
+  <div class="hud" id="r-br">
+    <button type="button" class="act touch-only" data-tact="run">跑步</button>
+    <button type="button" class="act touch-only" data-tact="use">互動</button>
+    <button type="button" class="act dungeon-only" data-tact="hp">回復藥<kbd>1</kbd></button>
+    <button type="button" class="act dungeon-only" data-tact="bag">背包<kbd>I</kbd></button>
+    <button type="button" class="act dungeon-only" data-tact="order">指揮<kbd>C</kbd></button>
+    <button type="button" class="act dungeon-only" data-tact="dodge">翻滾<kbd>點 Shift</kbd><span class="cd" id="r-dodge-cd"></span></button>
+    <button type="button" class="act sk dungeon-only" id="r-skill2" data-tact="skill2"><span id="r-skill2-n">技能</span><kbd>3</kbd><span class="cd" id="r-skill2-cd"></span></button>
+    <button type="button" class="act sk dungeon-only" id="r-skill3" data-tact="skill3"><span id="r-skill3-n">技能</span><kbd>4</kbd><span class="cd" id="r-skill3-cd"></span></button>
+    <button type="button" class="act big dungeon-only" id="r-skill" data-tact="skill"><span id="r-skill-n">技能</span><kbd>R／右鍵</kbd><span class="cd" id="r-skill-cd"></span></button>
+  </div>
+  <div class="hud" id="r-orders" hidden></div>
+  <div class="hud" id="r-prompt" data-tact="use" hidden></div>
+  <div class="hud" id="r-toast" role="status" hidden></div>
+  <div class="hud" id="r-banner" hidden></div>
+  <div class="joy" id="joy-l" aria-hidden="true"><i id="knob-l"></i></div>
+  <div class="joy" id="joy-r" aria-hidden="true"><i id="knob-r"></i></div>
+  <div class="modal" id="r-modal" hidden><div class="sheet" id="r-sheet" role="dialog" aria-modal="true"></div></div>
+</section>
+<div id="fade" hidden></div>
+<div class="hub-msg" id="hub-msg" role="status" aria-live="polite"></div>
+
+<script src="data.js"></script>
+<script src="mapdata.js"></script>
+<script src="map.js"></script>
+<script src="items.js"></script>
+<script src="dungeon.js"></script>
+<script src="combat.js"></script>
+<script src="run.js"></script>
+<script src="hud.js"></script>
+<script src="pixel.js"></script>
+<script src="party.js"></script>
+<script src="sprites.js"></script>
+<script src="races.js"></script>
+<script src="names.js"></script>
+<script src="calendar.js"></script>
+<script src="town.js"></script>
+<script src="suburbs.js"></script>
+<script src="civic.js"></script>
+<script src="interior.js"></script>
+<script src="props.js"></script>
+<script src="people.js"></script>
+<script src="jobs.js"></script>
+<script src="rivals.js"></script>
+<script src="skills.js"></script>
+<script src="hub.js"></script>
+<script src="saves.js"></script>
+<script src="creator.js"></script>
+<script src="main.js"></script>
