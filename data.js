@@ -337,6 +337,6 @@ window.R = window.R || {};
     { tier: 2, name: '核心', ilvl: 6, mats: { manaore: 6, crystal: 4, core: 1 }, gold: 300, weights: [0, 0, 40, 50, 10] }
   ];
   R.idPrice = it => 12 + it.ilvl * 12;
-  R.sellPrice = it => Math.round((6 + it.ilvl * 5) * (it.identified ? [1, 1.6, 2.6, 4.2, 7][it.rarity] : 1.3));
+  R.sellPrice = it => Math.round((6 + it.ilvl * 5) * (it.identified ? [1, 1.6, 2.6, 4.2, 7, 12][it.rarity] : 1.3));
   R.upgradePrice = it => ({ gold: 30 * (it.plus + 1), crystal: it.plus + 1 });
 })(window.R);

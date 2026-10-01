@@ -24,7 +24,7 @@
   // 未鑑定的東西，稀有度與詞綴其實已經決定好了，只是看不到、也還沒生效
   R.makeItem = (o) => {
     const it = { id: newId(), kind: o.kind, base: o.base, ilvl: o.ilvl || 1, rarity: o.rarity || 0, affixes: [], identified: !!o.identified, plus: 0, legend: null };
-    if (it.rarity === 4 && it.kind === 'weapon') { const ls = R.LEGENDS.filter(l => l.base === it.base); if (ls.length) it.legend = pick(ls).id; }
+    if (it.rarity >= 4 && it.kind === 'weapon') { const ls = R.LEGENDS.filter(l => l.base === it.base); if (ls.length) it.legend = pick(ls).id; }
     const pool = (it.kind === 'weapon' ? R.W_AFFIX : R.A_AFFIX).filter(a => !(a.ranged && !['gun', 'bow', 'magic'].includes(R.WEAPONS[it.base] && R.WEAPONS[it.base].kind)));
     const n = it.kind === 'charm' ? Math.max(1, R.RARITY[it.rarity].affix) : R.RARITY[it.rarity].affix;
     const bag = pool.slice();
@@ -89,7 +89,7 @@
     const t = R.tierOf(it.ilvl), got = { iron: rint(1, 2) };
     if (t >= 1) got.manaore = rint(1, 2);
     if (it.identified && it.rarity >= 2) got.crystal = rint(1, it.rarity);
-    if (it.identified && it.rarity === 4) got.core = 1;
+    if (it.identified && it.rarity >= 4) got.core = 1;
     if (it.kind === 'armor') got.shell = 1;
     Object.keys(got).forEach(k => { R.S.mats[k] = (R.S.mats[k] || 0) + got[k]; });
     R.removeItem(it.id);

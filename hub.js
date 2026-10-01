@@ -57,7 +57,7 @@
     R.save();
   };
   const matsLine = () => Object.keys(R.MATS).filter(k => R.S.mats[k]).map(k => '<span class="mat" style="--c:' + R.MATS[k].color + '">' + esc(R.MATS[k].name) + ' ' + R.S.mats[k] + '</span>').join('') || '<span class="note">還沒有素材。</span>';
-  const itemCard = (it, btns) => '<div class="item-card" style="--c:' + R.rarityColor(it) + '"><b>' + esc(R.itemName(it)) + '</b>' + (it.identified ? '<small class="rar">' + R.RARITY[it.rarity].name + '</small>' : '<small class="rar">？？？</small>') + '<ul>' + R.itemLines(it).map(l => '<li>' + esc(l) + '</li>').join('') + '</ul><div class="row">' + btns + '</div></div>';
+  const itemCard = (it, btns) => '<div class="item-card" style="--c:' + R.rarityColor(it) + '">' + (R.itemIconTag ? R.itemIconTag(it, 'card') : '') + '<b>' + esc(R.itemName(it)) + '</b>' + (it.identified ? '<small class="rar">' + R.RARITY[it.rarity].name + '</small>' : '<small class="rar">？？？</small>') + '<ul>' + R.itemLines(it).map(l => '<li>' + esc(l) + '</li>').join('') + '</ul><div class="row">' + btns + '</div></div>';
 
   // 同行的勇者：最多兩個人；每個人分走一成五的委託報酬
   const partyBox = () => {
@@ -124,7 +124,7 @@
   // 倉庫：裝備、賣掉
   const stash = () => {
     const S = R.S, eq = R.equipped(S.cls), eqIds = R.equippedIds();
-    const slot = k => '<div class="slot"><small>' + R.GEAR_NAME[k] + '</small>' + (eq[k] ? '<b style="color:' + R.rarityColor(eq[k]) + '">' + esc(R.itemName(eq[k])) + '</b>' + (k !== 'weapon' ? '<button type="button" class="mini" data-unequip="' + k + '">脫下</button>' : '') : '<span class="note">（空）</span>') + '</div>';
+    const slot = k => R.gearSlot ? R.gearSlot(k, eq[k]) : '<div class="slot"><small>' + R.GEAR_NAME[k] + '</small>' + (eq[k] ? '<b style="color:' + R.rarityColor(eq[k]) + '">' + esc(R.itemName(eq[k])) + '</b>' + (k !== 'weapon' ? '<button type="button" class="mini" data-unequip="' + k + '">脫下</button>' : '') : '<span class="note">（空）</span>') + '</div>';
     const P = R.calcPlayer(S.cls);
     const rest = S.stash.filter(it => !eqIds.has(it.id));
     return '<section class="panel-doc"><h2>倉庫</h2><p class="note">現在的職業：' + esc(R.CLASSES[S.cls].name) + '。放在倉庫的東西很安全；帶進遺跡的只有身上的裝備。</p><div class="slots">' + R.GEAR_KEYS.map(slot).join('') + '</div><p class="note">生命 ' + P.hpMax + '・魔力 ' + P.mpMax + '・防禦 ' + P.def.toFixed(1) + '・移動速度 ' + P.speed.toFixed(2) + '</p>'

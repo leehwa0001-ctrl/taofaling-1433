@@ -246,7 +246,7 @@
   // ---------- 背包與暫停 ----------
   R.bagSheet = () => {
     const run = W.run; if (!run) return;
-    const list = run.bag.map((it, i) => '<li><span style="color:' + R.rarityColor(it) + '">' + R.esc(R.itemName(it)) + '</span><small>' + R.esc(R.itemLines(it).slice(0, 2).join('・')) + '</small>'
+    const list = run.bag.map((it, i) => '<li>' + (R.itemIconTag ? R.itemIconTag(it, 'sm') : '') + '<span style="color:' + R.rarityColor(it) + '">' + R.esc(R.itemName(it)) + '</span><small>' + R.esc(R.itemLines(it).slice(0, 2).join('・')) + '</small>'
       + (it.identified && R.canUse(it, R.S.cls) && it.kind === 'weapon' ? '<button type="button" class="mini" data-eq="' + i + '">現在換上</button>' : !it.identified && it.kind === 'weapon' && R.canUse(it, R.S.cls) ? '<button type="button" class="mini" data-eq="' + i + '">換上（未鑑定，只有基礎數值）</button>' : '')
       + '<button type="button" class="mini" data-drop="' + i + '">丟掉</button></li>').join('');
     R.sheet('<h2>背包　' + run.bag.length + '／' + R.BAG_MAX + '</h2><ul class="bag">' + (list || '<li class="note">還沒撿到裝備。</li>') + '</ul>'
