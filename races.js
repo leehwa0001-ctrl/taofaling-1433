@@ -8,11 +8,11 @@
   const $ = id => document.getElementById(id);
   const esc = s => R.esc(s);
   R.TIERS = {
-    N: { name: 'N', w: 50, color: '#B9BEC7' },
+    N: { name: 'N', w: 50.4, color: '#B9BEC7' },
     R: { name: 'R', w: 31.4, color: '#62CB7E' },
     SR: { name: 'SR', w: 16, color: '#5BA8F2' },
     SSR: { name: 'SSR', w: 2, color: '#F2B64C' },
-    UR: { name: 'UR', w: 0.6, color: '#E04A6A', hidden: 1 }
+    UR: { name: 'UR', w: 0.2, color: '#E04A6A', hidden: 1 }   // 作者：降低機率（原本 0.6%）
   };
   // b：加成（hp、mp 是倍率；def 是加上去的防禦；speed、dmg、melee、magic、ranged 倍率；crit 暴擊率；critMult 暴擊傷害；dodge、skillCd 冷卻縮短；regen 每秒回復；calm 佩特拉的注意變慢；xp 經驗；vamp 吸血；ignite 點燃機率；thorns 反傷；guard 隊友少受傷；crystal 多掉魔力水晶；immune 免疫）
   // xeno：在東鶴被排擠的程度 0～3
@@ -41,8 +41,8 @@
     golddragon: { name: '金龍人族', tier: 'SSR', from: '地下礦脈・岩龍族種', xeno: 2, skins: ['#D8B048', '#C89A38'], b: { def: 6, hp: 0.2, ore: 0.6 }, line: '金色的鱗片和龍角，和龍人族是不同的族種。很硬，掘礦時常多敲下一塊。', look: { horns: 'dragon', tail: 'dragon', scales: 1, bald: 1, crest: 1 } },
     dragon: { name: '龍人族', tier: 'SSR', from: '地表山地・節鱗族種', xeno: 2, skins: ['#C8553F', '#B2463A'], b: { hp: 0.2, dmg: 0.15, def: 4, immune: { burn: 1 } }, line: '鱗片、角、尾巴。很少見。', look: { horns: 'dragon', tail: 'dragon', scales: 1, bald: 1, crest: 1 } },
     demon: { name: '魔族', tier: 'UR', from: '魔界・克拉克特斯（公會分類：神魔族）', xeno: 3, skins: ['#E8D8E0', '#C8B8D0'], hairs: ['#14101A', '#E8E4F0'], eye: '#C8323A',
-      b: { hp: 0.3, mp: 0.4, dmg: 0.3, def: 3, vamp: 0.04, skillCd: 0.25, regen: 1.2, calm: 0.15 },
-      line: '翅膀、光環、黑色雙角。人界的人怕你：店家不賣你東西、路人躲著走、私人賞金獵人會來找你。公會把你列為「受監視對象」——但也只有公會不准任何人討伐你。', look: { horns: 'demon', wings: 'demon', halo: 1 } }
+      b: { hp: 0.15, mp: 0.2, dmg: 0.12, def: 2, vamp: 0.02, skillCd: 0.1, regen: 0.4, calm: 0.1 },   // 作者：削弱（原本生命、傷害各 +30%）
+      line: '翅膀、黑色雙角。人界的人怕你：店家不賣你東西、路人躲著走、私人賞金獵人會來找你。公會把你列為「受監視對象」——但也只有公會不准任何人討伐你。', look: { horns: 'demon', wings: 'demon' } }   // 作者：拿掉光環
   };
   // 混血：勇者證的註名本來就有「混血與否」這一欄（公會的勇者大約三成是混血）
   // 長相淡一點（留耳朵、角變小；尾巴、鱗片、四隻眼睛之類的沒有），加成減半，再多一點大陸人族那邊的學習力；
