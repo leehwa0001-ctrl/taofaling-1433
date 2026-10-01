@@ -19,7 +19,7 @@
   const P = {
     taki: {
       name: '望月瀧', short: '瀧', race: 'human', adult: 1, romance: 1, recruit: 1, sil: 1, cls: 'blade', weapon: 'katana', lv: 40, card: 'HR-2830-3317', rank: '特攻段',
-      look: { top: '#34495E', hair: '#1A1714', cloak: '#26323E', hs: 'ponytail', skin: '#F1C9A5', eye: '#2A2420' },
+      look: { top: '#26262C', hair: '#E6EAF0', cloak: '#1E1E24', hs: 'ponytail', skin: '#F4E2D2', eye: '#8A929C', pants: '#1E1E24', sig: 'taki' },   // 照作者的設定圖（storylooks.js）
       likes: { strings: 3, tackle: 2, fish: 1, dango: 1, dorayaki: 1, tea: 1 },
       hint: '南橋下，有人在釣魚。',
       sched: (dd, E) => {
@@ -43,7 +43,7 @@
     },
     reno: {
       name: '雷諾・雷提歐', short: '雷諾', race: 'dog', adult: 1, romance: 1, recruit: 1, sil: 1, cls: 'mage', weapon: 'orb', lv: 16, card: '（冒險段・灰鐵階）',
-      look: { top: '#6E4B3A', hair: '#B7874E', cloak: '#4A3424', hs: 'short', skin: '#EFCFAE', eye: '#2A2420' },
+      look: { top: '#8A9A2E', hair: '#B7874E', cloak: '#7A8A28', hs: 'short', skin: '#EFCFAE', eye: '#6A9A2A', pants: '#5A4030', sig: 'reno' },
       likes: { notebook: 3, dango: 2, fish: 1, tea: 1, dorayaki: 1 },
       hint: '公會的大廳裡，有個人一直在小冊子上記東西。',
       sched: (dd, E) => {
@@ -62,7 +62,7 @@
     },
     churu: {
       name: '楚璐・洛朗', short: '楚璐', race: 'human', adult: 1, romance: 1, recruit: 1, sil: 1, cls: 'gunner', weapon: 'rifle', lv: 14, card: 'HR-2830-1192',
-      look: { top: '#1C1C24', hair: '#3A2A1C', cloak: '#2A2A30', hs: 'crop', skin: '#F1C9A5', eye: '#3A2A1C' },
+      look: { top: '#16161A', hair: '#6E4E30', cloak: '#16161A', hs: 'bob', skin: '#F1C9A5', eye: '#3A6AC8', pants: '#2E4A6E', sig: 'churu' },
       likes: { oil: 3, parts: 3, rose: 2, dango: 1 },
       hint: '北門外，有人在擦一台兩輪的機車。',
       sched: (dd, E) => {
@@ -257,6 +257,7 @@
   };
   // 隊伍裡的劇情人物：升級跟著你走（最多到他們原本的等級）
   R.syncStoryLv = () => { const s = S(); (s.party || []).forEach(m => { if (m.story) m.lv = Math.max(m.story === 'taki' ? 15 : 1, Math.min(P[m.story].lv, s.classes[s.cls].lv + (m.story === 'taki' ? 12 : 2))); }); };
+  R.STORY_LOOK = id => P[id] && P[id].look;   // storylooks.js：隊伍裡的劇情人物換成最新的樣子
   // 戀人在隊伍裡：多一點力氣
   R.partyBond = Pl => { const s = S(); if (!s || !W.run) return; const lover = (s.party || []).find(m => m.story && s.rel[m.story] === 'lover'); if (lover) { Pl.dmgMult *= 1.06; Pl.def += 2; Pl.bond = lover.story; } };
 

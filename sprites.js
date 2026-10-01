@@ -64,7 +64,8 @@
       hood: hood ? (o.hood ? '#3A322C' : rc.hoodCol || '#C8A870') : null,
       ears: hood || helm ? null : rc.ears, horns: hood ? null : rc.horns, wings: o.hood ? null : rc.wings, halo: o.hood ? null : rc.halo, tail: o.hood ? null : rc.tail,
       fin: hood ? null : rc.fin, flame: hood || helm ? null : rc.flame, leaves: hood || helm ? null : rc.leaves, gem: hood ? null : rc.gem, cracks: rc.cracks, rock: rc.rock, scales: rc.scales,
-      eyes4: rc.eyes4, beard: rc.beard, whisk: rc.whisk && !hood, crest: rc.crest && !hood && !helm, fangs: rc.fangs, wisp: rc.wisp
+      eyes4: rc.eyes4, beard: rc.beard, whisk: rc.whisk && !hood, crest: rc.crest && !hood && !helm, fangs: rc.fangs, wisp: rc.wisp,
+      sig: hood || helm ? null : o.sig   // 劇情人物自己的衣服、髮型細節（storylooks.js 的 R.HERO_SIG）
     };
   };
   const drawHero = (x, ox, oy, dir, fr, L, pose) => {
@@ -157,6 +158,8 @@
       if (L.beard) { p(8, 7, 4, 2, L.hair); p(9, 9, 2, 1, L.hair); }
       hairTop(p, L, 'side');
     }
+    // 劇情人物的細節（storylooks.js）
+    if (L.sig && R.HERO_SIG && R.HERO_SIG[L.sig]) R.HERO_SIG[L.sig](p, side ? 'side' : back ? 'back' : 'front', fr, L, sit, shade);
     // 暗影族：身邊飄著幾縷影子
     if (L.wisp && !sit) { const wc = 'rgba(36,28,58,0.85)'; (side ? [[3, 9], [12, 11], [2, 16], [13, 18], [4, 22]] : [[2, 9], [13, 10], [1, 14], [14, 15], [3, 21], [12, 22]]).forEach(([u, v]) => p(u, v, 1, 1, wc)); }
     // 帽子
