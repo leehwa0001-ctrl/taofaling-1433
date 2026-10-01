@@ -112,6 +112,7 @@
     }
   };
 
+  R.castSkillId = id => { const w = W(); return cast(id, w.P, w); };   // skillbook.js：任何一格都能放這十四個技能
   // 閃光彈：落地後不是爆炸，是一陣強光
   const explode0 = R.explode;
   R.explode = s => {
