@@ -435,7 +435,8 @@
       let moving = false;
       if (can && e.aggro && target) {
         const ai = e.def.ai;
-        if (ai === 'chase' || ai === 'lord' && false) { if (d > e.def.size + 0.7) { if (walk) { move(e, a, sp, dt); moving = true; } } else if (e.cd <= 0) { e.cd = 0.85; hurtT(P, e.dmg, e); } e.yaw = a; }
+        if (R.AI_X && R.AI_X[ai]) moving = !!R.AI_X[ai](e, P, d, a, sp, dt, walk, { move, hurtT, st, w });   // monsters2.js 的新生物
+        else if (ai === 'chase' || ai === 'lord' && false) { if (d > e.def.size + 0.7) { if (walk) { move(e, a, sp, dt); moving = true; } } else if (e.cd <= 0) { e.cd = 0.85; hurtT(P, e.dmg, e); } e.yaw = a; }
         else if (ai === 'kite') {
           const want = d < 6 ? a + Math.PI : d > 9 ? a : a + Math.PI / 2 * (e.side || (e.side = Math.random() < 0.5 ? 1 : -1));
           if (walk) { move(e, want, sp * (d > 6 && d < 9 ? 0.5 : 1), dt); moving = true; } e.yaw = a;
@@ -540,7 +541,7 @@
       if (!e.def.fly || e.id !== 'petra') R.collide(e, e.def.size * 0.5);
       for (const o of w.enemies) if (o !== e && !o.dead) { const dx = e.x - o.x, dz = e.z - o.z, dd = Math.hypot(dx, dz), m = (e.def.size + o.def.size) * 0.45; if (dd < m && dd > 0.001) { e.x += dx / dd * (m - dd) * 0.5; e.z += dz / dd * (m - dd) * 0.5; } }
       e.m.g.position.x = e.x; e.m.g.position.z = e.z; e.m.g.rotation.y = e.yaw;
-      if (e.def.ai !== 'hop' && e.def.ai !== 'ambush' && e.def.ai !== 'burrow' && e.def.ai !== 'pounce') e.m.g.position.y = e.def.fly ? 0.2 + Math.sin(e.t * 2) * 0.15 : 0;
+      if (!e.def.ownY && e.def.ai !== 'hop' && e.def.ai !== 'ambush' && e.def.ai !== 'burrow' && e.def.ai !== 'pounce') e.m.g.position.y = e.def.fly ? 0.2 + Math.sin(e.t * 2) * 0.15 : 0;
       if (e.def.human) R.animHero(e.m, moving ? e.speed : 0, dt, e.def.ai === 'kite'); else R.animBeast(e.m, e.id, e.t, moving);
     }
     w.enemies = w.enemies.filter(e => !e.dead);
