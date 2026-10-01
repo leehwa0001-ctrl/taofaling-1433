@@ -105,7 +105,7 @@
   };
   const openBest = () => {
     show('bestiary'); $('b-back').textContent = R.base === 'hub' || R.base === 'town' ? '東鶴' : '標題';
-    $('cards').innerHTML = Object.keys(R.ENEMIES).filter(id => !R.ENEMIES[id].human && !R.ENEMIES[id].noDex).map(id => { const e = R.ENEMIES[id], nm = e.name.split('・').pop(); return '<article class="card' + (e.boss ? ' boss' : '') + '"><span class="em" style="background:' + e.color + '">' + esc(nm[0]) + '</span><b>' + esc(e.name) + '</b><small>' + (e.ref === '公會文件' ? '公會正式名稱' : '公會東鶴分館的圖鑑名') + '</small><p>' + esc(e.desc) + '</p><div class="where">出沒：' + esc(whereOf(id).join('、') || '—') + '</div></article>'; }).join('')
+    $('cards').innerHTML = Object.keys(R.ENEMIES).filter(id => !R.ENEMIES[id].human && !R.ENEMIES[id].noDex).map(id => { const e = R.ENEMIES[id], nm = e.name.split('・').pop(); return '<article class="card' + (e.boss ? ' boss' : '') + '">' + (R.dexIcon ? R.dexIcon(id, '<span class="em" style="background:' + e.color + '">' + esc(nm[0]) + '</span>') : '<span class="em" style="background:' + e.color + '">' + esc(nm[0]) + '</span>') + '<b>' + esc(e.name) + '</b><small>' + (e.ref === '公會文件' ? '公會正式名稱' : '公會東鶴分館的圖鑑名') + '</small><p>' + esc(e.desc) + '</p>' + (R.dexStats ? R.dexStats(id) : '') + '<div class="where">出沒：' + esc(whereOf(id).join('、') || '—') + '</div></article>'; }).join('')
       + '<article class="card"><span class="em" style="background:#EDE0D6">瞳</span><b>牆瞳</b><small>不是敵人</small><p>' + esc(R.MOKUMOKUREN) + '</p><div class="where">出沒：所有遺跡的牆上</div></article>';
   };
 

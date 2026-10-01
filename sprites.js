@@ -565,6 +565,7 @@
   };
   // 換一套顏色（同樣大小的圖）
   R.beastVariant = (m, id, role) => { if (!m.isSprite) return; m.sp.t.image = beastSheet(id, role).c; m.sp.t.needsUpdate = true; };
+  R.beastSheetOf = beastSheet;   // 怪物頭上的名牌、圖鑑的小圖示（monlabel.js）
   R.fadeSprite = (m, a) => { m.sp.mat.transparent = a < 1; m.sp.mat.opacity = a; m.sp.mat.alphaTest = a < 1 ? 0.05 : 0.5; m.sp.mat.depthWrite = a >= 1; };
   R.flashSprite = (m, t) => { m.sp.mat.emissive.setRGB(1, t > 0 ? 0.35 : 1, t > 0 ? 0.3 : 1); m.sp.mat.emissiveIntensity = t > 0 ? 0.9 : 0.22; };
 

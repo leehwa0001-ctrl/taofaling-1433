@@ -393,6 +393,20 @@ body:not(.touch) #run.town #r-wp{position:fixed;left:16px;bottom:calc(max(16px,e
 #r-blind{background:radial-gradient(ellipse at center,rgba(184,154,106,.72) 0%,rgba(140,110,70,.97) 60%)}
 #r-field{background:radial-gradient(ellipse at center,transparent 18%,rgba(138,26,42,.5) 68%,rgba(40,0,20,.92) 100%)}
 #r-nums{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2}
+/* 遺跡生物頭上的名牌（monlabel.js）：小圖示、名字、生命條 */
+#r-tags{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2}
+.mtag{position:absolute;left:0;top:0;display:grid;grid-template-columns:auto auto;align-items:center;gap:0 3px;font-size:11px;font-weight:700;color:#F4E9CD;text-shadow:0 1px 0 #000,0 0 4px #000;white-space:nowrap;will-change:transform}
+.mtag img,.mtag .mg{grid-row:span 2;width:18px;height:18px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 1px 0 #000)}
+.mtag .mg{display:grid;place-items:center;background:#5A2A2A;border-radius:50%;font-size:10px}
+.mtag i{display:block;width:46px;height:3px;background:rgba(0,0,0,.65);border-radius:2px;overflow:hidden}
+.mtag em{display:block;height:100%;width:100%;background:#E0584A}
+.mtag.elite b{color:#FFB24A}.mtag.elite em{background:#FF9A2A}
+.mtag.human b{color:#FF8A7A}
+body.pixel .mtag{font-size:12px;text-shadow:1px 1px 0 #000}
+.card .em-img{background:radial-gradient(circle at 50% 60%,color-mix(in srgb,var(--c) 35%,transparent),rgba(0,0,0,.25))}
+.card .em-img img{max-width:46px;max-height:46px;image-rendering:pixelated}
+.card .dexstat{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:2px 12px;font-size:12px;color:var(--dim)}
+.card .dexstat b{color:#F4E9CD}
 .num{position:absolute;left:0;top:0;font-weight:900;font-size:16px;color:#FFFFFF;text-shadow:0 1px 0 #000,0 0 6px rgba(0,0,0,.85);white-space:nowrap;will-change:transform}
 .num.crit{color:#FFD24A;font-size:22px}
 .num.hurt{color:#FF6A5A}
@@ -710,6 +724,7 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <script src="townlife.js"></script>
 <script src="vigilance.js"></script>
 <script src="punish.js"></script>
+<script src="monlabel.js"></script>
 <script src="taki.js"></script>
 <script src="expel.js"></script>
 <script src="storylooks.js"></script>
