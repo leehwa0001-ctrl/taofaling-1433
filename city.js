@@ -89,6 +89,23 @@
   road('dirt', [[470, 126], [350, 112], [200, 84], [130, 62]], '往湯山村');
   road('dirt', [[90, 412], [90, 396]], '');
 
+  // ---------- 海：東鶴靠海（作者）。海岸線在示意圖 x = 975，以東是海（coast.js 蓋海、防波堤、漁港、燈塔、海水浴場）----------
+  // 伸進海裡的路、河、渠都切在海岸線上；國道一號的盡頭就是漁港
+  C.COAST = 975;
+  const clipX = (pts, X) => {
+    const runs = []; let cur = [];
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i], inP = p[0] <= X;
+      if (i > 0) { const q = pts[i - 1], inQ = q[0] <= X; if (inQ !== inP) { const t = (X - q[0]) / (p[0] - q[0]), m = [X, q[1] + (p[1] - q[1]) * t]; if (inQ) { cur.push(m); runs.push(cur); cur = []; } else cur = [m]; } }
+      if (inP) cur.push(p);
+    }
+    if (cur.length) runs.push(cur);
+    return runs.sort((a, b) => b.length - a.length)[0] || [];
+  };
+  C.roads.forEach(r => { r.pts = clipX(r.pts, C.COAST - 3); });
+  C.roads = C.roads.filter(r => r.pts.length >= 2 && Math.hypot(r.pts[r.pts.length - 1][0] - r.pts[0][0], r.pts[r.pts.length - 1][1] - r.pts[0][1]) > 6);
+  C.water.forEach(w => { w.pts = clipX(w.pts, C.COAST); });
+
   // ---------- 幾何 ----------
   const segDist = (px, py, ax, ay, bx, by) => { const dx = bx - ax, dy = by - ay, L = dx * dx + dy * dy || 1, t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / L)); return Math.hypot(px - (ax + dx * t), py - (ay + dy * t)); };
   const lineDist = (px, py, pts) => { let d = 1e9; for (let i = 0; i < pts.length - 1; i++) d = Math.min(d, segDist(px, py, pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1])); return d; };
@@ -146,6 +163,7 @@
     stalls: [[676, 676], [702, 676], [728, 676]], park: [520, 706], alley: [404, 532, 572],
     coach: [700, 372], firetower: [770, 818], clock: [905, 470], factory: [948, 286], farmhouse: [764, 182],
     dexTrade: [826, 298], dexParts: [847, 299], cafe: [838, 364],
+    fishMarket: [952, 872], beachHut: [958, 168],   // coast.js：魚市場、海水浴場的小屋
     // civic.js
     pref: [808, 540], guardHQ: [790, 652], bank: [560, 370], hospital: [818, 792], post: [942, 776], paper: [942, 690], theater: [680, 878], dept: [748, 324],
     // 站前（suburbs.js）
@@ -180,11 +198,12 @@
   // 設施的地（size：寬、深，示意圖單位；門朝南）
   const FS = {
     guild: [32, 24], board: [8, 4], news: [8, 4], store: [18, 16], pharmacy: [18, 14], tavern: [22, 19], exchange: [8, 7], shrine: [30, 34], smith: [42, 30], suga: [14, 10],
-    coach: [40, 24], firetower: [8, 8], clock: [12, 12], factory: [44, 46], farmhouse: [18, 14], dexTrade: [20, 16], dexParts: [16, 14], cafe: [22, 16],
+    coach: [40, 24], firetower: [8, 8], clock: [12, 12], factory: [44, 46], farmhouse: [18, 14], dexTrade: [20, 16], dexParts: [16, 14], cafe: [22, 16], fishMarket: [28, 22], beachHut: [10, 8],
     pref: [70, 44], guardHQ: [34, 26], bank: [48, 34], hospital: [62, 40], post: [30, 22], paper: [30, 24], theater: [40, 30], dept: [70, 56],
     koban: [8, 8], clockPillar: [18, 8], bath: [30, 26], temple: [56, 44], hotel: [38, 30], pachinko: [40, 30], game: [32, 28]
   };
   C.FS = FS; C._occ = occ; C._freeR = freeR;
+  setR(C.COAST - 1, 0, 1000, 1000, 2); setR(948, 110, C.COAST, 206, 3);   // 海、海水浴場的沙灘：不蓋房子
   Object.keys(FS).forEach(k => { const p = C.FAC[k]; if (!p) return; const [w, d] = FS[k]; setR(p[0] - w / 2 - 2, p[1] - d / 2 - 2, p[0] + w / 2 + 2, p[1] + d / 2 + 4, 3); });
   C.FAC.stalls.forEach(([x, y]) => setR(x - 9, y - 8, x + 9, y + 12, 3));
   { const [x0, y0, x1, y1] = C.FAC.dojo; setR(x0 - 2, y0 - 2, x1 + 2, y1 + 2, 3); }
@@ -209,6 +228,7 @@
   }
   // 田（北郊、南渠外）
   C.FIELDS = [[520, 160, 760, 205], [780, 150, 990, 205], [240, 166, 440, 205], [240, 962, 540, 1000], [580, 962, 860, 1000], [886, 962, 1000, 1000]];
+  C.FIELDS = C.FIELDS.map(r => [r[0], r[1], Math.min(r[2], r[1] < 300 ? 944 : C.COAST - 2), r[3]]).filter(r => r[2] - r[0] > 10);   // 田不要伸進沙灘、海裡
   C.FIELDS.forEach(r => setR(...r, 3));
   C.GREENS = [[640, 164, 700, 200]];
 
