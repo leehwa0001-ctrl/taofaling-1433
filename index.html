@@ -390,6 +390,11 @@ body:not(.touch) #run.town #r-wp{position:fixed;left:16px;bottom:calc(max(16px,e
 @keyframes toast{0%{opacity:0}8%,85%{opacity:1}100%{opacity:0}}
 .veil{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .15s;z-index:1}
 #r-hurt{background:radial-gradient(ellipse at center,transparent 45%,rgba(184,20,20,.85) 100%)}
+/* 按鍵設定（keybinds.js） */
+.keys{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:4px 14px;margin:8px 0}
+.keyrow{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;border-bottom:1px dashed var(--line);padding:3px 0}
+.keybtn{min-width:96px;padding:3px 10px;font-size:12.5px}
+.keybtn.changed{border-color:var(--gold);color:var(--gold)}
 /* 遺跡四周的黑（dread.js）：注意越高、生命越少越黑 */
 #r-dread{background:radial-gradient(ellipse at center,transparent 34%,rgba(4,2,8,.5) 62%,rgba(2,0,4,.96) 100%);transition:opacity .6s}
 #r-blind{background:radial-gradient(ellipse at center,rgba(184,154,106,.72) 0%,rgba(140,110,70,.97) 60%)}
@@ -715,6 +720,7 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <script src="people.js"></script>
 <script src="jobs.js"></script>
 <script src="rivals.js"></script>
+<script src="keybinds.js"></script>
 <script src="skills.js"></script>
 <script src="hub.js"></script>
 <script src="saves.js"></script>
