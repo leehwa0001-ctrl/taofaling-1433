@@ -581,6 +581,8 @@
     R.placeCam(null);
     try { W.renderer.compile(W.scene, W.camera); } catch (e) { }
     R.townHud(true);
+    // 遺跡裡的紅色殘血、致盲、力場的遮罩：城裡不會更新，進城時清掉（不然死掉回來還是一片紅）
+    ['r-hurt', 'r-blind', 'r-field'].forEach(id => { const v = document.getElementById(id); if (v) v.style.opacity = 0; });
     if (!at) R.banner('東鶴', (R.today ? R.dateLabel() : '') + (from ? '・從遺跡回來了' + (R.dayMsg ? '（' + R.dayMsg + '）' : '') : '')); R.dayMsg = '';
     if (R.crimeReset) R.crimeReset();
   };
