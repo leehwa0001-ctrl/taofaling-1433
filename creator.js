@@ -90,6 +90,22 @@
     R.W.paused = true; R.showScreen('pick'); step();
     $('pick-h').textContent = '照鏡子'; $('pick-intro').textContent = '倉庫裡的大鏡子。勇者證上的照片，下次登記時會換成新的樣子。';
   };
+  // 玩到一半重新登記種族（公會的登記處）：一天驗一次魔力波；抽到喜歡的才付手續費，都不喜歡就不改、不收錢
+  R.RACE_CHANGE_FEE = 150;
+  R.changeRace = done => {
+    const S = R.S, host = $('hub-sheet'), el = $('hub-modal'), old = S.race; el.hidden = false; S.raceChgDay = S.day; R.save();
+    R.raceGacha(host, id => {
+      el.hidden = true;
+      if (id === old) { done && done('驗出來還是同一族。手續費不用付。'); return; }
+      const r = R.RACES[id]; S.gold -= R.RACE_CHANGE_FEE; S.race = id; S.look = S.look || defaultLook(id);
+      if (r.hairCol) S.look.hair = r.hairCol; if (!r.skins.includes(S.look.skin)) S.look.skin = r.skins[0]; S.look.eye = r.eye || '#1A1714';
+      // 魔族：列為受監視對象；驗出來不是魔族了，監視也跟著撤掉
+      if (id === 'demon') { S.watched = true; R.addDeed && R.addDeed('公會東鶴分館登記了一名魔族勇者，列為受監視對象。'); } else if (S.watched) S.watched = false;
+      R.addDeed && R.addDeed('勇者證的種族欄重新登記為「' + r.name + '」。');
+      R.save(); if (R.restyleSelf) R.restyleSelf();
+      done && done('種族重新登記為「' + r.name + '」（手續費 ' + R.RACE_CHANGE_FEE + ' 費拉）。');
+    }, { title: '種族重新登記', intro: '登記處的館員推了推眼鏡：「要重新驗魔力波、改種族欄？」最多抽 4 次，選一個登記，手續費 ' + R.RACE_CHANGE_FEE + ' 費拉；都不喜歡就按「先不要」，種族不變、不收錢。一天只能驗一次。', cancel: () => { el.hidden = true; done && done('種族沒有改。'); } });
+  };
   // 舊存檔：補登記種族、外觀（在公會的登記處）
   R.lateRegister = done => {
     const host = $('hub-sheet'), el = $('hub-modal'); el.hidden = false;
