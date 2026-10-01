@@ -70,7 +70,7 @@
   const cardBox = () => {
     const S = R.S, r = R.raceOf();
     return '<h3>勇者證</h3><div class="hero-card"><canvas id="hc-face" width="72" height="90"></canvas><div><b>' + esc(S.name || '（還沒有名字）') + '</b><small>' + (r ? esc(r.name + '・' + r.from) : '種族：未登記') + '</small>'
-      + (S.watched ? '<span class="tag red">受監視對象（神魔族）</span>' : '') + (r ? '<small>' + esc(R.raceBonusText(S.race).join('・')) + '</small><button type="button" class="btn" data-racechg="1">重新登記種族（' + (R.RACE_CHANGE_FEE || 150) + ' 費拉）</button>' : '<button type="button" class="btn pri" data-latereg="1">補登記種族</button>') + '</div></div>';
+      + (S.watched ? '<span class="tag red">受監視對象（神魔族）</span>' : '') + (r ? '<small>' + esc(R.raceBonusText(S.race).join('・')) + '</small><button type="button" class="btn" data-restyle="1">重新捏角（換照片、名字）</button><button type="button" class="btn" data-racechg="1">重新登記種族（' + (R.RACE_CHANGE_FEE || 150) + ' 費拉）</button>' : '<button type="button" class="btn pri" data-latereg="1">補登記種族</button>') + '</div></div>';
   };
   // 公會東鶴分館：職業登記、轉職、遺跡委託
   const guild = () => {
@@ -143,6 +143,7 @@
     const S = R.S, on = (sel, f) => body.querySelectorAll(sel).forEach(b => { b.onclick = () => f(b); });
     on('[data-go]', b => R.startRun(b.dataset.go));
     on('[data-latereg]', () => R.lateRegister(() => R.hub()));
+    on('[data-restyle]', () => R.restyle && R.restyle({ from: 'hub' }));
     on('[data-racechg]', () => {
       if (S.raceChgDay === S.day) { flashMsg('今天已經驗過魔力波了。明天再來。'); return; }
       if (S.gold < (R.RACE_CHANGE_FEE || 150)) { flashMsg('手續費要 ' + (R.RACE_CHANGE_FEE || 150) + ' 費拉。'); return; }

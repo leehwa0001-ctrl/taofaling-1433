@@ -59,7 +59,14 @@
     $('cr-rname').onclick = () => { st.name = R.randomName(st.race); $('cr-name').value = st.name; };
     h.querySelectorAll('[data-k]').forEach(b => { b.onclick = () => { st.look[b.dataset.k] = b.dataset.v; lookStep(h); }; });
     $('cr-rand').onclick = () => { st.look = defaultLook(st.race); if (!bald) st.look.hs = pick(HS.slice(0, 8))[0]; st.look.acc = pick(ACC)[0]; st.look.accCol = pick(ACCC); st.look.eye = r.eye || pick(EYES); st.name = R.randomName(st.race); lookStep(h); };
-    if (st.edit) { $('cr-next').textContent = '照好了'; $('cr-next').onclick = () => { R.S.look = st.look; if (st.name) R.S.name = st.name; R.save(); clearInterval(timer); R.backToTown(); R.toast('換了個樣子。'); }; return; }
+    if (st.edit) {
+      // 重新捏角：照好了才換；「不換了」什麼都不改。從公會打開的回到公會，其他回到街上（或建築物裡）
+      const leave = msg => { clearInterval(timer); if (st.from === 'hub') { R.showScreen('hub'); R.hub(); if (msg && R.say) R.say(msg); } else { R.backToTown(); if (msg) R.toast(msg); } };
+      $('cr-next').textContent = '照好了';
+      $('cr-next').onclick = () => { R.S.look = st.look; if (st.name) R.S.name = st.name; R.save(); if (R.restyleSelf) R.restyleSelf(); leave('換了個樣子。'); };
+      const cx = document.createElement('button'); cx.type = 'button'; cx.className = 'btn'; cx.textContent = '不換了'; cx.onclick = () => leave(''); $('cr-next').before(cx);
+      return;
+    }
     $('cr-next').onclick = () => { if (!st.name) { st.name = R.randomName(st.race); } st.step = 'cls'; step(); };
   };
   const clsStep = h => {
@@ -83,13 +90,20 @@
       R.save(); R.enterTown();
     };
   };
-  // 倉庫的大鏡子：換髮型、衣服、配件（種族換不了）
-  R.restyle = () => {
+  // 重新捏角：名字、髮型、髮色、膚色、眼睛、衣服、披風、配件（種族要到公會重新登記）
+  // o.from：'mirror' 倉庫的大鏡子、'hub' 公會登記處、'town' 街上的暫停選單
+  R.restyle = o => {
+    o = o || {}; if (R.W.run) { R.toast('遺跡裡不能重新捏角。'); return; }
     const S = R.S, race = S.race || 'human';
-    st = { step: 'look', race, look: Object.assign(defaultLook(race), S.look || {}), name: S.name || R.randomName(race), cls: S.cls, edit: true };
+    st = { step: 'look', race, look: Object.assign(defaultLook(race), S.look || {}), name: S.name || R.randomName(race), cls: S.cls, edit: true, from: o.from || 'mirror' };
+    if (R.sheetOpen && R.sheetOpen()) R.closeSheet();
     R.W.paused = true; R.showScreen('pick'); step();
-    $('pick-h').textContent = '照鏡子'; $('pick-intro').textContent = '倉庫裡的大鏡子。勇者證上的照片，下次登記時會換成新的樣子。';
+    $('pick-h').textContent = '重新捏角';
+    $('pick-intro').textContent = { hub: '登記處的館員遞來一張新的照片表格：「勇者證要換照片？名字、樣子都可以改，不收錢。種族要另外重新驗魔力波。」', town: '找個櫥窗照一照。名字、髮型、衣服、配件都可以改；種族要到公會重新登記。', mirror: '倉庫裡的大鏡子。名字、髮型、衣服、配件都可以改；種族要到公會重新登記。' }[st.from];
   };
+  // 街上的暫停選單：多一個「重新捏角」
+  const tm0 = R.townMenu;
+  if (tm0) R.townMenu = () => { tm0(); const row = document.querySelector('#r-sheet .row'); if (!row) return; const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = '重新捏角'; b.onclick = () => R.restyle({ from: R.W.inside ? 'mirror' : 'town' }); row.insertBefore(b, row.children[1] || null); };
   // 玩到一半重新登記種族（公會的登記處）：一天驗一次魔力波；抽到喜歡的才付手續費，都不喜歡就不改、不收錢
   R.RACE_CHANGE_FEE = 150;
   R.changeRace = done => {
