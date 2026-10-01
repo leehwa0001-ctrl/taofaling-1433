@@ -115,9 +115,10 @@
       const L = Math.hypot(nx[0] - end[0], nx[1] - end[1]) || 1, ux = (nx[0] - end[0]) / L, uy = (nx[1] - end[1]) / L, d0 = big.w / 2 + 3;
       const sx = J.x + ux * d0, sy = J.y + uy * d0; GB.add(G3.box, M.white, WX(sx), 0.03, WZ(sy), 0.3, 0.02, lane.w * S - 0.8, 0, -Math.atan2(uy, ux), 0);
       const px = J.x + ux * (d0 + 1) - uy * (lane.w / 2 + 1.5), py = J.y + uy * (d0 + 1) + ux * (lane.w / 2 + 1.5);
-      SB.add(G3.box, M.metal, WX(px), 1.1, WZ(py), 0.08, 2.2, 0.08); SB.add(G3.cone, M.red, WX(px), 2.2, WZ(py), 0.7, 0.06, 0.7, Math.PI / 2, -Math.atan2(uy, ux) + Math.PI / 2, 0); block(WX(px) - 0.1, WX(px) + 0.1, WZ(py) - 0.1, WZ(py) + 0.1, 'deco');
+      if (!C.inCarriage(px, py)) SB.add(G3.box, M.metal, WX(px), 1.1, WZ(py), 0.08, 2.2, 0.08); SB.add(G3.cone, M.red, WX(px), 2.2, WZ(py), 0.7, 0.06, 0.7, Math.PI / 2, -Math.atan2(uy, ux) + Math.PI / 2, 0); block(WX(px) - 0.1, WX(px) + 0.1, WZ(py) - 0.1, WZ(py) + 0.1, 'deco');
       // 轉角的反射鏡（橘色的柱子、圓鏡）
-      if (rnd() < 0.5) { const mx = J.x - ux * 2 + uy * (lane.w / 2 + 2), my = J.y - uy * 2 - ux * (lane.w / 2 + 2); SB.add(G3.box, M.orange, WX(mx), 1.4, WZ(my), 0.1, 2.8, 0.1); SB.add(G3.cyl, lam('#BFD8E8', { em: '#5A7A8A', ei: 0.3 }), WX(mx), 2.9, WZ(my), 0.7, 0.06, 0.7, Math.PI / 2, -Math.atan2(uy, ux), 0); SB.add(G3.cyl, M.orange, WX(mx), 2.9, WZ(my), 0.78, 0.04, 0.78, Math.PI / 2, -Math.atan2(uy, ux), 0); block(WX(mx) - 0.1, WX(mx) + 0.1, WZ(my) - 0.1, WZ(my) + 0.1, 'deco'); }
+      // （原本往大路裡面退了 2，鏡子會立在大馬路中間；改成站在巷口那一角的人行道上）
+      if (rnd() < 0.5) { const mx = J.x + ux * (d0 - 1) + uy * (lane.w / 2 + 2), my = J.y + uy * (d0 - 1) - ux * (lane.w / 2 + 2); if (C.inCarriage(mx, my)) return; SB.add(G3.box, M.orange, WX(mx), 1.4, WZ(my), 0.1, 2.8, 0.1); SB.add(G3.cyl, lam('#BFD8E8', { em: '#5A7A8A', ei: 0.3 }), WX(mx), 2.9, WZ(my), 0.7, 0.06, 0.7, Math.PI / 2, -Math.atan2(uy, ux), 0); SB.add(G3.cyl, M.orange, WX(mx), 2.9, WZ(my), 0.78, 0.04, 0.78, Math.PI / 2, -Math.atan2(uy, ux), 0); block(WX(mx) - 0.1, WX(mx) + 0.1, WZ(my) - 0.1, WZ(my) + 0.1, 'deco'); }
     });
 
     // ---------- 地面上的停車場、菜園、空地 ----------
@@ -136,7 +137,7 @@
       }
       if (rd.kind === 'main') {
         const off = rd.w / 2 - 5.5;
-        [-1, 1].forEach(sd => along(C.offsetLine(rd.pts, sd * off), 22, 12, (x, y) => { if (nearJ(x, y, 22) || C.bridges.some(b => Math.hypot(b.sx - x, b.sy - y) < b.len / 2 + 6)) return; trees.push({ x: WX(x), z: WZ(y), s: 0.9 + rnd() * 0.4, bare: 1 }); block(WX(x) - 0.3, WX(x) + 0.3, WZ(y) - 0.3, WZ(y) + 0.3, 'tree'); }));
+        [-1, 1].forEach(sd => along(C.offsetLine(rd.pts, sd * off), 22, 12, (x, y) => { if (nearJ(x, y, 22) || C.bridges.some(b => Math.hypot(b.sx - x, b.sy - y) < b.len / 2 + 6)) return; if (C.inCarriage(x, y)) return; trees.push({ x: WX(x), z: WZ(y), s: 0.9 + rnd() * 0.4, bare: 1 }); block(WX(x) - 0.3, WX(x) + 0.3, WZ(y) - 0.3, WZ(y) + 0.3, 'tree'); }));
         // 護欄：人行道和車道中間（路口留開）
         [-1, 1].forEach(sd => along(C.offsetLine(rd.pts, sd * (rd.w / 2 - 8.6)), 4.5, 0, (x, y, ux, uy) => { if (nearJ(x, y, 26) || C.bridges.some(b => Math.hypot(b.sx - x, b.sy - y) < b.len / 2)) return; const a = -Math.atan2(uy, ux); SB.add(G3.box, M.rail, WX(x), 0.7, WZ(y), 4.5 * S, 0.22, 0.06, 0, a, 0); SB.add(G3.box, M.rail, WX(x), 0.38, WZ(y), 0.07, 0.76, 0.07); }));
       }
@@ -144,7 +145,7 @@
       if (rd.kind === 'sub' || rd.kind === 'lane' || rd.kind === 'olane') {
         const off = rd.kind === 'sub' ? rd.w / 2 - 1.2 : rd.w / 2 + 1.6; let prev = null;
         along(C.offsetLine(rd.pts, off), rd.kind === 'olane' ? 34 : 40, 6, (x, y, ux, uy) => {
-          if (!C.inCity(x, y) || nearJ(x, y, 9) || C.bridges.some(b => Math.hypot(b.sx - x, b.sy - y) < b.len / 2 + 4) || C.lots.some(l => x > l.r[0] - 0.5 && x < l.r[2] + 0.5 && y > l.r[1] - 0.5 && y < l.r[3] + 0.5)) { prev = null; return; }
+          if (!C.inCity(x, y) || nearJ(x, y, 9) || C.bridges.some(b => Math.hypot(b.sx - x, b.sy - y) < b.len / 2 + 4) || C.lots.some(l => x > l.r[0] - 0.5 && x < l.r[2] + 0.5 && y > l.r[1] - 0.5 && y < l.r[3] + 0.5) || C.inCarriage(x, y)) { prev = null; return; }
           const px = WX(x), pz = WZ(y);
           SB.add(G3.cyl, M.pole, px, 3.6, pz, 0.24, 7.2, 0.24); SB.add(G3.box, M.pole, px, 6.6, pz, 1.5, 0.1, 0.12, 0, -Math.atan2(uy, ux) + Math.PI / 2, 0);
           if (rnd() < 0.3) SB.add(G3.cyl, lam('#8A8C92', { tex: 0 }), px + 0.32, 5.6, pz, 0.55, 0.75, 0.55);
@@ -156,10 +157,14 @@
       }
     });
     // 公園、外濠、神社旁的松樹
-    C.PARKS.forEach(r => { for (let x = r[0] + 6; x < r[2] - 4; x += 16 + rnd() * 10) { if (r[3] - r[1] < 12) { if (rnd() < 0.5) trees.push({ x: WX(x), z: WZ((r[1] + r[3]) / 2), s: 0.8 + rnd() * 0.3 }); continue; } trees.push({ x: WX(x), z: WZ(r[1] + 4 + rnd() * (r[3] - r[1] - 8)), s: 0.9 + rnd() * 0.4 }); } });
-    // 城外的松樹（避開路、水、房子、田）
+    // 公園的樹也要擋人（原本沒有碰撞框，人會直接穿過樹幹）
+    const parkTree = (x, z, s) => { trees.push({ x, z, s }); block(x - 0.4, x + 0.4, z - 0.4, z + 0.4, 'tree'); };
+    C.PARKS.forEach(r => { for (let x = r[0] + 6; x < r[2] - 4; x += 16 + rnd() * 10) { if (r[3] - r[1] < 12) { if (rnd() < 0.5) parkTree(WX(x), WZ((r[1] + r[3]) / 2), 0.8 + rnd() * 0.3); continue; } parkTree(WX(x), WZ(r[1] + 4 + rnd() * (r[3] - r[1] - 8)), 0.9 + rnd() * 0.4); } });
+    // 城外的松樹（避開路、水、房子、田）；湯山村那些不在地塊裡的房子，直接看碰撞框
+    const houseAt = (x, z, r) => (R.col.cells.get(Math.floor(x / 12) + ',' + Math.floor(z / 12)) || []).some(c => c.on && c.tag === 'house' && x + r > c.x0 && x - r < c.x1 && z + r > c.z0 && z - r < c.z1);
     for (let i = 0, n = 0; i < 2400 && n < 260; i++) {
       const sx = rnd() * 1000, sy = rnd() * 1000;
+      if (houseAt(WX(sx), WZ(sy), 1.5)) continue;
       if (C.inCity(sx, sy) && !(sx < 176 && sy > 255 && sy < 420)) continue;
       if (C.roads.some(rd => C.lineDist(sx, sy, rd.pts) < rd.w / 2 + 8) || C.water.some(w => C.lineDist(sx, sy, w.pts) < w.w / 2 + 10)) continue;
       if (C.FIELDS.some(r => sx > r[0] - 6 && sx < r[2] + 6 && sy > r[1] - 6 && sy < r[3] + 6) || C.lots.some(l => sx > l.r[0] - 8 && sx < l.r[2] + 8 && sy > l.r[1] - 8 && sy < l.r[3] + 8)) continue;
@@ -201,7 +206,7 @@
     // ---------- 街角的小東西：販賣機、電話亭、郵筒、腳踏車、雪堆 ----------
     const spots = [];
     const inLot = (x, y) => { const v = C._occ[Math.floor(y / 2) * 500 + Math.floor(x / 2)]; return v >= 3; };
-    C.roads.filter(r => r.kind === 'sub' || r.kind === 'lane' || r.kind === 'olane').forEach(rd => [-1, 1].forEach(sd => along(C.offsetLine(rd.pts, sd * (rd.w / 2 + 2.5)), 30, 10 + rnd() * 20, (x, y, ux, uy) => { if (C.inCity(x, y) && !nearJ(x, y, 10) && !inLot(x, y) && !inLot(x, y + 4) && !inLot(x, y + 2)) spots.push([x, y, ux, uy, sd]); })));
+    C.roads.filter(r => r.kind === 'sub' || r.kind === 'lane' || r.kind === 'olane').forEach(rd => [-1, 1].forEach(sd => along(C.offsetLine(rd.pts, sd * (rd.w / 2 + 2.5)), 30, 10 + rnd() * 20, (x, y, ux, uy) => { if (C.inCity(x, y) && !nearJ(x, y, 10) && !inLot(x, y) && !inLot(x, y + 4) && !inLot(x, y + 2) && !C.inCarriage(x, y, -1.5)) spots.push([x, y, ux, uy, sd]); })));
     let vend = 0, phone = 0, post = 0;
     spots.forEach(([x, y, ux, uy, sd]) => {
       const r0 = rnd(), px = WX(x), pz = WZ(y);

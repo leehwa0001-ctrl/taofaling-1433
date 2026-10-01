@@ -192,7 +192,8 @@
     tw.crossings = [];
     const armM = lam('#F2D21A', { tex: 0 });
     CROSS.forEach(cxs => {
-      const x = WX(cxs), hw = 7.5 * S, c = { x, k: 0, arms: [], lamps: [], boxes: [] };
+      // 柵欄要跨過整條路（車道＋人行道）：路寬照那條路
+      const xRoad = C.roads.find(rd => rd.kind !== 'arcade' && rd.kind !== 'dirt' && rd.pts.some(p => Math.abs(p[0] - cxs) < 3)), x = WX(cxs), hw = ((xRoad ? xRoad.w : 15) / 2) * S, c = { x, k: 0, arms: [], lamps: [], boxes: [] };
       [[x + hw + 0.35, WZ(RAIL.fs + 1), 1], [x - hw - 0.35, WZ(RAIL.fn - 1), -1]].forEach(([px, pz, sd]) => {
         SB.add(G3.box, metal, px, 1.6, pz, 0.14, 3.2, 0.14); [0.6, -0.6].forEach(a => SB.add(G3.box, armM, px, 2.95, pz, 0.95, 0.12, 0.04, 0, 0, a)); SB.add(G3.box, metal, px, 0.35, pz, 0.4, 0.7, 0.4);
         [-0.22, 0.22].forEach(o => { const lm = new TH.Mesh(new TH.BoxGeometry(0.22, 0.22, 0.1), new TH.MeshLambertMaterial({ color: '#4A1A18', emissive: '#FF2A1A', emissiveIntensity: 0 })); lm.position.set(px + o, 2.35, pz + sd * 0.1); group.add(lm); c.lamps.push(lm); });

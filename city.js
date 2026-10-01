@@ -98,6 +98,8 @@
     return t >= -1e-6 && t <= 1 + 1e-6 && u >= -1e-6 && u <= 1 + 1e-6 ? [a[0] + r[0] * t, a[1] + r[1] * t, Math.atan2(r[1], r[0]), t, u] : null;
   };
   C.segDist = segDist; C.lineDist = lineDist; C.segX = segX;
+  // 這個點在不在車道上（人行道不算；拱廊商店街、泥土路不算）：路燈、電線桿、樹、反射鏡、腳踏車擺之前先問
+  C.inCarriage = (sx, sy, pad) => C.roads.some(rd => rd.kind !== 'dirt' && rd.kind !== 'arcade' && lineDist(sx, sy, rd.pts) < rd.w / 2 - (rd.kind === 'main' ? 4 : rd.kind === 'sub' ? 3 : 0.5) - (pad || 0));
   // 折線往旁邊平移（o > 0：往行進方向的右手邊）
   const offsetLine = (pts, o) => pts.map((p, i) => {
     const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1;
@@ -140,7 +142,7 @@
   // [x, y]：建築物中心（示意圖座標）；town.js、civic.js、suburbs.js 照這裡蓋
   C.FAC = {
     guild: [575, 550], board: [544, 592], news: [612, 588], store: [522, 552], pharmacy: [470, 616], tavern: [430, 610],
-    exchange: [552, 672], shrine: [500, 494], smith: [690, 578], suga: [628, 664], dojo: [650, 700, 730, 750],
+    exchange: [546, 672], shrine: [500, 494], smith: [690, 578], suga: [628, 664], dojo: [650, 700, 730, 750],
     stalls: [[676, 676], [702, 676], [728, 676]], park: [520, 706], alley: [404, 532, 572],
     coach: [700, 372], firetower: [770, 818], clock: [905, 470], factory: [948, 286], farmhouse: [764, 182],
     dexTrade: [826, 298], dexParts: [847, 299], cafe: [838, 364],
@@ -149,7 +151,7 @@
     // 站前（suburbs.js）
     koban: [525, 340], busStop: [[672, 346], [694, 346]], clockPillar: [590, 330],
     // 新的：錢湯、寺、公寓（公團住宅）、旅館、柏青哥、電玩店、卡拉 OK、喫茶店、書店
-    bath: [362, 676], temple: [470, 906], danchi: [[268, 470], [268, 500]], hotel: [404, 372], pachinko: [512, 368], game: [356, 372]
+    bath: [362, 676], temple: [470, 906], danchi: [[280, 470], [280, 500]], hotel: [404, 372], pachinko: [512, 368], game: [356, 372]
   };
   // 河西的特別區域（suburbs.js）
   C.Z = { ruins: [16, 268, 176, 396], school: [12, 512, 76, 632], park: [104, 512, 170, 572], grove: [104, 772, 170, 812], grave: [12, 772, 76, 870], market: [104, 886, 176, 935] };
@@ -177,8 +179,8 @@
   Object.values(C.Z).forEach(r => setR(r[0] - 2, r[1] - 2, r[2] + 2, r[3] + 2, 3));
   // 設施的地（size：寬、深，示意圖單位；門朝南）
   const FS = {
-    guild: [32, 24], board: [8, 4], news: [8, 4], store: [18, 16], pharmacy: [18, 14], tavern: [22, 19], exchange: [8, 7], shrine: [16, 30], smith: [42, 30], suga: [14, 10],
-    coach: [26, 18], firetower: [8, 8], clock: [12, 12], factory: [44, 46], farmhouse: [18, 14], dexTrade: [20, 16], dexParts: [16, 14], cafe: [22, 16],
+    guild: [32, 24], board: [8, 4], news: [8, 4], store: [18, 16], pharmacy: [18, 14], tavern: [22, 19], exchange: [8, 7], shrine: [30, 34], smith: [42, 30], suga: [14, 10],
+    coach: [40, 24], firetower: [8, 8], clock: [12, 12], factory: [44, 46], farmhouse: [18, 14], dexTrade: [20, 16], dexParts: [16, 14], cafe: [22, 16],
     pref: [70, 44], guardHQ: [34, 26], bank: [48, 34], hospital: [62, 40], post: [30, 22], paper: [30, 24], theater: [40, 30], dept: [70, 56],
     koban: [8, 8], clockPillar: [18, 8], bath: [30, 26], temple: [56, 44], hotel: [38, 30], pachinko: [40, 30], game: [32, 28]
   };
@@ -188,6 +190,23 @@
   { const [x0, y0, x1, y1] = C.FAC.dojo; setR(x0 - 2, y0 - 2, x1 + 2, y1 + 2, 3); }
   C.FAC.danchi.forEach(([x, y]) => setR(x - 22, y - 12, x + 22, y + 12, 3));
   C.FAC.busStop.forEach(([x, y]) => setR(x - 6, y - 3, x + 6, y + 3, 3));
+  // 巷子不能從設施底下穿過：碰到設施（含公團住宅）的那一段切掉，巷子走到設施前就斷（不然路面、電線桿、電線都會穿過建築）
+  {
+    const facR = Object.keys(FS).filter(k => C.FAC[k]).map(k => { const p = C.FAC[k], [w, d] = FS[k]; return [p[0] - w / 2 - 3, p[1] - d / 2 - 3, p[0] + w / 2 + 3, p[1] + d / 2 + 5]; })
+      .concat(C.FAC.danchi.map(([x, y]) => [x - 26, y - 15, x + 26, y + 15]), [[C.FAC.dojo[0] - 3, C.FAC.dojo[1] - 3, C.FAC.dojo[2] + 3, C.FAC.dojo[3] + 3]]);
+    const inside = (x, y) => facR.some(r => x > r[0] && x < r[2] && y > r[1] && y < r[3]);
+    // 取樣後只留轉彎的點（點太多的話，找路口的時候會很慢）
+    const simplify = pts => pts.filter((p, i) => i === 0 || i === pts.length - 1 || Math.abs((p[0] - pts[i - 1][0]) * (pts[i + 1][1] - p[1]) - (p[1] - pts[i - 1][1]) * (pts[i + 1][0] - p[0])) > 0.01);
+    const kept = [];
+    C.roads.forEach(rd => {
+      if (rd.kind !== 'lane' && rd.kind !== 'olane') { kept.push(rd); return; }
+      let cur = [];
+      const flush = () => { let L = 0; for (let i = 0; i < cur.length - 1; i++) L += Math.hypot(cur[i + 1][0] - cur[i][0], cur[i + 1][1] - cur[i][1]); if (L > 10) kept.push(Object.assign({}, rd, { pts: simplify(cur) })); cur = []; };
+      for (let i = 0; i < rd.pts.length - 1; i++) { const [ax, ay] = rd.pts[i], [bx, by] = rd.pts[i + 1], n = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / 2)); for (let k = i ? 1 : 0; k <= n; k++) { const x = ax + (bx - ax) * k / n, y = ay + (by - ay) * k / n; if (inside(x, y)) flush(); else cur.push([x, y]); } }
+      flush();
+    });
+    C.roads = kept;
+  }
   // 田（北郊、南渠外）
   C.FIELDS = [[520, 160, 760, 205], [780, 150, 990, 205], [240, 166, 440, 205], [240, 962, 540, 1000], [580, 962, 860, 1000], [886, 962, 1000, 1000]];
   C.FIELDS.forEach(r => setR(...r, 3));
@@ -268,7 +287,7 @@
     const [dist, f] = roadSide(placed), mid = f === 0 ? [(placed[0] + placed[2]) / 2, placed[3] + dist] : f === 1 ? [(placed[0] + placed[2]) / 2, placed[1] - dist] : f === 2 ? [placed[0] - dist, (placed[1] + placed[3]) / 2] : [placed[2] + dist, (placed[1] + placed[3]) / 2];
     const rd = dist < 1e8 ? nearRoad(mid[0], mid[1]) : null, back = !rd || dist > 14;
     const k = lotKind(zone, placed[2] - placed[0], placed[3] - placed[1], rd || { kind: 'lane' });
-    if (back && (k.type === 'shop' || k.type === 'conbini')) k.type = zone === 'old' ? 'oldhouse' : zone === 'com' ? 'midrise' : 'house';
+    if (back && (k.type === 'shop' || k.type === 'conbini' || k.type === 'clinic')) k.type = zone === 'old' ? 'oldhouse' : zone === 'com' ? 'midrise' : 'house';
     lot(Object.assign({ r: placed, f: back ? (rnd() < 0.5 ? 0 : 1) : f, zone, col: zone === 'old' ? pick(OLDC) : pick(WALLS), yard: rnd(), road: rd ? rd.kind : null, back }, k));
   }
 
@@ -338,7 +357,7 @@
   };
   // 劇情人物、委託人的位置（people.js、jobs.js）
   C.SPOTS = {
-    nanbashi: [548, 930, 0], dojo: [690, 728, Math.PI], dojoGate: [700, 756, 0], plaza: [600, 640, 0], plazaW: [560, 612, 0], market: [700, 690, Math.PI],
+    nanbashi: [548, 930, 0], dojo: [690, 728, Math.PI], dojoGate: [700, 756, 0], plaza: [600, 640, 0], plazaW: [570, 614, 0], market: [700, 690, Math.PI],
     northGate: [626, 430, 0], wallN: [560, 466, 0], survey: [150, 392, Math.PI * 0.8], survey2: [160, 400, Math.PI], survey3: [128, 400, Math.PI * 0.5],
     alley: [440, 576, 0], alley2: [500, 576, Math.PI], sugaSide: [646, 676, 0]
   };

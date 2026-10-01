@@ -64,7 +64,7 @@
       hood: hood ? (o.hood ? '#3A322C' : rc.hoodCol || '#C8A870') : null,
       ears: hood || helm ? null : rc.ears, horns: hood ? null : rc.horns, wings: o.hood ? null : rc.wings, halo: o.hood ? null : rc.halo, tail: o.hood ? null : rc.tail,
       fin: hood ? null : rc.fin, flame: hood || helm ? null : rc.flame, leaves: hood || helm ? null : rc.leaves, gem: hood ? null : rc.gem, cracks: rc.cracks, rock: rc.rock, scales: rc.scales,
-      eyes4: rc.eyes4, beard: rc.beard, whisk: rc.whisk && !hood, crest: rc.crest && !hood && !helm
+      eyes4: rc.eyes4, beard: rc.beard, whisk: rc.whisk && !hood, crest: rc.crest && !hood && !helm, fangs: rc.fangs, wisp: rc.wisp
     };
   };
   const drawHero = (x, ox, oy, dir, fr, L, pose) => {
@@ -130,6 +130,7 @@
         if (L.cracks) { p(5, 3, 1, 2, '#FF7A2A'); p(10, 6, 1, 2, '#FF9A3A'); p(8, 3, 1, 1, '#FF7A2A'); }
         p(6, 5, 1, 2, L.eye); p(9, 5, 1, 2, L.eye);
         if (L.eyes4) { p(6, 3, 1, 1, L.eye); p(9, 3, 1, 1, L.eye); }
+        if (L.fangs) { p(7, 8, 1, 1, '#F4F0EA'); p(8, 8, 1, 1, '#F4F0EA'); }   // 吸血人族的小尖牙
         if (L.beard) { p(5, 7, 6, 2, L.hair); p(6, 9, 4, 1, L.hair); }
         if (L.whisk) { p(3, 6, 1, 1, '#F4EEE6'); p(12, 6, 1, 1, '#F4EEE6'); }
       }
@@ -156,6 +157,8 @@
       if (L.beard) { p(8, 7, 4, 2, L.hair); p(9, 9, 2, 1, L.hair); }
       hairTop(p, L, 'side');
     }
+    // 暗影族：身邊飄著幾縷影子
+    if (L.wisp && !sit) { const wc = 'rgba(36,28,58,0.85)'; (side ? [[3, 9], [12, 11], [2, 16], [13, 18], [4, 22]] : [[2, 9], [13, 10], [1, 14], [14, 15], [3, 21], [12, 22]]).forEach(([u, v]) => p(u, v, 1, 1, wc)); }
     // 帽子
     if (L.head === 'light') { const s = '#C8A860'; p(1, 2, 14, 1, s); p(2, 1, 12, 1, lt(s)); p(4, 0, 8, 1, s); p(6, -1, 4, 1, dk(s)); p(1, 3, 14, 1, dk(dk(s))); p(9, 0, 3, 1, dk(s)); }
     else if (L.head === 'medium') { const s = '#7E8894'; p(3, 1, 10, 2, s); p(4, 1, 4, 1, lt(s)); p(3, 2, 2, 7, s); p(11, 2, 2, 7, dk(s)); if (back || side) { p(4, 2, 8, 7, s); for (let yy = 3; yy < 8; yy++) for (let xx = 4 + (yy % 2); xx < 12; xx += 2) p(xx, yy, 1, 1, dk(s)); } }

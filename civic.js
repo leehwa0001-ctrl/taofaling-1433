@@ -67,7 +67,7 @@
     // ---------- 郵局：門口有紅色的郵筒 ----------
     { const b = civ(FAC.post[0], FAC.post[1], 12, 8, 2, { col: '#C8B8A0', win: 1.8, door: 1.4 });
       bigSign(b.x, 3.55, b.front + 1.62, 0, '東鶴郵局', '#8A2A24', '#F4F0E6', 2.6, 0.6);
-      const px = b.x + 2.4, pz = b.front + 1.6; SB.add(G3.cyl, lam('#C8323A', { tex: 0 }), px, 0.75, pz, 0.6, 1.5, 0.6); SB.add(G3.cyl, lam('#A82A2A', { tex: 0 }), px, 1.55, pz, 0.68, 0.12, 0.68); SB.add(G3.box, lam('#1A1A1A', { tex: 0 }), px, 1.2, pz + 0.3, 0.3, 0.06, 0.04); block(px - 0.32, px + 0.32, pz - 0.32, pz + 0.32, 'deco');
+      const px = b.x + 3.2, pz = b.front + 0.7; SB.add(G3.cyl, lam('#C8323A', { tex: 0 }), px, 0.75, pz, 0.6, 1.5, 0.6); SB.add(G3.cyl, lam('#A82A2A', { tex: 0 }), px, 1.55, pz, 0.68, 0.12, 0.68); SB.add(G3.box, lam('#1A1A1A', { tex: 0 }), px, 1.2, pz + 0.3, 0.3, 0.06, 0.04); block(px - 0.32, px + 0.32, pz - 0.32, pz + 0.32, 'deco');
       inter(b.door[0], b.door[1], 2.2, '東鶴郵局', () => talk('東鶴郵局', ['「信件、包裹，往皇嶺的明天就到。」', '「年底的賀年信，記得早點寄。」']));
       inter(px, pz + 1, 1.4, '紅色的郵筒', () => R.townToast('郵筒上寫著收件時間：上午十時、下午三時。')); }
     // ---------- 東鶴日報社：瓦版就是這裡印的 ----------
@@ -122,7 +122,8 @@
       { const bx = x + 9, bz = z + 2; [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, c]) => HB.add(G3.box, woodM, bx + a * 1.2, 2.2, bz + c * 1.2, 0.24, 4.4, 0.24)); HB.add(G3.cone, B_('#3A3A44', { tex: 'cap' }), bx, 5.2, bz, 4, 1.4, 4, 0, Math.PI / 4, 0); HB.add(G3.cyl, B_('#6A5A3A', { tex: 0 }), bx, 3.4, bz, 1.0, 1.4, 1.0); block(bx - 1.4, bx + 1.4, bz - 1.4, bz + 1.4, 'deco');
         inter(bx, bz + 2.2, 1.8, '寺的鐘樓（敲一下）', () => { R.townToast('咚——。鐘聲在雪地裡傳得很遠。'); R.sfx && R.sfx('skill'); }); }
       [[-5, 6], [5, 6]].forEach(([a, c]) => { SB.add(G3.box, lam('#8C8A82', { tex: 'wall' }), x + a, 0.65, z + c, 0.26, 0.9, 0.26); SB.add(G3.box, lam('#FFD9A0', { em: '#FFB050', ei: 0.9 }), x + a, 1.3, z + c, 0.44, 0.4, 0.44); SB.add(G3.cone, lam('#EEF2F4', { tex: 'ground' }), x + a, 1.68, z + c, 1.1, 0.36, 1.1, 0, Math.PI / 4, 0); block(x + a - 0.3, x + a + 0.3, z + c - 0.3, z + c + 0.3, 'deco'); });
-      for (let r = 0; r < 2; r++) for (let i = 0; i < 6; i++) { const gx = x - 8 + i * 3.2, gz2 = z - d / 2 - 3 - r * 2.4; SB.add(G3.box, lam('#9C9A94', { tex: 'wall' }), gx, 0.6, gz2, 0.5, 1.2, 0.3); SB.add(G3.box, snowM, gx, 1.22, gz2, 0.52, 0.05, 0.32); block(gx - 0.3, gx + 0.3, gz2 - 0.2, gz2 + 0.2, 'deco'); }
+      // 墓碑排在本堂的西側（原本第二排跑出寺的地、插進北邊鄰居的房子）
+      for (let r = 0; r < 4; r++) for (let i = 0; i < 3; i++) { const gx = x - 11.6 + i * 1.6, gz2 = z - 3.2 + r * 2.2; SB.add(G3.box, lam('#9C9A94', { tex: 'wall' }), gx, 0.6, gz2, 0.5, 1.2, 0.3); SB.add(G3.box, snowM, gx, 1.22, gz2, 0.52, 0.05, 0.32); block(gx - 0.3, gx + 0.3, gz2 - 0.2, gz2 + 0.2, 'deco'); }
       sign(x, 3.2, z + d / 2 + 0.1, 0, '東鶴寺', '#3A2A1C', 2.4);
       inter(x, gz + 1.4, 2.2, '東鶴寺', () => talk('東鶴寺', [pick(['住持在掃雪：「年底的除夕夜，這裡會敲一百零八下鐘。」', '「遺跡裡回不來的勇者，名字都刻在後面的慰靈碑上。」'])])); }
     // ---------- 公團住宅：兩棟五層樓，陽台一整排、側面漆著大大的號碼 ----------

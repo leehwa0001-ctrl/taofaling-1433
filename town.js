@@ -338,7 +338,7 @@
       B.add(G3.box, B_('#3A3C42', { tex: 0 }), -3, 1.8, d / 2 + 0.04, 3.6, 3.6, 0.1); [2, 5].forEach(o => B.add(G3.box, glowW, o, 3.2, d / 2 + 0.03, 1.6, 1, 0.05));
       B.at(null); block(x - w / 2, x + w / 2, z - d / 2, z + d / 2, 'house');
       sign(x + 1, 4.8, z + d / 2 + 0.1, 0, '德克斯凡礦務・東鶴選礦廠', '#2E3A48', 4.4);
-      truck(x - 4.6, z + 7.2, 0.15);
+      truck(x - 4.6, z + 8.6, 0.15);   // 離選礦廠的牆遠一點（原本車尾貼進牆裡）
       [[3.5, 7.2], [5, 7.6], [6.2, 6.9]].forEach(([a, b2], i) => { SB.add(G3.box, lam('#6A4A2E', { tex: 'planks' }), x + a, 0.45, z + b2, 0.9, 0.9, 0.9, 0, i * 0.3, 0); SB.add(G3.box, lam('#8A74FF', { em: '#3A2A8A', ei: 0.6 }), x + a, 0.95, z + b2, 0.3, 0.2, 0.3); block(x + a - 0.5, x + a + 0.5, z + b2 - 0.5, z + b2 + 0.5, 'deco'); });
       if (R.addSteal) R.addSteal({ x: x + 5, z: z + 8.8, r: 2, label: '撬開選礦廠的木箱（魔晶礦）', owner: 'factory', time: 1.8, loot: () => ({ mat: 'manaore', n: 1 + (Math.random() < 0.3 ? 1 : 0) }), max: 3 });
       const g2 = npc(x + 2, z + 10.6, { top: '#3A4A5A', hair: '#2A2420', cloak: '#2E3A48' }, '選礦廠的警衛', Math.PI * 0.85, 'rifle', 'gunner'); g2.watch = { range: 12, fov: 1.0, guard: 1 }; tw.watchers.push(g2);
@@ -400,13 +400,17 @@
     { const [px, py] = FAC.park; well(WX(px - 8), WZ(py - 10)); bench(WX(px + 8), WZ(py + 14), 0); snowman(WX(px - 14), WZ(py + 22)); }
     bench(WX(520), WZ(465.5), 0); bench(WX(690), WZ(465.5), 0); snowman(WX(636), WZ(650));
     signpost(WX(630), WZ(482), ['北門外：外濠、國道一號，再往北是站前大通和東鶴站。', '站西通過了平交道是北口，再往北過霜溪是北山礦坑、霜溪石窟。更遠的遺跡，到東鶴站搭魔導電車，或到國道邊的驛站搭車。']);
-    signpost(WX(572), WZ(760), ['南門外：南門通、寺町。過了南渠的南橋，是往皇嶺的南官道。']);
+    signpost(WX(574), WZ(764), ['南門外：南門通、寺町。過了南渠的南橋，是往皇嶺的南官道。']);
     signpost(WX(410), WZ(652), ['西門外：城西的住宅區。西橋整修中，暫停通行。', '往河西、城西遺跡：走國道一號過新大橋。']);
     signpost(WX(730), WZ(608), ['東門外：官廳街（縣廳、郵局、醫院）。往皇嶺的國道一號在北邊。']);
     bike(WX(548), WZ(586), 0.2); bike(WX(818), WZ(312), 1.5);
 
     // --- 陪都的設施：縣廳、銀行、醫院、郵局、百貨……（civic.js） ---
-    if (R.buildCivic) R.buildCivic({ group, npc, inter, block, talk, lam, SB, HB, G3, B_, glowW, darkW, woodM, gableB, house, sign, lampPost, pineAt, bench, vending, bike, reserve, WX, WZ, tw, E, dexBuilding });
+    // 小東西不能擺在車道上：路燈、腳踏車、販賣機、松樹擺之前先看是不是在路中間（city.js 的 C.inCarriage）
+    const onCar = (x, z) => C.inCarriage && C.inCarriage(x / S + 500, z / S + 500);
+    const offRoad = f => function (x, z) { return onCar(x, z) ? null : f.apply(this, arguments); };
+    const lampPostG = offRoad(lampPost), bikeG = offRoad(bike), vendingG = offRoad(vending), pineAtG = offRoad(pineAt);
+    if (R.buildCivic) R.buildCivic({ group, npc, inter, block, talk, lam, SB, HB, G3, B_, glowW, darkW, woodM, gableB, house, sign, lampPost: lampPostG, pineAt: pineAtG, bench, vending: vendingG, bike: bikeG, reserve, WX, WZ, tw, E, dexBuilding });
     // 德克斯凡的磚造大樓：平屋頂、女兒牆、整排的窗、屋頂的水塔、直立的霓虹招牌
     function dexBuilding(sx, sy, w, d, floors, face) {
       const x = WX(sx), z = WZ(sy), B = HB, fh = 3.0, H = floors * fh; B.at(x, z, face || 0);
@@ -514,9 +518,9 @@
     if (R.placeJobs) R.placeJobs('town', api);
 
     // 街景：路面、標線、紅綠燈、路燈、電線桿、行道樹（cityscape.js）
-    if (R.buildCityscape) R.buildCityscape(Object.assign({}, api, { HB, B_, glowW, darkW, woodM, lampPost, vending, bike, sign, pineAt, tw, E }));
+    if (R.buildCityscape) R.buildCityscape(Object.assign({}, api, { HB, B_, glowW, darkW, woodM, lampPost: lampPostG, vending: vendingG, bike: bikeG, sign, pineAt: pineAtG, tw, E }));
     // 每一塊地的房子、鐵路、東鶴站（suburbs.js）
-    if (R.buildSuburbs) R.buildSuburbs(Object.assign({}, api, { HB, B_, glowW, darkW, woodM, gableB, house, sign, lampPost, pineAt, bench, vending, bike, crates, truck, well, snowman, signpost, stoneLantern, propSprite, dexBuilding, houseCols, ROOFS, srand, tw, E }));
+    if (R.buildSuburbs) R.buildSuburbs(Object.assign({}, api, { HB, B_, glowW, darkW, woodM, gableB, house, sign, lampPost: lampPostG, pineAt: pineAtG, bench, vending: vendingG, bike: bikeG, crates, truck, well, snowman, signpost, stoneLantern, propSprite, dexBuilding, houseCols, ROOFS, srand, tw, E }));
 
     // 雪（暴風雪那天特別多）
     const flakes = R.flakeCount ? R.flakeCount(E) : E.blizzard ? 2200 : E.heavySnow ? 1300 : 700, geo = new TH.BufferGeometry(), arr = new Float32Array(flakes * 3);
@@ -621,6 +625,10 @@
       const o = { x: n.x, z: n.z }; R.collide(o, 0.35); if (Math.hypot(o.x - n.x, o.z - n.z) > 0.01) { n.tx = n.x; n.tz = n.z; } n.x = o.x; n.z = o.z;
       n.rot = a; n.h.g.position.set(n.x, 0, n.z); n.h.g.rotation.y = a; R.animHero(n.h, sp, dt, false);
     });
+    // 人和人不互相穿過：你和附近的路人、路人和路人之間輕輕推開（只算你身邊的，遠的不算）
+    { const near = tw.npcs.filter(n => !n.off && Math.abs(n.x - P.x) < 18 && Math.abs(n.z - P.z) < 18);
+      near.forEach(n => { const dx = P.x - n.x, dz = P.z - n.z, d = Math.hypot(dx, dz); if (d > 0.001 && d < 0.75) { const k = 0.75 - d; if (n.walk && !n.chase) { n.x -= dx / d * k * 0.5; n.z -= dz / d * k * 0.5; } P.x += dx / d * k * (n.walk ? 0.5 : 1); P.z += dz / d * k * (n.walk ? 0.5 : 1); } });
+      for (let i = 0; i < near.length; i++) for (let j = i + 1; j < near.length; j++) { const a = near[i], b = near[j]; if (!a.walk && !b.walk) continue; const dx = a.x - b.x, dz = a.z - b.z, d = Math.hypot(dx, dz); if (d > 0.001 && d < 0.6) { const k = (0.6 - d) * 0.5; if (a.walk) { a.x += dx / d * k; a.z += dz / d * k; } if (b.walk) { b.x -= dx / d * k; b.z -= dz / d * k; } } } }
     if (R.crimeStep) R.crimeStep(dt, tw.watchers, tw);
     if (R.peopleStep) R.peopleStep(dt);
     // 貨車：照路線開，前面有人就停

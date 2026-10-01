@@ -35,6 +35,10 @@
     phantom: { name: '幻魔族', tier: 'SR', from: '地表平原・擬態族種', xeno: 2, skins: ['#B9A6D6', '#A993C9'], hairs: ['#2B2340', '#E6E0F2'], b: { mp: 0.25, calm: 0.2 }, line: '頭頂一對小角。擅長擬態，佩特拉不太注意得到。', look: { ears: 'elf', horns: 'small' } },
     spider: { name: '節肢蛛人族', tier: 'SR', from: '地下岩穴・節肢人族種', xeno: 2, skins: ['#9A8D86', '#857873'], hairs: ['#1A1A1A', '#3B3030'], b: { crit: 0.08, critMult: 0.25 }, line: '四隻眼睛，總是看得到要害。', look: { eyes4: 1 } },
     crystal: { name: '黑水晶族', tier: 'SSR', from: '深域結晶皇宮・晶體族種', xeno: 2, skins: ['#4B3B66', '#3C2F55'], hairCol: '#1E1830', b: { mp: 0.3, skillCd: 0.2, crystal: 0.5 }, line: '額頭上長著水晶。和魔力水晶特別有緣。', look: { gem: 1 } },
+    // 2026-10-02 加的 SSR（作者選的）：族種照《智慧生物》的 4 系 38 族種
+    vampire: { name: '吸血人族', tier: 'SSR', from: '地表荒原・吸血族種', xeno: 2, skins: ['#EDE2DC', '#E2D4CE'], hairs: ['#1A1418', '#3A1A22', '#D8D4D8'], eye: '#C8323A', b: { vamp: 0.06, critMult: 0.2, night: 0.15, hp: -0.05 }, line: '蒼白的皮膚、紅眼睛、一對小尖牙。打中會吸血；晚上出發的遺跡打得更兇。', look: { ears: 'elf', fangs: 1 } },
+    shade: { name: '暗影族', tier: 'SSR', from: '地下靈魂迴廊・光影族種', xeno: 2, skins: ['#3E3A4C', '#322E40'], hairs: ['#141018', '#2A2438'], eye: '#B8E0FF', b: { dodge: 0.3, back: 0.25, calm: 0.15 }, line: '身上飄著影子，眼睛發著淡藍的光。閃得快，從背後下手特別重，佩特拉也不太注意得到。', look: { wisp: 1 } },
+    golddragon: { name: '金龍人族', tier: 'SSR', from: '地下礦脈・岩龍族種', xeno: 2, skins: ['#D8B048', '#C89A38'], b: { def: 6, hp: 0.2, ore: 0.6 }, line: '金色的鱗片和龍角，和龍人族是不同的族種。很硬，掘礦時常多敲下一塊。', look: { horns: 'dragon', tail: 'dragon', scales: 1, bald: 1, crest: 1 } },
     dragon: { name: '龍人族', tier: 'SSR', from: '地表山地・節鱗族種', xeno: 2, skins: ['#C8553F', '#B2463A'], b: { hp: 0.2, dmg: 0.15, def: 4, immune: { burn: 1 } }, line: '鱗片、角、尾巴。很少見。', look: { horns: 'dragon', tail: 'dragon', scales: 1, bald: 1, crest: 1 } },
     demon: { name: '魔族', tier: 'UR', from: '魔界・克拉克特斯（公會分類：神魔族）', xeno: 3, skins: ['#E8D8E0', '#C8B8D0'], hairs: ['#14101A', '#E8E4F0'], eye: '#C8323A',
       b: { hp: 0.3, mp: 0.4, dmg: 0.3, def: 3, vamp: 0.04, skillCd: 0.25, regen: 1.2, calm: 0.15 },
@@ -44,14 +48,14 @@
   // 長相淡一點（留耳朵、角變小；尾巴、鱗片、四隻眼睛之類的沒有），加成減半，再多一點大陸人族那邊的學習力；
   // 看起來比較像本地人，閒話少一級
   const mixHex = (a, b) => '#' + [1, 3, 5].map(i => Math.round((parseInt(a.slice(i, i + 2), 16) + parseInt(b.slice(i, i + 2), 16)) / 2).toString(16).padStart(2, '0')).join('');
-  const HALF = ['hp', 'mp', 'speed', 'dmg', 'melee', 'magic', 'crit', 'critMult', 'dodge', 'skillCd', 'regen', 'calm', 'xp', 'vamp', 'ignite', 'thorns', 'guard', 'crystal'];
+  const HALF = ['hp', 'mp', 'speed', 'dmg', 'melee', 'magic', 'crit', 'critMult', 'dodge', 'skillCd', 'regen', 'calm', 'xp', 'vamp', 'ignite', 'thorns', 'guard', 'crystal', 'night', 'back', 'ore'];
   Object.keys(R.RACES).forEach(id => {
     const r = R.RACES[id]; if (id === 'human' || id === 'demon') return;
     const b = { xp: 0.05 };
     HALF.forEach(k => { if (r.b[k]) b[k] = Math.round(((b[k] || 0) + r.b[k] / 2) * 100) / 100; });
     if (r.b.def) b.def = Math.max(1, Math.round(r.b.def / 2));
     const L = Object.assign({}, r.look);
-    ['tail', 'scales', 'eyes4', 'rock', 'cracks', 'flame', 'whisk', 'beard', 'crest', 'halo', 'fin', 'hood', 'hoodCol', 'bald'].forEach(k => { delete L[k]; });
+    ['tail', 'scales', 'eyes4', 'rock', 'cracks', 'flame', 'whisk', 'beard', 'crest', 'halo', 'fin', 'hood', 'hoodCol', 'bald', 'wisp'].forEach(k => { delete L[k]; });
     if (L.horns) L.horns = 'small';
     const hairs = (r.hairs || (r.hairCol ? [r.hairCol] : [])).concat(['#2A1E16', '#5A3B24', '#8B5A2B']);
     R.RACES[id + '_m'] = { name: r.name + '（混血）', tier: r.tier, w: 0.43, mixed: id, from: r.from + '・混血', xeno: Math.max(0, r.xeno - 1), skins: r.skins.map(s => mixHex(s, '#E6BE98')), hairs, eye: r.eye, b, line: '雙親有一邊是' + r.name + '。長相淡一點，' + r.name + '的本事只有一半，學東西倒是比較快。', look: L };
@@ -70,6 +74,7 @@
     if (b.dodge) out.push('翻滾冷卻 −' + PCT(b.dodge)); if (b.skillCd) out.push('技能冷卻 −' + PCT(b.skillCd)); if (b.regen) out.push('每秒回復生命 ' + b.regen);
     if (b.calm) out.push('佩特拉的注意 −' + PCT(b.calm)); if (b.xp) out.push('經驗值 +' + PCT(b.xp)); if (b.vamp) out.push('吸血 ' + PCT(b.vamp));
     if (b.ignite) out.push(PCT(b.ignite) + ' 機率點燃'); if (b.thorns) out.push('貼身反傷 ' + PCT(b.thorns)); if (b.guard) out.push('隊友受到的傷害 −' + PCT(b.guard));
+    if (b.night) out.push('晚上出發的遺跡傷害 +' + PCT(b.night)); if (b.back) out.push('從背後打傷害 +' + PCT(b.back)); if (b.ore) out.push('掘礦多一塊的機率 ' + PCT(b.ore));
     if (b.crystal) out.push('魔力水晶 +' + PCT(b.crystal)); if (b.immune) out.push('不怕' + Object.keys(b.immune).map(k => ({ blind: '砂幕', slow: '寒氣減速', burn: '燃燒' })[k]).join('、'));
     return out;
   };
@@ -120,6 +125,8 @@
     if (b.crit) P.ws.crit += b.crit; if (b.critMult) P.critMult += b.critMult;
     if (b.dodge) P.dodgeCdMax *= 1 - b.dodge; if (b.skillCd) P.skillCdMult *= 1 - b.skillCd;
     if (b.regen) P.regen += b.regen; if (b.calm) P.calm += b.calm;
+    // 吸血人族：晚上（7 點到清晨 5 點）出發的遺跡打得更兇（daytime.js 的時間）
+    if (b.night && R.hourNow) { const h = R.hourNow() % 24; if (h >= 19 || h < 5) P.dmgMult *= 1 + b.night; }
     P.race = R.S.race; P.raceB = b; P.immune = b.immune || {};
     // 同行的戀人：多一點力氣（people.js 設定）
     if (R.partyBond) R.partyBond(P);
@@ -129,6 +136,9 @@
   R.gainXp = v => { const r = R.raceOf(); gx(r && r.b.xp ? Math.round(v * (1 + r.b.xp)) : v); };
   const he = R.hurtEnemy;
   R.hurtEnemy = (e, raw, o) => {
+    const P0 = R.W.P, b0 = P0 && P0.raceB;
+    // 暗影族：從背後打（站在遺跡生物面向的反方向）
+    if (b0 && b0.back && e && !e.dead && e.yaw != null) { const a = Math.atan2(P0.x - e.x, P0.z - e.z) - e.yaw; if (Math.abs(Math.atan2(Math.sin(a), Math.cos(a))) > 2.1) raw *= 1 + b0.back; }
     const d = he(e, raw, o), P = R.W.P, b = P && P.raceB;
     if (b && d > 0) { if (b.vamp) R.healP(d * b.vamp, true); if (b.ignite && o && o.primary && Math.random() < b.ignite && !e.dead) e.st.burn = 3; }
     return d;
@@ -144,6 +154,10 @@
   R.hurtAlly = (a, raw, src) => { const r = R.raceOf(); ha(a, r && r.b.guard ? raw * (1 - r.b.guard) : raw, src); };
   const ke = R.killEnemy;
   R.killEnemy = (e, by) => { const wasDead = e.dead; ke(e, by); const r = R.raceOf(); if (!wasDead && r && r.b.crystal && !e.def.human && Math.random() < 0.34 * r.b.crystal) R.dropMat('crystal', 1, e.x, e.z); };
+
+  // 金龍人族：掘礦常多敲下一塊
+  const mn = R.mine;
+  if (mn) R.mine = o => { mn(o); const r = R.raceOf(); if (r && r.b.ore && Math.random() < r.b.ore) { R.dropMat(Math.random() < 0.3 ? 'manaore' : 'iron', 1, o.x, o.z); R.toast('多敲下了一塊礦石'); } };
 
   // ---------- 排外 ----------
   // 戴著兜帽：看不出種族（戒嚴那天衛兵會要你拿下來）
