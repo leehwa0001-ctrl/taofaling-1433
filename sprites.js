@@ -537,6 +537,7 @@
     return null;
   };
   const beastSheets = {};
+  R.BEAST_ART = ART;   // 別的檔案可以加自己的點陣圖（townlife.js 的腳踏車、貓狗、鳥）
   const beastSheet = (id, role) => {
     const key = id + (role || ''); if (beastSheets[key]) return beastSheets[key];
     let frames = [];
