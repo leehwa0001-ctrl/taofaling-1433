@@ -287,6 +287,20 @@ ul.bag li small{order:3;flex-basis:100%;color:var(--dim);font-size:12px}
 #r-cls i{position:absolute;left:0;bottom:0;height:3px;background:var(--gold)}
 #r-tr{right:12px;top:max(12px,env(safe-area-inset-top));display:grid;gap:6px;justify-items:end}
 #r-map{width:160px;height:160px;border-radius:8px;border:1px solid var(--line);display:block}
+/* GTA 那樣的圓形雷達（gtamap.js）：城裡在電腦版放左下角；點一下打開大地圖 */
+#run #r-map.radar{border-radius:50%;border:3px solid #141018;box-shadow:0 0 0 1px var(--line),0 6px 18px rgba(0,0,0,.5);pointer-events:auto;cursor:pointer}
+body:not(.touch) #run.town #r-map.radar{position:fixed;left:16px;bottom:max(16px,env(safe-area-inset-bottom));width:200px;height:200px}
+#r-wp{padding:4px 10px;font-size:12px;color:#FFE08A;white-space:nowrap;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+body:not(.touch) #run.town #r-wp{position:fixed;left:16px;bottom:calc(max(16px,env(safe-area-inset-bottom)) + 210px)}
+.sheet.wide{width:min(1380px,100%);max-height:96dvh}
+.gmap{display:flex;gap:12px;align-items:flex-start}
+.gmap canvas{display:block;max-width:100%;height:auto;border-radius:8px;touch-action:none;cursor:grab;background:#0E0C12}
+.gmap canvas:active{cursor:grabbing}
+.gmap-side{flex:1;min-width:0;max-height:76dvh;overflow:auto}
+.glegend{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:12px}
+.glegend .gl{display:inline-flex;align-items:center;gap:4px}
+.glegend b{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;color:#FFF;font-size:11px;border:1.5px solid #141018}
+@media (max-width:820px){.gmap{flex-direction:column}.gmap-side{max-height:none}}
 #r-aware-box{width:160px;padding:5px 8px;font-size:11.5px}
 #r-aware-box.hot{border-color:#B8322A;animation:hot 1s ease-in-out infinite}
 @keyframes hot{50%{box-shadow:0 0 14px rgba(184,50,42,.8)}}
@@ -654,4 +668,5 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <script src="saves.js"></script>
 <script src="creator.js"></script>
 <script src="daytime.js"></script>
+<script src="gtamap.js"></script>
 <script src="main.js"></script>
