@@ -423,6 +423,55 @@ body.touch #r-aware-box{width:112px}
   .compass{width:46px;height:46px}
   .legend ul{grid-template-columns:1fr}
 }
+/* ---------- 手機：介面小一號、貼著邊、互不重疊 ----------
+   左上：地點、狀態（寬度扣掉右上那一欄）；右上：轉視角、小地圖、佩特拉的注意（固定 100px 寬）
+   下面：兩個搖桿貼著兩個角；按鈕一顆一顆擺在搖桿旁邊——右邊是戰鬥用的（技能、翻滾、互動），左邊是跑步、藥、背包、指揮 */
+body.touch{--e:6px;--js:112px;--col:100px}
+body.touch #r-tl{left:calc(var(--e) + env(safe-area-inset-left));top:max(var(--e),env(safe-area-inset-top));width:calc(100% - 2 * var(--e) - var(--col) - 8px - env(safe-area-inset-left) - env(safe-area-inset-right));max-width:300px;gap:4px}
+body.touch #r-where{padding:4px 8px}
+body.touch #r-where b{font-size:13px}
+body.touch #r-where small{font-size:10.5px}
+body.touch #r-cls{padding:2px 8px 4px;font-size:11px}
+body.touch #r-town{padding:4px 8px;font-size:11px}
+body.touch #r-bl{padding:5px 8px;gap:2px}
+body.touch .stat-row{grid-template-columns:24px 1fr auto;gap:5px;font-size:10.5px}
+body.touch .meter{height:7px}
+body.touch #r-weapon b{font-size:11.5px}
+body.touch #r-weapon small,body.touch .r-misc{font-size:10px}
+body.touch #r-party{padding:4px 6px;font-size:10.5px}
+body.touch #r-tr{right:calc(var(--e) + env(safe-area-inset-right));top:max(var(--e),env(safe-area-inset-top));width:var(--col);gap:4px;grid-template-columns:minmax(0,1fr)}
+body.touch .r-cam{display:grid;grid-template-columns:1fr 1fr;gap:4px;width:100%}
+body.touch .r-cam .mini,body.touch .r-cam #r-pause{justify-content:center;padding:3px 0;font-size:11px;min-height:26px;min-width:0;width:100%}
+body.touch #r-map,body.touch #r-aware-box{box-sizing:border-box;width:var(--col)}
+body.touch #r-map{height:var(--col)}
+body.touch #r-aware-box{padding:3px 6px;font-size:10px}
+body.touch .joy{width:var(--js);height:var(--js);bottom:max(8px,env(safe-area-inset-bottom))}
+body.touch .joy i{width:46px;height:46px;margin:-23px 0 0 -23px}
+body.touch #joy-l{left:calc(var(--e) + env(safe-area-inset-left))}
+body.touch #joy-r{right:calc(var(--e) + env(safe-area-inset-right))}
+body.touch #r-br{position:fixed;inset:0;width:auto;display:block}
+body.touch .joy{margin:0}
+body.touch #r-br .act{position:absolute;width:44px;height:44px;border-radius:10px;font-size:10.5px;padding:1px;--b:calc(max(8px,env(safe-area-inset-bottom)) + var(--js) + 8px);--b0:max(8px,env(safe-area-inset-bottom));--r:calc(var(--e) + env(safe-area-inset-right));--l:calc(var(--e) + env(safe-area-inset-left))}
+body.touch #r-br .act.big{width:54px;height:54px;font-size:11.5px}
+body.touch #r-skill{right:var(--r);bottom:var(--b)}
+body.touch #r-skill2{right:calc(var(--r) + 60px);bottom:var(--b)}
+body.touch #r-skill3{right:calc(var(--r) + 110px);bottom:var(--b)}
+body.touch #r-br [data-tact="dodge"]{right:calc(var(--r) + var(--js) + 6px);bottom:calc(var(--b0) + 50px)}
+body.touch #r-br [data-tact="use"]{right:calc(var(--r) + var(--js) + 6px);bottom:var(--b0)}
+body.touch #r-br [data-tact="run"]{left:var(--l);bottom:var(--b)}
+body.touch #r-br [data-tact="hp"]{left:calc(var(--l) + 50px);bottom:var(--b)}
+body.touch #r-br [data-tact="bag"]{left:calc(var(--l) + 100px);bottom:var(--b)}
+body.touch #r-br [data-tact="order"]{left:calc(var(--l) + var(--js) + 6px);bottom:var(--b0)}
+/* 城裡沒有右搖桿：互動放到右下角 */
+body.touch #run.town #r-br [data-tact="use"]{right:var(--r);bottom:var(--b0);width:54px;height:54px}
+body.touch #r-prompt{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + var(--js) + 64px)}
+body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + var(--js) + 104px)}
+@media (max-height:520px){
+  body.touch{--js:100px;--col:86px}
+  body.touch #r-tl{max-width:260px}
+  body.touch #r-prompt{bottom:auto;top:44%}
+  body.touch #r-toast{bottom:auto;top:30%}
+}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
