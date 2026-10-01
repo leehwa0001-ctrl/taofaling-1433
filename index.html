@@ -285,6 +285,10 @@ ul.bag li small{order:3;flex-basis:100%;color:var(--dim);font-size:12px}
 .t-transfer{display:grid;gap:4px;width:100%;text-align:left;margin-top:8px;padding:8px 10px;border:1px dashed var(--line);border-radius:8px}
 .t-transfer small{color:var(--dim)}
 .sc-code{width:100%;min-height:120px;font:12px/1.4 monospace;word-break:break-all;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px}
+/* 音量（audio.js）：暫停選單裡的兩條 */
+.vol-row{display:flex;flex-wrap:wrap;gap:6px 16px;margin:6px 0 10px;font-size:13px;color:var(--dim)}
+.vol-row label{display:flex;align-items:center;gap:8px;flex:1 1 180px}
+.vol-row input{flex:1}
 /* 技能書（skillbook.js）：卡片是按鈕 */
 .sb-card{text-align:left;font:inherit;color:inherit;cursor:pointer}
 .sb-card.on{outline:2px solid var(--gold);outline-offset:-2px}
@@ -710,6 +714,7 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <script src="storylooks.js"></script>
 <script src="skillbook.js"></script>
 <script src="monsters2.js"></script>
+<script src="audio.js"></script>
 <script src="savecode.js"></script>
 <script src="compensation.js"></script><!-- 限時補償：下一版做完就刪掉這一行和 compensation.js -->
 <script src="main.js"></script>

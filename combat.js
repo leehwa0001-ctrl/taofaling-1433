@@ -460,7 +460,7 @@
           if (e.cd <= 0) { e.cd = 3.2; for (let i = 0; i < 8; i++) R.fire({ kind: 'kasa', owner: 'e', x: e.x, z: e.z, a: i / 8 * Math.PI * 2 + e.t, speed: 6, dmg: e.dmg * 0.8, life: 1.8, src: e }); }
           if (d < 1 && e.cd < 3.3) { hurtT(P, e.dmg * 0.6, e); } e.yaw = a;
         } else if (ai === 'alarm') {
-          if (!e.alarmed && d < 11) { e.alarmed = true; R.toast('喚群燈大叫了起來！附近的遺跡生物都被叫過來了'); R.addAware(15, 'alarm'); const rm = R.roomOf(e); for (let i = 0; i < 2; i++) { const pool = w.run.grade.pool.filter(p => p !== 'chochin' && !R.ENEMIES[p].elite), [sx, sz] = R.roomPoint(rm); R.spawnEnemy(pool[Math.floor(Math.random() * pool.length)], sx, sz, rm.i, { aggro: true }); } }
+          if (!e.alarmed && d < 11) { e.alarmed = true; R.sfx && R.sfx('alarm'); R.toast('喚群燈大叫了起來！附近的遺跡生物都被叫過來了'); R.addAware(15, 'alarm'); const rm = R.roomOf(e); for (let i = 0; i < 2; i++) { const pool = w.run.grade.pool.filter(p => p !== 'chochin' && !R.ENEMIES[p].elite), [sx, sz] = R.roomPoint(rm); R.spawnEnemy(pool[Math.floor(Math.random() * pool.length)], sx, sz, rm.i, { aggro: true }); } }
           if (walk) { move(e, a + Math.PI, sp, dt); moving = true; } e.yaw = a;
         } else if (ai === 'roll') {
           if (e.dashT > 0) { e.dashT -= dt; const ox = e.x, oz = e.z; move(e, e.dashA, 12, dt); moving = true; if (d < 1.2 && !e.bit) { e.bit = true; hurtT(P, e.dmg, e, { knock: 0.3 }); } if (R.pointBlocked(e.x, e.z)) { e.x = ox; e.z = oz; e.dashT = 0; st.stun = 1; R.shake(0.2); } }

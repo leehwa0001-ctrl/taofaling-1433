@@ -127,6 +127,7 @@
     else if (a.mode === 'walk') line = pick(['「牠很親人，摸吧。」狗搖著尾巴。', '狗舔了舔你的手。牽著牠的人笑了一下。', '「別餵牠吃的喔。」狗在你腳邊轉了一圈。']);
     else line = pick(['狗搖著尾巴，把頭靠過來。', '狗翻過身，要你摸肚子。', '狗聞了聞你身上遺跡的味道，打了個噴嚏。']);
     if (a.kind === 'cat' && (xeno >= 3 || rnd() < 0.25)) { a.st = 'flee'; a.t = 1.6; }
+    R.sfx && R.sfx(a.kind === 'cat' ? 'meow' : 'bark');
     R.townToast(line);
   };
 
@@ -151,7 +152,7 @@
         // 路人停著不動：等一下就從旁邊繞過去（你擋著就一直等）
         let blk = ahead(P); if (!blk && !(b.pass > 0)) for (const n of tw.npcs) { if (n.off || !n.h.g.visible) continue; const a = ahead(n); if (a) { blk = a; break; } }
         b.pass = (b.pass || 0) - dt; b.wait = blk && blk < 1.4 ? (b.wait || 0) + dt : 0; if (b.wait > 1.5 && blk !== ahead(P)) { b.pass = 1.5; b.wait = 0; blk = 0; }
-        if (blk) { want = blk < 1.4 ? 0 : 1.2; if (blk < 3 && b.bell <= 0 && blk === ahead(P)) { b.bell = 4; R.sfx && R.sfx('crossing'); R.townToast('鈴鈴——腳踏車在你後面按鈴。'); } }
+        if (blk) { want = blk < 1.4 ? 0 : 1.2; if (blk < 3 && b.bell <= 0 && blk === ahead(P)) { b.bell = 4; R.sfx && R.sfx('bell'); R.townToast('鈴鈴——腳踏車在你後面按鈴。'); } }
       }
       b.bell -= dt; b.v += (want - b.v) * Math.min(1, dt * 3);
       b.x += ux * b.v * dt; b.z += uz * b.v * dt; b.t += dt * (b.v > 0.3 ? 1 : 0);
@@ -194,7 +195,7 @@
         if (pd < (running ? 6 : 3)) {
           // 一隻飛，附近的也跟著飛
           const fly = q => { if (q.st !== 'ground') return; q.st = 'fly'; q.t = 0; const a = Math.atan2(q.x - P.x, q.z - P.z) + (rnd() - 0.5) * 0.8, sp = 4 + rnd() * 2; q.vx = Math.sin(a) * sp; q.vz = Math.cos(a) * sp; q.vy = 3 + rnd() * 1.5; R.beastVariant(q.m, q.id + 'fly'); };
-          fly(b); L.birds.forEach(q => { if (q !== b && Math.hypot(q.x - b.x, q.z - b.z) < 6) fly(q); });
+          fly(b); L.birds.forEach(q => { if (q !== b && Math.hypot(q.x - b.x, q.z - b.z) < 6) fly(q); }); if (b.kind === 'crow' && R.playSfx) R.playSfx('caw', 2000);
         } else {
           b.t -= dt; if (b.t <= 0) { b.t = 0.6 + rnd() * 2.2; if (rnd() < 0.5) { const a = rnd() * 6.28; b.rot = a; b.hop = 0.25; } }
           if (b.hop > 0) { b.hop -= dt; const o = { x: b.x + Math.sin(b.rot) * 1.4 * dt, z: b.z + Math.cos(b.rot) * 1.4 * dt }; if (Math.hypot(o.x - b.hx, o.z - b.hz) < 4) { b.x = o.x; b.z = o.z; } }
@@ -215,8 +216,8 @@
     a.barkT = (a.barkT || 0) - dt;
     const d = Math.hypot(P.x - a.x, P.z - a.z);
     if (a.barkT > 0) return;
-    if (heat > 0 && d < 8) { a.barkT = 3; R.townToast('汪！汪汪！——狗對著你狂叫。'); if (R.alertGuards) R.alertGuards(P.x, P.z, 30, '狗叫'); }
-    else if (a.mode === 'chain' && d < 3 && rnd() < 0.5) { a.barkT = 12; R.townToast('汪！拴在門口的狗叫了兩聲。'); }
+    if (heat > 0 && d < 8) { a.barkT = 3; R.sfx && R.sfx('bark'); R.townToast('汪！汪汪！——狗對著你狂叫。'); if (R.alertGuards) R.alertGuards(P.x, P.z, 30, '狗叫'); }
+    else if (a.mode === 'chain' && d < 3 && rnd() < 0.5) { a.barkT = 12; R.sfx && R.sfx('bark'); R.townToast('汪！拴在門口的狗叫了兩聲。'); }
     else if (d < 3) a.barkT = 8;
   };
 
