@@ -495,7 +495,7 @@
     C.nodes.forEach(([sx, sy]) => { if (sy > 280 && sy < 900) tw.walkNodes.push([WX(sx), WZ(sy)]); });
     const nextNode = n => { const nb = C.adj[n.ni]; if (nb && nb.length) { let k = nb[Math.floor(Math.random() * nb.length)]; if (nb.length > 1 && k === n.prev) k = nb[Math.floor(Math.random() * nb.length)]; n.prev = n.ni; n.ni = k; } const [sx, sy] = C.nodes[n.ni]; return [WX(sx + (Math.random() - 0.5) * 3), WZ(sy + (Math.random() - 0.5) * 3)]; };
     const busy = C.nodes.map((p, i) => i).filter(i => { const [sx, sy] = C.nodes[i]; return sy > 280 && sy < 900 && sx > 230; });
-    const nWalk = E.martial ? 16 : E.blizzard ? 12 : dd && dd.rest ? 90 : 72;
+    const nWalk = R.walkerCount ? R.walkerCount(E, dd) : E.martial ? 16 : E.blizzard ? 12 : dd && dd.rest ? 90 : 72;   // daytime.js 依時間讓一部分人回家
     for (let i = 0; i < nWalk; i++) {
       const ni = busy[Math.floor(srand() * busy.length)], x = WX(C.nodes[ni][0]), z = WZ(C.nodes[ni][1]), race = R.randomRace ? R.randomRace() : 'human', rc = R.RACES ? R.RACES[race] : null;
       const pi = Math.floor(srand() * 24), look = { pool: 'walker' + pi, lite: 1, top: houseCols.concat(['#3E5A6E', '#7A5A6A', '#8A3A2E', '#2E4A6A', '#5A6A4A'])[Math.floor(srand() * 11)], hair: rc && rc.hairs ? rc.hairs[0] : ['#2A2420', '#6A4A2E', '#1A1714', '#8A5A2E', '#D8D2C4'][Math.floor(srand() * 5)], cloak: ['#4A3A30', '#3A3A44', '#5A4A3A', '#2E3A48'][Math.floor(srand() * 4)], race, skin: rc ? rc.skins[Math.floor(srand() * rc.skins.length)] : undefined, hs: ['short', 'long', 'ponytail', 'bun', 'bob', 'crop', 'spiky'][Math.floor(srand() * 7)], acc: srand() < 0.25 ? ['scarf', 'glasses', 'headband'][Math.floor(srand() * 3)] : null, accCol: ['#C8323A', '#2E5A8A', '#3E7A48'][Math.floor(srand() * 3)] };
@@ -519,7 +519,7 @@
     if (R.buildSuburbs) R.buildSuburbs(Object.assign({}, api, { HB, B_, glowW, darkW, woodM, gableB, house, sign, lampPost, pineAt, bench, vending, bike, crates, truck, well, snowman, signpost, stoneLantern, propSprite, dexBuilding, houseCols, ROOFS, srand, tw, E }));
 
     // 雪（暴風雪那天特別多）
-    const flakes = E.blizzard ? 2200 : E.heavySnow ? 1300 : 700, geo = new TH.BufferGeometry(), arr = new Float32Array(flakes * 3);
+    const flakes = R.flakeCount ? R.flakeCount(E) : E.blizzard ? 2200 : E.heavySnow ? 1300 : 700, geo = new TH.BufferGeometry(), arr = new Float32Array(flakes * 3);
     for (let i = 0; i < flakes; i++) { arr[i * 3] = (Math.random() - 0.5) * 60; arr[i * 3 + 1] = Math.random() * 18; arr[i * 3 + 2] = (Math.random() - 0.5) * 60; }
     geo.setAttribute('position', new TH.BufferAttribute(arr, 3));
     tw.snow = new TH.Points(geo, new TH.PointsMaterial({ color: '#FFFFFF', size: 1, sizeAttenuation: false, transparent: true, opacity: 0.9, depthWrite: false })); tw.snow.frustumCulled = false; tw.snow.userData.wind = E.blizzard ? 6 : 0.3; group.add(tw.snow);
@@ -613,7 +613,7 @@
     R.townAllies(dt);
     // 路人在街上走；衛兵巡邏；站著的人看著你
     tw.npcs.forEach(n => {
-      if (n.chase) return;   // 正在追你的衛兵（props.js）
+      if (n.chase || n.off) return;   // 正在追你的衛兵（props.js）；回家了的路人（daytime.js）
       if (!n.walk) { if (n.near && !n.watch) { const d = Math.hypot(P.x - n.x, P.z - n.z); n.h.g.rotation.y = d < 3.5 ? Math.atan2(P.x - n.x, P.z - n.z) : n.rot; } R.animHero(n.h, 0, dt, false); return; }
       const d = Math.hypot(n.tx - n.x, n.tz - n.z);
       if (d < 0.5) { if (n.patrol) { n.pi = (n.pi + 1) % n.patrol.length; [n.tx, n.tz] = n.patrol[n.pi]; } else { const t = n.next ? n.next(n) : tw.walkNodes[Math.floor(Math.random() * tw.walkNodes.length)]; n.tx = t[0]; n.tz = t[1]; } return; }
@@ -627,7 +627,7 @@
     (tw.cars || []).forEach(c => {
       const [tx, tz] = c.path[(c.i + 1) % c.path.length], dx = tx - c.x, dz = tz - c.z, d = Math.hypot(dx, dz); if (d < 0.5) { c.i = (c.i + 1) % c.path.length; return; }
       const ux = dx / d, uz = dz / d;
-      let stop = [P].concat(tw.npcs.filter(n => n.walk), tw.cars.filter(o => o !== c).map(o => ({ x: o.x, z: o.z }))).some(o => { const ox = o.x - c.x, oz = o.z - c.z, al = ox * ux + oz * uz, sd = Math.abs(ox * uz - oz * ux); return al > 0.5 && al < 6.5 && sd < 1.6; });
+      let stop = [P].concat(tw.npcs.filter(n => n.walk && !n.off), tw.cars.filter(o => o !== c).map(o => ({ x: o.x, z: o.z }))).some(o => { const ox = o.x - c.x, oz = o.z - c.z, al = ox * ux + oz * uz, sd = Math.abs(ox * uz - oz * ux); return al > 0.5 && al < 6.5 && sd < 1.6; });
       // 紅燈：開往路口、還沒進路口
       if (!stop) stop = (tw.signals || []).some(sg => { const ox = sg.x - c.x, oz = sg.z - c.z, al = ox * ux + oz * uz, sd = Math.abs(ox * uz - oz * ux); if (al < 6 || al > 16 || sd > 9) return false; const a = Math.atan2(-uz, -ux), dA = Math.abs(Math.sin(a + sg.J.angA)), axis = dA < 0.5 ? 'A' : 'B'; return R.signalState(tw.t, axis) !== 'g'; });
       // 平交道的柵欄放下來了
@@ -657,7 +657,7 @@
     });
     // 雪花跟著人物
     const pos = tw.snow.geometry.attributes.position, arr = pos.array, wind = tw.snow.userData.wind;
-    for (let i = 0; i < arr.length; i += 3) { arr[i + 1] -= dt * (1.4 + (i % 7) * 0.1 + wind * 0.3); arr[i] += (Math.sin(tw.t + i) * 0.3 + wind) * dt; if (arr[i + 1] < 0) { arr[i + 1] += 18; if (wind > 1) arr[i] = (Math.random() - 0.5) * 60; } }
+    for (let i = 0; i < arr.length; i += 3) { arr[i + 1] -= dt * (1.4 + (i % 7) * 0.1 + wind * 0.3) * (tw.snow.userData.fall || 1); arr[i] += (Math.sin(tw.t + i) * 0.3 + wind) * dt; if (arr[i + 1] < 0) { arr[i + 1] += 18; if (wind > 1) arr[i] = (Math.random() - 0.5) * 60; } }
     pos.needsUpdate = true; tw.snow.position.set(P.x, 0, P.z);
     // 鏡頭、陰影、擋住人的建築（材質裡挖洞）
     R.placeCam(dt, 0);

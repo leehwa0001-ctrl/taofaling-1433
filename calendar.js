@@ -31,6 +31,7 @@
     ['met', 'missed', 'lost', 'aff', 'talked', 'gifted', 'gifts', 'rel', 'evt', 'sil'].forEach(k => { S[k] = S[k] || {}; });
     S.jobs = S.jobs || []; S.offersTaken = S.offersTaken || {}; S.news = S.news || []; S.deeds = S.deeds || [];
     S.rep = S.rep || 0; S.fake = S.fake || 0; S.cards = S.cards || []; S.buff = S.buff || null;
+    if (S.hour == null) S.hour = 8;   // 現在幾點（0～24）：daytime.js
   };
   R.dayRand = salt => hash((R.S ? R.S.seed : 1) + ':' + ((R.S && R.S.day) || 0) + ':' + salt);
 
@@ -45,7 +46,10 @@
     if (a >= MORS) E.josaiMors = 1;                         // 城西遺跡暫定降為摩爾斯級
     if (dd.wd === '凝日') E.market = 1;                      // 市集日：攤子打八折
     if (a > dayIndex(2836, 10, 29) && hash('tide:' + a) < 0.12) E.manaTide = 1;   // 魔力潮：遺跡生物強一點，寶箱好一點
-    if (!E.blizzard && dd.season === '冬' && hash('snow:' + a) < 0.25) E.heavySnow = 1;
+    // 天氣：每天不一樣（照日期算，同一天每次看都一樣）。冬天是晴、陰、小雪、大雪；其他季節是晴、陰、雨
+    const wx = hash('wx:' + a), winter = dd.season === '冬';
+    E.weather = E.blizzard ? '暴風雪' : winter ? (wx < 0.3 ? '晴' : wx < 0.52 ? '陰' : wx < 0.8 ? '小雪' : '大雪') : (wx < 0.45 ? '晴' : wx < 0.75 ? '陰' : '雨');
+    if (E.weather === '大雪') E.heavySnow = 1;
     return E;
   };
   R.eventsToday = () => R.eventsOf(R.today());
@@ -83,6 +87,8 @@
     [k(10, 28)]: [['公會東鶴分館', '城西遺跡重新開放，暫定降為摩爾斯級。要先有摩爾斯級委託的資格才能進去。']],
     [k(11, 6)]: [['外電', '卡塞爾維亞王國與凡尼特奧賽帝國在洛爾森簽下停火協議。公會副會長擔任見證人。']]
   };
+  // 瓦版的天候欄：照當天真正的天氣寫
+  const WX_NEWS = { '晴': '晴，北風。霜溪的冰又厚了一點。', '陰': '整天陰陰的，看不到太陽。', '小雪': '細雪斷斷續續地下。路面有點滑。', '大雪': '大雪。走城外的路要小心。', '暴風雪': '暴風雪。', '雨': '下雨。積雪化成了泥水。' };
   const POOL = {
     weather: ['晴，北風。霜溪的冰又厚了一點。', '整天陰陰的，傍晚下起細雪。', '大雪。西橋的整修又延期了。', '天氣放晴。北渠上有孩子在溜冰，被衛兵趕下來。', '冷得刺骨。菅婆婆的炭爐前排了長長的隊。'],
     town: ['糰子還是兩費拉一串。菅婆婆說米價再漲就撐不住了。', '新商區又開了一家德克斯凡的店，賣會自己發亮的燈。', '西市兌換所公告：昭旭舊銅錢的兌換比率再次下調。', '湯山村的溫泉旅館說，今年冬天的客人比往年少。', '北郊農舍又被冰鼬偷了雞。', '驛站新進了一台德克斯凡的貨車，車伕還在學怎麼開。'],
@@ -94,7 +100,7 @@
   R.newsOf = dd => {
     const out = (SCRIPT[dd.abs] || []).map(([t, b]) => ({ t, b, big: 1 }));
     const pick = (list, salt) => list[Math.floor(hash(salt + ':' + dd.abs) * list.length)];
-    out.push({ t: '天候', b: R.eventsOf(dd).blizzard ? '暴風雪。' : R.eventsOf(dd).heavySnow ? '大雪。走城外的路要小心。' : pick(POOL.weather, 'w') });
+    out.push({ t: '天候', b: WX_NEWS[R.eventsOf(dd).weather] || pick(POOL.weather, 'w') });
     if (out.length < 3) out.push({ t: '市井', b: pick(POOL.town, 't') });
     if (out.length < 4) out.push({ t: pick(['公會', '遺跡', '外電'], 'kind'), b: pick(hash('k2:' + dd.abs) < 0.4 ? POOL.guild : hash('k3:' + dd.abs) < 0.5 ? POOL.ruin : POOL.world, 'p') });
     const E = R.eventsOf(dd);
