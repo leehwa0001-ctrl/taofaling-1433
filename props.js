@@ -158,6 +158,7 @@
     S0.rep = (S0.rep || 0) - 3; R.save();
     if (R.townHud) R.townHud(true);
   };
+  R.crimeSees = sees; R.crimeCaught = caught;   // 扒路人的錢包（streetcrime.js）也用同一套視線、抓包
   R.crimeHud = () => (C.heat > 0 ? '<span class="wanted">通緝 <b>' + '★'.repeat(C.heat) + '☆'.repeat(3 - C.heat) + '</b></span>' : '') + (C.ch || C.seen > 0.02 ? '<span class="seen">視線<i><em style="width:' + Math.round(C.seen * 100) + '%"></em></i></span>' : '');
   R.crimeMinimap = (x, pt) => { if (C.heat <= 0 || !W.town) return; (W.town.watchers || []).forEach(n => { if (!n.watch.guard) return; const m = pt(n.x, n.z); x.fillStyle = n.chase ? '#FF3A3A' : '#5A8ACF'; x.beginPath(); x.arc(m[0], m[1], 3.5, 0, 7); x.fill(); }); };
 

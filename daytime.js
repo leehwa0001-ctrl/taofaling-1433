@@ -66,7 +66,7 @@
     }
     // 路人：最多的那些先全部蓋好，之後照時間決定有幾個人在街上
     L.walkers = tw ? tw.npcs.filter(n => n.walk && !n.patrol && !n.name && !n.guard) : [];
-    L.walkers.forEach((n, i) => { n.rank = (i * 0.6180339) % 1; n._watch = n.watch; });   // 誰先回家：打散，不要整區一起消失
+    L.walkers.forEach((n, i) => { n.rank = (i * 0.6180339) % 1; });   // 誰先回家：打散，不要整區一起消失
     lightT = 0; walkT = 0; apply(0, true);
   };
   // 白天有多少人在街上（0～1）：早上通勤、中午、傍晚最多，半夜很少；天氣不好的時候少一點
@@ -107,11 +107,12 @@
   };
   // 路人：照時間決定誰在街上；離人物太遠的不畫
   const walkers = P => {
-    if (!L) return;
+    const tw = W.town; if (!L || !tw) return;
     const want = crowd(((R.hourNow() % 24) + 24) % 24, L.wx);
     L.walkers.forEach(n => {
       const off = n.rank >= want;
-      if (off !== !!n.off) { n.off = off; n.watch = off ? null : n._watch; }
+      // 回家的人從「看得到你的人」名單拿掉（不要把 n.watch 設成 null：props.js 的通緝、抓包會讀 n.watch.guard）
+      if (off !== !!n.off) { n.off = off; const ws = tw.watchers, i = ws.indexOf(n); if (off && i >= 0) ws.splice(i, 1); else if (!off && i < 0 && n.watch) ws.push(n); }
       n.h.g.visible = !off && Math.abs(n.x - P.x) + Math.abs(n.z - P.z) < 90;
     });
   };
