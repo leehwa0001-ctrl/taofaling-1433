@@ -21,7 +21,7 @@
     const h = $('pick-cards');
     $('pick-h').textContent = '勇者登記・' + { race: '一、種族', look: '二、外觀', cls: '三、登記武器' }[st.step];
     $('pick-intro').textContent = { race: '公會東鶴分館的登記處。戴眼鏡的館員推了推眼鏡：「下一位。種族、名字、武器，一項一項來。」', look: '「勇者證上要貼照片。」館員指了指牆邊的鏡子。', cls: '「最後，登記武器。勇者證上寫的是你的主要武器，公會照武器的類別派委託。之後隨時可以來改，每一類的等級分開算；練到 8 級、交一顆魔力核心，就能轉職。」' }[st.step];
-    if (st.step === 'race') R.raceGacha(h, id => { st.race = id; st.look = defaultLook(id); st.name = R.randomName(id); st.step = 'look'; step(); });
+    if (st.step === 'race') R.raceGacha(h, id => { st.race = id; st.look = defaultLook(id); st.name = R.randomName(id); st.step = 'look'; step(); }, { ten: true });
     else if (st.step === 'look') lookStep(h);
     else clsStep(h);
   };
@@ -113,6 +113,6 @@
       R.S.race = id; R.S.look = R.S.look || defaultLook(id); if (R.RACES[id].hairCol) R.S.look.hair = R.RACES[id].hairCol; if (!R.RACES[id].skins.includes(R.S.look.skin)) R.S.look.skin = R.RACES[id].skins[0];
       R.S.name = R.S.name || R.randomName(id); if (id === 'demon') R.S.watched = true;
       R.save(); el.hidden = true; done && done();
-    }, { title: '補登記：種族', intro: '公會更新了勇者證的格式，要補上種族欄。最多抽 4 次，從抽到的裡面選一個登記。', cancel: () => { el.hidden = true; } });
+    }, { ten: true, title: '補登記：種族', intro: '公會更新了勇者證的格式，要補上種族欄。十連抽一次，從抽到的十個裡面選一個登記。', cancel: () => { el.hidden = true; } });
   };
 })(window.R);

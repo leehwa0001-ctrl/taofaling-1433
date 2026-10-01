@@ -91,19 +91,31 @@
     return list[list.length - 1];
   };
   // 抽種族的畫面：最多抽 4 次，從抽到的裡面選一個登記（host：放進哪個元素；done(id)：選好了）
+  // o.ten：十連抽（開局）——按一次抽十個，從十個裡面選一個；卡片排成小格，下面是選中那一族的說明
   R.raceGacha = (host, done, o) => {
-    o = o || {}; const got = [], MAX = o.max || 4;
+    o = o || {}; const got = [], MAX = o.ten ? 10 : o.max || 4, TIER_I = Object.keys(R.TIERS);
     const rates = '<div class="rates">' + Object.keys(R.TIERS).map(t => { const T0 = R.TIERS[t], names = R.RACE_IDS.filter(id => R.RACES[id].tier === t && !R.RACES[id].mixed).map(id => R.RACES[id].name); return '<div class="rate" style="--c:' + T0.color + '"><b>' + T0.name + '</b><span>' + T0.w + '%</span><small>' + (T0.hidden ? '？？？' : esc(names.join('、'))) + '</small></div>'; }).join('') + '</div><p class="note">每一族都有大約三成是混血（勇者證上註名「混血」）：長相淡一點、加成減半、經驗多一點、閒話少一些。</p>';
     const card = (id, i) => { const r = R.RACES[id], T0 = R.TIERS[r.tier]; return '<button type="button" class="race-card' + (o.pick === i ? ' sel' : '') + '" data-pick="' + i + '" style="--c:' + T0.color + '"><span class="tier">' + T0.name + '</span><b>' + esc(r.name) + '</b><small>' + esc(r.from) + '</small><span>' + esc(r.line) + '</span><em>' + esc(R.raceBonusText(id).join('・')) + '</em><i>' + esc(R.XENO_TEXT[r.xeno]) + '</i></button>'; };
+    const detail = id => { const r = R.RACES[id], T0 = R.TIERS[r.tier]; return '<div class="race-card race-detail" style="--c:' + T0.color + '"><span class="tier">' + T0.name + '</span><b>' + esc(r.name) + '</b><small>' + esc(r.from) + '</small><span>' + esc(r.line) + '</span><em>' + esc(R.raceBonusText(id).join('・')) + '</em><i>' + esc(R.XENO_TEXT[r.xeno]) + '</i></div>'; };
     const render = () => {
-      host.innerHTML = '<h2>' + (o.title || '種族登記') + '</h2><p class="note">' + esc(o.intro || '勇者證上要寫種族。你是哪一族？最多抽 ' + MAX + ' 次，從抽到的裡面選一個登記。') + '</p>' + rates
-        + '<div class="race-cards">' + (got.length ? got.map(card).join('') : '<p class="note">還沒抽。</p>') + '</div>'
-        + '<div class="row"><button type="button" class="btn pri" id="rg-draw"' + (got.length >= MAX ? ' disabled' : '') + '>' + (got.length ? '再抽一次（還剩 ' + (MAX - got.length) + ' 次）' : '抽') + '</button>'
+      const drawBtn = o.ten ? (got.length ? '' : '<button type="button" class="btn pri" id="rg-draw">十連抽</button>')
+        : '<button type="button" class="btn pri" id="rg-draw"' + (got.length >= MAX ? ' disabled' : '') + '>' + (got.length ? '再抽一次（還剩 ' + (MAX - got.length) + ' 次）' : '抽') + '</button>';
+      host.innerHTML = '<h2>' + (o.title || '種族登記') + '</h2><p class="note">' + esc(o.intro || (o.ten ? '勇者證上要寫種族。你是哪一族？十連抽一次，從抽到的十個裡面選一個登記。' : '勇者證上要寫種族。你是哪一族？最多抽 ' + MAX + ' 次，從抽到的裡面選一個登記。')) + '</p>' + rates
+        + '<div class="race-cards' + (o.ten ? ' ten' : '') + '">' + (got.length ? got.map(card).join('') : '<p class="note">還沒抽。</p>') + '</div>'
+        + (o.ten && o.pick != null ? detail(got[o.pick]) : '')
+        + '<div class="row">' + drawBtn
         + (o.pick != null ? '<button type="button" class="btn gold" id="rg-ok">登記為「' + esc(R.RACES[got[o.pick]].name) + '」</button>' : '') + (o.cancel ? '<button type="button" class="btn" id="rg-x">先不要</button>' : '') + '</div>';
-      $('rg-draw').onclick = () => {
+      if ($('rg-draw')) $('rg-draw').onclick = () => {
         if (got.length >= MAX) return;
-        const id = R.drawRace(), r = R.RACES[id]; got.push(id); o.pick = got.length - 1;
-        render(); const el = host.querySelector('[data-pick="' + o.pick + '"]'); if (el) { el.classList.add('flip'); if (r.tier === 'SSR' || r.tier === 'UR') el.classList.add('shine'); }
+        const n = o.ten ? MAX - got.length : 1, from = got.length;
+        for (let k = 0; k < n; k++) got.push(R.drawRace());
+        // 十連：先選中最稀有的那一張
+        o.pick = got.length - 1; if (o.ten) got.forEach((id, i) => { if (TIER_I.indexOf(R.RACES[id].tier) > TIER_I.indexOf(R.RACES[got[o.pick]].tier)) o.pick = i; });
+        render();
+        for (let i = from; i < got.length; i++) {
+          const el = host.querySelector('[data-pick="' + i + '"]'), r = R.RACES[got[i]], d = (i - from) * 0.09, rare = r.tier === 'SSR' || r.tier === 'UR'; if (!el) continue;
+          el.style.animationDelay = rare ? d + 's, ' + (d + 0.5) + 's' : d + 's'; el.style.animationFillMode = 'backwards'; el.classList.add('flip'); if (rare) el.classList.add('shine');
+        }
       };
       host.querySelectorAll('[data-pick]').forEach(b => { b.onclick = () => { o.pick = +b.dataset.pick; render(); }; });
       if ($('rg-ok')) $('rg-ok').onclick = () => done(got[o.pick]);
