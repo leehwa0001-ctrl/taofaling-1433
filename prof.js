@@ -5,8 +5,9 @@
 //   武器熟練度每升一級，重量的拖累少一成，10 級就不拖累了。
 // - 魔法熟練度：法杖、法球、聖杖每發一次 +1；魔導士、神官放技能 +2。每級：魔法武器的傷害 +2%、每發的魔力 −3%。
 // - 敏捷：打倒遺跡生物的時候，身上全是輕裝 +2、上衣是輕裝 +1（重裝不加）。每級：移動 +1%、翻滾冷卻 −2%。
+// - 力量（2026-10-03）：用重武器（重量 2 以上）打倒 +2、中等（重量 1 以上）+1；上衣穿重裝再 +1。每級力量 +1（穿重裝要力量，gearplus.js）。
 // - 等級：熟練 n 級要 30 × n² 點（1 級 30、5 級 750、10 級 3000）。升級的效果從下一趟遺跡開始算。
-// - 存檔：R.S.prof = { w: {武器: 點數}, magic, agi }。公會登記處的勇者證下面有一覽。
+// - 存檔：R.S.prof = { w: {武器: 點數}, magic, agi, str }。公會登記處的勇者證下面有一覽。
 // 放在 skillpoints.js 後面（包住 R.calcPlayer、R.attack、R.hurtEnemy、R.killEnemy、R.useSkill、R.castSlot）。
 (function (R) {
   const W = () => R.W, S = () => R.S, $ = id => document.getElementById(id), esc = s => R.esc(s);
@@ -15,7 +16,7 @@
   const WEIGHT = { greatsword: 3, axe: 2.4, mace: 2, spear: 1.6, sword: 1, shotgun: 0.8, rifle: 0.8, crossbow: 0.8 };
   R.WEAPON_WEIGHT = WEIGHT;
   const pf = () => { const s = S(); s.prof = s.prof || { w: {}, magic: 0, agi: 0 }; s.prof.w = s.prof.w || {}; return s.prof; };
-  R.profLv = { weapon: base => lvOf(pf().w[base]), magic: () => lvOf(pf().magic), agi: () => lvOf(pf().agi) };
+  R.profLv = { weapon: base => lvOf(pf().w[base]), magic: () => lvOf(pf().magic), agi: () => lvOf(pf().agi), str: () => lvOf(pf().str) };
   const MAGIC_CLS = ['mage', 'priest'];
 
   // ---------- 加點數：升級的時候說一聲 ----------
@@ -24,13 +25,14 @@
     if (kind === 'w') p.w[base] = (p.w[base] || 0) + v; else p[kind] = (p[kind] || 0) + v;
     const after = kind === 'w' ? lvOf(p.w[base]) : lvOf(p[kind]);
     if (after > before) {
-      const name = kind === 'w' ? (R.WEAPONS[base] ? R.WEAPONS[base].name : base) + '的熟練度' : kind === 'magic' ? '魔法熟練度' : '敏捷';
+      const name = kind === 'w' ? (R.WEAPONS[base] ? R.WEAPONS[base].name : base) + '的熟練度' : kind === 'magic' ? '魔法熟練度' : kind === 'str' ? '力量的鍛鍊' : '敏捷';
       setTimeout(() => R.banner && R.banner(name + '升到 ' + after + ' 級', lineOf(kind, base, after) + '（下一趟遺跡開始算）'), 900);
     }
   };
   const lineOf = (kind, base, lv) => {
     if (kind === 'w') { const wt = WEIGHT[base] || 0; return '基本傷害 +' + 2 * lv + '%、攻擊速度 +' + lv + '%' + (wt ? '、重量的拖累 −' + lv * 10 + '%' : ''); }
     if (kind === 'magic') return '魔法武器的傷害 +' + 2 * lv + '%、每發的魔力 −' + 3 * lv + '%';
+    if (kind === 'str') return '力量 +' + lv + '（穿重裝要力量）';
     return '移動 +' + lv + '%、翻滾冷卻 −' + 2 * lv + '%';
   };
 
@@ -81,6 +83,9 @@
       const eq = R.equipped ? R.equipped(P.cls) : {}, ws = R.SLOTS.map(sl => eq[sl.id] && R.ARMOR[eq[sl.id].base] ? R.ARMOR[eq[sl.id].base].w : 'light');
       const v = ws.every(w => w === 'light') ? 2 : ws[R.SLOTS.findIndex(sl => sl.id === 'body')] === 'light' ? 1 : 0;
       if (v) gain('agi', null, v);
+      // 力量：重的武器、重的上衣
+      const wt = WEIGHT[P.item && P.item.base] || 0, st = (wt >= 2 ? 2 : wt >= 1 ? 1 : 0) + (ws[R.SLOTS.findIndex(sl => sl.id === 'body')] === 'heavy' ? 1 : 0);
+      if (st) gain('str', null, st);
     }
     return r;
   };
@@ -99,7 +104,7 @@
     const row = (name, xp, line) => { const lv = lvOf(xp); return '<li><b>' + esc(name) + '</b>　' + lv + ' 級' + bar(xp, lv) + '<br><small class="note">' + esc(line(lv)) + '</small></li>'; };
     return '<h3>熟練度</h3><p class="note">拿哪種武器打，那種武器就越順手：基本傷害、攻擊速度慢慢加上去，重的武器也越拿越輕（走路不再被拖慢）。魔法看釋放的次數；敏捷靠穿輕裝打倒遺跡生物。效果從下一趟遺跡開始算。</p><ul class="loot">'
       + ws.map(k => row(R.WEAPONS[k].name + (WEIGHT[k] ? '（重量 ' + WEIGHT[k] + '）' : ''), p.w[k], lv => lineOf('w', k, lv) + (WEIGHT[k] ? '；現在走路慢 ' + (WEIGHT[k] * 2.5 * (1 - lv / MAX)).toFixed(1) + '%' : ''))).join('')
-      + row('魔法', p.magic, lv => lineOf('magic', null, lv)) + row('敏捷', p.agi, lv => lineOf('agi', null, lv)) + '</ul>';
+      + row('魔法', p.magic, lv => lineOf('magic', null, lv)) + row('敏捷', p.agi, lv => lineOf('agi', null, lv)) + row('力量的鍛鍊', p.str, lv => lineOf('str', null, lv)) + '</ul>';
   };
   const hub0 = R.hub;
   R.hub = (t, f) => {
