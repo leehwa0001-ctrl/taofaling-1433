@@ -435,14 +435,14 @@
           bx(0.5, 0.08, 0.5, '#5A3E28', tx + ox, 0.46, tz + oz); bx(0.08, 0.46, 0.08, '#3A2A1C', tx + ox, 0.23, tz + oz);
           if (busy && !(mine && i === 0)) { const lk = LOOKS[(((i + Math.round(tx * 3 + tz)) % LOOKS.length) + LOOKS.length) % LOOKS.length], n = npc(tx + ox, tz + oz, rot, { name: '打麻將的客人', look: { top: lk[0], hair: lk[1], cloak: lk[0] } }); if (n && n.h) n.h.sit = true; }
         });
-        if (busy && !mine) inter(tx, tz + 1.9, 1.5, '看他們打牌', () => K.talk('打麻將的客人', [pick(TALK), pick(TALK)]));
+        if (busy && !mine) inter(tx, tz + 1.9, 1.7, '和這桌的客人打麻將', () => R.mahjong());   // 每一桌都能坐下打（作者：麻將館不能打麻將？——原本只有一張空桌能坐，找不到）
         if (mine) inter(tx, tz + 1.9, 1.7, '找空的那張桌子坐下（打麻將）', () => R.mahjong());
       };
       table(-3.6, -2.2, 1); table(3.6, -2.2, 1); table(-3.6, 2.4, 1); table(3.6, 2.4, 0, 1);
       // 櫃台和老闆娘
       bx(3.4, 1.0, 0.8, '#5A4030', 0, 0.5, -HD + 1.0); bx(3.6, 0.1, 1.0, '#7A5A40', 0, 1.05, -HD + 1.0); block(-1.8, 1.8, -HD + 0.5, -HD + 1.5, 'counter');
       npc(0, -HD + 0.4, 0, { name: '雀莊的老闆', look: { top: '#4A3A30', hair: '#8A8A88', acc: 'glasses' } });
-      inter(0, -HD + 2.2, 1.8, '和老闆說話', () => { const m = (R.S && R.S.mj) || {}; K.talk('雀莊的老闆', [m.games ? '「又來啦。打了 ' + m.games + ' 場，拿了 ' + (m.first || 0) + ' 次第一。」' : '「新面孔？空桌在右前方。不懂規則的話，桌上有提示。」', pick(['「這裡門清限定，不能吃碰槓。」', '「上個月有個勇者在這裡和了四暗刻，到現在還在講。」', '「茶免費，菸到外面抽。」'])]); });
+      inter(0, -HD + 2.2, 1.8, '和老闆說話（開一桌麻將）', () => { if (R.mahjong) { R.mahjong(); return; } const m = (R.S && R.S.mj) || {}; K.talk('雀莊的老闆', [m.games ? '「又來啦。打了 ' + m.games + ' 場，拿了 ' + (m.first || 0) + ' 次第一。」' : '「新面孔？空桌在右前方。不懂規則的話，桌上有提示。」', pick(['「這裡門清限定，不能吃碰槓。」', '「上個月有個勇者在這裡和了四暗刻，到現在還在講。」', '「茶免費，菸到外面抽。」'])]); });
       sign(0, 2.6, -HD + 0.36, 0, '本月排名', '#1E3A2A', NW.g);
       if (K && K.plantAt) { K.plantAt(c, -HW + 0.7, HD - 0.8); K.plantAt(c, HW - 0.7, -HD + 0.8); }
       lamp(-3.6, 2.8, -2.2, '#FFF0D0', 0.55, 7); lamp(3.6, 2.8, -2.2, '#FFF0D0', 0.55, 7); lamp(-3.6, 2.8, 2.4, '#FFF0D0', 0.55, 7); lamp(3.6, 2.8, 2.4, '#FFF0D0', 0.55, 7);
