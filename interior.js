@@ -20,6 +20,7 @@
     station: { name: '驛站', sub: '候車室・售票口', w: 18, d: 12, h: 4.2, zoom: 0.85, wall: '#8A6A4A', cap: '#4A3424', floor: ['#6E5238', 'planks'], out: '出去（回到大路口）' },
     tavern: { name: '赤提燈', sub: '居酒屋・樓上是宿屋', w: 20, d: 14, h: 4.2, zoom: 0.85, wall: '#8E7A62', cap: '#4A3424', floor: ['#6A4A30', 'planks'], out: '出去（回到西市街）' }
   };
+  R.INTERIOR_PLACES = PLACES;   // interiors2.js 加更多的建築
   const bodyOf = cls => ({ body: { base: cls === 'knight' ? 'body_heavy' : cls === 'warrior' ? 'body_medium' : 'body_light' }, feet: { base: 'feet_medium' } });
   // 酒場裡聽得到的傳聞（也是打遺跡生物的提示）
   const RUMORS = [
@@ -140,7 +141,7 @@
     if (pl.out) inter(0, HD - 0.9, 1.8, pl.out, () => R.exitInterior());
 
     const c = { TH, ins, bx, flat, mesh, block, inter, lamp, sign, npc, flame, part, wallLine, WG, seg, HW, HD, WH, T0, NW, SW, WW, EW };
-    ({ guild: furnishGuild, guild2: furnishGuild2, smith: furnishSmith, pharmacy: furnishPharmacy, store: furnishStore, station: furnishStation, tavern: furnishTavern })[kind](c);
+    Object.assign({ guild: furnishGuild, guild2: furnishGuild2, smith: furnishSmith, pharmacy: furnishPharmacy, store: furnishStore, station: furnishStation, tavern: furnishTavern }, R.INTERIOR_FURNISH || {})[kind](c);
     // 劇情人物、固定日期出現的人（people.js）
     if (R.placePeople) R.placePeople(kind, { ins, npc, inter, talk, HW, HD });
     return ins;
@@ -575,10 +576,11 @@
     R.placeCam(null);
     R.interiorHud(true);
   };
+  R.INTERIOR_KIT = { tableAt, benchAt, stoolAt, plantAt, shelfAt, talk, rumor, lam };   // interiors2.js 用
   R.enterInterior = kind => {
     if (busy || W.inside || !W.town) return;
     busy = true; R.input.keys = {};
-    R.fade(() => { busy = false; enterNow(kind); R.banner(PLACES[kind].name, { guild: '登記處在最裡面，委託貼在北邊的牆上；東邊是酒場', smith: '「門關上，外面的冷風會吹熄爐火。」', pharmacy: '藥草和驅寒茶的味道', store: '「寄放的東西，報名字就好。」', station: '售票口在最裡面，時刻表在左邊的牆上', tavern: '「歡迎光臨！」老闆娘的聲音從櫃台後面傳來' }[kind] || ''); });
+    R.fade(() => { busy = false; enterNow(kind); R.banner(PLACES[kind].name, { guild: '登記處在最裡面，委託貼在北邊的牆上；東邊是酒場', smith: '「門關上，外面的冷風會吹熄爐火。」', pharmacy: '藥草和驅寒茶的味道', store: '「寄放的東西，報名字就好。」', station: '售票口在最裡面，時刻表在左邊的牆上', tavern: '「歡迎光臨！」老闆娘的聲音從櫃台後面傳來' }[kind] || PLACES[kind].hint || PLACES[kind].sub || ''); });
   };
   // 上下樓
   R.changeFloor = (kind, at) => {
