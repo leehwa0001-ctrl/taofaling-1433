@@ -284,6 +284,7 @@
     }
   };
   const run = (sk, P, w) => { const s = Object.assign({ _id: sk.id }, sk.p); return T[sk.type](s, P, w, power(P.ws)); };
+  R.SKILL_TYPES = T; R.SKILL_KIT = { later, aimIn, nova, slowIn, power };   // skillbook2.js 加新的「型」和技能
 
   // ---------- 強化的效果：傷害、暴擊、燃燒、吸血、減傷、回復、移動 ----------
   const sbList = P => (P && P.sb ? Object.values(P.sb) : []);
@@ -325,7 +326,7 @@
     const S = R.S, cls = S.cls, st = S.classes[cls], lo = R.loadoutOf(cls), keys = KEYS();
     const ids = allOf(cls), learned = ids.filter(id => known(cls, st, id)), locked = ids.filter(id => !known(cls, st, id));
     const req = id => { const s = info(id); if (s.adv && s.adv !== st.adv) return '轉職：' + R.ADV[cls].find(a => a.id === s.adv).name + (s.lv > R.PROMOTE_LV ? '・Lv ' + s.lv : ''); return '職業等級 ' + s.lv; };
-    const card = (id, ok) => { const sk = R.SKILLS[id], at = lo.indexOf(id), s = info(id); return '<button type="button" class="recipe sb-card' + (at >= 0 ? ' on' : '') + (ok ? '' : ' lock') + '" data-sk="' + id + '"' + (ok ? '' : ' disabled') + '><b>' + esc(sk.name) + (s.adv ? ' <small class="sb-adv">' + esc(R.ADV[cls].find(a => a.id === s.adv).name) + '</small>' : '') + (at >= 0 ? ' <small class="sb-at">裝在「' + keys[at] + '」</small>' : '') + '</b><small>冷卻 ' + sk.cd + ' 秒・魔力 ' + sk.mp + (ok ? '' : '・' + esc(req(id))) + '</small><span>' + esc(sk.desc) + '</span></button>'; };
+    const card = (id, ok) => { const sk = R.SKILLS[id], at = lo.indexOf(id), s = info(id); return '<button type="button" class="recipe sb-card' + (at >= 0 ? ' on' : '') + (ok ? '' : ' lock') + '" data-sk="' + id + '"' + (ok ? '' : ' disabled') + '><b>' + esc(sk.name) + (s.adv ? ' <small class="sb-adv">' + esc(R.ADV[cls].find(a => a.id === s.adv).name) + '</small>' : '') + (at >= 0 ? ' <small class="sb-at">裝在「' + keys[at] + '」</small>' : '') + '</b><small>' + (R.skillTag && R.skillTag(id) ? esc(R.skillTag(id)) + '・' : '') + '冷卻 ' + sk.cd + ' 秒・魔力 ' + sk.mp + (ok ? '' : '・' + esc(req(id))) + '</small><span>' + esc(sk.desc) + '</span></button>'; };
     host.innerHTML = '<h2>技能書・' + esc(R.clsName(cls)) + ' Lv ' + st.lv + '</h2><p class="note">三格技能都可以換。先點上面的一格，再點下面學會的技能。第二、三格在職業等級 ' + R.SKILL_UNLOCK[1] + '、' + R.SKILL_UNLOCK[2] + ' 打開。進了遺跡就不能換。</p>'
       + '<div class="row sb-slots">' + [0, 1, 2].map(i => { const open = i === 0 || st.lv >= R.SKILL_UNLOCK[i]; return '<button type="button" class="btn' + (pickSlot === i ? ' pri' : '') + '" data-slot="' + i + '"' + (open ? '' : ' disabled') + '>' + keys[i] + '：' + (open ? esc(R.SKILLS[lo[i]].name) : 'Lv ' + R.SKILL_UNLOCK[i] + ' 打開') + '</button>'; }).join('') + '<button type="button" class="btn" data-reset="1">恢復預設</button></div>'
       + '<h3>學會的技能（' + learned.length + '）</h3><div class="recipes sb-list">' + learned.map(id => card(id, true)).join('') + '</div>'
