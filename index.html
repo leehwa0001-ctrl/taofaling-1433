@@ -344,6 +344,8 @@ body.touch .bh-head{grid-template-columns:36px 1fr}body.touch #bh-face{width:36p
 #qt-mark{position:absolute;top:-2px;bottom:-2px;width:4px;margin-left:-2px;background:#FFFFFF;box-shadow:0 0 6px #fff}
 #qt-msg{margin:0;text-align:center;font-weight:700;min-height:1.4em}
 .se-pips{display:flex;gap:6px;align-items:center;justify-content:center}.se-pips i{width:14px;height:14px;border-radius:50%;border:1px solid var(--gold)}.se-pips i.on{background:var(--gold)}.se-pips span{margin-left:8px;font-size:12px;color:var(--dim)}
+/* 開車、騎車的速度表（vehicles.js） */
+#vh-spd{left:50%;bottom:calc(max(12px,env(safe-area-inset-bottom)) + 8px);transform:translateX(-50%);padding:4px 14px;font-family:"DotGothic16",var(--sans);font-size:18px;font-variant-numeric:tabular-nums;color:#FFE070}
 /* 卡拉 OK（karaoke.js） */
 .kara canvas{display:block;width:100%;max-width:calc(62dvh * 7 / 4);margin:0 auto;height:auto;border-radius:6px}
 .kara-keys{justify-content:center}.kara-keys .btn{flex:1;max-width:180px;touch-action:none;user-select:none}.kara-keys .btn.on{background:var(--gold);color:#1A1410}
@@ -803,6 +805,7 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <script src="titleart.js"></script>
 <script src="battlehud.js"></script>
 <script src="streetevents.js"></script>
+<script src="vehicles.js"></script>
 <script src="townlife.js"></script>
 <script src="vigilance.js"></script>
 <script src="punish.js"></script>
