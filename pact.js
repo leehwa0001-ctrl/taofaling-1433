@@ -18,7 +18,13 @@
     ['time', '急件', ['委託的時限減半'], [2]],
     ['more', '增量', ['要討伐的數量 ×1.5'], [1]],
     ['solo', '單獨', ['不能帶隊友'], [2]],
-    ['nocry', '背水', ['不能用回歸水晶（要自己走回入口）'], [3]]
+    ['nocry', '背水', ['不能用回歸水晶（要自己走回入口）'], [3]],
+    // 2026-10-02 作者：條款可以多一點，像是怪死掉後會變炸彈
+    ['bomb', '殉爆', ['遺跡生物倒下 1.5 秒後爆炸（2.5 公尺）', '倒下 1 秒後爆炸（3.5 公尺，更痛）'], [3, 5]],
+    ['swarm', '群聚', ['遺跡生物的數量 ×1.5'], [3]],
+    ['regen', '再生', ['遺跡生物 3 秒沒被打到，每秒回復 2% 生命'], [2]],
+    ['glass', '易傷', ['你受到的傷害 +30%', '你受到的傷害 +60%'], [2, 4]],
+    ['nodash', '鈍足', ['翻滾的冷卻 ×2'], [2]]
   ];
   const T = Object.fromEntries(TERMS.map(t => [t[0], t]));
   const MAXPTS = TERMS.reduce((a, t) => a + t[3][t[3].length - 1], 0);
@@ -90,8 +96,54 @@
     let hk = [1, 1.5, 2][p.sel.hp || 0], dk = [1, 1.4, 1.8][p.sel.dmg || 0], sk = p.sel.speed ? 1.25 : 1;
     if (p.sel.elite && !e.def.boss && !e.def.elite) { hk *= 1.6; dk *= 1.2; sk *= 1.1; e.pactElite = 1; }
     e.hp *= hk; e.hpMax *= hk; e.dmg *= dk; e.speed *= sk;
+    // 群聚：一層開始放遺跡生物的時候，一半的機會多放一隻一樣的
+    if (swarming && on('swarm') && !e.def.boss && !e.def.elite && !cloning && Math.random() < 0.5) {
+      cloning = true; try { const [cx, cz] = R.nearestFloor ? R.nearestFloor(x + (Math.random() - 0.5) * 2.4, z + (Math.random() - 0.5) * 2.4) : [x, z]; const c = R.spawnEnemy(id, cx, cz, room, o); if (c && e.dormant) { c.dormant = true; c.aggro = false; } } finally { cloning = false; }
+    }
     return e;
   };
+  let swarming = false, cloning = false;
+  const pf0 = R.populateFloor;
+  if (pf0) R.populateFloor = (...a) => { swarming = true; try { return pf0(...a); } finally { swarming = false; } };
+  // 殉爆：倒下的地方先亮出範圍，過一下爆炸；打到你和隊友（翻滾躲得掉）
+  let fuses = [];
+  const ke1 = R.killEnemy;
+  R.killEnemy = (e, by) => {
+    const was = e && !e.dead, r = ke1(e, by), lv = on('bomb');
+    if (lv && was && e.dead && !e.def.human && !e.def.boss && e.id !== 'petra') {
+      const rad = lv > 1 ? 3.5 : 2.5, t = lv > 1 ? 1 : 1.5;
+      fuses.push({ x: e.x, z: e.z, rad, t, dmg: (e.dmg || e.def.dmg || 10) * (lv > 1 ? 1.8 : 1.2) });
+      R.fx('mark', e.x, 0, e.z, { r: rad, t, color: '#FF5A2A' });
+    }
+    return r;
+  };
+  const lf1 = R.loadFloor;
+  R.loadFloor = (...a) => { fuses = []; return lf1(...a); };
+  const st1 = R.step;
+  R.step = dt => {
+    st1(dt);
+    const w = W(), run = w.run; if (!run) { fuses = []; return; }
+    if (fuses.length) {
+      fuses.forEach(f => { f.t -= dt; });
+      fuses.filter(f => f.t <= 0).forEach(f => {
+        R.fx('boom', f.x, 0.3, f.z, { r: f.rad, color: '#FF7A2A' }); R.shake && R.shake(0.25); R.sfx && R.sfx('boom');
+        const P = w.P; if (P && !P.dead && Math.hypot(P.x - f.x, P.z - f.z) < f.rad + 0.4) R.hurtPlayer(f.dmg, null);
+        (w.allies || []).forEach(a => { if (!a.downed && Math.hypot(a.x - f.x, a.z - f.z) < f.rad + 0.4) R.hurtAlly(a, f.dmg, null); });
+      });
+      fuses = fuses.filter(f => f.t > 0);
+    }
+    // 再生：3 秒沒被打到就慢慢回血
+    if (on('regen')) (w.enemies || []).forEach(e => { if (e.dead || e.hp >= e.hpMax) return; if (run.t - (e.hitAt || 0) > 3) e.hp = Math.min(e.hpMax, e.hp + e.hpMax * 0.02 * dt); });
+  };
+  const he1 = R.hurtEnemy;
+  R.hurtEnemy = (e, raw, o) => { if (e) { const run = W().run; e.hitAt = run ? run.t : 0; } return he1(e, raw, o); };
+  const ah1 = R.allyHit;
+  if (ah1) R.allyHit = (e, dmg, by) => { if (e) { const run = W().run; e.hitAt = run ? run.t : 0; } return ah1(e, dmg, by); };
+  // 易傷、鈍足
+  const hp1 = R.hurtPlayer;
+  R.hurtPlayer = (raw, src, o) => hp1(raw * [1, 1.3, 1.6][on('glass')], src, o);
+  const dg1 = R.dodge;
+  R.dodge = () => { const P = W().P; if (P && on('nodash') && !P.pactNodash && P.dodgeCdMax) { P.pactNodash = 1; P.dodgeCdMax *= 2; } return dg1(); };
   const hl0 = R.healP;
   R.healP = (v, quiet) => hl0(v * (on('heal') ? 0.5 : 1) * (1 + tb('heal')), quiet);
   const dr0 = R.drink;
