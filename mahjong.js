@@ -8,7 +8,7 @@
 //   點數不算符，照翻數查表（一翻 1000、二翻 2000、三翻 3900、四翻 7700、滿貫 8000、跳滿 12000、倍滿 16000、三倍滿 24000、役滿 32000；莊家 1.5 倍）。
 //   振聽：自己打過的牌在等的牌裡就不能榮和；放過一次榮和，到下一次摸牌前也不能榮和（立直之後放過就一直不能）。
 //   流局：聽牌的人平分沒聽牌的人付的 3000 點。有人點數變成負的就提前結束。
-// 桌費 20 費拉；第一名拿 80、第二名 30、第三名 10（R.S.mj 記戰績）。
+// 桌費 20 費拉；第一名拿 80、第二名 30、第三名 10（R.S.mj 記戰績）。坐下時選倍率（×1、×2、×5、×10），桌費和獎金照倍數算（R.S.mj.mul 記上次選的）。
 // 電腦的三家：算向聽數和進張挑牌，聽牌就立直；有人立直、自己還差得遠的時候打安全牌（現物、筋、字牌）。
 //   吃碰：役牌的對子會碰；已經有役牌的副露、或是全部是 2–8 的牌（斷么九）時，吃碰讓向聽數變少才叫；四張一樣的會暗槓。
 // 街上的大樓、裡面的房間也在這個檔案（包住 R.buildCivic；用 civic.js 的 api.civ、api.bigSign）。
@@ -16,7 +16,9 @@
   const W = R.W, rnd = Math.random, pick = a => a[Math.floor(rnd() * a.length)];
   const NUM = ['一', '二', '三', '四', '五', '六', '七', '八', '九'], HON = ['東', '南', '西', '北', '白', '發', '中'], SUIT = ['萬', '筒', '索'];
   const tname = id => id < 27 ? NUM[id % 9] + SUIT[(id / 9) | 0] : HON[id - 27];
-  const FEE = 20, PRIZE = [80, 30, 10, 0], START = 25000;
+  const FEE = 20, PRIZE = [80, 30, 10, 0], START = 25000, MULS = [1, 2, 5, 10];
+  let MUL = 1;   // 這一場的倍率
+  const fee = () => FEE * MUL;
   const FOES = [
     { name: '老闆娘・玉枝', rp: 0.9, top: '#8A3A4A', hair: '#2A2420' },
     { name: '退休衛兵・權藏', rp: 0.7, top: '#3E4A5A', hair: '#8A8A88' },
@@ -318,7 +320,7 @@
   const order = () => G.seats.slice().sort((a, b) => b.pts - a.pts || a.i - b.i);
   const finish = () => {
     if (G.kyotaku) { order()[0].pts += G.kyotaku; G.kyotaku = 0; }   // 最後沒人拿的供託給第一名
-    const S = R.S, rk = order().findIndex(o => o.i === 0), pr = PRIZE[rk];
+    const S = R.S, rk = order().findIndex(o => o.i === 0), pr = PRIZE[rk] * MUL;
     if (S) { S.mj = S.mj || { games: 0, first: 0, wins: 0, best: 0, bestName: '' }; S.mj.games++; if (!rk) S.mj.first++; S.gold += pr; R.save && R.save(); }
     G.final = { rk, pr };
     R.sfx && R.sfx(rk === 0 ? 'chest' : 'coin');
@@ -426,7 +428,7 @@
         txt((r.y.yakuman ? '' : r.y.han + ' 翻　') + (rn ? rn + '　' : '') + r.total + ' 點' + (r.kt ? '＋供託 ' + r.kt : ''), CW / 2, 360, '#FFE070', 18, 'center');
       }
     }
-    { if (G.phase === 'over' && G.final) { const od = order(); x.fillStyle = 'rgba(10,14,12,.95)'; x.fillRect(150, 150, 420, 240); x.strokeStyle = '#C9A13A'; x.strokeRect(150.5, 150.5, 419, 239); txt('結束', CW / 2, 176, '#FFE070', 22, 'center'); od.forEach((o, i) => txt((i + 1) + ' 位　' + o.name + '　' + o.pts + ' 點', CW / 2, 214 + i * 28, o.i === 0 ? '#FFE070' : '#E8E0C8', 15, 'center')); txt(G.final.pr ? '獎金 ' + G.final.pr + ' 費拉' : '沒有獎金。下次再來。', CW / 2, 352, '#7AE0A0', 15, 'center'); }
+    { if (G.phase === 'over' && G.final) { const od = order(); x.fillStyle = 'rgba(10,14,12,.95)'; x.fillRect(150, 150, 420, 240); x.strokeStyle = '#C9A13A'; x.strokeRect(150.5, 150.5, 419, 239); txt('結束', CW / 2, 176, '#FFE070', 22, 'center'); od.forEach((o, i) => txt((i + 1) + ' 位　' + o.name + '　' + o.pts + ' 點', CW / 2, 214 + i * 28, o.i === 0 ? '#FFE070' : '#E8E0C8', 15, 'center')); txt(G.final.pr ? '獎金 ' + G.final.pr + ' 費拉' + (MUL > 1 ? '（×' + MUL + '）' : '') : '沒有獎金。下次再來。', CW / 2, 352, '#7AE0A0', 15, 'center'); }
     }
   };
   const $ = id => document.getElementById(id);
@@ -441,7 +443,7 @@
     if (G.phase === 'youRon') { B.push(['mj-ron', '榮和', 'pri']); B.push(['mj-pass', '跳過', '']); }
     if (G.phase === 'youCall') { (G.callOpts || []).forEach((c, i) => B.push(['mj-call' + i, c.label, c.type === 'chi' ? '' : 'gold'])); B.push(['mj-nocall', '跳過', '']); }
     if (G.phase === 'result') B.push(['mj-next', G.round >= 3 || G.seats.some(s => s.pts < 0) ? '看結果' : '下一局', 'pri']);
-    if (G.phase === 'over') B.push(['mj-again', '再打一場（' + FEE + ' 費拉）', 'pri']);
+    if (G.phase === 'over') B.push(['mj-again', '再打一場（' + (MUL > 1 ? '×' + MUL + '・' : '') + fee() + ' 費拉）', 'pri']);
     B.push(['mj-hint', G.hint ? '提示：開' : '提示：關', '']); B.push(['mj-rule', '規則', '']); B.push(['mj-x', G.phase === 'over' ? '離開' : '離席（這一場作廢）', '']);
     el.innerHTML = B.map(([id, t, c]) => '<button type="button" class="btn ' + c + '" id="' + id + '">' + t + '</button>').join('');
     const on = (id, f) => { const b = $(id); if (b) b.onclick = f; };
@@ -453,7 +455,7 @@
     on('mj-nocall', () => { G.youPassedCall = true; G.phase = 'claims'; pump(); });
     selfKans(0).forEach((k, i) => on('mj-sk' + i, () => { if (G.phase !== 'you') return; doKan(0, k.kind, k.id); G.phase = 'you'; refresh(); }));
     on('mj-next', () => { nextHand(); pump(); });
-    on('mj-again', () => { if (R.S.gold < FEE) { R.toast('錢不夠（桌費 ' + FEE + ' 費拉）。'); return; } R.S.gold -= FEE; R.save(); newGame(); pump(); });
+    on('mj-again', () => { if (R.S.gold < fee()) { R.toast('錢不夠（桌費 ' + fee() + ' 費拉）。'); return; } R.S.gold -= fee(); R.save(); newGame(); pump(); });
     on('mj-hint', () => { G.hint = !G.hint; refresh(); });
     on('mj-rule', () => { const n = $('mj-note'); n.hidden = !n.hidden; });
     on('mj-x', () => { clearTimeout(timer); G = null; R.closeSheet(); });
@@ -481,16 +483,19 @@
     + '<br><b>立直</b>：只差一張就能和（聽牌）的時候可以宣告立直，押 1000 點；之後只能打摸到的牌，但多一翻。<b>自摸</b>：自己摸到要的牌。<b>榮和</b>：別人打出你要的牌。'
     + '<br><b>要有役</b>：沒立直的時候，要有斷么九（全部 2–8）、役牌（白發中、自己的風、東 三張）、平和、一盃口、混一色、清一色、七對子……才能榮和；自摸本身就算一個役。'
     + '<br><b>振聽</b>：你等的牌如果自己打過，就不能榮和（自摸可以）。<b>提示</b>開著的時候，黃色的小三角是建議打的牌；右下會寫你在等什麼牌。'
-    + '<br>東風戰四局，第一名 ' + PRIZE[0] + ' 費拉、第二名 ' + PRIZE[1] + '、第三名 ' + PRIZE[2] + '。';
+    + '<br>東風戰四局，第一名 ' + PRIZE[0] + ' 費拉、第二名 ' + PRIZE[1] + '、第三名 ' + PRIZE[2] + '（這是 ×1；坐下時選幾倍，桌費和獎金就乘幾倍）。';
   R.mahjong = () => {
     const S = R.S; S.mj = S.mj || { games: 0, first: 0, wins: 0, best: 0, bestName: '' };
     const st = S.mj.games ? '你的戰績：' + S.mj.games + ' 場、第一名 ' + S.mj.first + ' 次、和了 ' + S.mj.wins + ' 次' + (S.mj.best ? '、最大 ' + S.mj.best + ' 翻（' + S.mj.bestName + '）' : '') + '。' : '第一次來？老闆娘會先跟你講規則。';
-    R.sheet('<p class="kicker">繁華街・二樓</p><h2>雀莊「東風」</h2><p class="note">洗牌的聲音嘩啦嘩啦。桌費 ' + FEE + ' 費拉，東風戰四局。' + st + '</p><p class="note">' + RULES + '</p>',
-      '<div class="row"><button type="button" class="btn pri" id="mj-go">坐下（' + FEE + ' 費拉）</button><button type="button" class="btn" id="mj-no">算了</button></div>');
+    const last = MULS.includes(S.mj.mul) ? S.mj.mul : 1;
+    R.sheet('<p class="kicker">繁華街・二樓</p><h2>雀莊「東風」</h2><p class="note">洗牌的聲音嘩啦嘩啦。桌費 ' + FEE + ' 費拉起，東風戰四局。' + st + '</p>'
+      + '<p class="note">要賭幾倍？桌費和獎金都照倍數算：' + MULS.map(m => '×' + m + ' 是桌費 ' + FEE * m + '、第一名 ' + PRIZE[0] * m).join('；') + '。</p><p class="note">' + RULES + '</p>',
+      '<div class="row">' + MULS.map(m => '<button type="button" class="btn' + (m === last ? ' pri' : '') + '" data-mjmul="' + m + '"' + (S.gold < FEE * m ? ' disabled' : '') + '>×' + m + '（' + FEE * m + ' 費拉）</button>').join('') + '<button type="button" class="btn" id="mj-no">算了</button></div>');
     $('mj-no').onclick = R.closeSheet;
-    $('mj-go').onclick = () => {
-      if (S.gold < FEE) { R.toast('錢不夠（桌費 ' + FEE + ' 費拉）。'); return; }
-      S.gold -= FEE; R.save();
+    document.querySelectorAll('[data-mjmul]').forEach(b => { b.onclick = () => {
+      MUL = +b.dataset.mjmul;
+      if (S.gold < fee()) { R.toast('錢不夠（桌費 ' + fee() + ' 費拉）。'); return; }
+      S.mj.mul = MUL; S.gold -= fee(); R.save();
       R.sheet('<div class="mj"><canvas id="mj-cv" width="' + CW + '" height="' + CH + '"></canvas><div class="row mj-btns" id="mj-btns"></div><p class="note" id="mj-note" hidden>' + RULES + '</p></div>', '');
       const sh = $('r-sheet'); if (sh) sh.classList.add('wide');
       cv = $('mj-cv'); x = cv.getContext('2d');
@@ -499,7 +504,7 @@
       cv.onmousemove = e => { if (!G || G.phase !== 'you') return; const [mx, my] = toXY(e), hp = handPos(), h = hp.findIndex(p => mx >= p.x && mx < p.x + 36 && my >= 462 && my < 522); if (h !== hover) { hover = h; draw(); } };
       cv.onmouseleave = () => { hover = -1; draw(); };
       newGame(); pump();
-    };
+    }; });
   };
   // 測試用：畫面在背景時，一步一步推；auto＝你那家也交給電腦
   R.mjDebug = { get G() { return G; }, newGame, step, pump, refresh, set speed(v) { SPEED = v; }, auto: on => { if (G) G.autoYou = on; }, shanten: tiles => shanten(counts(tiles)), yaku: (tiles, win, o) => yakuOf(Object.assign({ c: counts(tiles), win, tsumo: true, riichi: false, ippatsu: false, seatW: 0, last: false, dora: [] }, o || {})), nextHand, tname };
