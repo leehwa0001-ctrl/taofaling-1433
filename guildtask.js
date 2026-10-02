@@ -29,7 +29,7 @@
     R.sheet(html, foot); return { box: $('r-sheet'), close: R.closeSheet };
   };
   // 外層的包裝（main.js、gtamap.js……）只傳 id，所以「已經看過委託書」用旗子記，不用第二個參數
-  let okId = null;
+  let okId = null, freeId = null;   // freeId：不接委託，自己下去（沒有委託報酬、不打成績，加注條款也不算）
   const sr0 = R.startRun;
   R.startRun = id => {
     const s = S(), site = R.SITES.find(x => x.id === id);
@@ -40,15 +40,18 @@
     const m = modal('<p class="kicker">公會討伐令・委託書</p><h2>' + esc(site.name) + '</h2>' + specLines(site, sp).map(l => '<p>' + esc(l) + '</p>').join('')
       + '<p class="note">回到地面就是申請「任務完成」。專員會照五軌制（完成度、效率、創傷、環境、反饋）打分數，隔天登錄到勇者證，在公會的登記處查得到。</p>'
       + R.taskExtras.map(x => x.html(site, sp)).join(''),
-      '<div class="row"><button type="button" class="btn pri" id="tk-go">接下委託，出發</button><button type="button" class="btn" id="tk-no">再想想</button></div>');
+      '<div class="row"><button type="button" class="btn pri" id="tk-go">接下委託，出發</button><button type="button" class="btn" id="tk-free" title="沒有委託報酬、不打成績、沒有時限">不接委託，自己下去</button><button type="button" class="btn" id="tk-no">再想想</button></div>');
     R.taskExtras.forEach(x => x.bind && x.bind(m.box, site, sp));
     $('tk-no').onclick = m.close;
     $('tk-go').onclick = () => { m.close(); okId = id; R.startRun(id); };
+    $('tk-free').onclick = () => { m.close(); okId = id; freeId = id; R.startRun(id); };
   };
   // 真的出發了：記下委託
   const sr1 = R.startRun;
   R.startRun = id => {
+    const free = freeId === id; freeId = null;
     const r = sr1(id), run = W().run;
+    if (free && run) { run.free = 1; setTimeout(() => R.toast && R.toast('沒有接委託：這一趟沒有委託報酬，也不會打成績', '#C8B88A'), 2600); return r; }
     if (run && !run.task && run.site && run.site.id === id && (run.site.kind === 'ruin' || run.site.kind === 'hunt') && id !== 'kanko') {
       const sp = R.taskSpec(run.site); run.task = Object.assign({ t: 0, props: 0, deepest: 0 }, sp);
       setTimeout(() => R.toast && R.toast(sp.kind === 'patrol' ? '委託：巡查到第 ' + sp.floors + ' 層・時限 ' + sp.limitH + ' 小時' : '委託：討伐 ' + sp.need + ' 隻・時限 ' + sp.limitH + ' 小時', '#E8C04A'), 2600);
@@ -88,13 +91,19 @@
   // 結算的畫面：只說實際做了什麼，成績要等調查
   const rs0 = R.results;
   R.results = (ok, full, lost) => {
+    const r0 = W().run;
+    if (r0 && r0.free && ok && !r0.freePaid) { r0.freePaid = 1; S().gold -= (r0.reward || 0) - (r0.share || 0); r0.reward = 0; r0.share = 0; R.save(); }   // 不接委託：公會不付報酬
     rs0(ok, full, lost);
+    if (r0 && r0.free) { const b = $('r-sheet'); if (b) b.querySelectorAll('p').forEach(p => { if (p.innerHTML.includes('公會的委託報酬')) p.innerHTML = p.innerHTML.replace(/公會的委託報酬：[^<]*/, '沒有接委託：沒有委託報酬'); }); }
     const s = S(), t = s.tasks && s.tasks[s.tasks.length - 1], run = W().run; if (!t || !run || !run.task || t.day !== s.day) return;
     const box = $('r-sheet'); if (!box) return;
     const p = document.createElement('p'); p.className = 'note';
     p.textContent = '委託回報：' + (t.kind === 'patrol' ? '巡查到第 ' + t.done + '／' + t.need + ' 層' : '討伐 ' + t.done + '／' + t.need + ' 隻') + '・用了 ' + t.h + '／' + t.limitH + ' 小時。任務成績要等專員調查，明天以後到公會登記處的勇者證查詢。';
     const row = box.querySelector('.row'); if (row) box.insertBefore(p, row); else box.appendChild(p);
   };
+
+  const ae0 = R.askExtract;
+  R.askExtract = () => { ae0(); const run = W().run, b = $('r-sheet'); if (run && run.free && b) b.querySelectorAll('p.note').forEach(p => { p.innerHTML = p.innerHTML.replace('回去後公會會付委託報酬。', '這一趟沒有接委託，沒有委託報酬。'); }); };
 
   // ---------- 隔天：反饋評分、登錄到勇者證 ----------
   const post = () => {
