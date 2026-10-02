@@ -335,6 +335,15 @@ ul.bag li small{order:3;flex-basis:100%;color:var(--dim);font-size:12px}
 #r-boss.rage .bh-bar{box-shadow:0 0 14px rgba(224,40,58,.8)}
 #r-cls{display:none!important}
 body.touch .bh-head{grid-template-columns:36px 1fr}body.touch #bh-face{width:36px;height:30px}body.touch .bh-st{display:none}
+/* 街頭事件（streetevents.js）：追逐的計時、打強盜的小遊戲 */
+.se-hud{left:50%;top:calc(max(14px,env(safe-area-inset-top)) + 44px);transform:translateX(-50%);background:rgba(40,8,12,.82);border:1px solid #C8323A;border-radius:8px;padding:5px 14px;text-align:center;display:grid;gap:1px;min-width:180px}
+.se-hud b{font-family:var(--serif);font-size:15px;color:#FFE0D8}.se-hud span{font-size:12.5px;font-variant-numeric:tabular-nums}.se-hud small{font-size:11px;color:var(--dim)}
+.se-qte{display:grid;gap:8px;margin-top:10px}
+.se-bar{position:relative;height:26px;background:#1A1418;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+#qt-zone{position:absolute;top:0;bottom:0;background:linear-gradient(180deg,#E8C04A,#B8902A);opacity:.85}
+#qt-mark{position:absolute;top:-2px;bottom:-2px;width:4px;margin-left:-2px;background:#FFFFFF;box-shadow:0 0 6px #fff}
+#qt-msg{margin:0;text-align:center;font-weight:700;min-height:1.4em}
+.se-pips{display:flex;gap:6px;align-items:center;justify-content:center}.se-pips i{width:14px;height:14px;border-radius:50%;border:1px solid var(--gold)}.se-pips i.on{background:var(--gold)}.se-pips span{margin-left:8px;font-size:12px;color:var(--dim)}
 /* 卡拉 OK（karaoke.js） */
 .kara canvas{display:block;width:100%;max-width:calc(62dvh * 7 / 4);margin:0 auto;height:auto;border-radius:6px}
 .kara-keys{justify-content:center}.kara-keys .btn{flex:1;max-width:180px;touch-action:none;user-select:none}.kara-keys .btn.on{background:var(--gold);color:#1A1410}
@@ -793,6 +802,7 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <script src="karaoke.js"></script>
 <script src="titleart.js"></script>
 <script src="battlehud.js"></script>
+<script src="streetevents.js"></script>
 <script src="townlife.js"></script>
 <script src="vigilance.js"></script>
 <script src="punish.js"></script>
