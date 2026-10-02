@@ -47,6 +47,8 @@
   R.PACT_TERMS = TERMS; R.TITLES = TITLES;
   const tb = k => { const t = TT[pact().title]; return t && pact().got[t[0]] ? t[4][k] || 0 : 0; };
   const award = id => { const p = pact(); if (p.got[id] || !TT[id]) return; p.got[id] = S().day + 1; if (!p.title) p.title = id; R.save(); setTimeout(() => R.banner ? R.banner('拿到稱號「' + TT[id][1] + '」', TT[id][2] + '・' + TT[id][3] + '（公會登記處可以換戴）') : R.toast('拿到稱號「' + TT[id][1] + '」'), 1200); };
+  R.awardTitle = award;   // 別的檔案（例如 hunt.js 的狩獵考核）給稱號
+  R.addTitle = t => { if (!TT[t[0]]) { TITLES.push(t); TT[t[0]] = t; } };
   R.titleName = () => { const t = TT[pact().title]; return t && pact().got[t[0]] ? t[1] : ''; };
 
   // ---------- 委託書上的條款 ----------

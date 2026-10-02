@@ -12,7 +12,7 @@
   // ---------- 換樓層：把光調暗 ----------
   const lf = R.loadFloor;
   R.loadFloor = (f, o) => {
-    const r = lf(f, o), run = W.run, sc = W.scene; if (!run || !sc) return r;
+    const r = lf(f, o), run = W.run, sc = W.scene; if (!run || !sc || (run.site && run.site.outdoor)) return r;   // 外面（hunt.js 的狩獵場）不暗
     const k = Math.min(0.88, (DARK[run.grade.lv] || 0.6) + 0.03 * (f || 0)); D.k = k;
     sc.children.forEach(c => { if (c.isHemisphereLight) c.intensity = 0.42 * (1 - k) * 0.7 + 0.02; });
     if (W.moon) W.moon.intensity = 0.55 * (1 - k) * 0.6;
@@ -88,7 +88,7 @@
   const ul = R.updateLights;
   R.updateLights = dt => {
     ul(dt);
-    const run = W.run, P = W.P, veil = ensureVeil(); if (!run || !P) { if (veil) veil.style.opacity = 0; return; }
+    const run = W.run, P = W.P, veil = ensureVeil(); if (!run || !P || (run.site && run.site.outdoor)) { if (veil) veil.style.opacity = 0; return; }
     const t = run.t || 0;
     // 燈：平常微微晃，怪事發生時整個暗下來
     if (D.flickT > 0) { D.flickT -= dt; D.flick = D.flickT > 0 ? (rnd() < 0.15 ? 0.6 : 0.08) : 1; }

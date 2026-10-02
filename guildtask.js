@@ -21,7 +21,7 @@
     const g = R.gradeById(site.grade), floors = floorsOf(site), patrol = g.id === 'hamilia';
     return { kind: patrol ? 'patrol' : 'hunt', need: patrol ? floors : Math.max(10, Math.round(floors * (K[g.id] || 12))), limitH: Math.ceil(floors * 4 * (1 + 0.08 * (g.lv - 1))), letter: g.letter || '', floors };
   };
-  const specLines = (site, sp) => { const g = R.gradeById(site.grade); return ['任務分級：' + sp.letter + ' 級（' + g.name + '）', sp.kind === 'patrol' ? '任務內容：巡查（走到最深處，第 ' + sp.floors + ' 層）' : '任務內容：討伐遺跡生物 ' + sp.need + ' 隻（討伐令 1433 令）', '時限：' + sp.limitH + ' 小時（超過每小時扣 3% 的效率分）']; };
+  const specLines = (site, sp) => { const g = R.gradeById(site.grade); return sp.lines || ['任務分級：' + sp.letter + ' 級（' + g.name + '）', sp.kind === 'patrol' ? '任務內容：巡查（走到最深處，第 ' + sp.floors + ' 層）' : '任務內容：討伐遺跡生物 ' + sp.need + ' 隻（討伐令 1433 令）', '時限：' + sp.limitH + ' 小時（超過每小時扣 3% 的效率分）']; };
   R.taskExtras = [];   // 加注條款之類的：{ html(site), bind(box, site) }
   const hubOpen = () => { const h = $('hub'); return h && !h.hidden; };
   const modal = (html, foot) => {
@@ -34,7 +34,7 @@
   R.startRun = id => {
     const s = S(), site = R.SITES.find(x => x.id === id);
     if (okId === id) { okId = null; return sr0(id); }
-    if (!site || site.kind !== 'ruin' || !s) return sr0(id);
+    if (!site || (site.kind !== 'ruin' && site.kind !== 'hunt') || !s) return sr0(id);   // hunt：湯山村後山的狩獵場（hunt.js）
     if (s.banUntil > s.day || site.id === 'kanko' || site.grade === 'kaso') return sr0(id);   // 停權（punish.js 會說明）、觀光的動物園、卡索級的特別討伐令（kaso.js）不用這張委託書
     const sp = R.taskSpec(site);
     const m = modal('<p class="kicker">公會討伐令・委託書</p><h2>' + esc(site.name) + '</h2>' + specLines(site, sp).map(l => '<p>' + esc(l) + '</p>').join('')
@@ -49,7 +49,7 @@
   const sr1 = R.startRun;
   R.startRun = id => {
     const r = sr1(id), run = W().run;
-    if (run && !run.task && run.site && run.site.id === id && run.site.kind === 'ruin' && id !== 'kanko') {
+    if (run && !run.task && run.site && run.site.id === id && (run.site.kind === 'ruin' || run.site.kind === 'hunt') && id !== 'kanko') {
       const sp = R.taskSpec(run.site); run.task = Object.assign({ t: 0, props: 0, deepest: 0 }, sp);
       setTimeout(() => R.toast && R.toast(sp.kind === 'patrol' ? '委託：巡查到第 ' + sp.floors + ' 層・時限 ' + sp.limitH + ' 小時' : '委託：討伐 ' + sp.need + ' 隻・時限 ' + sp.limitH + ' 小時', '#E8C04A'), 2600);
     }
