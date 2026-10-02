@@ -15,11 +15,11 @@ window.R = window.R || {};
   // skill：基礎職業的技能；上位職業會換成自己的技能，並多一個被動
   R.CLASSES = {
     gunner: { name: '槍手', hp: 92, mp: 40, speed: 6.2, skill: 'roll', color: '#4A6A8A', desc: '手槍、步槍、霰彈槍。彈匣打空要換彈。', look: { top: '#3E4E62', hair: '#2A2420', cloak: '#6E5A44' } },
-    archer: { name: '弓箭手', hp: 86, mp: 50, speed: 6.4, skill: 'volley', color: '#4E7A48', desc: '短弓、長弓、弩。長弓可以按住蓄力。', look: { top: '#4A6A3E', hair: '#8A5A2E', cloak: '#3E5A36' } },
+    archer: { name: '弓箭手', hp: 94, mp: 50, speed: 6.4, skill: 'volley', color: '#4E7A48', desc: '短弓、長弓、弩。長弓可以按住蓄力。', look: { top: '#4A6A3E', hair: '#8A5A2E', cloak: '#3E5A36' } },
     warrior: { name: '戰士', hp: 132, mp: 30, speed: 5.7, skill: 'whirl', color: '#8A4A3A', desc: '大劍、戰斧、長劍。一刀掃一片。', look: { top: '#7A3E30', hair: '#3A2A1E', cloak: '#4A3A30' } },
     mage: { name: '術士', hp: 76, mp: 110, speed: 5.9, skill: 'fireball', color: '#5A4A8A', desc: '法杖、法球。施法消耗魔力。', look: { top: '#4A3E7A', hair: '#D8D2C4', cloak: '#2E2A4A' } },
     priest: { name: '牧師', hp: 96, mp: 95, speed: 5.9, skill: 'heal', color: '#C9B77A', desc: '聖杖、戰錘。會治療自己。', look: { top: '#E6DEC6', hair: '#6A4A2E', cloak: '#B89A4A' } },
-    blade: { name: '刀客', hp: 102, mp: 45, speed: 6.7, skill: 'flash', color: '#3A3A44', desc: '刀、雙刀。快、準，穿過敵人。', look: { top: '#2E2E38', hair: '#101014', cloak: '#6A2A2A' } },
+    blade: { name: '刀客', hp: 112, mp: 45, speed: 6.7, skill: 'flash', color: '#3A3A44', desc: '刀、雙刀。快、準，穿過敵人。', look: { top: '#2E2E38', hair: '#101014', cloak: '#6A2A2A' } },
     knight: { name: '騎士', hp: 152, mp: 35, speed: 5.4, skill: 'charge', color: '#6A7A8A', desc: '長劍、長槍、戰錘，帶盾。正面受到的傷害減少。', look: { top: '#8A96A3', hair: '#C99B55', cloak: '#2F4A6E' }, shield: 1 }
   };
   R.CLASS_IDS = Object.keys(R.CLASSES);
@@ -90,19 +90,20 @@ window.R = window.R || {};
 
   // ---------- 武器 ----------
   // kind：gun 槍、bow 弓、magic 魔法、melee 揮砍、thrust 突刺
+  // 2026-10-03 職業平衡（作者：弓箭手、刀客比較弱）：弓 +20%（短弓 11→13、長弓 25→30、弩 19→23）、聖杖 11→13；弓箭手生命 86→94、刀客 102→112
   R.WEAPONS = {
     pistol: { name: '手槍', cls: ['gunner'], kind: 'gun', dmg: 9, rate: 4.2, speed: 28, range: 14, mag: 12, reload: 1, spread: 0.04 },
     rifle: { name: '步槍', cls: ['gunner'], kind: 'gun', dmg: 6.5, rate: 9, speed: 32, range: 16, mag: 30, reload: 1.6, spread: 0.08 },
     shotgun: { name: '霰彈槍', cls: ['gunner'], kind: 'gun', dmg: 5.5, pellets: 6, rate: 1.3, speed: 24, range: 7, mag: 6, reload: 1.5, spread: 0.45 },
-    shortbow: { name: '短弓', cls: ['archer'], kind: 'bow', dmg: 11, rate: 3, speed: 24, range: 15 },
-    longbow: { name: '長弓', cls: ['archer'], kind: 'bow', dmg: 25, rate: 1.1, speed: 30, range: 20, pierce: 1, charge: 1 },
-    crossbow: { name: '弩', cls: ['archer'], kind: 'bow', dmg: 19, rate: 1.6, speed: 36, range: 17, pierce: 1 },
+    shortbow: { name: '短弓', cls: ['archer'], kind: 'bow', dmg: 13, rate: 3, speed: 24, range: 15 },
+    longbow: { name: '長弓', cls: ['archer'], kind: 'bow', dmg: 30, rate: 1.1, speed: 30, range: 20, pierce: 1, charge: 1 },
+    crossbow: { name: '弩', cls: ['archer'], kind: 'bow', dmg: 23, rate: 1.6, speed: 36, range: 17, pierce: 1 },
     greatsword: { name: '大劍', cls: ['warrior'], kind: 'melee', dmg: 28, rate: 1, range: 2.9, arc: 2.4, kb: 3 },
     axe: { name: '戰斧', cls: ['warrior'], kind: 'melee', dmg: 21, rate: 1.4, range: 2.5, arc: 1.9, kb: 2 },
     sword: { name: '長劍', cls: ['warrior', 'knight'], kind: 'melee', dmg: 14, rate: 2.3, range: 2.3, arc: 1.8, kb: 1 },
     staff: { name: '法杖', cls: ['mage'], kind: 'magic', dmg: 15, rate: 2.2, speed: 17, range: 14, mp: 2, splash: 1.3 },
     orb: { name: '法球', cls: ['mage'], kind: 'magic', dmg: 6.5, pellets: 3, rate: 1.8, speed: 15, range: 13, mp: 3, homing: 1, spread: 0.3 },
-    holystaff: { name: '聖杖', cls: ['priest'], kind: 'magic', dmg: 11, rate: 2.1, speed: 18, range: 13, mp: 1.5, holy: 1 },
+    holystaff: { name: '聖杖', cls: ['priest'], kind: 'magic', dmg: 13, rate: 2.1, speed: 18, range: 13, mp: 1.5, holy: 1 },
     mace: { name: '戰錘', cls: ['priest', 'knight'], kind: 'melee', dmg: 19, rate: 1.5, range: 2.2, arc: 1.7, kb: 2, stun: 0.15 },
     katana: { name: '刀', cls: ['blade'], kind: 'melee', dmg: 15, rate: 2.7, range: 2.6, arc: 1.6, kb: 1 },
     dualblades: { name: '雙刀', cls: ['blade'], kind: 'melee', dmg: 8.5, hits: 2, rate: 3.4, range: 2, arc: 1.4 },
