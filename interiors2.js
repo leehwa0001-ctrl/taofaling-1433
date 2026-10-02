@@ -177,8 +177,10 @@
   // ---------- 柏青哥 ----------
   def('pachinko', { name: '柏青哥「銀河」', sub: '店內', hint: '鋼珠的聲音吵得聽不見自己說話', w: 22, d: 14, wall: '#3A2A4A', cap: '#C9A13A', floor: ['#5A2A3A', 'floor'] }, c => {
     const { HW, HD, bx, block, lamp } = c;
-    [-4, 4].forEach(x => { for (let i = 0; i < 6; i++) { const z = -HD + 2 + i * 1.3; machine(c, x - 0.5, z, -Math.PI / 2, '#C8C0D8', pick(['#FF5A8A', '#FFE070', '#7AE0FF'])); machine(c, x + 0.5, z, Math.PI / 2, '#C8C0D8', pick(['#FF5A8A', '#FFE070', '#7AE0FF'])); } });
-    c.inter(-5.5, -1, 1.8, '找一台空著的坐下（打柏青哥）', run('pachinko')); c.inter(5.5, 1, 1.8, '找一台空著的坐下（打柏青哥）', run('pachinko'));
+    // 四排不同的機台（pachinko.js 的 R.PACHI_KINDS）：左島的外側銀河、內側海神；右島的內側赤龍、外側月影
+    const PK = R.PACHI_KINDS || {}, side = (x, face) => (x < 0 ? (face < 0 ? 'ginga' : 'kaijin') : (face < 0 ? 'sekiryu' : 'tsukikage')), lit = k => (PK[k] ? PK[k].lamp : pick(['#FF5A8A', '#FFE070', '#7AE0FF']));
+    [-4, 4].forEach(x => { for (let i = 0; i < 6; i++) { const z = -HD + 2 + i * 1.3; machine(c, x - 0.5, z, -Math.PI / 2, '#C8C0D8', lit(side(x, -1))); machine(c, x + 0.5, z, Math.PI / 2, '#C8C0D8', lit(side(x, 1))); } });
+    [[-5.5, -1, -4, -1], [-2.5, 1, -4, 1], [2.5, -1, 4, -1], [5.5, 1, 4, 1]].forEach(([px, pz, x, f]) => { const k = side(x, f), nm = PK[k] ? PK[k].name : ''; c.inter(px, pz, 1.8, nm ? '坐下來打「' + nm + '」（' + PK[k].spec + '）' : '找一台空著的坐下（打柏青哥）', PK[k] ? () => R.pachinko(k) : run('pachinko')); });
     for (let k = 0; k < 6; k++) { const x = (rnd() < 0.5 ? -5.4 : 5.4) * (rnd() < 0.5 ? 1 : 0.85), z = -HD + 2 + Math.floor(rnd() * 6) * 1.3; c.npc(x, z, x < 0 ? Math.PI / 2 : -Math.PI / 2, { name: '打柏青哥的人', look: look() }); }
     counter(c, 0, HD - 2.5, 5, { col: '#C9A13A', top: '#E8D8A0' }); guest(c, 0, HD - 3.5, 0, '景品的店員', ['「鋼珠可以換香菸、零食、玩具。也可以換這個——（金色的小牌子）。」', '「這個嘛，出去轉角的小窗口會收。我什麼都沒說。」'], { top: '#C83A3A' });
     lamp(-4, 3.0, 0, '#FF8AC8', 0.7, 10); lamp(4, 3.0, 0, '#8AE0FF', 0.7, 10); lamp(0, 3.2, HD - 3, '#FFE070', 0.6, 8);

@@ -6,7 +6,18 @@
   const FW = 240, FH = 300, CX = 120, CY = 146, RAD = 112, RB = 2.4, G = 420;
   const RAIL_A0 = Math.PI * 0.75, RAIL_A1 = Math.PI * 1.27, INNER = RAD - 9;
   const LCD = [82, 86, 158, 142], HESO = { x: 120, y: 200 }, SODE = [{ x: 52, y: 188 }, { x: 158, y: 200 }], ATK = { x0: 182, x1: 204, y: 212 };
-  const PAY = { heso: 1, sode: 2, atk: 12 }, P_WIN = 1 / 50, P_REACH = 0.14, ROUNDS = 3, ROUND_IN = 6, ROUND_T = 10;
+  const PAY = { heso: 1, sode: 2, atk: 12 }, P_REACH = 0.14, ROUND_T = 10;
+  let P_WIN = 1 / 50, ROUNDS = 3, ROUND_IN = 6;   // 照機台換（KINDS）
+  // 機台（作者 2026-10-03：柏青哥應該要有其他的機台）。盤面一樣，機率、回合、確變、顏色不一樣；期望值都差不多（每轉約 4 顆），只是起伏不同
+  // st：大當結束時 p 的機會進入確變，接下來 n 次每次 win 的機率
+  const KINDS = {
+    ginga: { name: '銀河', spec: '大當 1/50・3 回合', desc: '店裡最多的標準機台。', win: 1 / 50, rounds: 3, inn: 6, bg: ['#2A2A6A', '#141436', '#0A0A1E'], band: '#8A7AFF', plate: '#2A1A4A', lamp: '#9AD8FF' },
+    kaijin: { name: '海神', spec: '甘：大當 1/22・2 回合', desc: '中得勤、一次出得少，適合慢慢玩。', win: 1 / 22, rounds: 2, inn: 4, bg: ['#1A6A8A', '#0E2E4A', '#061624'], band: '#3AD8C8', plate: '#0E3A4A', lamp: '#7AF0E0' },
+    sekiryu: { name: '赤龍', spec: '大當 1/90・4 回合・確變', desc: '大當結束時有四成的機會進入「龍神時間」：接下來 8 次，每次 1/10 就再中一次。', win: 1 / 90, rounds: 4, inn: 6, st: { p: 0.4, n: 8, win: 1 / 10, name: '龍神時間' }, bg: ['#7A1A1A', '#3A0A0A', '#1A0404'], band: '#FFB83A', plate: '#5A0E0E', lamp: '#FFB83A' },
+    tsukikage: { name: '月影', spec: '一發台：大當 1/150・8 回合', desc: '很久才中一次，中了就是一大盒。', win: 1 / 150, rounds: 8, inn: 7, bg: ['#3A3A5A', '#1A1A2E', '#08080F'], band: '#E8E4C8', plate: '#1A1A2E', lamp: '#F4F0D0' }
+  };
+  let K = KINDS.ginga;
+  R.PACHI_KINDS = KINDS;
   const BUY = 50, BUY_GOLD = 10, CASH = 6, OUT_Y = CY + RAD - 16;
 
   // ---------- 釘子 ----------
@@ -95,7 +106,7 @@
     L.step = dt => {
       if (L.msgT > 0) L.msgT -= dt;
       if (L.jack) return;
-      if (!L.spin && L.hold > 0) { L.hold--; const win = rnd() < P_WIN, reach = win || rnd() < P_REACH; L.spin = { t: 0, win, reach, fin: pickDigits(win, reach), dur: reach ? 4.6 : 2.0 }; if (reach) ev('reach'); }
+      if (!L.spin && L.hold > 0) { L.hold--; const win = rnd() < (L.st > 0 && K.st ? K.st.win : P_WIN); if (L.st > 0) L.st--; const reach = win || rnd() < P_REACH; L.spin = { t: 0, win, reach, fin: pickDigits(win, reach), dur: reach ? 4.6 : 2.0 }; if (reach) ev('reach'); }
       const s = L.spin; if (!s) return;
       s.t += dt;
       // 左、右先停，中間最後停（聽牌的時候慢慢轉）
@@ -108,9 +119,20 @@
 
   // ---------- 畫面 ----------
   let loop = 0;
-  R.pachinko = () => {
+  // 選機台
+  const pick = () => {
+    R.sheet('<p class="kicker">站前</p><h2>柏青哥「銀河」</h2><p class="note">一排一排的機台，燈一直閃。挑一台坐下。鋼珠每一台都通用。</p>'
+      + '<div class="pachi-kinds">' + Object.keys(KINDS).map(k => { const m = KINDS[k]; return '<button type="button" class="pachi-kind" data-pk="' + k + '" style="--pk:' + m.band + ';--pkb:' + m.bg[1] + '"><b>' + m.name + '</b><small>' + m.spec + '</small><span>' + m.desc + '</span></button>'; }).join('') + '</div>',
+      '<div class="row"><button type="button" class="btn" id="pk-x">離開</button></div>');
+    document.querySelectorAll('[data-pk]').forEach(b => { b.onclick = () => R.pachinko(b.dataset.pk); });
+    document.getElementById('pk-x').onclick = R.closeSheet;
+  };
+  { const css = document.createElement('style'); css.textContent = '.pachi-kinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin:8px 0}.pachi-kind{display:grid;gap:3px;text-align:left;padding:10px 12px;border-radius:10px;border:2px solid var(--pk);background:linear-gradient(160deg,var(--pkb),#08080F);color:#F4F0E8;cursor:pointer;font:inherit}.pachi-kind b{font-size:1.15em;color:var(--pk)}.pachi-kind small{opacity:.9}.pachi-kind span{font-size:.85em;opacity:.8}.pachi-kind:hover{filter:brightness(1.2)}'; document.head.appendChild(css); }
+  R.pachinko = kind => {
+    if (!KINDS[kind]) return pick();
+    K = KINDS[kind]; P_WIN = K.win; ROUNDS = K.rounds; ROUND_IN = K.inn;
     const S = R.S; S.pachiBalls = S.pachiBalls || 0;
-    R.sheet('<p class="kicker">站前</p><h2>柏青哥「銀河」</h2><p class="note">店裡吵得聽不到自己說話。找一台空著的坐下。把手轉到適合的力道、按住就會一直打；珠子進中間的「啟動口」，液晶的數字就轉一次，三個一樣是大當——右下的大入賞口打開，往右邊打。</p>'
+    R.sheet('<p class="kicker">柏青哥「銀河」・' + K.spec + '</p><h2>' + K.name + '</h2><p class="note">店裡吵得聽不到自己說話。找一台空著的坐下。把手轉到適合的力道、按住就會一直打；珠子進中間的「啟動口」，液晶的數字就轉一次，三個一樣是大當——右下的大入賞口打開，往右邊打。</p>'
       + '<div class="pachi"><canvas id="pc-cv" width="' + FW + '" height="' + FH + '"></canvas><div class="pachi-ui">'
       + '<div class="pachi-st">持珠 <b id="pc-n">0</b> 顆<small id="pc-info"></small></div>'
       + '<label class="pachi-pow">把手的力道<input type="range" id="pc-pow" min="0" max="100" value="38"><span><i>← 左邊打</i><i>右邊打 →</i></span></label>'
@@ -141,7 +163,11 @@
       M.atkOpen = true; J.t += dt;
       if (J.inn >= ROUND_IN || J.t >= ROUND_T) {
         M.atkOpen = false;
-        if (J.round >= ROUNDS) { L.jack = null; L.msg = '大當結束'; L.msgT = 2; info('大當結束。大入賞口一共進了 ' + hits + ' 顆。'); hits = 0; R.save(); }
+        if (J.round >= ROUNDS) {
+          L.jack = null; L.msg = '大當結束'; L.msgT = 2; info('大當結束。大入賞口一共進了 ' + hits + ' 顆。'); hits = 0; R.save();
+          if (K.st && rnd() < K.st.p) { L.st = K.st.n; L.msg = K.st.name + '！'; L.msgT = 3; info('進入' + K.st.name + '：接下來 ' + K.st.n + ' 次很容易再中。'); R.sfx && R.sfx('chest'); }
+          else if (L.st) L.st = 0;
+        }
         else { J.round++; J.gap = 1.2; }
       }
     };
@@ -149,11 +175,11 @@
     const base = document.createElement('canvas'); base.width = FW; base.height = FH;
     { const b = base.getContext('2d');
       b.fillStyle = '#B8B4C4'; b.fillRect(0, 0, FW, FH); b.fillStyle = '#8A8698'; for (let i = 0; i < FH; i += 4) b.fillRect(0, i, FW, 1);
-      const gr = b.createRadialGradient(CX, CY - 30, 10, CX, CY, RAD); gr.addColorStop(0, '#2A2A6A'); gr.addColorStop(0.7, '#141436'); gr.addColorStop(1, '#0A0A1E');
+      const gr = b.createRadialGradient(CX, CY - 30, 10, CX, CY, RAD); gr.addColorStop(0, K.bg[0]); gr.addColorStop(0.7, K.bg[1]); gr.addColorStop(1, K.bg[2]);
       b.fillStyle = gr; b.beginPath(); b.arc(CX, CY, RAD, 0, Math.PI * 2); b.fill();
       // 銀河帶與星星
       b.save(); b.beginPath(); b.arc(CX, CY, RAD, 0, Math.PI * 2); b.clip();
-      b.globalAlpha = 0.25; b.fillStyle = '#8A7AFF'; b.beginPath(); b.ellipse(CX, CY - 10, RAD, 22, -0.5, 0, Math.PI * 2); b.fill(); b.globalAlpha = 1;
+      b.globalAlpha = 0.25; b.fillStyle = K.band; b.beginPath(); b.ellipse(CX, CY - 10, RAD, 22, -0.5, 0, Math.PI * 2); b.fill(); b.globalAlpha = 1;
       for (let i = 0; i < 140; i++) { const sx = Math.random() * FW, sy = Math.random() * FH; b.fillStyle = ['#FFFFFF', '#FFE08A', '#9AD8FF'][i % 3]; b.fillRect(sx | 0, sy | 0, 1, 1); }
       b.restore();
       // 外框的鍍鉻
@@ -162,7 +188,7 @@
       // 發射軌道的內軌
       b.strokeStyle = '#D8D6E2'; b.lineWidth = 1.5; b.beginPath(); b.arc(CX, CY, INNER, RAIL_A0 - 0.03, RAIL_A1); b.stroke();
       // 機台名字
-      b.fillStyle = '#2A1A4A'; b.fillRect(70, 262, 100, 30); b.fillStyle = '#FFE08A'; b.font = 'bold 16px sans-serif'; b.textAlign = 'center'; b.fillText('銀　河', CX, 283);
+      b.fillStyle = K.plate; b.fillRect(70, 262, 100, 30); b.fillStyle = '#FFE08A'; b.font = 'bold 16px sans-serif'; b.textAlign = 'center'; b.fillText(K.name.split('').join('　'), CX, 283);
       // 釘子
       pins.forEach(p => { b.fillStyle = '#5A5A6A'; b.fillRect(Math.round(p.x) - 1, Math.round(p.y), 2, 2); b.fillStyle = '#F0F0F8'; b.fillRect(Math.round(p.x) - 1, Math.round(p.y) - 1, 2, 1); });
       // 啟動口、袖入賞口
@@ -173,7 +199,7 @@
       x.drawImage(base, 0, 0);
       const t = M.t, J = L.jack;
       // 外框的燈：平常慢慢閃，轉數字的時候跑馬燈，大當整圈紅金一起閃
-      for (let i = 0; i < 28; i++) { const a = i / 28 * Math.PI * 2, on = J ? (Math.floor(t * 8) + i) % 2 : L.spin ? (Math.floor(t * 14) % 28) === i || (Math.floor(t * 14) + 14) % 28 === i : (Math.floor(t * 2) + i) % 7 === 0; x.fillStyle = on ? (J ? (i % 2 ? '#FF3A3A' : '#FFE08A') : '#9AD8FF') : '#4A4858'; x.fillRect(Math.round(CX + (RAD + 6) * Math.cos(a)) - 1, Math.round(CY + (RAD + 6) * Math.sin(a)) - 1, 3, 3); }
+      for (let i = 0; i < 28; i++) { const a = i / 28 * Math.PI * 2, on = J ? (Math.floor(t * 8) + i) % 2 : L.spin ? (Math.floor(t * 14) % 28) === i || (Math.floor(t * 14) + 14) % 28 === i : (Math.floor(t * 2) + i) % 7 === 0; x.fillStyle = on ? (J ? (i % 2 ? '#FF3A3A' : '#FFE08A') : L.st > 0 ? '#FF5A5A' : K.lamp) : '#4A4858'; x.fillRect(Math.round(CX + (RAD + 6) * Math.cos(a)) - 1, Math.round(CY + (RAD + 6) * Math.sin(a)) - 1, 3, 3); }
       // 風車
       MILLS.forEach(m => { x.save(); x.translate(m.x, m.y); x.rotate(m.a); x.fillStyle = '#E8E6F0'; for (let k = 0; k < 4; k++) { x.rotate(Math.PI / 2); x.fillRect(-0.5, -4.5, 1.5, 4); } x.fillStyle = '#C83A3A'; x.fillRect(-1, -1, 2, 2); x.restore(); });
       // 液晶
@@ -182,7 +208,7 @@
       const COLS = ['#FF5A5A', '#FFE08A', '#7AE0FF', '#9AFF8A', '#FF9AE0', '#FFFFFF', '#FFB83A', '#C8A8FF', '#FF5A5A'];
       L.show.forEach((d, i) => { const cx2 = LCD[0] + 13 + i * 25, spin = L.spin && !(L.spin.t >= [0.8, L.spin.dur, 1.3][i]); x.fillStyle = '#14142A'; x.fillRect(cx2 - 10, LCD[1] + 10, 20, 28); x.fillStyle = spin ? '#8A8AA8' : COLS[d - 1]; x.fillText(String(d), cx2, LCD[1] + 32); });
       x.font = '9px sans-serif'; x.fillStyle = '#FFE08A';
-      const msg = J ? (J.gap > 0 ? '第 ' + J.round + ' 回合' : '第 ' + J.round + '／' + ROUNDS + ' 回合　往右打 →') : L.msgT > 0 ? L.msg : L.spin && L.spin.reach && L.spin.t > 1.3 ? '聽牌！' : '銀河';
+      const msg = J ? (J.gap > 0 ? '第 ' + J.round + ' 回合' : '第 ' + J.round + '／' + ROUNDS + ' 回合　往右打 →') : L.msgT > 0 ? L.msg : L.spin && L.spin.reach && L.spin.t > 1.3 ? '聽牌！' : L.st > 0 && K.st ? K.st.name + '・剩 ' + L.st + ' 次' : K.name;
       x.fillText(msg, CX, LCD[3] - 6);
       // 保留燈
       for (let i = 0; i < 4; i++) { x.fillStyle = i < L.hold ? '#FF5A5A' : '#3A3848'; x.fillRect(HESO.x - 11 + i * 6, HESO.y + 16, 4, 3); }
