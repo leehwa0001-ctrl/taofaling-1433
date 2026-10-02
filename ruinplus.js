@@ -88,7 +88,7 @@
         const r = rooms[i % rooms.length], [x, z] = R.roomPoint(r, {}), [nm, top, lines] = pick(CIV), c = npc(x, z, { top, hair: pick(HAIRS), cloak: pick(TOPS) }, { pool: 'civ' + i, room: r, speed: 1.1 + rnd() * 0.5 });
         F.rpInter.push({ get x() { return c.x; }, get z() { return c.z; }, r: 1.6, label: '和' + nm + '說話', act: () => say(nm, [pick(lines)]) });
       }
-      R.banner(R.floorLabel(run), '這一層開放給登記的民眾，沒有遺跡生物。再往下才會遇到。');
+      if (!F.zoo) R.banner(R.floorLabel(run), '這一層開放給登記的民眾，沒有遺跡生物。再往下才會遇到。');   // 動物園（zoo.js）另外講
     }
   };
   const lf1 = R.loadFloor;
