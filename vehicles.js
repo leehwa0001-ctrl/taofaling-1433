@@ -42,6 +42,8 @@
     return g;
   };
 
+  V.carMesh = carMesh; V.MODELS = MODELS; V.box = box; V.lam = lam;   // 巡邏車、路障（pursuit.js）也用
+
   // ---------- 停著的車 ----------
   const blocked = (x, z, r) => R.col.list.some(b => b.on !== false && b.tag !== 'deco' && b.tag !== 'veh' && x > b.x0 - r && x < b.x1 + r && z > b.z0 - r && z < b.z1 + r);
   const freeNear = (x, z, r) => { for (let d = 0; d <= 10; d += 0.5) for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2, nx = x + Math.sin(a) * d, nz = z + Math.cos(a) * d; if (!blocked(nx, nz, r)) return [nx, nz]; } return null; };
