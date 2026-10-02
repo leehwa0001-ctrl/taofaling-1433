@@ -46,6 +46,18 @@
   // 太鼓：音高往下掉的正弦＋一點噪音
   const taiko = (t, v, dest, f) => { sweep('sine', f || 120, 42, t, 0.42, v, dest); noiseHit(t, 0.08, v * 0.4, dest, 'lowpass', 900); };
   const woodTick = (t, v, dest) => { sweep('sine', 1700, 1500, t, 0.05, v, dest); };
+  // 篠笛（晚上當尺八用，吹低一點）：正弦為主、帶二倍泛音，音頭從下面滑上來，有顫音和氣音
+  const fue = (m, t, d, v, dest, breath) => {
+    const f = mtof(m), g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(v, t + 0.07); g.gain.setValueAtTime(v, t + Math.max(0.08, d - 0.14)); g.gain.linearRampToValueAtTime(0.0001, t + d); g.connect(dest); toRev(g, 0.65);
+    const o = osc('sine', f * 0.97, t, t + d + 0.05, g); o.frequency.exponentialRampToValueAtTime(f, t + 0.09);
+    const h = ctx.createGain(); h.gain.value = 0.18; h.connect(g); osc('triangle', f * 2, t, t + d + 0.05, h);
+    const vib = ctx.createOscillator(), vg = ctx.createGain(); vib.frequency.value = 5.2; vg.gain.setValueAtTime(0, t); vg.gain.linearRampToValueAtTime(f * 0.012, t + Math.min(d, 0.6)); vib.connect(vg); vg.connect(o.frequency); vib.start(t); vib.stop(t + d + 0.05);
+    noiseHit(t, Math.min(0.3, d), v * (breath || 0.3), dest, 'bandpass', Math.min(6000, f * 2.2), 2);
+  };
+  // 三味線：鋸齒波很快收掉，兩根弦稍微走音，加一點「さわり」的沙沙聲
+  const shami = (m, t, v, dest) => { const f = mtof(m), lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.setValueAtTime(f * 9, t); lp.frequency.exponentialRampToValueAtTime(f * 2, t + 0.16); const g = gainAt(t, 0.002, v, 0.5, dest); lp.connect(g); toRev(g, 0.3); osc('sawtooth', f, t, t + 0.55, lp); osc('sawtooth', f, t, t + 0.55, lp, 8); noiseHit(t, 0.025, v * 0.6, dest, 'highpass', 3200); };
+  // 鉦（摺鉦）：短短的金屬聲
+  const kane = (t, v, dest) => { noiseHit(t, 0.09, v, dest, 'bandpass', 5600, 8); const g = gainAt(t, 0.002, v * 0.6, 0.18, dest); osc('sine', 3520, t, t + 0.22, g); osc('sine', 4870, t, t + 0.2, g); };
 
   // ---------- 音樂 ----------
   const rng = seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let x = Math.imul(seed ^ seed >>> 15, 1 | seed); x = x + Math.imul(x ^ x >>> 7, 61 | x) ^ x; return ((x ^ x >>> 14) >>> 0) / 4294967296; };
@@ -69,25 +81,31 @@
       if (st % 2 === 0 && (st / 2) % 4 !== 3) koto(SC.miyako[(st / 2 + bar * 3) % 5] - 12, t, d * 3, 0.06, L, 0.6);
       phrase(SC.miyako, bar, 3, 62).forEach(([k, m, len]) => { if (k === st && bar % 2 === 1) koto(m, t, d * len * 0.9, 0.09, L); });
     } },
-    day: { bpm: 88, bus: null, step(s, t, d, L) {
-      const bar = Math.floor(s / 16), st = s % 16, ch = [[50, 57, 62, 66], [47, 54, 59, 62], [43, 50, 55, 59], [45, 52, 57, 61]][bar % 4];
-      if (st === 0) { pad(ch.slice(1), t, d * 16, 0.035, L, 1100); bass(ch[0] - 12 + 12, t, d * 6, 0.12, L); }
-      if (st === 8) bass(ch[0] + 7, t, d * 6, 0.1, L);
-      if (st % 4 === 2) woodTick(t, 0.025, L);
-      phrase(SC.yo, bar, daySeed(), 62).forEach(([k, m, len]) => { if (k === st) koto(m, t, d * len * 0.95, 0.1, L); });
-      if (st % 4 === 0 && bar % 8 >= 4) koto(ch[2] + 12, t, d * 3, 0.035, L);
+    // 白天：篠笛的旋律、三味線的底、太鼓和鉦（像祭典的囃子，但慢一點、輕一點）；墊底是空五度，不用西洋的三和弦
+    day: { bpm: 92, bus: null, step(s, t, d, L) {
+      const bar = Math.floor(s / 16), st = s % 16, root = [50, 50, 55, 57][bar % 4];
+      if (st === 0 && bar % 2 === 0) pad([root - 12, root - 5], t, d * 32, 0.022, L, 600);
+      if (st === 0) taiko(t, 0.16, L); if (st === 8) taiko(t, 0.1, L, 110); if (st === 6 || (st === 14 && bar % 2)) taiko(t, 0.06, L, 140);
+      if (st === 4 || st === 12) kane(t, 0.03, L);
+      if ([0, 3, 6, 8, 11, 14].includes(st)) shami(SC.yo[[0, 2, 3, 0, 1, 3][[0, 3, 6, 8, 11, 14].indexOf(st)]] - 12 + (root - 50) % 12, t, 0.045, L);
+      const sec = Math.floor(bar / 8) % 2;
+      phrase(SC.yo, bar, daySeed(), 62).forEach(([k, m, len]) => { if (k !== st) return; if (sec === 0) fue(m + 12, t, d * len * 0.95, 0.06, L); else koto(m, t, d * len * 0.95, 0.09, L); });
+      if (sec === 1 && st % 4 === 2) koto(SC.yo[(bar + st) % 5] + 12, t, d * 2, 0.03, L);
     } },
-    interior: { bpm: 80, bus: null, step(s, t, d, L) {
-      const bar = Math.floor(s / 16), st = s % 16, ch = [[50, 57, 62], [43, 55, 59], [45, 52, 57], [50, 54, 57]][bar % 4];
-      if (st === 0) { pad(ch, t, d * 16, 0.03, L, 800); bass(ch[0] - 12, t, d * 8, 0.08, L); }
-      if (st % 4 === 0) koto(ch[(st / 4) % 3] + 12, t, d * 4, 0.05, L);
-      phrase(SC.yo, bar, daySeed() + 3, 62).forEach(([k, m, len]) => { if (k === st && bar % 2 === 0) koto(m, t, d * len, 0.06, L); });
+    // 屋裡：琴的分散和弦、輕輕的三味線，沒有鼓
+    interior: { bpm: 76, bus: null, step(s, t, d, L) {
+      const bar = Math.floor(s / 16), st = s % 16, root = [50, 55, 57, 50][bar % 4];
+      if (st === 0) pad([root - 12, root - 5], t, d * 16, 0.02, L, 500);
+      if (st % 2 === 0) koto(SC.yo[(st / 2 + bar * 2) % 5] + (st % 4 ? 12 : 0) + (root - 50) % 12, t, d * 3, 0.04, L);
+      if (st === 0 || st === 10) shami(root - 12, t, 0.035, L);
+      phrase(SC.yo, bar, daySeed() + 3, 62).forEach(([k, m, len]) => { if (k === st && bar % 2 === 0) koto(m + 12, t, d * len, 0.055, L); });
     } },
-    night: { bpm: 62, bus: null, step(s, t, d, L) {
+    // 晚上：陰音階，吹得很低很慢的笛子（像尺八）、零星的琴、風鈴
+    night: { bpm: 58, bus: null, step(s, t, d, L) {
       const bar = Math.floor(s / 16), st = s % 16;
-      if (st === 0) { pad(bar % 2 ? [45, 52, 57] : [46, 53, 58], t, d * 16, 0.03, L, 600); bass(bar % 2 ? 33 : 34, t, d * 12, 0.09, L, 'sine'); }
-      if (st % 4 === 0) koto(SC.in[(bar * 2 + st / 4) % 5], t, d * 5, 0.05, L, 0.7);
-      phrase(SC.in, bar, daySeed() + 11, 57).forEach(([k, m, len]) => { if (k === st && bar % 4 !== 1) koto(m + 12, t, d * len * 1.2, 0.07, L, 0.7); });
+      if (st === 0 && bar % 2 === 0) pad([45, 52], t, d * 32, 0.022, L, 500);
+      if (st % 8 === 0 && bar % 2) koto(SC.in[(bar * 2 + st / 8) % 5], t, d * 6, 0.045, L, 0.8);
+      phrase(SC.in, bar, daySeed() + 11, 57).forEach(([k, m, len]) => { if (k === st && bar % 4 !== 3) fue(m, t, d * len * 1.1, 0.05, L, 0.55); });
       if (st === 8 && Math.random() < 0.3) bell(SC.in[Math.floor(Math.random() * 5)] + 24, t, 0.03, L, 3);
     } },
     // 遺跡：持續音（另外開著，在 drone() 裡）＋零星的回音、水滴；心跳和戰鬥層照緊張程度
