@@ -171,7 +171,7 @@
     koban: [525, 340], busStop: [[672, 346], [694, 346]], clockPillar: [590, 330],
     // 新的：錢湯、寺、公寓（公團住宅）、旅館、柏青哥、電玩店、卡拉 OK、喫茶店、書店
     bath: [362, 676], temple: [470, 906], danchi: [[280, 470], [280, 500]], hotel: [404, 372], pachinko: [512, 368], game: [356, 372],
-    mahjong: [440, 360]   // 雀莊「東風」（mahjong.js）
+    mahjong: [440, 360], karaoke: [660, 360]   // 雀莊「東風」（mahjong.js）、卡拉 OK「歌聲」（karaoke.js）
   };
   // 河西的特別區域（suburbs.js）
   C.Z = { ruins: [16, 268, 176, 396], school: [12, 512, 76, 632], park: [104, 512, 170, 572], grove: [104, 772, 170, 812], grave: [12, 772, 76, 870], market: [104, 886, 176, 935] };
@@ -202,7 +202,7 @@
     guild: [32, 24], board: [8, 4], news: [8, 4], store: [18, 16], pharmacy: [18, 14], tavern: [22, 19], exchange: [8, 7], shrine: [30, 34], smith: [42, 30], suga: [14, 10],
     coach: [40, 24], firetower: [8, 8], clock: [12, 12], factory: [44, 46], farmhouse: [18, 14], dexTrade: [20, 16], dexParts: [16, 14], cafe: [22, 16], fishMarket: [28, 22], beachHut: [10, 8],
     pref: [70, 44], guardHQ: [34, 26], bank: [48, 34], hospital: [62, 40], post: [30, 22], paper: [30, 24], theater: [40, 30], dept: [70, 56],
-    koban: [8, 8], clockPillar: [18, 8], bath: [30, 26], temple: [56, 44], hotel: [38, 30], pachinko: [40, 30], game: [32, 28], mahjong: [24, 18]
+    koban: [8, 8], clockPillar: [18, 8], bath: [30, 26], temple: [56, 44], hotel: [38, 30], pachinko: [40, 30], game: [32, 28], mahjong: [24, 18], karaoke: [20, 16]
   };
   C.FS = FS; C._occ = occ; C._freeR = freeR;
   setR(C.COAST - 1, 0, 1000, 1000, 2); setR(948, 110, C.COAST, 206, 3);   // 海、海水浴場的沙灘：不蓋房子

@@ -152,6 +152,7 @@
     else if (w.run && vis('run')) name = 'ruin';
     else if (vis('hub')) name = 'interior';
     else if (w.town && vis('run')) { if (w.inside) name = 'interior'; else { const h = R.hourNow ? ((R.hourNow() % 24) + 24) % 24 : 12; name = h >= 6 && h < 18.5 ? 'day' : 'night'; } }
+    if (R.musicHold) name = null;   // 卡拉 OK 唱歌的時候先停（karaoke.js）
     setScene(name);
     // 緊張程度：附近醒著的遺跡生物；核心或領主在附近就是最大
     if (w.run && w.P) { let n = 0; boss = false; (w.enemies || []).forEach(e => { if (e.dead || !e.aggro || e.def.human && !e.aggro) return; const dd = Math.hypot(e.x - w.P.x, e.z - w.P.z); if (dd < 16) { n += e.def.elite ? 3 : 1; if (e.def.boss) boss = true; } }); threat = boss ? 1 : Math.min(1, n / 5); } else { threat = 0; boss = false; }
