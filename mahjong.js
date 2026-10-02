@@ -463,8 +463,9 @@
   // 自動的部分一步一步跑（每一步隔一下，看得到電腦在打牌）
   const pump = () => {
     clearTimeout(timer); refresh();
-    if (!G || !['draw', 'ai', 'claims', 'auto'].includes(G.phase) && !(G.phase === 'you' && G.autoYou)) return;
-    const ms = { draw: 90, ai: 420, claims: 120, auto: 500, you: 300 }[G.phase] * SPEED;
+    // aiDiscard：電腦吃、碰之後打一張（以前漏了這一個，電腦一吃碰整桌就停住）
+    if (!G || !['draw', 'ai', 'aiDiscard', 'claims', 'auto'].includes(G.phase) && !(G.phase === 'you' && G.autoYou)) return;
+    const ms = { draw: 90, ai: 420, aiDiscard: 520, claims: 120, auto: 500, you: 300 }[G.phase] * SPEED;
     timer = setTimeout(() => { if (!alive() || !G) return; step(); pump(); }, ms);
   };
   const clickAt = (mx, my) => {
