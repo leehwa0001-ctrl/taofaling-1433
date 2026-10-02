@@ -30,6 +30,9 @@ button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--gold);outl
 .t-eye{width:min(300px,62vw);height:auto;filter:drop-shadow(0 0 30px rgba(184,50,42,.35))}
 .t-eye .pupil{transform-origin:150px 90px;animation:look 7s ease-in-out infinite}
 @keyframes look{0%,100%{transform:translate(0,0)}30%{transform:translate(-14px,2px)}60%{transform:translate(12px,-3px)}}
+/* 佩特拉核心的像素立繪（titleart.js）；內容比畫面高的時候不要把最上面切掉 */
+.t-core{width:min(480px,88vw);image-rendering:pixelated;margin:-6px 0 -14px}
+#title{justify-content:flex-start}#title .t-wrap{margin-block:auto}
 .t-kicker{font-size:12px;letter-spacing:.28em;color:var(--dim)}
 .t-name{margin:0;font-family:var(--serif);font-weight:900;font-size:clamp(46px,11vw,96px);letter-spacing:.12em;line-height:1.05}
 .t-name small{display:block;font-size:.3em;letter-spacing:.5em;color:var(--gold);margin-top:10px;font-weight:700}
@@ -755,6 +758,7 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <script src="claw.js"></script>
 <script src="mahjong.js"></script>
 <script src="karaoke.js"></script>
+<script src="titleart.js"></script>
 <script src="townlife.js"></script>
 <script src="vigilance.js"></script>
 <script src="punish.js"></script>
