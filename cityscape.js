@@ -200,7 +200,14 @@
     { const bx = 540, by = 412, w = C.roads[0].w, z0 = WZ(by - w / 2 + 2), z1 = WZ(by + w / 2 - 2), x = WX(bx), H = 5.4, dk = lam('#4A6A8A', { tex: 0 });
       HB.add(G3.box, dk, x, H, (z0 + z1) / 2, 2.2, 0.35, z1 - z0); [-1, 1].forEach(o => HB.add(G3.box, M.rail, x + o * 1.05, H + 0.55, (z0 + z1) / 2, 0.08, 0.9, z1 - z0));
       [z0, z1].forEach((zz, i) => { const sd = i ? 1 : -1; HB.add(G3.box, dk, x - 1.8, H / 2, zz, 0.35, H, 0.35); HB.add(G3.box, dk, x + 1.8, H / 2, zz, 0.35, H, 0.35); block(x - 2.1, x - 1.5, zz - 0.2, zz + 0.2, 'deco'); block(x + 1.5, x + 2.1, zz - 0.2, zz + 0.2, 'deco');
-        HB.add(G3.box, dk, x + 3.0, H / 2, zz + sd * 0.6, 1.6, 0.25, 8.6, Math.atan2(H, 8) * -sd, 0, 0); });
+        // 樓梯（作者：天橋的樓梯像一塊斜板插進旁邊）：沿著人行道、和馬路平行，一階一階往下；北邊往東下、南邊往西下（錯開）；平台、扶手
+        const dir = i ? -1 : 1, zc = zz + sd * 0.55, n = 16, rise = H / n, run = 0.5, x0s = x + dir * 1.15;
+        HB.add(G3.box, dk, x + dir * 0.4, H, zc, 1.6, 0.35, 1.5);   // 平台：天橋接樓梯的地方
+        for (let k = 0; k < n; k++) { const top = H - (k + 1) * rise + rise, xs = x0s + dir * (k + 0.5) * run; HB.add(G3.box, k % 2 ? dk : M.rail, xs, top / 2, zc, run, top, 1.4); }
+        const len = n * run, ang = Math.atan2(H, len), mx = x0s + dir * len / 2;
+        [-0.72, 0.72].forEach(o => HB.add(G3.box, M.rail, mx, H / 2 + 0.9, zc + o, Math.hypot(len, H), 0.06, 0.06, 0, 0, -dir * ang));   // 扶手
+        // 只擋低的那一段（高的地方人可以從底下走過）
+        block(Math.min(x0s + dir * len * 0.62, x0s + dir * len), Math.max(x0s + dir * len * 0.62, x0s + dir * len), zc - 0.7, zc + 0.7, 'deco'); });
       sign(x, H + 1.3, (z0 + z1) / 2 + 0.01, 0, '站前天橋', '#2E4A6A', 2.0); sign(x, H + 1.3, (z0 + z1) / 2 - 0.01, Math.PI, '國道一號', '#2E4A6A', 2.0); }
 
     // ---------- 街角的小東西：販賣機、電話亭、郵筒、腳踏車、雪堆 ----------
