@@ -1,0 +1,16 @@
+{
+  "name": "taofaling-1433-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "討伐令 1433 的多人連線伺服器（只轉送訊息）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

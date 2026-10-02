@@ -767,6 +767,7 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <div id="fade" hidden></div>
 <div class="hub-msg" id="hub-msg" role="status" aria-live="polite"></div>
 
+<script src="net-rng.js"></script><!-- 多人連線的種子亂數：一定要在最前面 -->
 <script src="data.js"></script>
 <script src="mapdata.js"></script>
 <script src="map.js"></script>
@@ -852,4 +853,5 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <script src="compensation.js"></script><!-- 限時補償：下一版做完就刪掉這一行和 compensation.js -->
 <script src="streetlife.js"></script>
 <script src="tidy.js"></script>
+<script src="net.js"></script>
 <script src="main.js"></script>
