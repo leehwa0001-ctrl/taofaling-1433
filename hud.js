@@ -16,7 +16,7 @@
   // ---------- 狀態列 ----------
   R.hudFloor = () => {
     const run = W.run;
-    $('r-where').innerHTML = '<b>' + R.esc(run.site.name) + '</b><small>' + R.esc(run.grade.name) + '・' + R.esc(R.TYPES[run.type] ? R.TYPES[run.type].name : '') + '・第 ' + (run.floor + 1) + '／' + run.floors + ' 層' + (run.env ? '・' + R.ENVS[run.env].name : '') + '</small>';
+    $('r-where').innerHTML = '<b>' + R.esc(run.site.name) + '</b><small>' + R.esc(run.grade.name) + '・' + R.esc(R.TYPES[run.type] ? R.TYPES[run.type].name : '') + '・' + (R.floorLabel ? R.floorLabel(run) : '第 ' + (run.floor + 1) + '／' + run.floors + ' 層') + (run.env ? '・' + R.ENVS[run.env].name : '') + '</small>';
     if (W.P) { const sk = R.SKILLS[W.P.skill]; $('r-skill-n').textContent = sk.name; $('r-skill').title = sk.name + '：' + sk.desc + '（魔力 ' + sk.mp + '）'; }
     R.drawMinimap(true);
   };

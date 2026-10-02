@@ -88,7 +88,7 @@
     R.lockBarriers = [];
     arrive.visited = true;
     R.hudFloor(); R.hudTick(1);
-    R.banner((run.grade.floor0 && f === 0 ? '第 0 層・' : '') + run.site.name, '第 ' + (f + 1) + ' 層／共 ' + run.floors + ' 層' + (run.env ? '・' + R.ENVS[run.env].name + '環境' : ''));
+    R.banner(run.site.name, (R.floorLabel ? R.floorLabel(run) : '第 ' + (f + 1) + ' 層／共 ' + run.floors + ' 層') + (run.env ? '・' + R.ENVS[run.env].name + '環境' : ''));
     R.placeCam(null);
     if (f === 0 && (R.S.stats.runs || 0) <= 1 && !R.S.stats.helped) { R.S.stats.helped = 1; R.save(); setTimeout(() => R.helpSheet && R.helpSheet(), 600); }
   };

@@ -1,5 +1,7 @@
 // 討伐令 1433：遺跡生物全部加強、後期壓住玩家的強度；領主體多幾種攻擊（作者：玩家到後面都太強了）
-// - 所有遺跡生物：生命 ×1.35、傷害 ×1.25 起跳；越深的樓層多一點；克森特級再多一成五、跑快一點。
+// - 所有遺跡生物：照分級和深度（作者：前期太難、難度要和深度掛鉤）。淺層、低分級比較溫和，越往下越強：
+//   生命 = 分級的底（哈米莉亞・阿彌勒 0.8、摩爾斯 1.0、克森特 1.25、卡索 1.45）× (1 + 0.12 × 深度)；傷害的底 0.6／0.62／0.9／1.1／1.25 × (1 + 0.1 × 深度)。
+//   深度從第 1 層算起（有第 0 層的遺跡，第 0 層是休息區）。克森特級以上跑快一點。
 // - 跟著玩家變強：職業等級超過這個分級該有的等級（哈米莉亞 4、阿彌勒 10、摩爾斯 17、克森特 25），每多一級生命 +6%、傷害 +4%（最多 +150%／+100%）；
 //   身上的裝備等級比這一層的寶箱高，每多一級再 +3%（最多 +45%）。
 // - 領主體：巢織蛛多了卵雨、蛛網陣、狂亂；地出巨骸多了骨雨、地底的手、咆哮的震波；千節蟲會鑽地、蜷身衝撞、吐酸、放腳刺；
@@ -7,7 +9,8 @@
 // 這個檔案要在 monsters2.js 前面載入（鐵齒鼠成群生出來的那幾隻才會一起加強）。
 (function (R) {
   const W = () => R.W, rnd = Math.random, wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
-  const EXP = { 1: 4, 2: 10, 3: 17, 4: 25 };
+  const EXP = { 1: 4, 2: 10, 3: 17, 4: 25, 5: 32 };
+  const BASE_H = { 1: 0.8, 2: 0.8, 3: 1.0, 4: 1.25, 5: 1.45 }, BASE_D = { 1: 0.6, 2: 0.62, 3: 0.9, 4: 1.1, 5: 1.25 };
 
   // ---------- 全部加強 ----------
   const gearLv = () => { const S = R.S; if (!S || !R.equipped) return 0; const eq = R.equipped(S.cls), its = R.GEAR_KEYS.map(k => eq[k]).filter(Boolean); return its.length ? its.reduce((a, it) => a + it.ilvl, 0) / its.length : 0; };
@@ -16,8 +19,9 @@
     const e = se(id, x, z, room, o), run = W().run; if (!e || !run) return e;
     const g = run.grade.lv || 1, f = run.floor || 0, S = R.S, lv = S && S.classes[S.cls] ? S.classes[S.cls].lv : 1;
     const over = Math.max(0, lv - (EXP[g] || 10)), gearOver = Math.max(0, gearLv() - (g * 2 + f));
-    const hpK = 1.35 * (1 + 0.06 * f) * (1 + Math.min(1.5, over * 0.06)) * (1 + Math.min(0.45, gearOver * 0.03)) * (g >= 4 ? 1.15 : 1);
-    const dmgK = 1.25 * (1 + 0.04 * f) * (1 + Math.min(1, over * 0.04)) * (1 + Math.min(0.45, gearOver * 0.03)) * (g >= 4 ? 1.1 : 1);
+    const dep = Math.max(0, f - (run.grade.floor0 ? 1 : 0));
+    const hpK = (BASE_H[g] || 1.45) * (1 + 0.12 * dep) * (1 + Math.min(1.5, over * 0.06)) * (1 + Math.min(0.45, gearOver * 0.03));
+    const dmgK = (BASE_D[g] || 1.25) * (1 + 0.1 * dep) * (1 + Math.min(1, over * 0.04)) * (1 + Math.min(0.45, gearOver * 0.03));
     e.hp *= hpK; e.hpMax *= hpK; e.dmg *= dmgK; if (g >= 4) e.speed *= 1.06;
     return e;
   };
