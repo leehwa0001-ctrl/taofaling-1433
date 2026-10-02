@@ -28,8 +28,6 @@ button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--gold);outl
 #title{align-items:center;justify-content:center;padding:24px 16px;background:radial-gradient(90% 70% at 50% 42%,#2A1E2A 0%,var(--bg) 70%);overflow:auto}
 .t-wrap{width:min(760px,100%);display:grid;gap:18px;justify-items:center;text-align:center}
 .t-eye{width:min(300px,62vw);height:auto;filter:drop-shadow(0 0 30px rgba(184,50,42,.35))}
-.t-eye .pupil{transform-origin:150px 90px;animation:look 7s ease-in-out infinite}
-@keyframes look{0%,100%{transform:translate(0,0)}30%{transform:translate(-14px,2px)}60%{transform:translate(12px,-3px)}}
 /* 佩特拉核心的像素立繪（titleart.js）；內容比畫面高的時候不要把最上面切掉 */
 .t-core{width:min(480px,88vw);image-rendering:pixelated;margin:-6px 0 -14px}
 #title{justify-content:flex-start}#title .t-wrap{margin-block:auto}
@@ -622,15 +620,7 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <!-- 標題 -->
 <section class="screen" id="title">
   <div class="t-wrap">
-    <svg class="t-eye" viewBox="0 0 300 180" aria-hidden="true">
-      <path d="M40 90C20 60 6 44 0 20C40 30 60 50 76 70Z" fill="#3A2A30" stroke="#6A4A50" stroke-width="2"/>
-      <path d="M260 90C280 60 294 44 300 20C260 30 240 50 224 70Z" fill="#3A2A30" stroke="#6A4A50" stroke-width="2"/>
-      <path d="M50 110C28 130 18 150 14 176C44 160 62 140 78 120Z" fill="#2E2228" stroke="#5A3E44" stroke-width="2"/>
-      <path d="M250 110C272 130 282 150 286 176C256 160 238 140 222 120Z" fill="#2E2228" stroke="#5A3E44" stroke-width="2"/>
-      <ellipse cx="150" cy="90" rx="86" ry="72" fill="#EDE0D6"/>
-      <path d="M78 70C100 76 110 60 130 66M76 112C96 104 112 122 128 112M222 70C200 78 190 60 170 66M224 112C204 104 188 124 172 112" fill="none" stroke="#B8322A" stroke-width="2" opacity=".7"/>
-      <g class="pupil"><circle cx="150" cy="90" r="38" fill="#8A1A2A"/><circle cx="150" cy="90" r="18" fill="#1A0A0E"/><circle cx="160" cy="80" r="6" fill="#FFFFFF" opacity=".85"/></g>
-    </svg>
+    <div class="t-eye" aria-hidden="true"></div><!-- 佩特拉核心的像素立繪（titleart.js 換成 canvas）；原本的平面 SVG 眼球刪掉了（作者 2026-10-03） -->
     <div class="t-kicker">《艾菲爾斯特——公會特殊討伐令－遺跡》</div>
     <h1 class="t-name">討伐令 1433<small>昭旭聯合王國・遺跡</small></h1>
     <p class="t-sub">遺跡是佩特拉核心長出來的「可循環自然建築」。昭旭的島上到處都是。帶著公會的委託下去，把寶箱裡的東西帶回東鶴的鐵匠鋪鑑定——前提是你回得來。</p>
