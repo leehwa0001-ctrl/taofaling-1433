@@ -328,6 +328,8 @@ ul.bag li small{order:3;flex-basis:100%;color:var(--dim);font-size:12px}
 .act.nomp{filter:saturate(.35) brightness(.8);border-color:#3A6ACF!important}
 .act.nomp::after{content:"魔力不足";position:absolute;bottom:2px;left:0;right:0;font-size:9.5px;color:#9ABCFF;text-align:center}
 .act.ready{animation:bhReady .6s}
+.act.lit{border-color:#FFD25A!important;box-shadow:0 0 10px rgba(255,210,90,.55),inset 0 0 10px rgba(255,210,90,.22);color:#FFF4D0}
+.act.lit.ready{animation:bhReady .6s}
 @keyframes bhReady{0%{box-shadow:0 0 0 0 rgba(255,224,112,.9)}100%{box-shadow:0 0 0 12px rgba(255,224,112,0)}}
 #r-boss .meter.bh-bar{height:13px}
 #r-boss .bh-bar::after{background:repeating-linear-gradient(90deg,transparent 0 calc(25% - 1px),rgba(0,0,0,.55) calc(25% - 1px) 25%)}

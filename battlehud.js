@@ -3,7 +3,7 @@
 // - 左下：角色的頭像（從身上的圖切下來）、職業和等級、經驗條；生命和魔力條有刻度、高光，
 //   被打的時候留一段白色的「殘影」慢慢退掉，補血的時候閃綠光；護盾疊在生命條上面；生命剩三成以下會閃。
 // - 狀態：吃的東西、技能的強化（戰吼、防禦、回復、護盾……）、壞狀態（緩速、看不見、踉蹌），寫剩幾秒。
-// - 技能鈕：冷卻變成順時針轉的扇形，中間寫剩幾秒；魔力不夠的時候變暗、變藍；冷卻好的那一下會亮一下。
+// - 技能鈕：冷卻變成順時針轉的扇形，中間寫剩幾秒；魔力不夠的時候變暗、變藍；冷卻好的那一下會亮一下，能放的時候一直亮著（金框、發光）。
 // - 魔王的血條：名牌、四分之一的刻度、殘影、剩幾 %；剩三成以下會發紅光。
 (function (R) {
   const W = R.W, $ = id => document.getElementById(id);
@@ -61,6 +61,7 @@
       const c = b.querySelector('.cd'); if (c) c.style.setProperty('--p', p);
       const s = b.querySelector('.bh-sec'); if (s) s.textContent = cd > 0.05 && sk ? (cd >= 10 ? Math.ceil(cd) : cd.toFixed(1)) : '';
       b.classList.toggle('nomp', !!sk && P.mp < sk.mp && cd <= 0);
+      b.classList.toggle('lit', !!sk && cd <= 0 && P.mp >= sk.mp);   // 能放的技能一直亮著（作者：技能沒有亮起來）
       if ((prevCd[id] || 0) > 0 && cd <= 0 && sk) flash(b, 'ready'); prevCd[id] = cd;
     });
     { const c = $('r-dodge-cd'), b = c && c.parentNode; if (c) { const p = P.dodgeCdMax ? Math.max(0, Math.min(1, P.dodgeCd / P.dodgeCdMax)) : 0; c.style.setProperty('--p', p); const s = b.querySelector('.bh-sec'); if (s) s.textContent = P.dodgeCd > 0.05 ? P.dodgeCd.toFixed(1) : ''; } }
