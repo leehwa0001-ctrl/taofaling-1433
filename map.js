@@ -111,7 +111,7 @@
     s += neigh.map(([n, v]) => { let x = NX(v.c[0]), y = NY(v.c[1]); x = Math.max(60, Math.min(NW - 60, x)); y = Math.max(24, Math.min(NH - 14, y)); return '<text x="' + f1(x) + '" y="' + f1(y) + '" class="neigh-name">' + esc(n) + '</text>'; }).join('');
     // 地點
     s += R.SITES.filter(x => x.map === 'nation').map(x => '<g class="site k-' + x.kind + (x.status === 'lock' ? ' locked' : '') + '" data-site="' + x.id + '" transform="translate(' + f1(NX(x.x)) + ' ' + f1(NY(x.z)) + ')" tabindex="0" role="button" aria-label="' + esc(x.name) + '"><g class="mk">' + marker(x) + '</g>'
-      + '<text class="site-name" y="' + (x.kind === 'forbidden' ? 62 : x.kind === 'capital' ? 30 : 28) + '">' + esc(x.name) + '</text></g>').join('');
+      + '<text class="site-name"' + (x.lx ? ' x="' + x.lx + '"' : '') + ' y="' + (x.ly != null ? x.ly : x.kind === 'forbidden' ? 62 : x.kind === 'capital' ? 30 : 28) + '">' + esc(x.name) + '</text></g>').join('');
     s += '<rect width="' + NW + '" height="' + NH + '" fill="url(#vig)" pointer-events="none"/><rect width="' + NW + '" height="' + NH + '" filter="url(#paper)" pointer-events="none"/>';
     return s + '</svg>';
   };
