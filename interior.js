@@ -577,10 +577,10 @@
     R.interiorHud(true);
   };
   R.INTERIOR_KIT = { tableAt, benchAt, stoolAt, plantAt, shelfAt, talk, rumor, lam };   // interiors2.js 用
-  R.enterInterior = kind => {
+  R.enterInterior = (kind, at) => {   // at：從別的門進來時站的位置（例如望月家正屋的後門）
     if (busy || W.inside || !W.town) return;
     busy = true; R.input.keys = {};
-    R.fade(() => { busy = false; enterNow(kind); R.banner(PLACES[kind].name, { guild: '登記處在最裡面，委託貼在北邊的牆上；東邊是酒場', smith: '「門關上，外面的冷風會吹熄爐火。」', pharmacy: '藥草和驅寒茶的味道', store: '「寄放的東西，報名字就好。」', station: '售票口在最裡面，時刻表在左邊的牆上', tavern: '「歡迎光臨！」老闆娘的聲音從櫃台後面傳來' }[kind] || PLACES[kind].hint || PLACES[kind].sub || ''); });
+    R.fade(() => { busy = false; enterNow(kind, at); R.banner(PLACES[kind].name, { guild: '登記處在最裡面，委託貼在北邊的牆上；東邊是酒場', smith: '「門關上，外面的冷風會吹熄爐火。」', pharmacy: '藥草和驅寒茶的味道', store: '「寄放的東西，報名字就好。」', station: '售票口在最裡面，時刻表在左邊的牆上', tavern: '「歡迎光臨！」老闆娘的聲音從櫃台後面傳來' }[kind] || PLACES[kind].hint || PLACES[kind].sub || ''); });
   };
   // 上下樓
   R.changeFloor = (kind, at) => {
@@ -607,7 +607,8 @@
       const ins = W.inside, o = W.outside, P = W.P; if (!ins || !o) return;
       (W.town.allies || []).forEach(a => { if (a.h.g.parent) a.h.g.parent.remove(a.h.g); });
       W.scene = o.scene; R.col = o.col; W.moon = o.moon; W.torch = o.torch;
-      W.scene.add(P.h.g); P.x = o.x; P.z = o.z + 0.3; P.yaw = 0; P.h.g.position.set(P.x, 0, P.z); P.h.g.rotation.y = 0;
+      // o.back：從後門出來（站在門的北邊、面向北）
+      W.scene.add(P.h.g); P.x = o.x; P.z = o.z + (o.back ? -0.3 : 0.3); P.yaw = o.back ? Math.PI : 0; P.h.g.position.set(P.x, 0, P.z); P.h.g.rotation.y = P.yaw;
       W.inside = null; W.outside = null;
       dispose(ins);
       R.spawnTownAllies();

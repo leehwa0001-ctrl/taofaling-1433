@@ -255,16 +255,114 @@
     const { HW, HD, bx } = c; for (let i = 0; i < 4; i++) shelf(c, -2 + i * 2.8, 0, 6, { alongZ: true, h: 1.6, face: i % 2 ? 1 : -1, col: '#C8C8D0' });
     for (let i = 0; i < 4; i++) { bx(1.6, 0.8, 1.0, '#8A6A44', -HW + 1.2, 0.4, 0 + i * 1.3); for (let k = 0; k < 4; k++) bx(0.3, 0.3, 0.3, pick(['#F0F0E8', '#C83A3A', '#5AA85A', '#E8823A']), -HW + 0.7 + k * 0.35, 0.95, i * 1.3); } c.block(-HW + 0.3, -HW + 2.1, -0.6, 4.6, 'deco');
     guest(c, 3, HD - 2, Math.PI, '買菜的太太', ['「白蘿蔔特價，晚上煮關東煮。」', '「冬天的菜都從南邊運來，貴得要命。」']); } });
-  // ---------- 望月家道場 ----------
-  def('dojo', { name: '望月家道場', sub: '道場', hint: '木刀打在一起的聲音', w: 20, d: 14, h: 4.6, zoom: 0.86, wall: '#C8B898', cap: '#3A2A1C', floor: ['#B89868', 'planks'] }, c => {
-    const { HW, HD, bx, block, lamp } = c;
-    bx(3, 0.6, 0.8, '#5A3E28', 0, 3.2, -HD + 0.5, c.NW.g); bx(0.6, 0.5, 0.4, '#E8E0C8', 0, 3.7, -HD + 0.5, c.NW.g);
-    for (let i = 0; i < 8; i++) bx(0.06, 1.2, 0.06, '#8A6A44', -HW + 1 + i * 0.3, 1.1, -HD + 0.5); bx(2.6, 0.1, 0.3, '#5A3E28', -HW + 2, 1.6, -HD + 0.5); block(-HW + 0.6, -HW + 3.6, -HD, -HD + 0.8, 'deco');
-    [[4, -2], [6, -2]].forEach(([x, z]) => { bx(0.4, 1.6, 0.4, '#8A6A44', x, 0.8, z); bx(0.9, 0.2, 0.2, '#8A6A44', x, 1.2, z); block(x - 0.3, x + 0.3, z - 0.3, z + 0.3, 'deco'); });
-    c.inter(5, -0.8, 2, '對著木人樁練習（一天一次）', () => { const S = R.S; if (S.dojoDay === S.day) { talk('望月家道場', ['手臂已經抬不起來了。明天再來。']); return; } S.dojoDay = S.day; if (R.gainXp) R.gainXp(25); R.save(); talk('望月家道場', ['揮了幾百下木刀，汗水滴在地板上。', '（職業經驗值 +25）']); });
-    clerk(c, -3, 0, 0, '道場的門生', { top: '#E8E4DC', cloak: '#2E3A4A' }, '和門生說話', run('dojo'));
-    lamp(0, 3.6, 0, '#FFE8C8', 0.8, 13);
+  // ---------- 望月家（照原著〈浮標〉）：正屋、道場 ----------
+  // 院子、碎石小路在城裡（town.js）。正屋：南邊是廊下，紙門後面由西到東是書房、座敷（床之間掛著「秋水長天」、佛龕）、廚房（土間、灶、水甕）；
+  // 廚房北牆的後門出去是碎石小路，經過矮牆的小門就是道場。整間道場（房子連地）是租的。
+  const BACK_X = 6;
+  let scrollTex = null;   // 「秋水長天」的字（只畫一次）
+  const scroll = TH => {
+    if (scrollTex) return scrollTex;
+    const cv = document.createElement('canvas'); cv.width = 64; cv.height = 192; const g = cv.getContext('2d');
+    g.fillStyle = '#3A3A4A'; g.fillRect(0, 0, 64, 192); g.fillStyle = '#E8DFC8'; g.fillRect(8, 22, 48, 150); g.fillStyle = '#5A3E26'; g.fillRect(0, 0, 64, 6); g.fillRect(0, 186, 64, 6);
+    g.fillStyle = '#1E1A16'; g.font = 'bold 30px "Noto Serif TC", serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; ['秋', '水', '長', '天'].forEach((ch, i) => g.fillText(ch, 32, 42 + i * 34));
+    g.fillStyle = '#B83A2E'; g.fillRect(40, 160, 8, 8);
+    scrollTex = new TH.CanvasTexture(cv); scrollTex.encoding = TH.sRGBEncoding; return scrollTex;
+  };
+  def('mochiHouse', { name: '望月家', sub: '正屋', hint: '廊下的木板擦得很乾淨', w: 20, d: 10, h: 3.2, zoom: 0.84, wall: '#D8CFBC', cap: '#3A2A1C', floor: ['#A8885A', 'planks'], out: '出去（回到院子）', backDoor: [BACK_X - 0.8, BACK_X + 0.8] }, c => {
+    const { HW, HD, T0, bx, flat, mesh, TH, block, lamp, part, flame, ins } = c, L = K().lam, ZS = HD - 1.8;
+    // 廊下（南邊一整條）和紙門
+    flat(2 * HW, HD - ZS - 0.3, L('#C0A272', { tex: 'planks' }), 0, 0.012, (ZS + 0.3 + HD) / 2);
+    const gaps = [[-7.6, -6.2], [-1.4, 1.4], [5.4, 6.8]], sh = part(true, ZS, -HW, HW, gaps);
+    for (let x = -HW + 0.5; x < HW; x += 1) { if (gaps.some(([a, b]) => x > a - 0.5 && x < b + 0.5)) continue; bx(0.9, 2.3, 0.03, L('#F2ECDA', { tex: 0 }), x, 1.35, ZS + 0.32, sh.g); bx(0.04, 2.3, 0.03, '#5A3E26', x - 0.46, 1.35, ZS + 0.34, sh.g); bx(0.9, 0.04, 0.03, '#5A3E26', x, 1.7, ZS + 0.34, sh.g); }
+    part(false, -4, -HD, ZS - T0 / 2, [[-0.4, 1.0]]); part(false, 4, -HD, ZS - T0 / 2, [[-0.4, 1.0]]);
+    // 座敷：榻榻米、床之間（「秋水長天」）、佛龕、矮桌和坐墊
+    flat(7.4, ZS - 0.3 + HD - 0.1, L('#3A3A2A', { tex: 0 }), 0, 0.011, (ZS - 0.3 - HD) / 2);
+    for (let r = 0; r < 8; r++) for (let i = 0; i < 4; i++) flat(1.74, 0.84, L(r % 2 === i % 2 ? '#BDB97C' : '#B4B074', { tex: 0 }), -2.7 + i * 1.8, 0.014, -HD + 0.55 + r * 0.9);
+    bx(2.6, 0.16, 0.8, '#5A3E26', 1.1, 0.08, -HD + 0.4); bx(2.6, 2.7, 0.04, '#C8BCA2', 1.1, 1.35, -HD + 0.04, c.NW.g); bx(0.16, 3.2, 0.16, '#6A4A2E', -0.25, 1.6, -HD + 0.8); bx(2.9, 0.22, 0.1, '#5A3E26', 1.1, 2.75, -HD + 0.8);
+    mesh(new TH.PlaneGeometry(0.66, 1.98), new TH.MeshLambertMaterial({ map: scroll(TH) }), 1.1, 1.6, -HD + 0.07);
+    mesh(new TH.CylinderGeometry(0.12, 0.16, 0.42, 8), '#3A4A5A', 2.0, 0.37, -HD + 0.45); block(-0.2, 2.4, -HD, -HD + 0.8, 'deco');
+    c.inter(1.1, -HD + 1.7, 1.8, '看床之間的字', () => talk('座敷', ['床之間掛著一幅字：「秋水長天」。', '墨跡很淡，紙邊有一點泛黃，看得出掛了很多年。']));
+    bx(1.2, 0.3, 0.9, '#3A2A1C', -2.6, 0.15, -HD + 0.45); bx(1.0, 1.4, 0.6, '#1E1A18', -2.6, 1.0, -HD + 0.36); bx(0.76, 1.0, 0.02, L('#C9A13A', { em: '#5A4010', ei: 0.5 }), -2.6, 1.05, -HD + 0.67);
+    [-2.85, -2.35].forEach(x => { bx(0.05, 0.16, 0.05, '#F0ECE2', x, 0.38, -HD + 0.8); flame(x, 0.52, -HD + 0.8, 0.22); }); block(-3.25, -1.95, -HD, -HD + 0.95, 'deco');
+    c.inter(-2.6, -HD + 1.6, 1.5, '在佛龕前合掌', () => talk('佛龕', ['佛龕前點著兩支小蠟燭，火光一動也不動。', '（你合掌，低頭拜了一下。）']));
+    mesh(new TH.CylinderGeometry(0.62, 0.62, 0.06, 16), '#5A3A24', 0, 0.38, -0.6); mesh(new TH.CylinderGeometry(0.08, 0.1, 0.36, 6), '#4A3020', 0, 0.18, -0.6); block(-0.62, 0.62, -1.22, 0.02, 'table');
+    [[0, -1.6], [0, 0.4], [-1.0, -0.6], [1.0, -0.6]].forEach(([x, z]) => bx(0.6, 0.08, 0.6, '#6A2E3A', x, 0.05, z));
+    // 書房：矮桌、硯台、書架、行燈
+    bx(1.6, 0.36, 0.6, '#5A3E26', -7, 0.18, -HD + 1.2); bx(0.2, 0.04, 0.3, '#1A1A1E', -7.5, 0.38, -HD + 1.2); flat(0.5, 0.36, '#F4F0E4', -6.8, 0.37, -HD + 1.2); bx(0.5, 0.08, 0.5, '#4A3A5A', -7, 0.04, -HD + 1.9); block(-7.8, -6.2, -HD + 0.9, -HD + 1.5, 'desk');
+    for (let i = 0; i < 2; i++) { const z = -3.6 + i * 2.6; bx(0.5, 1.9, 2.2, '#4A3424', -HW + 0.3, 0.95, z); for (let r = 0; r < 3; r++) for (let k = 0; k < 7; k++) bx(0.36, 0.42, 0.22, pick(['#6A5A48', '#8A7A5A', '#4A4A5A', '#7A4A3A', '#C8B898']), -HW + 0.4, 0.3 + r * 0.6, z - 0.95 + k * 0.3); block(-HW, -HW + 0.6, z - 1.1, z + 1.1, 'shelf'); }
+    mesh(new TH.CylinderGeometry(0.2, 0.2, 0.55, 6), L('#FFE8B8', { em: '#FFC870', ei: 0.8 }), -5.0, 0.3, -HD + 0.6); lamp(-5.0, 0.9, -HD + 0.9, '#FFD8A0', 0.35, 5, true);
+    c.inter(-7, -HD + 2.3, 1.6, '看書房的矮桌', () => talk('書房', ['矮桌上放著硯台和一枝筆，墨已經乾了。', '書架上是舊書和線裝的帳冊。']));
+    // 廚房：土間、灶（還有火）、水甕、流理台、碗櫃；北牆的後門
+    flat(HW - 4.3, ZS - 0.3 + HD, L('#6E665C', { tex: 'floor' }), (4.3 + HW) / 2, 0.013, (ZS - 0.3 - HD) / 2);
+    bx(1.9, 0.8, 0.9, L('#8A7A6A', { tex: 'wall' }), 8.7, 0.4, -HD + 0.55); [8.2, 9.2].forEach(x => { bx(0.4, 0.3, 0.04, L('#FF7A2A', { em: '#FF5A1A', ei: 1 }), x, 0.3, -HD + 1.01); mesh(new TH.CylinderGeometry(0.3, 0.24, 0.3, 10), '#2A2A2E', x, 0.95, -HD + 0.55); });
+    flame(8.2, 0.35, -HD + 1.1, 0.5); lamp(8.7, 0.6, -HD + 1.6, '#FF9A4A', 0.8, 6, true); ins.smoke.push({ x: 9.2, y: 1.3, z: -HD + 0.55 }); block(7.75, 9.65, -HD, -HD + 1.05, 'stove');
+    mesh(new TH.CylinderGeometry(0.4, 0.32, 0.8, 10), '#5A4A3E', 4.9, 0.4, -HD + 0.6); flat(0.62, 0.62, L('#9FC0D8', { em: '#3A5A70', ei: 0.3 }), 4.9, 0.81, -HD + 0.6); block(4.45, 5.35, -HD + 0.15, -HD + 1.05, 'jar');
+    bx(0.7, 0.85, 2.0, '#8A8A86', HW - 0.4, 0.42, -0.6); bx(0.6, 1.6, 1.8, '#5A3E26', HW - 0.35, 1.9, 1.6); for (let k = 0; k < 6; k++) mesh(new TH.CylinderGeometry(0.12, 0.08, 0.1, 8), pick(['#E8E0D0', '#4A6A8A', '#C8B898']), HW - 0.72, 1.3 + Math.floor(k / 3) * 0.5, 1.0 + (k % 3) * 0.55); block(HW - 0.8, HW, -1.6, 2.5, 'shelf');
+    c.inter(8.7, -HD + 1.9, 1.8, '看看灶', () => talk('廚房', ['灶裡的柴火還有一點紅，鍋裡在燒熱水。', '水甕裡的水結了一層薄冰。']));
+    // 後門：門外的石階、碎石（走出去就到正屋後面的碎石小路）
+    bx(2, 0.12, 0.8, '#7A766E', BACK_X, 0.02, -HD - T0 - 0.4).castShadow = false; bx(3.2, 0.1, 2.0, L('#B4B0A6', { tex: 'gravel' }), BACK_X, -0.05, -HD - T0 - 1.6).castShadow = false;
+    block(BACK_X - 3, BACK_X + 3, -HD - T0 - 3, -HD - T0 - 1.1); lamp(BACK_X, 2.4, -HD - 1.8, '#9FB4CC', 0.3, 5);
+    c.inter(BACK_X, -HD + 0.9, 1.5, '從後門出去（碎石小路，往道場）', () => { ins.exitBack = 1; R.exitInterior(); });
+    c.inter(-6, HD - 0.9, 1.6, '從廊下看院子', () => talk('廊下', ['紙門外是廊下，看得到院子裡的老松。', '雪從松枝上滑下來，「沙」的一聲。']));
+    lamp(0, 2.8, -1.2, '#FFE8C8', 0.8, 12); lamp(0, 2.6, HD - 0.9, '#E8F0FF', 0.35, 12);
   });
+  // 道場：東側的高窗、磨得發亮的木地板（有地板縫）、牆邊的木刀架、護具架、牆角的記分表、角落的小桌、補過灰泥的牆角、草靶。
+  // 公開練習日（息日）門邊鋪觀摩席的墊子，有人來看、門生在中間對練。
+  def('dojo', { name: '望月家道場', sub: '道場', hint: '木刀打在一起的聲音', w: 18, d: 12, h: 4.4, zoom: 0.86, wall: '#DCD2BA', cap: '#3A2A1C', floor: ['#C49A62', 'planks'], out: '出去（回到碎石小路）' }, c => {
+    const { HW, HD, bx, flat, mesh, TH, block, lamp, ins, NW, WW, EW } = c, L = K().lam, dd = R.today ? R.today() : {}, open = dd.wd === '息日';
+    // 地板縫、窗光照到的亮處
+    for (let z = -HD + 0.6; z < HD; z += 0.6) flat(2 * HW, 0.025, '#7A5630', 0, 0.012, z);
+    { const glow = new TH.MeshBasicMaterial({ color: '#FFF0C8', transparent: true, opacity: 0.2, depthWrite: false }); for (let i = 0; i < 4; i++) flat(3.4, 1.1, glow, HW - 3.0, 0.014, -4.0 + i * 2.6); }
+    // 腰板
+    bx(2 * HW, 1.1, 0.05, L('#6A4A2E', { tex: 'planks' }), 0, 0.55, -HD + 0.03, NW.g); bx(0.05, 1.1, 2 * HD, L('#6A4A2E', { tex: 'planks' }), -HW + 0.03, 0.55, 0, WW.g); bx(0.05, 1.1, 2 * HD, L('#6A4A2E', { tex: 'planks' }), HW - 0.03, 0.55, 0, EW.g);
+    // 東側的高窗
+    [-4, -1.3, 1.4, 4.1].forEach(z => { bx(0.04, 0.7, 1.5, L('#FFF6DE', { em: '#FFF0C8', ei: 0.95 }), HW - 0.03, 3.5, z, EW.g); bx(0.06, 0.06, 1.5, '#3A2A1C', HW - 0.05, 3.5, z, EW.g); }); [-2.6, 2.6].forEach(z => lamp(HW - 1.6, 3.2, z, '#FFF2D8', 0.45, 8));
+    // 木刀架（西牆）
+    bx(0.12, 1.5, 3.4, '#5A3E26', -HW + 0.1, 1.55, -1.5, WW.g); bx(0.3, 0.08, 3.4, '#4A3424', -HW + 0.2, 0.95, -1.5, WW.g); bx(0.3, 0.08, 3.4, '#4A3424', -HW + 0.2, 2.15, -1.5, WW.g);
+    for (let i = 0; i < 10; i++) bx(0.05, 1.1, 0.05, i === 9 ? '#6A4A2E' : '#9A7A4E', -HW + 0.24, 1.55, -3.0 + i * 0.33, WW.g);
+    block(-HW, -HW + 0.4, -3.3, 0.3, 'rack'); c.inter(-HW + 1.3, -1.5, 1.6, '看木刀架', () => talk('木刀架', ['一排木刀，握柄的地方都被手磨得發黑。']));
+    // 護具架（北牆西邊）
+    bx(3.2, 1.0, 0.6, '#4A3424', -5.6, 0.5, -HD + 0.35); bx(3.2, 0.06, 0.6, '#3A2818', -5.6, 1.5, -HD + 0.35); [-4.5, -3.5, -2.5, -1.5].forEach(o => { bx(0.5, 0.4, 0.44, '#2A3448', -7.2 + (o + 4.5) * 1.05, 1.22, -HD + 0.35); bx(0.4, 0.04, 0.3, '#C8C8D0', -7.2 + (o + 4.5) * 1.05, 1.24, -HD + 0.58); bx(0.56, 0.5, 0.36, '#1E1E24', -7.2 + (o + 4.5) * 1.05, 1.8, -HD + 0.35); });
+    block(-7.2, -4.0, -HD, -HD + 0.7, 'rack'); c.inter(-5.6, -HD + 1.5, 1.6, '看護具架', () => talk('護具架', ['護具一套一套排好，綁帶都打成一樣的結。']));
+    // 補過灰泥的牆角（西北角）
+    bx(0.9, 1.1, 0.03, '#EEE8D8', -HW + 0.6, 2.3, -HD + 0.04, NW.g); bx(0.5, 0.6, 0.03, '#F2EEE2', -HW + 0.4, 2.9, -HD + 0.045, NW.g);
+    c.inter(-HW + 1.2, -HD + 1.3, 1.3, '看牆角', () => talk('牆角', ['牆角補過灰泥，顏色比旁邊淺一點，抹得不太平。']));
+    // 牆角的記分表（東北角）
+    bx(1.6, 1.1, 0.04, '#E8E0C8', HW - 1.3, 2.0, -HD + 0.05, NW.g); for (let r = 0; r < 5; r++) { bx(0.4, 0.05, 0.02, '#2A2420', HW - 1.85, 2.38 - r * 0.18, -HD + 0.08, NW.g); for (let k = 0; k < 1 + (r * 3) % 4; k++) bx(0.12, 0.08, 0.02, '#2A2420', HW - 1.3 + k * 0.16, 2.38 - r * 0.18, -HD + 0.08, NW.g); }
+    c.inter(HW - 1.4, -HD + 1.3, 1.4, '看牆角的記分表', () => talk('記分表', ['牆角釘著一張記分表：門生的名字底下，對練贏一次畫一筆，畫成一個個「正」字。']));
+    // 角落的小桌（西南角）
+    bx(0.9, 0.4, 0.6, '#5A3E26', -HW + 0.8, 0.2, HD - 0.7); mesh(new TH.SphereGeometry(0.13, 8, 6), '#4A5A4A', -HW + 0.6, 0.5, HD - 0.7); [0.85, 1.05].forEach(x => mesh(new TH.CylinderGeometry(0.05, 0.04, 0.08, 6), '#E8E0D0', -HW + x, 0.44, HD - 0.65)); block(-HW + 0.3, -HW + 1.3, HD - 1.0, HD - 0.4, 'desk');
+    c.inter(-HW + 1.6, HD - 1.1, 1.3, '角落的小桌', () => talk('角落的小桌', ['小桌上放著茶壺和幾個茶杯，茶已經涼了。']));
+    // 草靶（東邊），練習一天一次
+    [-3, 0, 3].forEach(z => { const x = HW - 2.2; bx(0.14, 1.8, 0.14, '#6A4A2E', x, 0.9, z); mesh(new TH.CylinderGeometry(0.3, 0.32, 1.0, 8), L('#C8B070', { tex: 0 }), x, 1.35, z); [1.0, 1.7].forEach(y => mesh(new TH.CylinderGeometry(0.33, 0.33, 0.06, 8), '#6A4A2E', x, y, z)); block(x - 0.33, x + 0.33, z - 0.33, z + 0.33, 'deco'); });
+    c.inter(HW - 3.4, 0, 2, '對著草靶練習（一天一次）', () => { const S = R.S; if (S.dojoDay === S.day) { talk('望月家道場', ['手臂已經抬不起來了。明天再來。']); return; } S.dojoDay = S.day; if (R.gainXp) R.gainXp(25); R.save(); talk('望月家道場', ['對著草靶揮了幾百下木刀，汗水滴在發亮的地板上。', '（職業經驗值 +25）']); });
+    clerk(c, -3, 0.6, 0, '道場的門生', { top: '#E8E4DC', cloak: '#2E3A4A' }, '和門生說話', () => talk('道場的門生', [pick(['「地板每天早上擦一遍，擦到照得出人影。」', '「步法比刀快。這是第一天就教的。」', '「公開練習日是息日。那天門邊會鋪墊子，誰都可以進來看。」'])]));
+    // 公開練習日：觀摩席的墊子、來看的人、兩個門生在中間對練
+    if (open) {
+      [-5.2, 5.2].forEach(x => flat(5.6, 1.5, L('#5A6A4A', { tex: 0 }), x, 0.03, HD - 1.0));
+      [[-6.4, '來看練習的老人家', ['「公開練習日，誰都可以進來看。」', '「我年輕的時候也在這裡練過幾年。」']], [-4.2, '來看練習的學生', ['「聽說望月家的步法，一眨眼就到你面前。」', '「我也想學……可是好冷。」']], [5.0, '來看練習的太太', ['「我家孩子也在裡面練。」', '「地板亮得可以照鏡子呢。」']]].forEach(([x, name, lines]) => { const n = guest(c, x, HD - 1.0, Math.PI, name, lines); n.h.sit = true; n.sitting = true; });
+      ins.spar = [[-1.0, -0.6, Math.PI / 2], [1.0, -0.6, -Math.PI / 2]].map(([x, z, rot], i) => { const n = c.npc(x, z, rot, { name: '對練的門生', weapon: 'katana', look: look({ top: '#E8E4DC', cloak: i ? '#2E3A4A' : '#3A2A2A' }) }); n.sitting = true; n.t = i * 0.6; return n; });
+      c.inter(0, 0.6, 1.6, '看門生對練', () => talk('公開練習日', ['兩個門生隔著一步的距離站著，誰都沒有先動。', '——木刀相擊，一聲就結束了。']));
+    }
+    lamp(0, 4.0, 0, '#FFE8C8', 0.7, 14); lamp(-5, 3.6, 0, '#FFE8C8', 0.4, 9);
+  });
+  // 從正屋、道場出來：正屋前門回到院子、後門到碎石小路；道場的門也是碎石小路（城裡的位置 tw.mochi 在 town.js）
+  const exit0 = R.exitInterior;
+  R.exitInterior = () => {
+    const ins = W.inside, o = W.outside, m = W.town && W.town.mochi;
+    if (ins && o && m) { const back = ins.kind === 'mochiHouse' && ins.exitBack, p = ins.kind === 'mochiHouse' ? m[back ? 'back' : 'front'] : ins.kind === 'dojo' ? m.dojo : null; if (p) { o.x = p[0]; o.z = p[1]; o.back = back ? 1 : 0; } }
+    exit0();
+  };
+  R.enterMochiBack = () => R.enterInterior('mochiHouse', { x: BACK_X, z: -PL.mochiHouse.d / 2 + 1.1, yaw: 0 });
+  const istep0 = R.interiorStep;
+  R.interiorStep = dt => {
+    istep0(dt);
+    const ins = W.inside, P = W.P; if (!ins || !P) return;
+    // 走出後門
+    if (ins.kind === 'mochiHouse' && !ins.exitBack && P.z < -ins.pl.d / 2 - 0.2 && Math.abs(P.x - BACK_X) < 1) { ins.exitBack = 1; R.exitInterior(); }
+    // 對練：輪流出手
+    if (ins.spar) ins.spar.forEach(n => { n.t -= dt; if (n.t <= 0) { n.t = 1.1 + rnd() * 0.9; n.h.swing = 0.25; } });
+  };
   // ---------- 東鶴站 ----------
   def('trainst', { name: '東鶴站', sub: '售票口・剪票口・候車室', hint: '「往皇嶺的魔導電車，即將進站——」', w: 24, d: 14, h: 5, zoom: 0.9, wall: '#C8C0B0', cap: '#3A4A5A', floor: ['#A8A49C', 'floor'] }, c => {
     const { HW, HD, bx, block, lamp } = c;

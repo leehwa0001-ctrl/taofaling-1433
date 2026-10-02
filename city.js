@@ -387,7 +387,7 @@
   };
   // 劇情人物、委託人的位置（people.js、jobs.js）
   C.SPOTS = {
-    nanbashi: [548, 930, 0], dojo: [690, 728, Math.PI], dojoGate: [700, 756, 0], plaza: [600, 640, 0], plazaW: [570, 614, 0], market: [700, 690, Math.PI],
+    nanbashi: [548, 930, 0], dojo: [690, 740, Math.PI], dojoGate: [700, 756, 0], plaza: [600, 640, 0], plazaW: [570, 614, 0], market: [700, 690, Math.PI],
     northGate: [626, 430, 0], wallN: [560, 466, 0], survey: [150, 392, Math.PI * 0.8], survey2: [160, 400, Math.PI], survey3: [128, 400, Math.PI * 0.5],
     alley: [440, 576, 0], alley2: [500, 576, Math.PI], sugaSide: [646, 676, 0]
   };

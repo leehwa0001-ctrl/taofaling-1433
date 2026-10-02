@@ -315,17 +315,100 @@
       SB.add(G3.box, lam('#FFE0A0', { em: '#FFB050', ei: 0.7 }), x, 1.5, z - 1.02, 1.6, 0.8, 0.05); block(x - 1.3, x + 1.3, z - 1, z + 1, 'deco');
       sign(x, 2.95, z - 1.32, Math.PI, '西市兌換所', '#2E3A48', 2.2);
       inter(x, z - 2.0, 2.0, '西市兌換所（驗貨幣、換錢）', () => R.exchangeSheet ? R.exchangeSheet() : talk('西市兌換所', ['「赤金要看鳴文：紅色的漩渦才是真的。」', '「昭旭的舊銅錢，這個月又跌了。」'])); }
-    // 望月家道場：圍牆、正門、庭院（練習用的木樁）、主屋
-    { const x0 = WX(FAC.dojo[0]), x1 = WX(FAC.dojo[2]), z0 = WZ(FAC.dojo[1]), z1 = WZ(FAC.dojo[3]), cx = (x0 + x1) / 2;
-      const fence = B_('#D8D0BE'), roofE = B_('#3A3A44', { tex: 'cap' });
-      const fenceRun = (ax, az, bx2, bz) => { const w = Math.abs(bx2 - ax) || 0.4, d = Math.abs(bz - az) || 0.4, mx = (ax + bx2) / 2, mz = (az + bz) / 2; HB.add(G3.box, fence, mx, 1.0, mz, w, 2, d); HB.add(G3.box, roofE, mx, 2.1, mz, w + 0.3, 0.2, d + 0.3); block(mx - w / 2, mx + w / 2, mz - d / 2, mz + d / 2, 'wall'); };
-      fenceRun(x0, z0, x1, z0); fenceRun(x0, z0, x0, z1); fenceRun(x1, z0, x1, z1); fenceRun(x0, z1, cx - 1.6, z1); fenceRun(cx + 1.6, z1, x1, z1);
-      HB.at(cx, z1, 0); [-1.7, 1.7].forEach(o => HB.add(G3.box, woodM, o, 1.5, 0, 0.3, 3, 0.3)); HB.add(G3.box, roofE, 0, 3.1, 0, 4.4, 0.3, 1.2); HB.add(G3.box, B_('#F2F6F8', { tex: 'ground' }), 0, 3.3, 0, 4.2, 0.1, 1.1); HB.at(null);
-      sign(cx, 2.5, z1 + 0.25, 0, '望月家道場', '#3A2A1C', 2.2);
-      house((FAC.dojo[0] + FAC.dojo[2]) / 2, FAC.dojo[1] + 12, 12, 6, 3.4, '#CFC2A8', 0, { two: false, shop: false, doorX: 0, chimney: true });
-      [-3.5, -1.5, 2].forEach(a => { const pz = z1 - 4; SB.add(G3.cyl, lam('#8A6A44', { tex: 'planks' }), cx + a, 0.8, pz, 0.3, 1.6, 0.3); SB.add(G3.box, lam('#D8C8A0', { tex: 0 }), cx + a, 1.2, pz, 0.42, 0.3, 0.42); block(cx + a - 0.2, cx + a + 0.2, pz - 0.2, pz + 0.2, 'deco'); });
-      inter(cx, z1 + 1.4, 2.4, '望月家道場的大門', () => (R.dojoGate ? R.dojoGate() : talk('望月家道場', ['門裡傳來木刀相擊的聲音。', '門口掛著「望月」的木牌。'])));
+    // 望月家（照原著〈浮標〉）：門口的石階上有一隻老貓；圍牆裡，正屋、東廂、西廂圍出一個不大的院子，院角一棵比屋頂還高的老松。
+    // 道場在正屋後面，中間隔一道矮牆和一條碎石小路：從正屋的後門出去，經過矮牆的小門。院子、碎石小路在城裡直接走；正屋、道場走得進去（interiors2.js 的 mochiHouse、dojo）。
+    // 座標：u 往東、v 從南邊的圍牆往北（公尺）。圍牆比 FAC 的地窄一點，兩邊留松樹。
+    { const x0 = WX(FAC.dojo[0]), x1 = WX(FAC.dojo[2]), z0 = WZ(FAC.dojo[1]), z1 = WZ(FAC.dojo[3]), cx = (x0 + x1) / 2, HU = 12.5;
+      const P = (u, v) => [cx + u, z1 - v];
+      const fence = B_('#D8D0BE'), roofE = B_('#3A3A44', { tex: 'cap' }), snowM = B_('#F2F6F8', { tex: 'ground' });
+      const fenceRun = (ax, az, bx2, bz, h) => { h = h || 2; const w = Math.abs(bx2 - ax) || 0.4, d = Math.abs(bz - az) || 0.4, mx = (ax + bx2) / 2, mz = (az + bz) / 2; HB.add(G3.box, fence, mx, h / 2, mz, w, h, d); HB.add(G3.box, roofE, mx, h + 0.1, mz, w + 0.3, 0.2, d + 0.3); HB.add(G3.box, snowM, mx, h + 0.23, mz, w + 0.1, 0.06, d + 0.1); block(mx - w / 2, mx + w / 2, mz - d / 2, mz + d / 2, 'wall'); };
+      const wx0 = cx - HU, wx1 = cx + HU;
+      fenceRun(wx0, z0, wx1, z0); fenceRun(wx0, z0, wx0, z1); fenceRun(wx1, z0, wx1, z1); fenceRun(wx0, z1, cx - 1.6, z1); fenceRun(cx + 1.6, z1, wx1, z1);
+      // 正門（門柱上的家紋在 storylooks.js）、門柱上「望月」的木牌
+      HB.at(cx, z1, 0); [-1.7, 1.7].forEach(o => HB.add(G3.box, woodM, o, 1.5, 0, 0.3, 3, 0.3)); HB.add(G3.box, roofE, 0, 3.1, 0, 4.4, 0.3, 1.2); HB.add(G3.box, snowM, 0, 3.3, 0, 4.2, 0.1, 1.1); HB.at(null);
+      { const t = pixCanvasTex(24, 72, (g, W0, H0) => { g.fillStyle = '#5A3E26'; g.fillRect(0, 0, W0, H0); g.fillStyle = '#E4D8BC'; g.fillRect(2, 2, W0 - 4, H0 - 4); g.fillStyle = '#1E1A16'; g.font = 'bold 19px "Noto Serif TC", serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('望', W0 / 2, H0 * 0.3); g.fillText('月', W0 / 2, H0 * 0.7); });
+        const m = new TH.Mesh(new TH.PlaneGeometry(0.3, 0.9), R.seeThrough(new TH.MeshBasicMaterial({ map: t }))); m.position.set(cx + 1.7, 1.15, z1 + 0.17); group.add(m); }
+      // 門口的青石板石階（地面是平的，用兩階石階表示門前的坡）
+      [[-1.3, 0.05, 4.6], [-0.65, 0.1, 4.0]].forEach(([v, h, w]) => { const [x, z] = P(0, v + 0.325); SB.add(G3.box, lam('#7E8A90', { tex: 'stone' }), x, h / 2, z, w, h, 0.65); SB.add(G3.box, lam('#4A5258', { tex: 0 }), x, h - 0.01, z + 0.33, w, 0.02, 0.03); });
+      // 石階上的老貓
+      if (!E.blizzard && R.makeBeastSprite && R.BEAST_ART && R.BEAST_ART.cat3) {
+        const ART = R.BEAST_ART; if (!ART.oldcat) ART.oldcat = { pal: { a: '#A39C92', d: '#6E675E', e: '#C8B040', n: '#D88A8A' }, a: ART.cat3.a, b: ART.cat3.a };
+        const [x, z] = P(-2.0, -0.8), m = R.makeBeastSprite('oldcat'); m.g.position.set(x, 0.1, z); group.add(m.g); block(x - 0.3, x + 0.3, z - 0.2, z + 0.2, 'deco');
+        const CAT = ['老貓瞇著眼睛，動也不動。石階被太陽曬得有一點暖。', '老貓甩了一下尾巴，算是打過招呼。', '老貓讓你摸了兩下頭，又把臉埋回前腳裡。', '老貓睜開一隻眼睛看你，又閉上了。'];
+        inter(x, z + 0.9, 1.3, '摸摸門口的老貓', () => { if (R.sfx) R.sfx('meow'); talk('門口的老貓', [CAT[Math.floor(Math.random() * CAT.length)]]); });
+      }
+      // 院子：門口到正屋的石板路
+      { const [x, z] = P(0, 3); SB.add(G3.box, lam('#8E9298', { tex: 'stone' }), x, 0.02, z, 1.6, 0.04, 6); }
+      // 和風的房子：石基、白牆、黑柱、紙門、緣側（廊下）、雙坡屋頂。rot 0＝正面朝南；eng：緣側的範圍（沿正面）；door：正面的門；back：背面的後門
+      const jh = (u, v, w, d, h, rot, o) => {
+        o = o || {}; const [x, z] = P(u, v), B = HB, wallC = o.wall || '#E8E2D2', paper = B_('#F2ECDA', { tex: 0 }), dark = B_('#3A2A1C', { tex: 'planks' });
+        B.at(x, z, rot);
+        B.add(G3.box, B_('#7A766E', { tex: 'stone' }), 0, 0.2, 0, w + 0.24, 0.4, d + 0.24);
+        B.add(G3.box, B_(wallC), 0, 0.4 + (h - 0.4) / 2, 0, w, h - 0.4, d);
+        const n = Math.max(2, Math.round(w / 1.8)), step = w / n, di = o.door == null ? -1 : Math.min(n - 1, Math.floor((o.door + w / 2) / step));
+        for (let i = 0; i <= n; i++) B.add(G3.box, woodM, -w / 2 + i * step, h / 2 + 0.2, d / 2 + 0.03, 0.18, h - 0.4, 0.18);
+        [-1, 1].forEach(a => B.add(G3.box, woodM, a * (w / 2 - 0.08), h / 2 + 0.2, -d / 2 + 0.08, 0.18, h - 0.4, 0.18));
+        B.add(G3.box, woodM, 0, h - 0.08, d / 2 + 0.04, w + 0.02, 0.16, 0.08); B.add(G3.box, woodM, 0, 0.48, d / 2 + 0.04, w + 0.02, 0.1, 0.08);
+        for (let i = 0; i < n; i++) {
+          const px = -w / 2 + (i + 0.5) * step, ph = h - 1.1, py = 0.55 + ph / 2;
+          if (i === di) { B.add(G3.box, dark, px, py, d / 2 + 0.05, step - 0.3, ph, 0.05); continue; }
+          B.add(G3.box, (i * 7 + n) % 3 === 0 ? glowW : paper, px, py, d / 2 + 0.05, step - 0.3, ph, 0.04);
+          B.add(G3.box, woodM, px, py, d / 2 + 0.08, 0.05, ph, 0.03); B.add(G3.box, woodM, px, 0.55 + ph * 0.66, d / 2 + 0.08, step - 0.3, 0.05, 0.03);
+        }
+        // 緣側（高起來的木板，人不站上去）和上面的屋簷
+        const e0 = o.eng ? o.eng[0] : -w / 2, e1 = o.eng ? o.eng[1] : w / 2, ew = e1 - e0, ec = (e0 + e1) / 2;
+        B.add(G3.box, B_('#8A6A44', { tex: 'planks' }), ec, 0.32, d / 2 + 0.5, ew, 0.1, 0.9); [e0 + 0.12, e1 - 0.12].forEach(px => B.add(G3.box, woodM, px, 0.15, d / 2 + 0.88, 0.12, 0.3, 0.12));
+        B.add(G3.box, B_(ROOFS[0], { tex: 'cap' }), ec, h + 0.05, d / 2 + 0.55, ew + 0.3, 0.12, 1.3, 0.32, 0, 0); B.add(G3.box, snowM, ec, h + 0.14, d / 2 + 0.55, ew + 0.2, 0.06, 1.2, 0.32, 0, 0);
+        if (o.back != null) B.add(G3.box, dark, o.back, 0.4 + (h - 0.9) / 2 + 0.1, -d / 2 - 0.04, 1.0, h - 0.9, 0.06);
+        gableB(B, w, d, h, 0, wallC);
+        B.at(null);
+        const c0 = Math.cos(rot), s0 = Math.sin(rot), box = (ax, az, bx2, bz) => { const p = [[ax, az], [bx2, az], [ax, bz], [bx2, bz]].map(([a, b2]) => [x + a * c0 + b2 * s0, z - a * s0 + b2 * c0]), xs = p.map(q => q[0]), zs = p.map(q => q[1]); block(Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs), 'house'); };
+        box(-w / 2, -d / 2, w / 2, d / 2); box(e0, d / 2, e1, d / 2 + 0.95);
+      };
+      // 正屋（院子北邊，後門在廚房那邊）、西廂、東廂（正面朝院子）
+      jh(0, 9.6, 24.4, 5.2, 3.4, 0, { eng: [-4.6, 4.6], door: 0, back: 6 });
+      jh(-8.4, 3.9, 6.2, 7.6, 3.0, Math.PI / 2);
+      jh(8.4, 3.9, 6.2, 7.6, 3.0, -Math.PI / 2);
+      // 院角的老松（比屋頂還高；點陣看板，和人物一樣只轉向鏡頭）
+      { const w = 64, h = 64, c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'), F = (x, y, ww, hh, col) => { g.fillStyle = col; g.fillRect(x, y, ww, hh); };
+        const trunk = [[33, 63], [33, 56], [31, 49], [28, 43], [29, 37], [33, 31], [36, 25], [35, 19], [32, 12]];
+        for (let i = 0; i < trunk.length - 1; i++) { const [ax, ay] = trunk[i], [bx2, by] = trunk[i + 1], th = Math.max(2, 5 - i * 0.4); for (let k = 0; k <= 8; k++) { const t = k / 8; F(Math.round(ax + (bx2 - ax) * t - th / 2), Math.round(ay + (by - ay) * t), Math.round(th), 1, '#4A3424'); F(Math.round(ax + (bx2 - ax) * t - th / 2), Math.round(ay + (by - ay) * t), 1, 1, '#6A4A34'); } }
+        [[29, 41, 17, 39], [33, 31, 46, 32], [35, 25, 22, 26], [35, 19, 45, 18]].forEach(([ax, ay, bx2, by]) => { for (let k = 0; k <= 12; k++) { const t = k / 12; F(Math.round(ax + (bx2 - ax) * t), Math.round(ay + (by - ay) * t), 2, 1, '#4A3424'); } });
+        [[15, 37, 11, 4], [47, 29, 13, 4], [21, 23, 11, 3], [45, 15, 10, 3], [31, 8, 9, 3]].forEach(([px, py, rx, ry]) => {
+          for (let yy = -ry; yy <= ry; yy++) for (let xx = -rx; xx <= rx; xx++) if ((xx * xx) / (rx * rx) + (yy * yy) / (ry * ry) <= 1) F(px + xx, py + yy, 1, 1, yy < 0 ? '#3E5E46' : '#2E4A36');
+          for (let xx = -rx + 2; xx <= rx - 2; xx++) { const top = Math.round(-ry * Math.sqrt(Math.max(0, 1 - (xx * xx) / (rx * rx)))); F(px + xx, py + top, 1, 1, '#F4F8FA'); if (Math.abs(xx) < rx - 4) F(px + xx, py + top + 1, 1, 1, '#DDE8EE'); }
+        });
+        const im = g.getImageData(0, 0, w, h), d = im.data, A = (x, y) => x >= 0 && y >= 0 && x < w && y < h && d[(y * w + x) * 4 + 3] > 0, out = [];
+        for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (!A(x, y) && (A(x - 1, y) || A(x + 1, y) || A(x, y - 1) || A(x, y + 1))) out.push([x, y]);
+        out.forEach(([x, y]) => F(x, y, 1, 1, '#1A241E'));
+        const [px, pz] = P(3.0, 5.2); propSprite(c, px, pz, group); block(px - 0.3, px + 0.3, pz - 0.3, pz + 0.3, 'tree');
+        inter(px - 1.0, pz + 0.6, 1.5, '看看院角的老松', () => talk('院角的老松', ['比屋頂還高的老松，枝上壓著雪。', '一陣風過去，雪從松枝上滑下來，「沙」的一聲落在院子裡。'])); }
+      { const [x, z] = P(-4.1, 3.9); inter(x, z, 1.6, '西廂', () => talk('西廂', ['紙門關著，裡面很安靜。'])); }
+      { const [x, z] = P(4.1, 2.6); inter(x, z, 1.6, '東廂', () => talk('東廂', ['紙門關著。門邊擺著一雙擦得很乾淨的木屐。'])); }
+      // 正屋後面：碎石小路、矮牆和小門、石凳；最後面是道場
+      { const [x, z] = P(0, 13.2); SB.add(G3.box, lam('#B4B0A6', { tex: 'gravel' }), x, 0.02, z, 2 * HU - 0.6, 0.04, 1.9); const [x2, z2] = P(3, 15); SB.add(G3.box, lam('#B4B0A6', { tex: 'gravel' }), x2, 0.02, z2, 1.4, 0.04, 1.3); }
+      { const [, zz] = P(0, 14.3); fenceRun(wx0 + 0.2, zz, cx + 2.4, zz, 1.1); fenceRun(cx + 3.6, zz, wx1 - 0.2, zz, 1.1);
+        HB.at(cx + 3, zz, 0); [-0.65, 0.65].forEach(o => HB.add(G3.box, woodM, o, 0.9, 0, 0.16, 1.8, 0.16)); HB.add(G3.box, roofE, 0, 1.9, 0, 1.8, 0.16, 0.7); HB.add(G3.box, snowM, 0, 2.02, 0, 1.6, 0.06, 0.6); HB.at(null); }
+      { const [x, z] = P(-3.5, 13.85); SB.add(G3.box, lam('#8C8A82', { tex: 'stone' }), x, 0.42, z, 1.4, 0.12, 0.42); [-0.5, 0.5].forEach(o => SB.add(G3.box, lam('#7A786E', { tex: 'stone' }), x + o, 0.18, z, 0.22, 0.36, 0.34)); SB.add(G3.box, snowM, x + 0.3, 0.5, z, 0.6, 0.04, 0.36); block(x - 0.7, x + 0.7, z - 0.21, z + 0.21, 'deco');
+        inter(x, z + 0.8, 1.3, '在矮牆邊的石凳坐一下', () => talk('石凳', ['石凳冰冰的。矮牆那邊傳來木刀相擊的聲音。'])); }
+      { const [x, z] = P(0, 18.6), w = 16, d = 6, h = 4.0, B = HB; B.at(x, z, 0);
+        B.add(G3.box, B_('#7A766E', { tex: 'stone' }), 0, 0.2, 0, w + 0.24, 0.4, d + 0.24);
+        B.add(G3.box, B_('#5A4430', { tex: 'planks' }), 0, 1.2, 0, w, 1.6, d); B.add(G3.box, B_('#E6DFCC'), 0, 2.0 + (h - 2.0) / 2, 0, w - 0.02, h - 2.0, d - 0.02);
+        for (let i = 0; i <= 8; i++) B.add(G3.box, woodM, -w / 2 + i * w / 8, h / 2 + 0.2, d / 2 + 0.03, 0.2, h - 0.4, 0.2);
+        for (let i = 0; i < 6; i++) B.add(G3.box, i % 2 ? glowW : darkW, -6 + i * 2.4, 3.3, d / 2 + 0.05, 1.2, 0.5, 0.05);
+        for (let i = 0; i < 3; i++) B.add(G3.box, glowW, w / 2 + 0.03, 3.3, -2 + i * 2, 0.05, 0.5, 1.2);   // 東側的高窗
+        B.add(G3.box, B_('#3A2A1C', { tex: 'planks' }), 3, 1.3, d / 2 + 0.05, 2.0, 2.2, 0.06); B.add(G3.box, woodM, 3, 2.5, d / 2 + 0.08, 2.4, 0.16, 0.1);
+        gableB(B, w, d, h, 0, '#E6DFCC');
+        B.at(null); block(x - w / 2, x + w / 2, z - d / 2, z + d / 2, 'house');
+        sign(x + 3, 2.95, z + d / 2 + 0.12, 0, '道場', '#3A2A1C', 1.4); }
+      [[-15.2, 3], [15.2, 4], [-15.2, 11], [15.2, 12], [-15.2, 19], [15.2, 19.5], [-10.2, 18.2], [10.2, 18.6]].forEach(([u, v]) => { const [x, z] = P(u, v); pineAt(x, z, 1.0); });
+      // 大門（說話：望月巖坐在門口的時候）、正屋的前門和後門、道場的門
+      { const [x, z] = P(0, -1.0); inter(x, z, 2.2, '望月家的大門', () => (R.dojoGate ? R.dojoGate() : talk('望月家', ['門裡傳來木刀相擊的聲音。', '門口掛著「望月」的木牌。']))); }
+      { const [x, z] = P(0, 5.4); inter(x, z, 1.8, '走進望月家的正屋', () => R.enterInterior('mochiHouse'), { door: 1 }); }
+      { const [x, z] = P(6, 12.75); inter(x, z, 1.6, '從後門回到正屋', () => (R.enterMochiBack ? R.enterMochiBack() : R.enterInterior('mochiHouse')), { door: 1 }); }
+      { const [x, z] = P(3, 14.95); inter(x, z, 1.7, '走進道場', () => R.enterInterior('dojo'), { door: 1 }); }
       tw.dojo = { x: cx, z: z1 - 3, z1 };
+      tw.mochi = { front: P(0, 5.4), back: P(6, 12.75), dojo: P(3, 14.95) };   // 從正屋、道場出來的位置（interiors2.js）
     }
     // 新商區：德克斯凡的店（玻璃櫥窗、發亮的招牌）；門口的自動販賣機
     const dexShop = (sx, sy, w, d, name, col, glow) => {
