@@ -177,6 +177,22 @@
     const hx = side ? (atk && k !== 'gun' && k !== 'bow' && k !== 'magic' ? 11 : 8) : 12, hy = side ? (atk ? 11 : 15) : atk ? 5 : 14;
     // 揮出去的刀身：從 (x0, y0) 往 (sx, sy) 一格一格畫 n 格，回傳尾端
     const ray = (x0, y0, sx, sy, n, col, w) => { let ex = x0, ey = y0; for (let i = 0; i < n; i++) { ex = Math.round(x0 + sx * i); ey = Math.round(y0 + sy * i); p(ex, ey, w || 1, 1, col); } return [ex, ey]; };
+    // 掘礦的十字鎬（mining.js 掘礦時換上）：4 舉過頭、3 敲下去、5 敲進地裡；其他格拿在身邊
+    if (wp === 'pickaxe') {
+      const st = '#9AA2AC', hd = (x0, y0, n) => { p(x0, y0, n, 1, st); p(x0 - 1, y0 + 1, 1, 1, dk(st)); p(x0 + n, y0 + 1, 1, 1, dk(st)); p(x0 + 1, y0, n - 2, 1, lt(st)); };
+      if (side) {
+        if (fr === 4) { ray(9, 9, -0.45, -1, 10, wood); hd(1, -1, 9); }
+        else if (fr === 3) { ray(10, 9, 1, 0.4, 8, wood); p(18, 8, 1, 10, st); p(17, 8, 1, 1, dk(st)); p(19, 17, 1, 1, dk(st)); }
+        else if (fr === 5) { ray(10, 12, 0.9, 0.75, 7, wood); hd(12, 18, 7); }
+        else { p(9, 7, 1, 9, wood); hd(6, 6, 7); }
+      } else {
+        if (fr === 4) { p(12, -3, 1, 9, wood); hd(8, -4, 9); }
+        else if (fr === 3) { p(7, 10, 1, 6, wood); hd(4, 16, 7); }
+        else if (fr === 5) { p(7, 12, 1, 6, wood); hd(4, 18, 7); }
+        else { p(13, 6, 1, 9, wood); hd(10, 5, 7); }
+      }
+      return;
+    }
     if (swingP && wp === 'spear') {
       // 長槍：舉起＝往後收、砍下＝刺到最遠、收招＝收回一點；正面看槍尖朝著鏡頭（縮短）
       if (side) { const back2 = swingP === 'wind' ? -6 : swingP === 'follow' ? -3 : -1, n = swingP === 'wind' ? 9 : 8; p(hx + back2, hy, n, 1, wood); p(hx + back2 + n, hy - 1, 2, 3, metal); return; }
