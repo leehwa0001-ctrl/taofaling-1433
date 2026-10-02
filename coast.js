@@ -136,7 +136,10 @@
   const shells = () => {
     const S0 = R.S; if (S0.shellDay !== S0.day) { S0.shellDay = S0.day; S0.shellN = 0; }
     if (S0.shellN >= 3) { R.townTalk('東濱', ['今天的沙灘已經被撿得差不多了。']); return; }
-    S0.shellN++; S0.mats.shell = (S0.mats.shell || 0) + 1; R.save(); R.toast('撿到一個貝殼（素材：' + (R.MATS.shell ? R.MATS.shell.name : '貝殼') + '）', '#E2D2A8');
+    // 貝殼（crafting.js 的素材；沒有的話退回甲殼），很少撿到珍珠
+    S0.shellN++; const k = R.MATS.seashell ? 'seashell' : 'shell', n = 1 + (Math.random() < 0.4 ? 1 : 0); S0.mats[k] = (S0.mats[k] || 0) + n;
+    const pearl = R.MATS.pearl && Math.random() < 0.08; if (pearl) S0.mats.pearl = (S0.mats.pearl || 0) + 1;
+    R.save(); R.toast('撿到' + (n > 1 ? '兩個' : '一個') + '貝殼' + (pearl ? '，還有一顆珍珠！' : ''), '#E2D2A8');
   };
 
   // ---------- 接上城裡 ----------
