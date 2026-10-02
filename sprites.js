@@ -705,7 +705,8 @@
       group.add(im); group.add(sh); out.push({ im, L });
     });
     let last = null;
-    const update = yaw => { if (yaw === last) return; last = yaw; out.forEach(({ im, L }) => { L.forEach((t, i) => { dummy.position.set(t.x, 0, t.z); dummy.rotation.set(0, yaw, 0); dummy.updateMatrix(); im.setMatrixAt(i, dummy.matrix); }); im.instanceMatrix.needsUpdate = true; }); };
+    // force：清單裡的 hide 改了，鏡頭沒轉也重排一次（hide 的樹移到地底下）
+    const update = (yaw, force) => { if (yaw === last && !force) return; last = yaw; out.forEach(({ im, L }) => { L.forEach((t, i) => { dummy.position.set(t.x, t.hide ? -50 : 0, t.z); dummy.rotation.set(0, yaw, 0); dummy.updateMatrix(); im.setMatrixAt(i, dummy.matrix); }); im.instanceMatrix.needsUpdate = true; }); };
     update(R.W.cam ? R.W.cam.yaw : 0);
     return { update };
   };

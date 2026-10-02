@@ -81,11 +81,52 @@
     }
     return F;
   };
+  // 空地周圍：遺跡的磚牆換成一圈一圈的松樹。牆的碰撞留著（還是走不進去），只是看不到；牆底下鋪雪地
+  let woodsF = null;
+  const woods = F => {
+    const t = F.tile; woodsF = null; if (!t || !F.wallMeshes) return;
+    F.wallMeshes.concat(F.ghosts || []).forEach(m => { m.visible = false; });
+    const TH = THREE, { nx, nz, T: TT, TS } = t, N = nx * nz;
+    const snow = new TH.Mesh(new TH.PlaneGeometry(nx * TS + 60, nz * TS + 60), new TH.MeshLambertMaterial({ color: '#E4ECF0' }));
+    snow.rotation.x = -Math.PI / 2; snow.position.set(t.X0 + nx * TS / 2, -0.06, t.Z0 + nz * TS / 2); snow.receiveShadow = true; F.group.add(snow);
+    // 每一格牆離空地幾格（1 是貼著空地的那一圈）
+    const d = new Uint8Array(N); let q = [];
+    for (let k = 0; k < N; k++) if (TT[k] === 1) q.push(k);
+    for (let step = 1; step <= 4 && q.length; step++) {
+      const nq = [];
+      q.forEach(k => { const tx = k % nx, tz = (k - tx) / nx; for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) { const x = tx + dx, z = tz + dz; if (x < 0 || z < 0 || x >= nx || z >= nz) continue; const m = z * nx + x; if (TT[m] === 2 && !d[m]) { d[m] = step; nq.push(m); } } });
+      q = nq;
+    }
+    // 越靠空地越密；再外面稀稀落落的，從上面看還是一片林子
+    const list = [];
+    for (let k = 0; k < N; k++) {
+      if (TT[k] !== 2) continue;
+      const n = d[k] === 1 ? 2 : d[k] === 2 ? 2 : d[k] === 3 ? (rnd() < 0.8 ? 1 : 2) : d[k] === 4 ? (rnd() < 0.7 ? 1 : 0) : (rnd() < 0.35 ? 1 : 0);
+      const tx = k % nx, tz = (k - tx) / nx;
+      for (let i = 0; i < n; i++) list.push({ x: t.cX(tx) + (rnd() - 0.5) * TS * 0.8, z: t.cZ(tz) + (rnd() - 0.5) * TS * 0.8, s: d[k] && d[k] <= 2 ? 0.95 + rnd() * 0.4 : 0.85 + rnd() * 0.5, near: d[k] && d[k] <= 3 });
+    }
+    // 遠的先畫、近的後畫（同一種大小的樹是一批）
+    list.sort((a, b) => a.z - b.z);
+    woodsF = { F, list, near: list.filter(x => x.near), field: R.treeField(list, F.group) };
+  };
+  // 擋在鏡頭和人物中間的樹先藏起來（跟遺跡的牆變矮一樣）
+  const woodsStep = () => {
+    const w = woodsF, P = W().P; if (!w || W().F !== w.F || !P) return;
+    const yaw = W().cam ? W().cam.yaw : 0, cy = Math.sin(yaw), cz = Math.cos(yaw); let dirty = false;
+    w.near.forEach(tr => {
+      const wx = tr.x - P.x, wz = tr.z - P.z, along = wx * cy + wz * cz, side = Math.abs(wx * cz - wz * cy);
+      const hide = along > -0.5 && along < 6.5 && side < 1.8 - along * 0.05;
+      if (!!tr.hide !== hide) { tr.hide = hide; dirty = true; }
+    });
+    w.field.update(yaw, dirty);
+  };
+
   // 蓋好之後：拿掉寶箱和打得壞的東西（遺跡裡才有），種松樹
   const dress = F => {
     (F.chests || []).forEach(c => { if (c.mesh && c.mesh.parent) c.mesh.parent.remove(c.mesh); if (c.col) c.col.on = false; }); F.chests = [];
     (F.props || []).forEach(p => { p.alive = false; if (p.col) p.col.on = false; if (p.mesh && p.mesh.parent) p.mesh.parent.remove(p.mesh); }); F.props = [];
     if (!F.group) return;
+    woods(F);
     F.rooms.forEach((r, i) => { if (!i) return; const n = 3 + Math.floor(rnd() * 3); for (let k = 0; k < n; k++) { const x = r.x + (rnd() - 0.5) * 2 * Math.max(1, r.hx - 1.5), z = r.z + (rnd() - 0.5) * 2 * Math.max(1, r.hz - 1.5); if (Math.hypot(x - r.x, z - r.z) < 2.5 || (R.pointBlocked && R.pointBlocked(x, z))) continue; const sp = R.pineSprite(0.9 + rnd() * 0.4); sp.position.set(x, 0, z); F.group.add(sp); R.addBox(x - 0.4, x + 0.4, z - 0.4, z + 0.4, 'tree'); } });
   };
   const fl0 = R.floorLabel;
@@ -119,6 +160,7 @@
   const st0 = R.step;
   R.step = dt => {
     st0(dt);
+    if (outdoor()) woodsStep();
     const run = W().run, a = run && run.agent, P = W().P; if (!a || !P) return;
     const dx = P.x - a.x, dz = P.z - a.z, d = Math.hypot(dx, dz), sp = d > 4 && !P.dead ? Math.min(P.speed || 6, (d - 3) * 3) : 0;
     if (sp) { a.x += dx / d * sp * dt; a.z += dz / d * sp * dt; }
