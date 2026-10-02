@@ -37,6 +37,7 @@
       return { x, z, w, d, H, front: z + d / 2, door: [x, z + d / 2 + (o.columns ? 2.8 : 1.4)] };
     };
     const flagpole = (x, z, h, tex) => { SB.add(G3.cyl, lam('#C8C8CC', { tex: 0 }), x, h / 2, z, 0.16, h, 0.16); SB.add(G3.box, lam('#6A6A70', { tex: 'cap' }), x, 0.2, z, 0.6, 0.4, 0.6); block(x - 0.2, x + 0.2, z - 0.2, z + 0.2, 'deco'); const fl = new TH.Mesh(new TH.PlaneGeometry(1.8, 1.35), R.seeThrough(new TH.MeshLambertMaterial({ map: tex, side: TH.DoubleSide }))); fl.position.set(x + 0.95, h - 0.75, z); group.add(fl); tw.fx.push({ kind: 'flag', m: fl, ph: x }); };
+    api.civ = civ; api.bigSign = bigSign;   // 別的檔案蓋大樓用（mahjong.js）
     if (!flagTex) { flagTex = new TH.TextureLoader().load('flag.webp'); flagTex.encoding = TH.sRGBEncoding; flagTex.userData.shared = true; }
 
     // ---------- 東鶴縣廳：五層的石造廳舍、前庭、國旗 ----------
