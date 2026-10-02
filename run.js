@@ -285,7 +285,7 @@
     const full = run.floor === run.floors - 1 && (run.grade.boss ? !!run.bossDown : W.F.rooms.some(r => r.type === 'deep' && r.visited && r.cleared));
     // 公會的委託報酬：看分級、走到第幾層、擊倒幾隻、有沒有走完
     const lv = run.grade.lv, greed = R.calcPlayer(S.cls).greed || 0;
-    run.reward = Math.round(([30, 90, 220, 520][lv - 1] + [12, 30, 70, 160][lv - 1] * run.floor + run.kills * (1 + lv)) * (full ? 1.6 : 1) * (1 + greed));
+    run.reward = Math.round(([30, 90, 220, 520, 1100][lv - 1] + [12, 30, 70, 160, 320][lv - 1] * run.floor + run.kills * (1 + lv)) * (full ? 1.6 : 1) * (1 + greed));
     // 隊友照公會規矩分走報酬
     const alive = (run.party || []).filter(pm => !pm.gone).length; run.share = Math.round(run.reward * R.PARTY_SHARE * alive);
     S.gold += run.reward - run.share;
