@@ -109,14 +109,9 @@
         const touch = ri === 0 && run.floor === 1, hx = Math.min(r.hx, 14) - 4, hz = Math.min(r.hz, 11) - 4; if (hx < 2.5 || hz < 2.5) return;
         const id = pool[pi++ % pool.length], x0 = r.x - hx, x1 = r.x + hx, z0 = r.z - hz, z1 = r.z + hz;
         if (!touch) {
-          // 柵欄：柱子和橫桿，四邊都擋住
-          const post = new TH.MeshLambertMaterial({ color: '#8A6A44' }), rail = new TH.MeshLambertMaterial({ color: '#C8A878' });
-          for (let x = x0; x <= x1 + 0.01; x += 2) [z0, z1].forEach(z => { const p = new TH.Mesh(new TH.BoxGeometry(0.14, 1.1, 0.14), post); p.position.set(x, 0.55, z); F.group.add(p); });
-          for (let z = z0; z <= z1 + 0.01; z += 2) [x0, x1].forEach(x => { const p = new TH.Mesh(new TH.BoxGeometry(0.14, 1.1, 0.14), post); p.position.set(x, 0.55, z); F.group.add(p); });
-          [[r.x, z0, x1 - x0, 0.08], [r.x, z1, x1 - x0, 0.08]].forEach(([x, z, w, d]) => [0.5, 0.95].forEach(y => { const m = new TH.Mesh(new TH.BoxGeometry(w, 0.06, d), rail); m.position.set(x, y, z); F.group.add(m); }));
-          [[x0, r.z, 0.08, z1 - z0], [x1, r.z, 0.08, z1 - z0]].forEach(([x, z, w, d]) => [0.5, 0.95].forEach(y => { const m = new TH.Mesh(new TH.BoxGeometry(w, 0.06, d), rail); m.position.set(x, y, z); F.group.add(m); }));
-          R.addBox(x0 - 0.1, x1 + 0.1, z0 - 0.1, z0 + 0.1, 'fence'); R.addBox(x0 - 0.1, x1 + 0.1, z1 - 0.1, z1 + 0.1, 'fence'); R.addBox(x0 - 0.1, x0 + 0.1, z0, z1, 'fence'); R.addBox(x1 - 0.1, x1 + 0.1, z0, z1, 'fence');
-          const n = 2 + Math.floor(rnd() * 2); for (let i = 0; i < n; i++) { const c = critter(id, F.group, r.x + (rnd() - 0.5) * hx, r.z + (rnd() - 0.5) * hz, 0); c.bounds = [x0 + 0.8, x1 - 0.8, z0 + 0.8, z1 - 0.8]; F.critters.push(c); }
+          // 2026-10-04 回饋：怪物旁邊的圍欄可以刪掉——展示區改成放養區：不圍柵欄，生物在自己那一區走，每一隻都溫馴、可以摸
+          const post = new TH.MeshLambertMaterial({ color: '#8A6A44' });
+          const n = 2 + Math.floor(rnd() * 2); for (let i = 0; i < n; i++) { const c = critter(id, F.group, r.x + (rnd() - 0.5) * hx, r.z + (rnd() - 0.5) * hz, 0); c.bounds = [x0 + 0.8, x1 - 0.8, z0 + 0.8, z1 - 0.8]; c.tame = true; F.critters.push(c); F.rpInter.push({ get x() { return c.x; }, get z() { return c.z; }, r: 1.5, label: '摸摸' + nameOf(id), act: () => petIt(c, nameOf(id)) }); }
           // 說明牌（柵欄的南邊外面）
           const sign = new TH.Mesh(new TH.BoxGeometry(1.2, 0.7, 0.08), new TH.MeshLambertMaterial({ color: '#F2E8C8' })); sign.position.set(r.x, 1.1, z1 + 0.6); F.group.add(sign); const sp = new TH.Mesh(new TH.BoxGeometry(0.1, 0.9, 0.1), post); sp.position.set(r.x, 0.45, z1 + 0.6); F.group.add(sp);
           F.rpInter.push({ x: r.x, z: z1 + 1.4, r: 1.8, label: '看說明牌：' + nameOf(id), act: () => plaque(id) });

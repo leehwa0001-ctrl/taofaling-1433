@@ -99,6 +99,8 @@
     if (D.flick < 1 && W.pool) W.pool.forEach(l => { l.intensity *= D.flick; });
     // 霧：角色周圍一定看得清楚；一般看得到 30 公尺左右（越暗越近），濃霧樓層（ruinvar.js 的 F.fogMin）10 公尺
     { const fg = W.scene && W.scene.fog; if (fg && fg.isFog && W.camera) { const cd = Math.hypot(W.camera.position.x - P.x, W.camera.position.y - 1, W.camera.position.z - P.z), vis = W.F && W.F.fogMin ? 10 : 30 - D.k * 12; fg.near = Math.max(1, cd - 3); fg.far = cd + vis; } }
+    // 哈米莉亞級：不嚇人（沒有四周的黑、黑影、低語、敲門聲）——2026-10-04 回饋：探索起來太壓抑
+    if (run.grade && run.grade.id === 'hamilia') { if (veil) veil.style.opacity = 0; return; }
     // 四周的黑：注意越高、生命越少越黑
     if (veil) veil.style.opacity = Math.min(0.95, 0.22 + D.k * 0.2 + run.aware / 100 * 0.25 + Math.max(0, 0.5 - P.hp / P.hpMax) * 0.4).toFixed(3);
     // 黑影：走近或時間到就不見

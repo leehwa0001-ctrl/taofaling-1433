@@ -294,7 +294,7 @@ window.R = window.R || {};
     snow: { name: '凍原', floor: '#C8D4DE', wall: '#8A98A6', light: '#DDEEFF', fog: '#1A2430', desc: '地面結冰會滑，寒氣讓體力慢慢流失。' }
   };
   R.THEMES = {
-    hamilia: { floor: '#4A5A44', wall: '#5E6A56', top: '#8A9A7A', light: '#A8E09A', fog: '#101A12', accent: '#7FE08A' },
+    hamilia: { floor: '#8A8A6E', wall: '#9C9478', top: '#CEC6A4', light: '#FFF0C8', fog: '#46564A', accent: '#9AE08A' },   // 2026-10-04 回饋：哈米莉亞級太壓抑——亮一點、暖一點（原本 #4A5A44／#5E6A56／#8A9A7A／#A8E09A／#101A12）
     amile: { floor: '#5E4E3A', wall: '#6E5A42', top: '#A08A64', light: '#FFD08A', fog: '#16110A', accent: '#FFC45A' },
     mors: { floor: '#2E2A38', wall: '#3A3448', top: '#5A5070', light: '#B89AFF', fog: '#0C0A14', accent: '#B07AFF' },
     kesent: { floor: '#2A2A30', wall: '#3A3A44', top: '#5A5A66', light: '#FFFFFF', fog: '#0A0A10', accent: '#FF5A7A' }

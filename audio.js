@@ -167,7 +167,7 @@
     const w = W();
     let name = scene;
     if (vis('title') || (vis('pick') && !w.town)) name = 'title';
-    else if (w.run && vis('run')) name = 'ruin';
+    else if (w.run && vis('run')) name = w.run.grade && w.run.grade.id === 'hamilia' ? 'day' : 'ruin';   // 哈米莉亞級：輕鬆一點的曲子（2026-10-04 回饋：太壓抑）
     else if (vis('hub')) name = 'interior';
     else if (w.town && vis('run')) { if (w.inside) name = 'interior'; else { const h = R.hourNow ? ((R.hourNow() % 24) + 24) % 24 : 12; name = h >= 6 && h < 18.5 ? 'day' : 'night'; } }
     if (R.musicHold) name = null;   // 卡拉 OK 唱歌的時候先停（karaoke.js）
