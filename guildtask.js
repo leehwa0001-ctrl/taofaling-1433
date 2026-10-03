@@ -113,7 +113,9 @@
   R.turnInTask = () => {
     const s = S(), h = s.heldTask; if (!h) return;
     const t = record(h, false); t.rkTag = 1; if (h.rankExam) t.rankExam = h.rankExam; if (h.boss) t.boss = 1;
-    s.gold += h.pay || 0; s.heldTask = null; R.save(); R.sfx && R.sfx('coin');
+    s.gold += h.pay || 0; s.heldTask = null;
+    if (h.pact && h.pact.pts && t.s[0] >= 60 && R.awardTitle) R.awardTitle('first');   // 加注條款的稱號：原本回到地面就看完成度（pact.js），改成繳交的時候看
+    R.save(); R.sfx && R.sfx('coin');
     return t;
   };
   const endTask = (failed) => {
