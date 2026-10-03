@@ -29,6 +29,8 @@ jobs:
             cat index.html
             printf '%s\n' '</body></html>'
           } > _site/index.html
+      - name: 每個 script 加上版本號（內容改了網址就變，瀏覽器不會用舊的快取）
+        run: node tools/bust.js _site/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
