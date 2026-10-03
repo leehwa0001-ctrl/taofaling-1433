@@ -130,12 +130,13 @@
   css.textContent = '.news-ov{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(6,4,10,.62)}'
     + '.news-box{width:min(620px,100%);max-height:min(82vh,760px);overflow:auto;background:var(--bg,#1A1612);color:var(--ink,#F1E9DA);border:1px solid var(--line,#5A4A3A);border-radius:12px;padding:16px 18px;box-shadow:0 10px 40px rgba(0,0,0,.5)}'
     + '.news-box h2{margin:0 0 6px}.news-box h3{margin:14px 0 6px;color:var(--gold,#C9A13A);font-size:1em}.news-box ul{margin:0;padding-left:1.2em;display:grid;gap:5px}.news-box li{line-height:1.5}'
+    + '.news-close{position:sticky;top:0;float:right;margin:-6px -8px 0 8px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line,#5A4A3A);background:var(--bg,#1A1612);color:inherit;font-size:22px;line-height:1;cursor:pointer;z-index:2}.news-close:hover{border-color:var(--gold,#C9A13A);color:var(--gold,#C9A13A)}'
     + '.news-box .row{display:flex;justify-content:flex-end;margin-top:12px}.t-btns .news-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#FF5A4A;margin-left:6px;vertical-align:middle}';
   document.head.appendChild(css);
   R.newsSheet = () => {
     markSeen(); const dot = document.querySelector('#t-news .news-dot'); if (dot) dot.remove();
     const ov = document.createElement('div'); ov.className = 'news-ov';
-    ov.innerHTML = '<div class="news-box" role="dialog" aria-label="更新公告"><p class="kicker">公會東鶴分館・告示板</p><h2>更新公告</h2>'
+    ov.innerHTML = '<div class="news-box" role="dialog" aria-label="更新公告"><button type="button" class="news-close" id="news-xt" aria-label="關閉" title="關閉（Esc）">×</button><p class="kicker">公會東鶴分館・告示板</p><h2>更新公告</h2>'
       + R.UPDATES.map(u => '<h3>' + esc(u.d) + '</h3><ul>' + u.items.map(t => '<li>' + esc(t) + '</li>').join('') + '</ul>').join('')
       + '<div class="row"><button type="button" class="btn pri" id="news-x">知道了</button></div></div>';
     document.body.appendChild(ov);
@@ -143,7 +144,7 @@
     const key = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } };
     document.addEventListener('keydown', key, true);
     ov.onclick = e => { if (e.target === ov) close(); };
-    ov.querySelector('#news-x').onclick = close;
+    ov.querySelector('#news-x').onclick = close; ov.querySelector('#news-xt').onclick = close;   // 2026-10-04 作者：叉叉放在最上面（捲動的時候一直在右上角）
   };
   // 標題畫面
   const addTitle = () => {
