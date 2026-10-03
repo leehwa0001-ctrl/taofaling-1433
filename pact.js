@@ -37,12 +37,12 @@
   // [id, 名字, 怎麼拿到, 加成說明, 加成]
   const TITLES = [
     ['first', '加注者', '第一次帶著加注條款完成委託（完成度 60% 以上）', '委託報酬 +3%', { pay: 0.03 }],
-    ['ten', '十注', '加注 10 點以上走完一座遺跡', '經驗值 +4%', { xp: 0.04 }],
-    ['twenty', '二十注', '加注 20 點以上走完一座遺跡', '傷害 +4%', { dmg: 0.04 }],
-    ['nopot', '不飲', '用「禁藥」走完一座遺跡', '回復 +6%', { heal: 0.06 }],
-    ['back', '背水者', '用「背水」走完一座遺跡', '生命 +4%', { hp: 0.04 }],
-    ['wolf', '孤狼', '用「單獨」走完摩爾斯級以上的遺跡', '傷害 +3%', { dmg: 0.03 }],
-    ['elite', '精英獵人', '用「精英化」走完一座遺跡', '暴擊率 +3%', { crit: 0.03 }],
+    ['ten', '十注', '加注 10 點以上，委託做到六成以上回來（或走完遺跡）', '經驗值 +4%', { xp: 0.04 }],
+    ['twenty', '二十注', '加注 20 點以上，委託做到六成以上回來（或走完遺跡）', '傷害 +4%', { dmg: 0.04 }],
+    ['nopot', '不飲', '用「禁藥」，委託做到六成以上回來（或走完遺跡）', '回復 +6%', { heal: 0.06 }],
+    ['back', '背水者', '用「背水」，委託做到六成以上回來（或走完遺跡）', '生命 +4%', { hp: 0.04 }],
+    ['wolf', '孤狼', '用「單獨」在摩爾斯級以上，委託做到六成以上回來（或走完遺跡）', '傷害 +3%', { dmg: 0.03 }],
+    ['elite', '精英獵人', '用「精英化」，委託做到六成以上回來（或走完遺跡）', '暴擊率 +3%', { crit: 0.03 }],
     ['full_amile', '滿注・阿彌勒', '全部條款最高級，走完阿彌勒級遺跡', '傷害 +3%', { dmg: 0.03 }],
     ['full_mors', '滿注・摩爾斯', '全部條款最高級，走完摩爾斯級遺跡', '傷害 +4%、生命 +3%', { dmg: 0.04, hp: 0.03 }],
     ['full_kesent', '滿注・克森特', '全部條款最高級，走完克森特級遺跡', '傷害 +5%、生命 +5%', { dmg: 0.05, hp: 0.05 }],
@@ -59,9 +59,9 @@
 
   // ---------- 委託書上的條款 ----------
   const sheet = (site, sp) => {
-    const p = pact(), s = S(), sel = p.sel, pts = ptsOf(sel), best = p.best[site.grade] || 0, party = (s.party || []).length;
+    const p = pact(), s = S(), sel = p.sel, party = (s.party || []).length, pts = ptsOf(party ? Object.assign({}, sel, { solo: 0 }) : sel), best = p.best[site.grade] || 0;   // 隊伍裡有人：「單獨」出發時會被拿掉，這裡就不算它
     return '<div id="pact-box"><h3>加注條款</h3><p class="note">自願接下更苛刻的條款，公會照條款加付報酬。加注每 1 點：報酬 +10%、經驗 +5%、寶箱多開一樣的機率 +3%。</p><div class="pact-list">'
-      + TERMS.map(([id, name, lv, pt]) => { const v = sel[id] || 0, dis = id === 'solo' && party; return '<div class="pact-row' + (v ? ' on' : '') + '"><b>' + esc(name) + '</b><small>' + esc(v ? lv[v - 1] : lv.join('／')) + (dis ? '（隊伍裡有人，不能選）' : '') + '</small><div class="pact-lv">' + ['不加'].concat(lv.map((_, i) => (lv.length > 1 ? (i ? '二級' : '一級') : '加') + ' ' + pt[i] + ' 點')).map((n, i) => '<button type="button" class="mini' + (v === i ? ' gold' : '') + '" data-pact="' + id + ':' + i + '"' + (dis && i ? ' disabled' : '') + '>' + n + '</button>').join('') + '</div></div>'; }).join('')
+      + TERMS.map(([id, name, lv, pt]) => { const v = sel[id] || 0, dis = id === 'solo' && party; return '<div class="pact-row' + (v ? ' on' : '') + '"><b>' + esc(name) + '</b><small>' + esc(v ? lv[v - 1] : lv.join('／')) + (dis ? (v ? '<b style="color:#FF9A7A">（隊伍裡有人：這一趟不算，點數也不算）</b>' : '（隊伍裡有人，不能選）') : '') + '</small><div class="pact-lv">' + ['不加'].concat(lv.map((_, i) => (lv.length > 1 ? (i ? '二級' : '一級') : '加') + ' ' + pt[i] + ' 點')).map((n, i) => '<button type="button" class="mini' + (v === i ? ' gold' : '') + '" data-pact="' + id + ':' + i + '"' + (dis && i ? ' disabled' : '') + '>' + n + '</button>').join('') + '</div></div>'; }).join('')
       + '</div><p class="pact-sum">加注 <b>' + pts + '</b>／' + MAXPTS + ' 點' + (pts ? '・報酬 +' + pts * 10 + '%・經驗 +' + pts * 5 + '%' : '') + (best ? '・這個分級的最高紀錄：' + best + ' 點' : '') + (pts === MAXPTS ? '・<b>滿注</b>' : '') + '</p></div>';
   };
   if (R.taskExtras) R.taskExtras.push({
@@ -169,17 +169,20 @@
     const r = ex0(how);
     const full = ((s.cleared || {})[run.grade.id] || 0) > before, p = run.pact, pay = (p ? p.pts * 0.1 : 0) + tb('pay');
     if (pay && run.reward) { run.pactBonus = Math.round(run.reward * pay); s.gold += run.pactBonus; }
-    const t = s.tasks && s.tasks[s.tasks.length - 1], comp = t && t.day === s.day ? t.s[0] : 0;
+    // 完成度：這一趟委託自己的進度（2026-10-04：委託改成回公會繳交才打成績以後，s.tasks 最後一筆不是這一趟的，會拿到別的委託的成績）
+    const tk = run.task, comp = tk && tk.need ? Math.round(100 * (tk.kind === 'patrol' ? Math.min(tk.deepest || 0, tk.floors || tk.need) : (run.kills || 0) + (tk.kills0 || 0)) / tk.need) : 0;
     if (p) {
       const pp = pact(), g = run.grade.id;
       if (full || comp >= 60) pp.best[g] = Math.max(pp.best[g] || 0, p.pts);
+      if (full) { pp.bestFull = pp.bestFull || {}; pp.bestFull[g] = Math.max(pp.bestFull[g] || 0, p.pts); }
       if (comp >= 60) award('first');
-      if (full) {
+      // 2026-10-04 作者：用孤單跟禁藥闖很多次也沒拿到——層數加深以後「走完」太難，改成委託做到六成以上回來就算（滿注的稱號還是要走完）
+      if (full || comp >= 60) {
         if (p.pts >= 10) award('ten'); if (p.pts >= 20) award('twenty');
         if (p.sel.nopot) award('nopot'); if (p.sel.nocry) award('back'); if (p.sel.elite) award('elite');
         if (p.sel.solo && run.grade.lv >= 3) award('wolf');
-        if (p.pts === MAXPTS && TT['full_' + g]) award('full_' + g);
       }
+      if (full && p.pts === MAXPTS && TT['full_' + g]) award('full_' + g);
     }
     R.save();
     if (run.pactBonus) setTimeout(() => { const box = $('r-sheet'); if (!box) return; const el = document.createElement('p'); el.className = 'note'; el.textContent = (p ? '加注條款 ' + p.pts + ' 點' : '稱號') + '：公會加付 ' + run.pactBonus + ' 費拉。'; const row = box.querySelector('.row'); if (row) box.insertBefore(el, row); }, 50);
@@ -196,7 +199,8 @@
     const body = $('hub-body'), card = body && body.querySelector('.hero-card'); if (!card) return;
     const p = pact(), name = R.titleName(); const info = card.querySelector('div'); if (info && name) { const el = document.createElement('small'); el.className = 'tag'; el.textContent = '稱號：' + name; info.insertBefore(el, info.children[1] || null); }
     const box = document.createElement('div'); box.className = 'ft-box';
-    box.innerHTML = '<h3>稱號（' + Object.keys(p.got).length + '／' + TITLES.length + '）</h3><p class="note">一次戴一個稱號。加注條款的最高紀錄：' + (['amile', 'mors', 'kesent'].map(g => R.gradeById(g).name + ' ' + (p.best[g] || 0) + ' 點').join('・')) + '（滿注 ' + MAXPTS + ' 點）</p><div class="ft-list">'
+    { const bs = Object.values(p.best || {}); if (bs.some(v => v >= 10)) award('ten'); if (bs.some(v => v >= 20)) award('twenty'); }   // 2026-10-04 條件放寬以前的紀錄：補發
+    box.innerHTML = '<h3>稱號（' + Object.keys(p.got).length + '／' + TITLES.length + '）</h3><p class="note">一次戴一個稱號。加注條款的最高紀錄（委託做到六成以上回來，或走完遺跡）：' + (['amile', 'mors', 'kesent'].map(g => R.gradeById(g).name + ' ' + (p.best[g] || 0) + ' 點' + ((p.bestFull || {})[g] ? '（走完 ' + p.bestFull[g] + ' 點）' : '')).join('・')) + '（滿注 ' + MAXPTS + ' 點；滿注的稱號要走完）</p><div class="ft-list">'
       + TITLES.map(([id, n, how, bonus]) => { const got = p.got[id]; return '<div class="ft-row' + (got ? '' : ' locked') + '"><b>' + (got ? esc(n) : '？？？') + '</b><small>' + esc(how) + '・' + esc(bonus) + '</small>' + (got ? (p.title === id ? '<span class="tag">戴著</span>' : '<button type="button" class="mini" data-title="' + id + '">戴上</button>') : '') + '</div>'; }).join('') + '</div>';
     const after = body.querySelector('.ft-box') || card; after.after(box);
     box.querySelectorAll('[data-title]').forEach(b => { b.onclick = () => { p.title = b.dataset.title; R.save(); R.hub(); }; });
