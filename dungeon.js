@@ -718,7 +718,7 @@
 
   // ---------- 擋住人物的牆會暫時變矮（轉視角也看得到自己） ----------
   const cutM = () => new (T().Matrix4)(), cutQ = () => new (T().Quaternion)();
-  let _m, _q, _p, _s, _zero;
+  let _m, _q, _p, _s, _zero, _up;
   R.updateCutaway = dt => {
     const W = R.W, F = W.F, P = W.P; if (!F || !F.wallMeshes || !P) return;
     if (!_m) { _m = cutM(); _q = cutQ(); _p = new (T().Vector3)(); _s = new (T().Vector3)(); }
@@ -734,8 +734,13 @@
     // 線經過的牆比線高，就換成半透明的。透視鏡頭畫面邊邊的視線是斜的，只看人物正前方那一條不夠。
     const C = W.camera && W.camera.position;
     if (C) {
+      // 正交鏡頭的視線是平行的：每一條線都照鏡頭看的方向；透視鏡頭照「往鏡頭的位置」
+      const cam = W.camera, ortho = cam.isOrthographicCamera; let bx = 0, by = 1, bz = 0;
+      if (ortho) { cam.updateMatrixWorld(); const e = cam.matrixWorld.elements; bx = e[8]; by = e[9]; bz = e[10]; }
       const ray = (x, y, z, wide) => {
-        const hx = C.x - x, hz = C.z - z, hd = Math.hypot(hx, hz) || 1, ux = hx / hd, uz = hz / hd, k = (C.y - y) / hd;
+        let ux, uz, k, hd;
+        if (ortho) { const hl = Math.hypot(bx, bz) || 1; ux = bx / hl; uz = bz / hl; k = by / hl; hd = 1e9; }
+        else { const hx = C.x - x, hz = C.z - z; hd = Math.hypot(hx, hz) || 1; ux = hx / hd; uz = hz / hd; k = (C.y - y) / hd; }
         const reach = Math.min(hd, Math.max(0, (7 - y) / Math.max(0.05, k)));   // 線比 7 公尺高之後，沒有牆擋得到
         for (let s0 = 0.3; s0 <= reach; s0 += 0.5) {
           const ry = y + s0 * k;
@@ -754,11 +759,13 @@
     // 擋住的牆：本體縮成 0，換上同樣大小的半透明幽靈牆
     if (!_zero) _zero = new (T().Matrix4)().makeScale(0, 0, 0);
     const full = (j, i) => {
-      const h = F.wallH[i], fac = F.wallFacade[i], tk = F.wallTile[i], tx = tk % t.nx, tz = (tk - tx) / t.nx, x = t.cX(tx), z = t.cZ(tz);
-      if (j === 0) { _p.set(x, h / 2, z); _s.set(TS, h, TS); }
+      const h = F.wallVisH ? F.wallVisH[i] : F.wallH[i], fac = F.wallFacade[i], tk = F.wallTile[i], tx = tk % t.nx, tz = (tk - tx) / t.nx, x = t.cX(tx), z = t.cZ(tz);   // wallVisH：ruinterrain.js 的丘陵、樹林（看得到的高度和擋視線的高度不一樣）
+      // ruinterrain.js 的地形：好幾種形狀分在幾個 mesh（wallPick：這一格用第幾個）、每一格轉的角度（wallRotY）、大小（wallSX）
+      if (F.wallPick && F.wallPick[i] !== j) return _zero;
+      if (j === 0 || F.wallPick) { const sx = F.wallSX ? F.wallSX[i] : 1; _p.set(x, h / 2, z); _s.set(TS * sx, h, TS * sx); }
       else if (j === 1) { if (fac) { _p.set(x, h + 0.2, z); _s.set(TS + 0.5, 0.4, TS + 0.5); } else { _p.set(x, h + 0.09, z); _s.set(TS + 0.12, 0.18, TS + 0.12); } }
       else { _p.set(x, h + 0.36, z); _s.set(TS - 0.5, 0.36, TS - 0.5); }
-      _q.identity(); return _m.compose(_p, _q, _s);
+      _q.identity(); if (F.wallRotY) _q.setFromAxisAngle(_up || (_up = new (T().Vector3)(0, 1, 0)), F.wallRotY[i]); return _m.compose(_p, _q, _s);
     };
     let dirty = false;
     const swap = (i, ghost) => { F.wallMeshes.forEach((solid, j) => { solid.setMatrixAt(i, ghost ? _zero : full(j, i)); F.ghosts[j].setMatrixAt(i, ghost ? full(j, i) : _zero); }); dirty = true; };

@@ -71,7 +71,7 @@
   };
 
   // 透視的程度：鏡頭的視角（度）。0 ＝ 原本的正交鏡頭。一般鏡頭是 44 度，這裡收窄成 26 度，看起來只有「一點」透視
-  R.PIX_FOV = () => { const o = R.S && R.S.opts; return o && o.fov != null ? o.fov : 26; };
+  R.PIX_FOV = () => { const o = R.S && R.S.opts; return o && o.fov != null ? o.fov : 0; };   // 2026-10-04 作者：透視之後感覺變差——預設改回不透視（45 度俯角留著），選單的「鏡頭」還是可以開
   // 換鏡頭：像素風用透視（窄角）或正交鏡頭（位置、方向照舊，鏡頭的程式不用改）
   const useCam = (W, pix, w, h) => {
     if (!W.pcam) W.pcam = W.camera;
