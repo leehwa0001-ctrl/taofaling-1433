@@ -432,6 +432,7 @@ body:not(.touch) #run.town #r-wp{position:fixed;left:16px;bottom:calc(max(16px,e
 .r-cam svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .r-cam .flip svg{transform:scaleX(-1)}
 .r-cam .key-only{font-size:11px;color:var(--dim)}
+#run.town #r-boss{display:none!important}   /* 城裡（含奉主）不顯示佩特拉核心的血條：離開遺跡時血條還開著，原本會一直掛著 */
 #r-boss{left:50%;top:max(14px,env(safe-area-inset-top));transform:translateX(-50%);width:min(460px,calc(100% - 440px));text-align:center;font-family:var(--serif);font-size:14px;font-weight:700;text-shadow:0 1px 6px #000}
 #r-boss .meter{height:10px;margin-top:4px;border:1px solid rgba(255,255,255,.3)}
 #r-boss-hp{background:linear-gradient(90deg,#8A1A2A,#E0283A)}
