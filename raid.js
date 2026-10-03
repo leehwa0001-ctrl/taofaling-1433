@@ -16,20 +16,22 @@
   const ST = k => { if (STACK_OF[k]) return STACK_OF[k]; const v = (R.MATS[k] && R.MATS[k].value) || 10; return v >= 40 ? 10 : v >= 14 ? 20 : v >= 6 ? 30 : 40; };
   R.stackOf = ST;
   const PACKS = {
-    sack: { name: '布袋', w: 5, h: 4, price: 0, desc: '公會發的布袋。倒下了也會再發一個。' },
-    leather: { name: '皮背包', w: 6, h: 5, price: 450, desc: '老岩推薦的皮背包，耐磨。' },
-    frame: { name: '登山背包', w: 7, h: 6, price: 1400, desc: '有鋁框的登山背包，背得比較多。' },
-    guild: { name: '公會遠征背包', w: 8, h: 7, price: 3600, desc: '公會給長期遠征用的大背包，側邊掛得了長兵器。' },
-    mage: { name: '魔導收納袋', w: 9, h: 8, price: 9000, desc: '魔導術式縫進內襯的袋子：裡面比外面大一點。' }
+    // 2026-10-04 作者：背包容量再擴大——每一種長寬各 +1
+    sack: { name: '布袋', w: 6, h: 5, price: 0, desc: '公會發的布袋。倒下了也會再發一個。' },
+    leather: { name: '皮背包', w: 7, h: 6, price: 450, desc: '老岩推薦的皮背包，耐磨。' },
+    frame: { name: '登山背包', w: 8, h: 7, price: 1400, desc: '有鋁框的登山背包，背得比較多。' },
+    guild: { name: '公會遠征背包', w: 9, h: 8, price: 3600, desc: '公會給長期遠征用的大背包，側邊掛得了長兵器。' },
+    mage: { name: '魔導收納袋', w: 10, h: 9, price: 9000, desc: '魔導術式縫進內襯的袋子：裡面比外面大一點。' }
   };
   R.PACKS = PACKS;
   const packs = () => { const s = S(); s.packs = s.packs || { sack: 1 }; s.packs.sack = Math.max(1, s.packs.sack || 0); if (!s.pack || !(s.packs[s.pack] > 0) || !PACKS[s.pack]) s.pack = 'sack'; return s.packs; };
   const curPackId = () => { packs(); return S().pack; };
 
   // ---------- 每件東西佔幾格（寬×高） ----------
-  const WSIZE = { pistol: [2, 1], rifle: [4, 1], shotgun: [4, 1], shortbow: [1, 3], longbow: [1, 4], crossbow: [3, 2], greatsword: [1, 4], axe: [2, 3], sword: [1, 3], staff: [1, 4], orb: [2, 2], holystaff: [1, 4], mace: [1, 3], katana: [1, 3], dualblades: [2, 2], spear: [1, 4] };
-  const KSIZE = { melee: [1, 3], gun: [3, 1], bow: [1, 3], magic: [1, 3], thrust: [1, 4] };
-  const ASIZE = { head: [2, 2], body: [2, 3], legs: [2, 2], feet: [2, 1] };
+  // 2026-10-04 作者：裝備占的格數可以小一點——大約都縮一號
+  const WSIZE = { pistol: [1, 1], rifle: [3, 1], shotgun: [3, 1], shortbow: [1, 2], longbow: [1, 3], crossbow: [2, 2], greatsword: [1, 3], axe: [2, 2], sword: [1, 2], staff: [1, 3], orb: [1, 1], holystaff: [1, 3], mace: [1, 2], katana: [1, 2], dualblades: [2, 1], spear: [1, 3] };
+  const KSIZE = { melee: [1, 2], gun: [2, 1], bow: [1, 2], magic: [1, 2], thrust: [1, 3] };
+  const ASIZE = { head: [1, 1], body: [2, 2], legs: [1, 2], feet: [1, 1] };
   const sizeOf = it => {
     if (!it) return [1, 1];
     if (it.kind === 'weapon') { const w = R.WEAPONS[it.base]; return WSIZE[it.base] || (w && KSIZE[w.kind]) || [1, 3]; }
@@ -130,8 +132,20 @@
   };
 
   // ---------- 背包的畫面（Minecraft 的裝備欄＋塔科夫的格子） ----------
-  const CELL = 38;
-  let sel = null, drag = null;
+  // 格子大小可以放大縮小（記在這台瀏覽器）；視窗可以拖（2026-10-04 作者：背包的介面可以拖動和放大）
+  let CELL = (() => { try { return Math.max(28, Math.min(64, +localStorage.getItem('tk-cell') || 38)); } catch (e) { return 38; } })();
+  let sel = null, drag = null, bagPos = null, inBag = false;
+  const sh0 = R.sheet; R.sheet = (...a) => { const sh = $('r-sheet'); if (sh && !inBag) { sh.style.transform = ''; sh.classList.remove('tk-win'); } return sh0(...a); };
+  const winHook = () => {
+    const sh = $('r-sheet'); if (!sh) return; sh.classList.add('tk-win'); sh.style.transform = bagPos ? 'translate(' + bagPos[0] + 'px,' + bagPos[1] + 'px)' : '';
+    sh.querySelectorAll('[data-zoom]').forEach(b => { b.onclick = e => { e.stopPropagation(); CELL = Math.max(28, Math.min(64, CELL + 6 * (+b.dataset.zoom))); try { localStorage.setItem('tk-cell', CELL); } catch (er) { } R.bagSheet(); }; });
+    const head = sh.querySelector('.tk-head'); if (!head) return;
+    head.onpointerdown = e => { if (e.target.closest('button')) return; const p0 = bagPos || [0, 0], x0 = e.clientX, y0 = e.clientY; head.setPointerCapture && head.setPointerCapture(e.pointerId);
+      head.onpointermove = ev => { bagPos = [p0[0] + ev.clientX - x0, p0[1] + ev.clientY - y0]; sh.style.transform = 'translate(' + bagPos[0] + 'px,' + bagPos[1] + 'px)';
+        const r = sh.getBoundingClientRect(), fx = r.right < 120 ? 120 - r.right : r.left > innerWidth - 120 ? innerWidth - 120 - r.left : 0, fy = r.top < 0 ? -r.top : r.top > innerHeight - 50 ? innerHeight - 50 - r.top : 0;   // 拖到哪都留一截標題在畫面裡
+        if (fx || fy) { bagPos = [bagPos[0] + fx, bagPos[1] + fy]; sh.style.transform = 'translate(' + bagPos[0] + 'px,' + bagPos[1] + 'px)'; } };
+      head.onpointerup = head.onpointercancel = () => { head.onpointermove = null; }; };
+  };
   const icon = it => (R.itemIconTag ? R.itemIconTag(it, 'sm') : '');
   R.bagSheet = () => {
     const run = W().run; if (!run) return;
@@ -159,13 +173,14 @@
           + '</div></div>';
       }
     }
-    R.sheet('<div class="tk-head"><h2>背包・' + esc(pk.name) + '</h2><span>' + u.used + '／' + u.total + ' 格</span></div>'
+    inBag = true; try { R.sheet('<div class="tk-head" title="按住這一列可以拖動"><h2>背包・' + esc(pk.name) + '</h2><span>' + u.used + '／' + u.total + ' 格</span><span class="tk-zoom"><button type="button" class="mini" data-zoom="-1" title="縮小">－</button><button type="button" class="mini" data-zoom="1" title="放大">＋</button></span></div>'
       + '<div class="tk-wrap"><div class="mc-panel"><p class="kicker">裝備</p><div class="mc-slots">' + slots + '</div></div>'
       + '<div class="tk-gridwrap"><div class="tk-grid" id="tk-grid" style="grid-template-columns:repeat(' + g.w + ',' + CELL + 'px);grid-template-rows:repeat(' + g.h + ',' + CELL + 'px)">' + cells + matsHtml + items + '</div></div></div>'
       + (loose.length ? '<p class="note" style="color:#FF9A6A">暫時放不進格子的物品：整理背包後即可收納；目前仍占用容量，返回地面時也會一起帶回。' + loose.map(it => '<button type="button" class="mini" data-loose="' + run.bag.indexOf(it) + '">' + esc(R.itemName(it)) + '</button>').join('') + '</p>' : '')
       + info
       + '<p class="note">素材：' + (Object.keys(run.mats).filter(k => run.mats[k] > 0).map(k => R.MATS[k].name + ' ×' + run.mats[k] + ' <button type="button" class="mini" data-dm="' + k + '">丟掉一格</button>').join('、') || '沒有') + '（一格疊幾個看素材：高級的 10 個、普通的 20～40 個）。倒下的話，背包、身上的裝備都會留在遺跡裡。</p>',
-      '<div class="row"><button type="button" class="btn pri" id="bag-x">關上（I）</button></div>');
+      '<div class="row"><button type="button" class="btn pri" id="bag-x">關上（I）</button></div>'); } finally { inBag = false; }
+    winHook();
     $('bag-x').onclick = () => { sel = null; R.closeSheet(); };
     const box = $('r-sheet');
     box.querySelectorAll('[data-slot]').forEach(el => { el.onclick = () => { sel = { slot: el.dataset.slot }; R.bagSheet(); }; });
@@ -334,7 +349,7 @@
   };
 
   const css = document.createElement('style');
-  css.textContent = '.tk-head{display:flex;align-items:baseline;gap:12px}.tk-head span{opacity:.8}.tk-wrap{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;margin:6px 0}'
+  css.textContent = '.tk-head{display:flex;align-items:baseline;gap:12px;cursor:move;user-select:none;touch-action:none}.tk-head span{opacity:.8}.tk-head .tk-zoom{margin-left:auto;display:flex;gap:4px;opacity:1}#r-sheet.tk-win{max-width:min(96vw,1400px);width:auto}.tk-wrap{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;margin:6px 0}'
     + '.mc-panel{background:#C6C6C6;border:3px solid;border-color:#FFFFFF #555555 #555555 #FFFFFF;padding:8px;border-radius:4px;color:#3A3A3A}.mc-panel .kicker{color:#3A3A3A;margin:0 0 6px}'
     + '.mc-slots{display:grid;grid-template-columns:repeat(2,52px);gap:6px}.mc-slot{width:52px;height:52px;background:#8B8B8B;border:3px solid;border-color:#373737 #FFFFFF #FFFFFF #373737;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative}'
     + '.mc-slot.sel{outline:2px solid #FFE08A}.mc-empty{font-size:11px;color:#3A3A3A;opacity:.75}.mc-slot img,.mc-slot canvas{max-width:40px;max-height:40px;image-rendering:pixelated}'
