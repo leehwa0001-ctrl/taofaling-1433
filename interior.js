@@ -648,7 +648,7 @@
     if (I.moveStick) { mx += I.moveStick.x; mz += I.moveStick.y; }
     const ml = Math.hypot(mx, mz); if (ml > 1) { mx /= ml; mz /= ml; }
     const cy = Math.cos(W.cam.yaw), sy = Math.sin(W.cam.yaw), wx = mx * cy + mz * sy, wz = -mx * sy + mz * cy;
-    const run = R.running() ? 1.5 : 1; P.x += wx * P.speed * 0.8 * run * dt; P.z += wz * P.speed * 0.8 * run * dt;
+    const run = R.running() ? 1.8 : 1; P.x += wx * P.speed * 0.8 * run * dt; P.z += wz * P.speed * 0.8 * run * dt;
     R.collide(P, 0.42);
     if (ml > 0.1) P.yaw = Math.atan2(wx, wz);
     P.aimA = P.yaw;

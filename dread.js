@@ -6,18 +6,18 @@
 //   身後的腳步聲、牆裡傳來三下敲門聲、聽不清楚的低語。聲音用瀏覽器即時合成（audio.js 的 R.AUDIO.ctx）。
 (function (R) {
   const W = R.W, rnd = Math.random, T = () => THREE;
-  const DARK = { 1: 0.45, 2: 0.6, 3: 0.72, 4: 0.8 };
+  const DARK = { 1: 0.15, 2: 0.38, 3: 0.48, 4: 0.56 };   // 2026-10-04 回饋：遺跡太暗、看不清楚怪物和技能（原本 0.45／0.6／0.72／0.8）
   const D = { k: 0, torchI: 1.3, flick: 1, flickT: 0, nextT: 30, shadow: null, veil: null };
 
   // ---------- 換樓層：把光調暗 ----------
   const lf = R.loadFloor;
   R.loadFloor = (f, o) => {
     const r = lf(f, o), run = W.run, sc = W.scene; if (!run || !sc || (run.site && run.site.outdoor)) return r;   // 外面（hunt.js 的狩獵場）不暗
-    const k = Math.min(0.88, (DARK[run.grade.lv] || 0.6) + 0.03 * (f || 0)); D.k = k;
-    sc.children.forEach(c => { if (c.isHemisphereLight) c.intensity = 0.42 * (1 - k) * 0.7 + 0.02; });
-    if (W.moon) W.moon.intensity = 0.55 * (1 - k) * 0.6;
-    if (sc.fog) { sc.fog.density = 0.026 * (1 + k * 1.1); sc.fog.color.multiplyScalar(1 - k * 0.5); if (sc.background && sc.background.isColor) sc.background.copy(sc.fog.color); }
-    if (W.torch) { W.torch.intensity = D.torchI = 1.8; W.torch.distance = 11 + (1 - k) * 4; W.torch.decay = 1.6; }
+    const k = Math.min(0.7, (DARK[run.grade.lv] || 0.4) + 0.015 * (f || 0)); D.k = k;
+    sc.children.forEach(c => { if (c.isHemisphereLight) c.intensity = 0.62 * (1 - k) + 0.14; });
+    if (W.moon) W.moon.intensity = 0.6 * (1 - k) * 0.8 + 0.05;
+    if (sc.fog) { sc.fog.density = 0.02 * (1 + k * 0.7); sc.fog.color.multiplyScalar(1 - k * 0.35); if (sc.background && sc.background.isColor) sc.background.copy(sc.fog.color); }
+    if (W.torch) { W.torch.intensity = D.torchI = 2.3; W.torch.distance = 15 + (1 - k) * 6; W.torch.decay = 1.4; }
     if (W.F && W.F.lights) W.F.lights.forEach(L => { L.I *= 0.85; });
     D.flick = 1; D.flickT = 0; D.nextT = 25 + rnd() * 20; removeShadow();
     return r;
@@ -95,7 +95,7 @@
     if (W.torch) W.torch.intensity = D.torchI * D.flick * (0.9 + Math.sin(t * 7.3) * 0.04 + Math.sin(t * 17.1) * 0.03 + (rnd() < 0.01 ? -0.25 : 0));
     if (D.flick < 1 && W.pool) W.pool.forEach(l => { l.intensity *= D.flick; });
     // 四周的黑：注意越高、生命越少越黑
-    if (veil) veil.style.opacity = Math.min(0.95, 0.42 + D.k * 0.25 + run.aware / 100 * 0.25 + Math.max(0, 0.5 - P.hp / P.hpMax) * 0.4).toFixed(3);
+    if (veil) veil.style.opacity = Math.min(0.95, 0.22 + D.k * 0.2 + run.aware / 100 * 0.25 + Math.max(0, 0.5 - P.hp / P.hpMax) * 0.4).toFixed(3);
     // 黑影：走近或時間到就不見
     const s = D.shadow;
     if (s) {

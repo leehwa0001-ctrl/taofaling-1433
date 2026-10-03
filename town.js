@@ -670,7 +670,7 @@
     const sc = sun.shadow.camera; sc.left = -34; sc.right = 34; sc.top = 34; sc.bottom = -34; sc.near = 1; sc.far = 110; sun.shadow.bias = -0.0012;
     W.scene.add(sun); W.scene.add(sun.target); W.moon = sun; W.torch = null;
     R.buildTown(W.scene);
-    const cls = R.S.cls, eq = R.equipped(cls), P = { cls, speed: R.CLASSES[cls].speed * 1.05, h: R.makePlayerHero(cls, eq.weapon ? eq.weapon.base : R.STARTER[cls], eq), aimA: Math.PI, yaw: Math.PI };
+    const cls = R.S.cls, eq = R.equipped(cls), P = { cls, speed: R.CLASSES[cls].speed * 1.2, h: R.makePlayerHero(cls, eq.weapon ? eq.weapon.base : R.STARTER[cls], eq), aimA: Math.PI, yaw: Math.PI };
     W.P = P; W.scene.add(P.h.g);
     const spot = at || (from && W.town.gates && W.town.gates[from] ? W.town.gates[from] : [WX(592), WZ(656)]);
     P.x = spot[0]; P.z = spot[1];
@@ -709,7 +709,7 @@
     const ml = Math.hypot(mx, mz); if (ml > 1) { mx /= ml; mz /= ml; }
     if (P.sit) { if (ml > 0.1) { P.sit = false; P.h.sit = false; } else { mx = mz = 0; } }
     const cy = Math.cos(W.cam.yaw), sy = Math.sin(W.cam.yaw), wx = mx * cy + mz * sy, wz = -mx * sy + mz * cy;
-    const run = R.running() ? 1.65 : 1; P.x += wx * P.speed * run * dt; P.z += wz * P.speed * run * dt;
+    const run = R.running() ? 2.2 : 1; P.x += wx * P.speed * run * dt;   /* 2026-10-04 回饋：跑步要明顯比較快（1.65→2.2） */ P.z += wz * P.speed * run * dt;
     if (!P.sit) R.collide(P, 0.42);
     if (ml > 0.1) P.yaw = Math.atan2(wx, wz);
     P.aimA = P.yaw;

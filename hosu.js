@@ -551,7 +551,7 @@
     const sc = sun.shadow.camera; sc.left = -34; sc.right = 34; sc.top = 34; sc.bottom = -34; sc.near = 1; sc.far = 110; sun.shadow.bias = -0.0012;
     W.scene.add(sun); W.scene.add(sun.target); W.moon = sun; W.torch = null;
     build(W.scene);
-    const cls = S().cls, eq = R.equipped(cls), P = { cls, speed: R.CLASSES[cls].speed * 1.05, h: R.makePlayerHero(cls, eq.weapon ? eq.weapon.base : R.STARTER[cls], eq), aimA: 0, yaw: 0 };
+    const cls = S().cls, eq = R.equipped(cls), P = { cls, speed: R.CLASSES[cls].speed * 1.2, h: R.makePlayerHero(cls, eq.weapon ? eq.weapon.base : R.STARTER[cls], eq), aimA: 0, yaw: 0 };
     W.P = P; W.scene.add(P.h.g); P.x = 0; P.z = -88.5;
     R.spawnTownAllies();
     R.showScreen('run'); $('run').classList.add('town'); W.paused = false;
@@ -577,7 +577,7 @@
     if (!P.busy) { if (I.keys.w || I.keys.arrowup) mz -= 1; if (I.keys.s || I.keys.arrowdown) mz += 1; if (I.keys.a || I.keys.arrowleft) mx -= 1; if (I.keys.d || I.keys.arrowright) mx += 1; if (I.moveStick) { mx += I.moveStick.x; mz += I.moveStick.y; } }
     const ml = Math.hypot(mx, mz); if (ml > 1) { mx /= ml; mz /= ml; }
     if (P.sit) { if (ml > 0.1) { P.sit = false; P.h.sit = false; } else { mx = mz = 0; } }
-    const cy = Math.cos(W.cam.yaw), sy = Math.sin(W.cam.yaw), wx = mx * cy + mz * sy, wz = -mx * sy + mz * cy, run = R.running() ? 1.65 : 1;
+    const cy = Math.cos(W.cam.yaw), sy = Math.sin(W.cam.yaw), wx = mx * cy + mz * sy, wz = -mx * sy + mz * cy, run = R.running() ? 2.2 : 1;
     P.x += wx * P.speed * run * dt; P.z += wz * P.speed * run * dt; R.collide(P, 0.42);
     if (ml > 0.1) P.yaw = Math.atan2(wx, wz); P.aimA = P.yaw;
     P.h.g.position.set(P.x, 0, P.z); P.h.g.rotation.y = P.yaw; R.animHero(P.h, ml * P.speed * run, dt, false);

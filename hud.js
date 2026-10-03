@@ -192,9 +192,14 @@
     } else if (kind === 'sector') {
       f.life = o.t || 1;
       const m = add(new TH.Mesh(new TH.RingGeometry(0.4, o.range, 28, 1, -o.arc / 2, o.arc), basic('#E0283A', 0.25, true)), true); m.rotation.set(-Math.PI / 2, 0, o.a - Math.PI / 2); m.position.set(x, 0.08, z);
+      // 外緣一圈亮紅、跟著時間長出去的填色（長滿就打下來；2026-10-04 回饋：遺跡太暗、怪物攻擊提示看不清楚）
+      const edge = new TH.Mesh(new TH.RingGeometry(o.range - 0.12, o.range, 28, 1, -o.arc / 2, o.arc), basic('#FF3A4A', 0.9, true)); edge.position.z = 0.003; m.add(edge);
+      const fill = new TH.Mesh(new TH.RingGeometry(0.4, o.range, 28, 1, -o.arc / 2, o.arc), basic('#FF2A3A', 0.35, true)); fill.position.z = 0.002; fill.scale.set(0.05, 0.05, 1); m.add(fill); f.tick = k => fill.scale.set(Math.max(0.05, k), Math.max(0.05, k), 1);
     } else if (kind === 'mark') {
       f.life = o.t || 1;
       const m = add(new TH.Mesh(geo('disc', () => new TH.CircleGeometry(1, 28)), basic('#E0283A', 0.25))); m.scale.set(o.r, o.r, 1); m.rotation.x = -Math.PI / 2; m.position.set(x, 0.08, z);
+      const edge = new TH.Mesh(geo('mkedge', () => new TH.RingGeometry(0.92, 1, 40)), basic('#FF3A4A', 0.9)); edge.position.z = 0.003; m.add(edge);
+      const fill = new TH.Mesh(geo('disc', () => new TH.CircleGeometry(1, 28)), basic('#FF2A3A', 0.35)); fill.position.z = 0.002; fill.scale.set(0.05, 0.05, 1); m.add(fill); f.tick = k => fill.scale.set(Math.max(0.05, k), Math.max(0.05, k), 1);
     } else if (kind === 'aim' || kind === 'beam' || kind === 'slash') {
       f.life = kind === 'aim' ? (o.t || 1) : 0.25;
       const m = add(new TH.Mesh(new TH.PlaneGeometry(kind === 'aim' ? 0.3 : kind === 'slash' ? 1.2 : 1.8, o.len), basic(kind === 'aim' ? '#FF3A4A' : kind === 'slash' ? '#FFFFFF' : '#FF8A9A', kind === 'aim' ? 0.45 : 0.8, true)), true);
@@ -219,12 +224,12 @@
         if (m.material && m.material.transparent) m.material.opacity = Math.max(0, (m.material.userData.o0 || (m.material.userData.o0 = m.material.opacity)) * (1 - k));
       });
       if (f.shared && f.shared.transparent) f.shared.opacity = Math.max(0, 1 - k);
-      if (f.kind === 'mark' || f.kind === 'sector') f.objs[0].material.opacity = 0.2 + 0.25 * Math.abs(Math.sin(f.t * 10));
+      if (f.kind === 'mark' || f.kind === 'sector') f.objs[0].material.opacity = 0.28 + 0.27 * Math.abs(Math.sin(f.t * 10));
       if (f.tick && k < 1) f.tick(k);
       if (k >= 1) {
         f.dead = true;
         const mats = new Set();
-        f.objs.forEach(m => { W.scene.remove(m); if (m.userData.ownGeo) m.geometry.dispose(); if (m.material) mats.add(m.material); });
+        f.objs.forEach(m => { W.scene.remove(m); if (m.userData.ownGeo) m.geometry.dispose(); if (m.material) mats.add(m.material); m.children.forEach(c => { if (c.material) mats.add(c.material); if (f.kind === 'sector' && c.geometry) c.geometry.dispose(); }); });
         mats.forEach(mt => mt.dispose());
       }
     });
