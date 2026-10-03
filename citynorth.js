@@ -88,6 +88,8 @@
     for (let i = base; i < C.nodes.length; i++) { const [x, y] = C.nodes[i]; for (let j = 0; j < C.nodes.length; j++) { if (j === i) continue; if (Math.hypot(C.nodes[j][0] - x, C.nodes[j][1] - y) < 14) link(i, j); } }
   }
   if (C.junctions) NEW.forEach(a => { if (a.kind === 'arcade') return; C.roads.forEach(b => { if (b === a || b.kind === 'dirt' || b.kind === 'arcade') return; for (let p = 0; p < a.pts.length - 1; p++) for (let q = 0; q < b.pts.length - 1; q++) { const h = C.segX(a.pts[p], a.pts[p + 1], b.pts[q], b.pts[q + 1]); if (!h || C.junctions.some(J => Math.hypot(J.x - h[0], J.y - h[1]) < 14)) continue; C.junctions.push({ x: h[0], y: h[1], a, b, angA: h[2], angB: Math.atan2(b.pts[q + 1][1] - b.pts[q][1], b.pts[q + 1][0] - b.pts[q][0]), signal: false }); } }); });
-  if (C.DISTRICTS) C.DISTRICTS.unshift({ n: '北口商店街', x: 700, y: 160, r: 90 }, { n: '站北新市街', x: 600, y: 180, r: 300 });
+  // 地名：新市街在 C.inCity（y > 209）外面，照範圍（長方形）判斷，不用圓形的 DISTRICTS（半徑太大會蓋掉東鶴站、站前廣場）
+  const an0 = C.areaName;
+  if (an0) C.areaName = (sx, sy) => { if (!inA([sx, sy, sx, sy])) return an0(sx, sy); return sx > 556 && sx < 870 && sy > 148 && sy < 172 ? '東鶴・北口商店街' : '東鶴・站北新市街'; };
   R.CITY_NORTH = { lots: made, roads: NEW.length };
 })(window.R);

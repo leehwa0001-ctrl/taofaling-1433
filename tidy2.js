@@ -26,7 +26,7 @@
   // ---------- 回報穿模 ----------
   R.reportClip = () => {
     const P = W.P, s = R.S; if (!P || !s) return;
-    const where = W.run ? (W.run.site.name + '・第 ' + (W.run.floor + 1) + ' 層') : W.inside ? '室內：' + ((R.INTERIOR_PLACES[W.inside.kind] || {}).name || W.inside.kind || '') : '東鶴';
+    const where = W.run ? (W.run.site.name + '・第 ' + (W.run.floor + 1) + ' 層') : W.town && W.town.hosu ? (R.townArea ? R.townArea() : '奉主') : W.inside ? '室內：' + ((R.INTERIOR_PLACES[W.inside.kind] || {}).name || W.inside.kind || '') : '東鶴';
     const line = '穿模回報｜' + where + '｜x=' + P.x.toFixed(1) + ' z=' + P.z.toFixed(1) + '｜鏡頭 ' + Math.round(((W.cam && W.cam.yaw) || 0) * 180 / Math.PI) + '°｜' + (R.shortDate ? R.shortDate() : '');
     s.clipReports = (s.clipReports || []).concat([line]).slice(-30); R.save();
     R.sheet('<p class="kicker">回報穿模</p><h2>記下來了</h2><p>把下面這一行複製起來貼給 Claude，就知道是哪裡：</p><textarea id="cr-t" readonly rows="2" style="width:100%;font:13px monospace">' + R.esc(line) + '</textarea>'
