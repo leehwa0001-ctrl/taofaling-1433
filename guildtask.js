@@ -141,7 +141,7 @@
     if (r0 && r0.free && ok && !r0.freePaid) { r0.freePaid = 1; S().gold -= (r0.reward || 0) - (r0.share || 0); r0.reward = 0; r0.share = 0; R.save(); }   // 不接委託：公會不付報酬
     rs0(ok, full, lost);
     if (r0 && r0.free) { const b = $('r-sheet'); if (b) b.querySelectorAll('p').forEach(p => { if (p.innerHTML.includes('公會的委託報酬')) p.innerHTML = p.innerHTML.replace(/公會的委託報酬：[^<]*/, '沒有接委託：沒有委託報酬'); }); }
-    const s = S(), t = s.tasks && s.tasks[s.tasks.length - 1], run = W().run; if (!t || !run || !run.task || t.day !== s.day) return;
+    const s = S(), t = s.tasks && s.tasks[s.tasks.length - 1], run = W().run; if (!t || t.board || !run || !run.task || t.day !== s.day) return;   /* board：委託板的（questboard.js）不是這一趟的 */
     const box = $('r-sheet'); if (!box) return;
     const p = document.createElement('p'); p.className = 'note';
     p.textContent = '委託回報：' + (t.kind === 'patrol' ? '巡查到第 ' + t.done + '／' + t.need + ' 層' : '討伐 ' + t.done + '／' + t.need + ' 隻') + '・用了 ' + t.h + '／' + t.limitH + ' 小時。任務成績要等專員調查，明天以後到公會登記處的勇者證查詢。';
