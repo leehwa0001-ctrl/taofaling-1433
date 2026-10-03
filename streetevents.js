@@ -191,7 +191,7 @@
           if (d > 25) { k.x = Pl.x - 1; k.z = Pl.z; k.path = null; }
           const m = ev.mom, dm = dist(m, Pl); showArrow(m); showHud('<b>帶小孩去找媽媽</b><span>' + Math.round(dm) + ' 公尺</span><small>地圖上標出來了</small>');
           m.h.g.rotation.y = Math.atan2(Pl.x - m.x, Pl.z - m.z); R.animHero(m.h, 0, dt, false);
-          if (dm < 3) { const r = 15 + Math.floor(rnd() * 16); gold(r); rep(1); if (R.addGift && rnd() < 0.5) R.addGift('rose', 1); R.sfx && R.sfx('chest'); say('小孩的媽媽', ['「小翼！你跑去哪裡了——」', '「真是太謝謝你了。一點點心意。」', '（拿到 ' + r + ' 費拉。名聲 +1）']); if (R.clearWaypoint && S().waypoint && S().waypoint.name === '小孩的媽媽') R.clearWaypoint(); end(); }
+          if (dm < 3) { const r = 15 + Math.floor(rnd() * 16); gold(r); rep(1); if (R.addGift && rnd() < 0.5) R.addGift('rose', 1); R.sfx && R.sfx('chest'); say('小孩的媽媽', ['「小翼！你跑去哪裡了——」', '「謝謝，剛剛一轉頭人就不見了。這點錢請你收下。」', '（拿到 ' + r + ' 費拉。名聲 +1）']); if (R.clearWaypoint && S().waypoint && S().waypoint.name === '小孩的媽媽') R.clearWaypoint(); end(); }
           else if (ev.t > 300) end('小孩說他想起路了，自己跑走了。');
         }
       }
@@ -203,7 +203,7 @@
         const Pl = P(), a = Pl.yaw + (rnd() - 0.5), p = freeNear(Pl.x + Math.sin(a) * 8, Pl.z + Math.cos(a) * 8); if (!p) return false;
         const o = mk(p[0], p[1], { top: '#6A5A4A', hair: '#C8C0B0', acc: 'glasses', accCol: '#2A2420' }, { pool: 'old', full: 1 }); R.setDown && R.setDown(o.h, true);
         ev = { kind: 'fall', st: 'down', t: 0, npcs: [o], o };
-        tw().inter.push(ev.it = { follow: o, x: o.x, z: o.z, r: 1.8, label: '扶跌倒的老人家起來', when: () => ev && ev.kind === 'fall' && ev.st === 'down', act: () => { ev.st = 'up'; ev.t = 0; R.setDown && R.setDown(o.h, false); rep(1); const g = rnd() < 0.5; if (g && R.addGift) R.addGift('tea', 1); say('老人家', ['「哎呀……路太滑了。謝謝你，年輕人。」', g ? '「這包茶葉你拿去，天冷，泡來喝。」（拿到熱茶葉。名聲 +1）' : '「現在這麼好心的人不多了。」（名聲 +1）']); } });
+        tw().inter.push(ev.it = { follow: o, x: o.x, z: o.z, r: 1.8, label: '扶跌倒的老人家起來', when: () => ev && ev.kind === 'fall' && ev.st === 'down', act: () => { ev.st = 'up'; ev.t = 0; R.setDown && R.setDown(o.h, false); rep(1); const g = rnd() < 0.5; if (g && R.addGift) R.addGift('tea', 1); say('老人家', ['「哎呀……路太滑了。謝謝你，年輕人。」', g ? '「這包茶葉你拿去，天冷，泡來喝。」（拿到熱茶葉。名聲 +1）' : '「先扶我到旁邊坐一下就好。謝謝，麻煩你了。」（名聲 +1）']); } });
         R.toast('有位老人家在雪地上滑倒了。');
         return true;
       },
@@ -276,7 +276,7 @@
       '<div class="row"><button type="button" class="btn pri" id="bw-calm">「兩位，冷靜一點。」</button><button type="button" class="btn" id="bw-firm">「再鬧我就叫衛兵了。」</button><button type="button" class="btn" id="bw-x">不管他們</button></div>');
     const done = (ok, lines) => { R.closeSheet(); ev.st = 'leave'; ev.t2 = 0; if (ok) rep(1); say('醉漢', lines); };
     document.getElementById('bw-calm').onclick = () => rnd() < 0.65 ? done(true, ['「……算了算了，今天就放過你。」', '兩個人各自搖搖晃晃地走了。（名聲 +1）']) : done(false, ['「關你什麼事！」', '其中一個推了你一把，然後兩個人一起罵著你走掉了。……至少不打了。']);
-    document.getElementById('bw-firm').onclick = () => rnd() < 0.8 ? done(true, ['「衛、衛兵？……喂，走了走了。」', '兩個人一下子酒醒了一半。（名聲 +1）']) : done(false, ['「叫啊！叫啊！」', '……然後兩個人還是走了。']);
+    document.getElementById('bw-firm').onclick = () => rnd() < 0.8 ? done(true, ['「衛、衛兵？……喂，走了走了。」', '兩人往街口看了一眼，互相罵了幾句，各自走了。（名聲 +1）']) : done(false, ['「叫啊！叫啊！」', '……然後兩個人還是走了。']);
     document.getElementById('bw-x').onclick = R.closeSheet;
   };
   const lostSheet = () => {

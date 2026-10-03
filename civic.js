@@ -48,13 +48,13 @@
       bigSign(b.x, 4.6, b.front + 1.82, 0, '東鶴縣廳', '#2E2A26', '#F4E9CD', 4.2, 0.8);
       [-6, 6].forEach(o => flagpole(b.x + o, b.front + 5, 7, flagTex));
       for (let i = 0; i < 2; i++) pineAt(b.x - 9 + i * 18, b.front + 3, 0.9); bench(b.x - 3.5, b.front + 4.6, 0); bench(b.x + 3.5, b.front + 4.6, 0);
-      inter(b.door[0], b.door[1], 2.4, '東鶴縣廳的服務台', () => talk('東鶴縣廳', E.martial ? ['「今日退位大典，縣廳只辦緊急事務。」', '大廳的收音機正在轉播皇嶺的典禮。'] : [pick(['「勇者登記請到公會分館；這裡是縣廳。」', '「陪都的事情多：皇嶺的人來來去去，戶籍、通行證都在這裡辦。」', '「河西的西橋什麼時候修好？預算還在審。」'])])); });
+      inter(b.door[0], b.door[1], 2.4, '東鶴縣廳的服務台', () => talk('東鶴縣廳', E.martial ? ['「今日退位大典，縣廳只辦緊急事務。」', '大廳的收音機正在轉播皇嶺的典禮。'] : [pick(['「勇者登記請到公會分館；這裡是縣廳。」', '「戶籍和通行證都在這裡辦。先看你要辦哪一項，別排錯窗口。」', '「河西的西橋什麼時候修好？預算還在審。」'])])); });
     // ---------- 衛兵詰所：官廳街，衛兵輪班的地方 ----------
     { const b = civ(FAC.guardHQ[0], FAC.guardHQ[1], 13, 9, 3, { col: '#8E8A80', win: 2.0 });
       bigSign(b.x, 3.6, b.front + 1.62, 0, '衛兵詰所', '#2E3A48', '#F4E9CD', 2.8, 0.6);
       HB.add(G3.box, B_('#E04A3A', { em: '#C0281A', ei: 1 }), b.x + 3.6, 3.1, b.front + 0.3, 0.4, 0.4, 0.4);
       const g = npc(b.x + 2.2, b.front + 1.6, { top: '#3E4A5A', hair: '#2A2420', cloak: '#2E3A48', shield: true }, '詰所的衛兵', 0, 'spear', 'knight'); g.watch = { range: 11, fov: 1.0, guard: 1 }; tw.watchers.push(g); g.guard = true;
-      inter(b.door[0], b.door[1], 2.2, '衛兵詰所', () => talk('衛兵詰所', [R.crimeHud && R.crimeHud() ? '「……你最近是不是在哪裡偷了東西？別讓我們抓到。」' : pick(['「城裡的治安歸我們管。遺跡裡的事歸公會。」', '「失物招領在左邊的櫃子。撿到勇者證要送公會，不是送這裡。」'])]));
+      inter(b.door[0], b.door[1], 2.2, '衛兵詰所', () => talk('衛兵詰所', [R.crimeHud && R.crimeHud() ? '「先別走，有人報案。勇者證拿出來，配合一下。」' : pick(['「城裡的治安歸我們管。遺跡裡的事歸公會。」', '「失物招領在左邊的櫃子。撿到勇者證要送公會，不是送這裡。」'])]));
       bike(b.x - 4, b.front + 1.2, 0.2); bike(b.x - 3.3, b.front + 1.2, 0.2); }
     // ---------- 大聯合國世界中央銀行 東鶴分行：國道邊、石柱的門面 ----------
     { const b = civ(FAC.bank[0], FAC.bank[1], 18, 12, 4, { col: '#C8C2B4', columns: 1, win: 1.6, door: 2.0, fh: 3.6 });
@@ -137,7 +137,7 @@
       B.at(null); block(x - w / 2, x + w / 2, z - d / 2 - 1.6, z + d / 2 + 1.2, 'house');
       const num = R.pixCanvasTex(24, 32, (g, W0, H0) => { g.fillStyle = '#D8D4C8'; g.fillRect(0, 0, W0, H0); g.fillStyle = '#3A5A8A'; g.font = 'bold 28px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(String(k + 1), W0 / 2, H0 / 2 + 1); });
       const nm = new TH.Mesh(new TH.PlaneGeometry(2.2, 2.9), R.seeThrough(new TH.MeshLambertMaterial({ map: num }))); nm.position.set(x + w / 2 + 0.02, H - 2.5, z); nm.rotation.y = Math.PI / 2; group.add(nm);
-      inter(x - w / 2 + 1.5, z + d / 2 + 2, 1.6, '公團住宅 ' + (k + 1) + ' 號棟', () => R.townToast(pick(['樓梯間貼著：「垃圾請在收集日早上八點前拿出來。」', '不知道哪一戶在煮咖哩，整個樓梯間都是香味。', '信箱上的名字有一半是外地人的姓。'])));
+      inter(x - w / 2 + 1.5, z + d / 2 + 2, 1.6, '公團住宅 ' + (k + 1) + ' 號棟', () => R.townToast(pick(['樓梯間貼著：「垃圾請在收集日早上八點前拿出來。」', '不知道哪一戶在煮咖哩，整個樓梯間都是香味。', '幾個信箱換過名牌，新紙底下還露著舊名字。'])));
     });
     // ---------- 旅館（六層樓）：住一晚 ----------
     { const b = civ(FAC.hotel[0], FAC.hotel[1], 16, 12, 6, { col: '#C8B8A8', win: 1.5, fh: 3.1, doorW: 2.4 });
@@ -182,12 +182,12 @@
   R.ufoCatcher = () => {
     if (!gold(3)) return;
     if (Math.random() < 0.22) { const k = ['dango', 'dorayaki', 'rose', 'notebook'][Math.floor(Math.random() * 4)]; if (R.addGift) R.addGift(k, 1); R.save(); R.townTalk('夾娃娃機', ['爪子夾住了……掉進洞裡了！', '裡面不是娃娃，是一份「' + (R.GIFTS && R.GIFTS[k] ? R.GIFTS[k].name : k) + '」的兌換券。去櫃台換了。']); }
-    else R.townTalk('夾娃娃機', ['爪子夾住了……又鬆開了。', '店員在玻璃另一邊偷笑。']);
+    else R.townTalk('夾娃娃機', ['爪子夾住了……又鬆開了。', '娃娃落回原處，只翻了個面。']);
   };
   R.sento = () => {
     const s = R.S; if (s.sentoDay === s.day) { R.townTalk('松之湯', ['今天已經泡過了。']); return; } if (!gold(8)) return;
     s.sentoDay = s.day; s.buff = { kind: 'sento', b: { hp: 0.03, regen: 0.2 }, until: s.day }; R.save();
-    R.townTalk('錢湯「松之湯」', ['牆上畫著一整面的富士山……不，是皇嶺的山。', '泡完喝一瓶冰牛奶。（下一趟遺跡：生命 +3%、每秒回復 0.2，只有今天）']);
+    R.townTalk('錢湯「松之湯」', ['浴池後方畫著皇嶺的山，靠近水面的地方有幾塊漆剝落了。', '泡完喝一瓶冰牛奶。（下一趟遺跡：生命 +3%、每秒回復 0.2，只有今天）']);
   };
   R.hotelSheet = door => {
     R.sheet('<p class="kicker">站前</p><h2>東鶴旅館</h2><p>「單人房一晚 40 費拉，附早餐。」櫃台後面掛著一排鑰匙。</p>', '<div class="row"><button type="button" class="btn pri" id="ht-sleep">住一晚</button><button type="button" class="btn" id="ht-x">不用了</button></div>');

@@ -40,9 +40,9 @@
   };
   // 細看：找破綻（騙局的話，大部分看得出來；真的委託，也可能看起來怪怪的）
   const clues = j => {
-    const c = { deposit: ['委託人說不出自己住在哪裡。', '「保證金一定要付現金。」'], fakegold: ['他讓你看了一眼那枚赤金：鳴文是藍色的直紋。（真的赤金是紅色的漩渦）', '這種小事付一枚赤金？太多了。'], contraband: ['包裹沉得不像話，外面貼著德克斯凡礦務公司的封條。', '委託人一直要你「別在路上打開」。'], baddate: ['合約上的日期：夏峰月 27 日。……夏峰月只有 25 天。', '委託人的印章是新刻的，邊緣還很利。'], trap: ['委託人不肯留名字，只說「到了第二層就知道」。', '他的同伴在後巷口一直盯著你看。'], traffic: ['「臨時搬運工」三個人都沒有身分證。', '公會前幾天才警告過：有人用「臨時搬運工」的名義帶沒有身分的人進遺跡。'] }[j.scam];
+    const c = { deposit: ['委託人說不出自己住在哪裡。', '「保證金一定要付現金。」'], fakegold: ['他讓你看了一眼那枚赤金：鳴文是藍色的直紋。（真的赤金是紅色的漩渦）', '這種小事付一枚赤金？太多了。'], contraband: ['包裹沉得不像話，外面貼著德克斯凡礦務公司的封條。', '委託人一直要你「別在路上打開」。'], baddate: ['合約上的日期：夏峰月 27 日。……夏峰月只有 25 天。', '印章旁邊的日期被改過，改動處沒有簽名。'], trap: ['委託人不肯留名字，只說「到了第二層就知道」。', '他的同伴在後巷口一直盯著你看。'], traffic: ['「臨時搬運工」三個人都沒有身分證。', '公會前幾天才警告過：有人用「臨時搬運工」的名義帶沒有身分的人進遺跡。'] }[j.scam];
     if (c) return c;
-    return [pick2(['委託人是常在這一帶走動的人。', '紙上的字寫得很工整，地址也寫得清清楚楚。', '委託人看起來有點緊張，不過說話很老實。']), pick2(['報酬不多，但也不少。', '日期和地點都寫得很清楚。'])];
+    return [pick2(['委託人是常在這一帶走動的人。', '紙上的字寫得很工整，地址也寫得清清楚楚。', '委託人把數量又數了一次，請你核對收據。']), pick2(['報酬不多，但也不少。', '日期和地點都寫得很清楚。'])];
   };
   const pick2 = a => a[Math.floor(Math.random() * a.length)];
 
@@ -50,7 +50,7 @@
   R.privateBoard = () => {
     R.ensureWorld();
     const s = S(), list = offers();
-    R.sheet('<p class="kicker">後巷・私人委託</p><h2>木板上的紙</h2><p class="note">公會不保障私人委託。被騙了，公會也沒辦法。' + (R.today().abs <= R.absOf(2836, 10, 20) && R.today().abs >= R.absOf(2836, 10, 13) ? '（最近公會警告過「臨時搬運工」的事。）' : '') + '</p>'
+    R.sheet('<p class="kicker">後巷・私人委託</p><h2>木板上的紙</h2><p class="note">私人委託不受公會保障。接下前，請確認委託人的身分、期限與付款方式。' + (R.today().abs <= R.absOf(2836, 10, 20) && R.today().abs >= R.absOf(2836, 10, 13) ? '（最近公會警告過「臨時搬運工」的事。）' : '') + '</p>'
       + (list.length ? '<div class="quests">' + list.map(j => '<div class="quest" style="--c:#8A6A44"><b>' + esc(j.title) + '</b><small>' + esc(j.client) + '・報酬 ' + j.reward + ' 費拉・' + (j.due - s.day) + ' 天內</small><small>' + esc(j.text) + '</small><div class="row"><button type="button" class="mini" data-look="' + j.id + '">細看</button><button type="button" class="mini gold" data-take="' + j.id + '">接下</button><button type="button" class="mini" data-rep="' + j.id + '">通報衛兵</button></div><p class="hand" id="cl-' + j.id + '" hidden></p></div>').join('') + '</div>' : '<p class="note">今天沒有新的委託。</p>')
       + ((s.jobs || []).length ? '<h3>手上的私人委託</h3>' + jobLines() : ''),
       '<div class="row"><button type="button" class="btn" id="pb-x">好</button></div>');

@@ -32,7 +32,7 @@
   R.enterTownNow = (from, at) => {
     enter0(from, at); const s = S(); if (!s || s.kasoAuth || !s.cleared || (s.cleared.kesent || 0) < NEED) return;
     s.kasoAuth = s.day; R.save && R.save(); R.syncStatus();
-    setTimeout(() => R.sheet('<p class="kicker">公會本部・會長室</p><h2>特別討伐令</h2><p>「你走完了三座克森特級遺跡。這件事，本部已經知道了。」</p><p>「封鎖海域裡，出現了第八座卡索級遺跡。一千五百年來第八次。」</p><p>「公會明文禁止任何個人單獨進入卡索級遺跡——帶著你的隊伍去。至少兩個人跟著你。」</p><p class="note">「還有一件事。如果在裡面遇到『那個』……不要打。通報，然後撤離。這是命令。」</p>',
+    setTimeout(() => R.sheet('<p class="kicker">公會本部・會長室</p><h2>特別討伐令</h2><p>「你走完了三座克森特級遺跡。這件事，本部已經知道了。」</p><p>「封鎖海域裡，出現了第八座卡索級遺跡。一千五百年來第八次。」</p><p>「公會明文禁止任何個人單獨進入卡索級遺跡——帶著你的隊伍去。至少兩個人跟著你。」</p><p class="note">「還有一件事。如果確認是坎賽特級反應，不要交戰。立刻通報、撤離。這是命令。」</p>',
       '<div class="row"><button type="button" class="btn pri" id="ks-ok">接下討伐令</button></div>'), 600);
     setTimeout(() => { const b = document.getElementById('ks-ok'); if (b) b.onclick = () => { R.closeSheet(); R.toast('全國地圖上的封鎖海域可以進去了。'); }; }, 700);
   };

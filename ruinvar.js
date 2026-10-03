@@ -127,7 +127,7 @@
   const merchant = s => {
     const run = W().run, lv = run.grade.lv || 1, st = S();
     if (!s.stock) { const l = R.rollChest ? R.rollChest(lv - 1, run.floor, st.cls, 1).find(q => q.item) : null; s.stock = [{ k: 'hp', n: '回復藥', p: 40 + 10 * lv }, { k: 'mp', n: '魔力藥', p: 40 + 10 * lv }]; if (l) s.stock.push({ item: l.item, n: R.itemName(l.item), p: Math.round((R.sellPrice ? R.sellPrice(l.item) : 100) * 3.5) }); }
-    R.sheet('<p class="kicker">遺跡裡的行商</p><h2>擺攤的勇者</h2><p>「遺跡裡的東西，價錢當然不一樣。要不要隨你。」</p><div class="rv-opts">' + s.stock.map((x, i) => '<button type="button" class="rv-opt" data-mc="' + i + '"' + (x.sold || st.gold < x.p ? ' disabled' : '') + '><b>' + esc(x.n) + '</b><small>' + (x.sold ? '賣完了' : x.p + ' 費拉') + '</small></button>').join('') + '</div><p class="note">身上 ' + st.gold + ' 費拉。</p>',
+    R.sheet('<p class="kicker">遺跡裡的行商</p><h2>擺攤的勇者</h2><p>「比城裡貴一點，我得自己搬下來。你先看，要買再叫我。」</p><div class="rv-opts">' + s.stock.map((x, i) => '<button type="button" class="rv-opt" data-mc="' + i + '"' + (x.sold || st.gold < x.p ? ' disabled' : '') + '><b>' + esc(x.n) + '</b><small>' + (x.sold ? '賣完了' : x.p + ' 費拉') + '</small></button>').join('') + '</div><p class="note">身上 ' + st.gold + ' 費拉。</p>',
       '<div class="row"><button type="button" class="btn" id="rv-x">不買了</button></div>');
     document.querySelectorAll('[data-mc]').forEach(el => { el.onclick = () => { const x = s.stock[+el.dataset.mc]; if (x.sold || st.gold < x.p) return; st.gold -= x.p; if (x.item) { x.sold = true; const P = W().P; R.dropItem(x.item, P.x + 1, P.z); } else { st.potions[x.k] = (st.potions[x.k] || 0) + 1; } R.save(); R.sfx && R.sfx('coin'); merchant(s); }; });
     $('rv-x').onclick = R.closeSheet;

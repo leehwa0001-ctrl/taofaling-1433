@@ -34,7 +34,7 @@
     '蛛身牛低頭刨地就是要衝了。閃到旁邊讓牠撞牆，撞暈了才是機會。',
     '纏身布衝過來之前，地上會先出現一條紅線。被纏住就動不了。',
     '影撲貓壓低身子的時候看地上的圈，撲完會隱身一下，別追丟了。',
-    '根童被打會四散，過一會兒又圍回來吐種子。煩是煩，倒不太痛。',
+    '根童挨打就跑，你一鬆懈又圍回來吐種子。打不太痛，可是很煩。',
     '房間裡的生物平常只是在晃。你一踏進去，或從外面打到牠們，整間都會醒過來。'
   ];
 
@@ -235,7 +235,7 @@
     roundAt(10, 0.5); roundAt(12.8, 4.5); roundAt(9.2, 5.8);
     const people = [[11.2, 0.0, 'archer', '#3E6A3A'], [8.9, 1.3, 'gunner', '#5A4A3A'], [12.6, 3.3, 'mage', '#4A3A6A'], [10.1, 6.6, 'knight', '#6A6A74']];
     people.forEach(([x, z, cls, top], i) => { const n = npc(x, z, Math.atan2((i < 2 ? 10 : i === 2 ? 12.8 : 9.2) - x, (i < 2 ? 0.5 : i === 2 ? 4.5 : 5.8) - z), { cls, weapon: R.STARTER[cls], eq: bodyOf(cls), name: '在酒場的勇者' });
-      inter(x, z + 0.8, 1.6, '和在酒場的勇者聊聊', () => rumor('在酒場的勇者', i === 3 ? ['「我是公會的勇者，不是誰都能請得動的。要找同行的，去大廳。」'] : null)); });
+      inter(x, z + 0.8, 1.6, '和在酒場的勇者聊聊', () => rumor('在酒場的勇者', i === 3 ? ['「我今天有約了。你要找同行的，到大廳問問，剛才那邊還有人。」'] : null)); });
     // 酒場的暖爐（東牆）
     const stone = lam('#7A746A', { tex: 'wall' });
     bx(0.7, 2.6, 3.0, stone, HW - 0.35, 1.3, -2, EW.g); bx(0.05, 1.4, 2.0, lam('#140C08', { tex: 0 }), HW - 0.72, 0.7, -2, EW.g);
@@ -483,7 +483,7 @@
       [[5.2, 2.6], [8, 2.6], [5.2, 5.2], [8, 5.2]].forEach(([x, z]) => { bx(1.4, 0.3, 0.9, '#6A4A30', x, 0.45, z); [-0.9, 0.9].forEach(o => bx(0.5, 0.08, 0.5, '#8A2A24', x + o, 0.34, z)); block(x - 0.7, x + 0.7, z - 0.45, z + 0.45, 'table'); }); }
     // 一般的桌子、在喝酒的客人（有的會聊遺跡的傳聞）
     tableAt(c, -4.5, 2.6, 2.0, 1.1); tableAt(c, -0.8, 3.4, 2.0, 1.1); tableAt(c, -4.5, 5.4, 2.0, 1.1);
-    [[-5.6, 2.6, 'archer'], [-3.4, 2.6, 'gunner'], [0.3, 3.4, 'mage'], [-5.6, 5.4, 'warrior']].forEach(([x, z, cls], i) => { const n = npc(x, z, x < -4.5 ? Math.PI / 2 : -Math.PI / 2, { cls, weapon: R.STARTER[cls], eq: bodyOf(cls), name: '喝酒的客人', look: { race: R.randomRace ? R.randomRace() : 'human' } }); n.h.sit = true; inter(x, z + 0.9, 1.4, '和喝酒的客人聊聊', () => rumor('喝酒的客人', i === 3 ? ['「這家的熱湯最暖。……上面的房間也便宜。」'] : null)); });
+    [[-5.6, 2.6, 'archer'], [-3.4, 2.6, 'gunner'], [0.3, 3.4, 'mage'], [-5.6, 5.4, 'warrior']].forEach(([x, z, cls], i) => { const n = npc(x, z, x < -4.5 ? Math.PI / 2 : -Math.PI / 2, { cls, weapon: R.STARTER[cls], eq: bodyOf(cls), name: '喝酒的客人', look: { race: R.randomRace ? R.randomRace() : 'human' } }); n.h.sit = true; inter(x, z + 0.9, 1.4, '和喝酒的客人聊聊', () => rumor('喝酒的客人', i === 3 ? ['「湯還有嗎？再給我一碗。喝完我就上樓睡了。」'] : null)); });
     // 上二樓的樓梯（客房）
     for (let i = 0; i < 7; i++) { const h = 0.55 * (i + 1); bx(1.8, h, 0.5, '#6A4A30', -HW + 1.0, h / 2, HD - 0.4 - 0.5 * i); }
     block(-HW, -HW + 2, HD - 3.8, HD, 'stairs');
@@ -501,7 +501,7 @@
     const S = R.S; if (S.roster.indexOf(m) < 0) return;
     const full = S.party.length >= R.PARTY_MAX, poor = S.gold < m.fee || !!m.refuse;
     R.sheet('<p class="kicker">公會大廳・同行的勇者</p><h2>' + esc(m.name) + '</h2><p class="note">' + esc(R.CLASSES[m.cls].name) + ' Lv ' + m.lv + '</p><p>' + esc(m.line) + '</p>'
-      + '<p class="note">邀請同行要 ' + m.fee + ' 費拉（你有 ' + S.gold + '）。隊伍最多 ' + R.PARTY_MAX + ' 人，現在 ' + S.party.length + ' 人。' + (full ? '隊伍已經滿了；要換人的話，到登記處的隊伍名冊解散。' : poor ? '費拉不夠。' : '委託報酬每個隊友分走一成五。') + '</p>',
+      + '<p class="note">邀請同行要 ' + m.fee + ' 費拉（你有 ' + S.gold + '）。隊伍最多 ' + R.PARTY_MAX + ' 人，現在 ' + S.party.length + ' 人。' + (full ? '隊伍已滿。要換人，請到登記處的隊伍名冊讓一位隊友離隊。' : poor ? '費拉不夠。' : '委託報酬每個隊友分走一成五。') + '</p>',
       '<div class="row"><button type="button" class="btn pri" id="rc-hire"' + (full || poor ? ' disabled' : '') + '>邀請同行（' + m.fee + ' 費拉）</button><button type="button" class="btn" id="rc-x">算了</button></div>');
     $('rc-x').onclick = R.closeSheet;
     $('rc-hire').onclick = () => {
@@ -580,7 +580,7 @@
   R.enterInterior = (kind, at) => {   // at：從別的門進來時站的位置（例如望月家正屋的後門）
     if (busy || W.inside || !W.town) return;
     busy = true; R.input.keys = {};
-    R.fade(() => { busy = false; enterNow(kind, at); R.banner(PLACES[kind].name, { guild: '登記處在最裡面，委託貼在北邊的牆上；東邊是酒場', smith: '「門關上，外面的冷風會吹熄爐火。」', pharmacy: '藥草和驅寒茶的味道', store: '「寄放的東西，報名字就好。」', station: '售票口在最裡面，時刻表在左邊的牆上', tavern: '「歡迎光臨！」老闆娘的聲音從櫃台後面傳來' }[kind] || PLACES[kind].hint || PLACES[kind].sub || ''); });
+    R.fade(() => { busy = false; enterNow(kind, at); R.banner(PLACES[kind].name, { guild: '登記處在最裡面，委託貼在北邊的牆上；東邊是酒場', smith: '「進來把門帶上，風一直灌進來。」', pharmacy: '藥草和驅寒茶的味道', store: '「寄放的東西，報名字就好。」', station: '售票口在最裡面，時刻表在左邊的牆上', tavern: '「歡迎光臨！」老闆娘的聲音從櫃台後面傳來' }[kind] || PLACES[kind].hint || PLACES[kind].sub || ''); });
   };
   // 上下樓
   R.changeFloor = (kind, at) => {

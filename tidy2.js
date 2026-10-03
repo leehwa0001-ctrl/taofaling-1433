@@ -35,7 +35,7 @@
     const where = W.run ? (W.run.site.name + '・第 ' + (W.run.floor + 1) + ' 層') : W.town && W.town.hosu ? (R.townArea ? R.townArea() : '奉主') : W.inside ? '室內：' + ((R.INTERIOR_PLACES[W.inside.kind] || {}).name || W.inside.kind || '') : '東鶴';
     const line = '穿模回報｜' + where + '｜x=' + P.x.toFixed(1) + ' z=' + P.z.toFixed(1) + '｜鏡頭 ' + Math.round(((W.cam && W.cam.yaw) || 0) * 180 / Math.PI) + '°｜' + (R.shortDate ? R.shortDate() : '');
     s.clipReports = (s.clipReports || []).concat([line]).slice(-30); R.save();
-    R.sheet('<p class="kicker">回報穿模</p><h2>記下來了</h2><p>把下面這一行複製起來貼給 Claude，就知道是哪裡：</p><textarea id="cr-t" readonly rows="2" style="width:100%;font:13px monospace">' + R.esc(line) + '</textarea>'
+    R.sheet('<p class="kicker">回報穿模</p><h2>記下來了</h2><p>請複製以下位置資料，回報時附上你遇到的問題；有截圖也可以一起提供：</p><textarea id="cr-t" readonly rows="2" style="width:100%;font:13px monospace">' + R.esc(line) + '</textarea>'
       + (s.clipReports.length > 1 ? '<details><summary>之前記的（' + (s.clipReports.length - 1) + ' 筆）</summary><textarea readonly rows="5" style="width:100%;font:12px monospace">' + R.esc(s.clipReports.slice(0, -1).join('\n')) + '</textarea></details>' : ''),
       '<div class="row"><button type="button" class="btn pri" id="cr-copy">複製</button><button type="button" class="btn" id="cr-x">好</button></div>');
     document.getElementById('cr-copy').onclick = () => { const t = document.getElementById('cr-t'); t.select(); try { navigator.clipboard ? navigator.clipboard.writeText(t.value) : document.execCommand('copy'); R.toast('複製了。'); } catch (e) { document.execCommand && document.execCommand('copy'); } };

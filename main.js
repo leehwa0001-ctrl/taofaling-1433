@@ -47,7 +47,7 @@
     if (s.status === 'open') return '<span class="stamp open">開放中</span>';
     if (s.status === 'forbidden') return '<span class="stamp forbidden">禁止進入</span>';
     const g = gradeOf(s), u = g && g.unlock ? R.gradeById(g.unlock) : null;
-    return '<span class="stamp lock">未開放</span><p class="hand">' + (u ? '要先從' + esc(u.name) + '遺跡的最深處活著回來，公會才會發這一級的委託。' : '') + '</p>';
+    return '<span class="stamp lock">未開放</span><p class="hand">' + (u ? '要先從' + esc(u.name) + '遺跡的最深處返回，公會才會受理這一級的委託。' : '') + '</p>';
   };
   const carry = '<h3>帶得出來的東西</h3><p>寶箱開出的道具、防具、武器、素材；遺跡生物體內的魔力水晶、魔力核心；礦殼背上的礦石。其他在遺跡裡撿到的東西，一出遺跡就會分解，過樓層通道時也會自己消失。</p><p class="hand">寶箱開出的武器，大多是「未鑑定」的。帶回東鶴，給老岩的鐵匠鋪鑑定。</p>';
   const facilities = '<h3>東鶴的設施</h3><div class="fac"><div><b>公會東鶴分館</b><span>西市口的綠旗石樓。遺跡委託、職業登記、轉職。</span></div><div><b>老岩的鐵匠鋪</b><span>鑑定、製作、強化、分解。</span></div><div><b>白藤堂</b><span>回復藥、魔力藥。</span></div><div><b>倉庫</b><span>放裝備和素材。帶下去的東西，死在遺跡裡就沒了。</span></div><div><b>菅婆婆的糰子攤</b><span>還在西市口。</span></div></div>';

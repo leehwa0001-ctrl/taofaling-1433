@@ -34,7 +34,7 @@
     const rates = '<div class="rates">' + TIER_I().map(t => '<div class="rate" style="--c:' + R.TIERS[t].color + '"><b>' + R.TIERS[t].name + '</b><span>' + R.TIERS[t].w + '%</span></div>').join('') + '</div>';
     const render = () => {
       const n = S.raceTickets || 0;
-      host.innerHTML = '<h2>種族抽選券</h2><p class="note">登記處的館員收下抽選券：「抽選券用的，這次驗魔力波不收錢。」抽一次用一張，十連抽用十張。抽到喜歡的就按「登記」；不喜歡就再抽，或收起來下次再用。</p>'
+      host.innerHTML = '<h2>種族抽選券</h2><p class="note">登記處的館員收下抽選券：「有抽選券就不用付這次的驗測費。給我一張就好。」抽一次用一張，十連抽用十張。抽到喜歡的就按「登記」；不喜歡就再抽，或收起來下次再用。</p>'
         + '<p class="note">現在的種族：<b>' + (S.race && R.RACES[S.race] ? esc(R.RACES[S.race].name) : '未登記') + '</b>・抽選券還有 <b>' + n + '</b> 張</p>' + rates
         + '<div class="race-cards ten">' + (got.length ? got.map(card).join('') : '<p class="note">還沒抽。</p>') + '</div>'
         + (pick != null ? detail(got[pick]) : '')

@@ -14,7 +14,7 @@
   R.onNewDay = () => { nd0(); try { const g = accrue(); if (g > 0) R.save(); } catch (e) { console.warn('[bank]', e); } };
   R.bankSheet = () => {
     const s = S(); accrue(); const b = acct();
-    R.sheet('<p class="kicker">世界中央銀行・東鶴分行</p><h2>存款窗口</h2><p>櫃員推了推眼鏡：「存款每天 0.2% 的利息，一天算一次。存在這裡的錢，扒手扒不走。」</p>'
+    R.sheet('<p class="kicker">世界中央銀行・東鶴分行</p><h2>存款窗口</h2><p>櫃員把存款單遞過來。「要存多少？利息每天算一次，日利率 0.2%。」存進銀行的錢不會被扒走。</p>'
       + '<div class="bk-box"><div><small>錢包</small><b>' + fmt(s.gold) + ' 費拉</b></div><div><small>存款</small><b>' + fmt(b.bal) + ' 費拉</b></div><div><small>累計利息</small><b>' + fmt(b.earned) + ' 費拉</b></div><div><small>明天的利息</small><b>約 ' + fmt(b.bal * RATE) + ' 費拉</b></div></div>'
       + '<div class="row bk-row"><input id="bk-amt" type="number" min="1" step="100" placeholder="金額" inputmode="numeric"><button type="button" class="btn pri" data-bk="in">存</button><button type="button" class="btn" data-bk="out">領</button></div>'
       + '<div class="row bk-row"><button type="button" class="btn" data-bq="in:1000">存 1,000</button><button type="button" class="btn" data-bq="in:10000">存 10,000</button><button type="button" class="btn" data-bq="in:all">全部存</button><button type="button" class="btn" data-bq="out:1000">領 1,000</button><button type="button" class="btn" data-bq="out:all">全部領</button></div>',

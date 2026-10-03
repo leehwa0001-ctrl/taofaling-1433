@@ -65,7 +65,7 @@
   const partyBox = () => {
     const S = R.S; R.ensureRoster();
     const card = (m, btn) => '<div class="recruit" style="--c:' + R.CLASSES[m.cls].color + '"><b>' + esc(m.name) + '</b><small>' + esc((m.race && R.RACES[m.race] ? R.RACES[m.race].name + '・' : '') + R.CLASSES[m.cls].name) + ' Lv ' + m.lv + (m.story ? '・不收錢' : '') + '</small><span>' + esc(m.line) + '</span>' + btn + '</div>';
-    return '<h3>同行的勇者</h3><p class="note">最多兩個人一起下遺跡。隊友會跟著你、照自己的職業打；倒下了靠近扶起來。人越多，寶箱刷新越慢，公會的委託報酬每人分走一成五。</p>'
+    return '<h3>同行的勇者</h3><p class="note">最多帶兩位隊友下遺跡。隊友會跟著你、照自己的職業打；倒下了靠近扶起來。人越多，寶箱刷新越慢，公會的委託報酬每人分走一成五。</p>'
       + '<div class="recruits">' + (S.party.length ? S.party.map((m, i) => card(m, '<button type="button" class="mini" data-dismiss="' + i + '">解散</button>')).join('') : '<p class="note">現在是一個人。</p>') + '</div>'
       + '<p class="note">公會大廳裡的勇者（每跑完一趟會換一批）：</p><div class="recruits">' + S.roster.map((m, i) => card(m, m.refuse ? '<span class="note">不肯同行</span>' : '<button type="button" class="btn pri" data-hire="' + i + '"' + (S.party.length >= R.PARTY_MAX || S.gold < m.fee ? ' disabled' : '') + '>邀請同行（' + m.fee + ' 費拉）</button>')).join('') + '</div>';
   };

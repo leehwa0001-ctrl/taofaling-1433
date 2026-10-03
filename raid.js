@@ -162,7 +162,7 @@
     R.sheet('<div class="tk-head"><h2>背包・' + esc(pk.name) + '</h2><span>' + u.used + '／' + u.total + ' 格</span></div>'
       + '<div class="tk-wrap"><div class="mc-panel"><p class="kicker">裝備</p><div class="mc-slots">' + slots + '</div></div>'
       + '<div class="tk-gridwrap"><div class="tk-grid" id="tk-grid" style="grid-template-columns:repeat(' + g.w + ',' + CELL + 'px);grid-template-rows:repeat(' + g.h + ',' + CELL + 'px)">' + cells + matsHtml + items + '</div></div></div>'
-      + (loose.length ? '<p class="note" style="color:#FF9A6A">放不下的東西（整理出空間再放進去，不然出遺跡時一樣帶得走，但會一直佔著）：' + loose.map(it => '<button type="button" class="mini" data-loose="' + run.bag.indexOf(it) + '">' + esc(R.itemName(it)) + '</button>').join('') + '</p>' : '')
+      + (loose.length ? '<p class="note" style="color:#FF9A6A">暫時放不進格子的物品：整理背包後即可收納；目前仍占用容量，返回地面時也會一起帶回。' + loose.map(it => '<button type="button" class="mini" data-loose="' + run.bag.indexOf(it) + '">' + esc(R.itemName(it)) + '</button>').join('') + '</p>' : '')
       + info
       + '<p class="note">素材：' + (Object.keys(run.mats).filter(k => run.mats[k] > 0).map(k => R.MATS[k].name + ' ×' + run.mats[k] + ' <button type="button" class="mini" data-dm="' + k + '">丟掉一格</button>').join('、') || '沒有') + '（一格疊幾個看素材：高級的 10 個、普通的 20～40 個）。倒下的話，背包、身上的裝備都會留在遺跡裡。</p>',
       '<div class="row"><button type="button" class="btn pri" id="bag-x">關上（I）</button></div>');
@@ -274,7 +274,7 @@
     if (!list.length && !pk) return;
     const rows = list.map(it => '<label class="ins-row"><input type="checkbox" data-ins="' + it.id + '"' + (insCost(it) <= s.gold ? ' checked' : '') + '><span style="color:' + R.rarityColor(it) + '">' + esc(R.itemName(it)) + '</span><b>' + insCost(it) + ' 費拉</b></label>').join('')
       + (pk ? '<label class="ins-row"><input type="checkbox" data-ins="pack" checked><span>' + esc(pk.name) + '（背包本身）</span><b>' + Math.round(pk.price * 0.1) + ' 費拉</b></label>' : '');
-    R.sheet('<p class="kicker">遺跡入口</p><h2>回收屋・霧島</h2><p>入口旁邊靠著一個背著大背包的勇者，勇者證掛在胸前。「我是霧島。要保險嗎？你要是倒在裡面，我下去把你身上的東西撿回來——十件大概撿得回八件，兩天後放進你的倉庫。」</p>'
+    R.sheet('<p class="kicker">遺跡入口</p><h2>回收屋・霧島</h2><p>入口旁，一個背著大背包的勇者問你要不要保險。「霧島，我的名字，證件在這裡。你要是倒在裡面，我會去找你留下的裝備。先說，不保證全拿得到，十件大概能找回八件，兩天後送到你的倉庫。」</p>'
       + '<p class="note">保的是身上穿的裝備和背的背包。背包裡撿到的東西保不了。</p><div class="ins-list">' + rows + '</div><p class="note" id="ins-sum"></p>',
       '<div class="row"><button type="button" class="btn pri" id="ins-go">保勾起來的</button><button type="button" class="btn" id="ins-no">不用了</button></div>');
     const box = $('r-sheet'), cost = () => [...box.querySelectorAll('[data-ins]')].filter(c => c.checked).reduce((a, c) => a + (c.dataset.ins === 'pack' ? Math.round(pk.price * 0.1) : insCost(R.itemById(c.dataset.ins))), 0);
@@ -284,7 +284,7 @@
     $('ins-go').onclick = () => {
       const c = cost(); if (c > s.gold) return; s.gold -= c;
       run.ins = [...box.querySelectorAll('[data-ins]')].filter(x => x.checked && x.dataset.ins !== 'pack').map(x => x.dataset.ins);
-      run.insPack = !!box.querySelector('[data-ins="pack"]:checked'); R.save(); R.closeSheet(); R.toast('霧島：「收到。別死得太裡面就好。」', '#E8C04A');
+      run.insPack = !!box.querySelector('[data-ins="pack"]:checked'); R.save(); R.closeSheet(); R.toast('霧島：「收到了。真有事我會去找，不過能自己帶回來最好。」', '#E8C04A');
     };
   }
 

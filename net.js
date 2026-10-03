@@ -36,11 +36,11 @@
   // ---------- 連線 ----------
   const connect = () => new Promise((ok, no) => {
     if (N.ws && N.ws.readyState === 1) { ok(); return; }
-    const url = serverUrl(); if (!url) { no(new Error('還沒有連線伺服器的網址（伺服器還沒架好）。')); return; }
+    const url = serverUrl(); if (!url) { no(new Error('尚未設定連線網址，請在「換伺服器」填入《討伐令 1433》的伺服器網址。')); return; }
     let ws; try { ws = new WebSocket(url); } catch (e) { no(new Error('伺服器網址不對：' + url)); return; }
     N.ws = ws; N.busy = '連線中……'; refresh();
     // Render 免費的伺服器閒置會睡著，第一次連要等它醒（最多一分鐘左右）
-    const wake = setTimeout(() => { if (!opened) { N.busy = '伺服器醒來中（閒置太久會睡著，最多等一分鐘）……'; refresh(); } }, 3000);
+    const wake = setTimeout(() => { if (!opened) { N.busy = '伺服器仍在連線中，可能正在從休眠啟動，請稍候……'; refresh(); } }, 3000);
     const giveUp = setTimeout(() => { if (!opened) { try { ws.close(); } catch (e) { } N.busy = ''; no(new Error('伺服器一直沒有回應（' + url + '）。')); } }, 75000);
     let opened = false;
     ws.onopen = () => { opened = true; clearTimeout(wake); clearTimeout(giveUp); N.busy = ''; ok(); };

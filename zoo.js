@@ -123,7 +123,7 @@
         }
       });
       // 飼育員
-      const rr = rooms[0]; if (rr) { const h = R.makeHero('warrior', null, { pool: 'zoo_keeper', lite: 1, top: '#4A6A3A', hair: '#2A2420', cloak: '#3A5A2A', weapon: null, shield: false }); h.g.position.set(rr.x + 3, 0, rr.z + rr.hz - 1.5); F.group.add(h.g); F.rpInter.push({ x: rr.x + 3, z: rr.z + rr.hz - 0.6, r: 1.6, label: '和飼育員說話', act: () => R.townTalk('動物園的飼育員', [pick(['「這座遺跡的核心很安靜，生物都不太兇。公會評估過才開放的。」', '「餵食時間是下午三點。……開玩笑的，牠們不太吃東西，吸的是魔力。」', '「請不要敲柵欄，牠們會緊張。」', '「每一隻都有名字喔。那隻叫小麻糬。」'])]) }); }
+      const rr = rooms[0]; if (rr) { const h = R.makeHero('warrior', null, { pool: 'zoo_keeper', lite: 1, top: '#4A6A3A', hair: '#2A2420', cloak: '#3A5A2A', weapon: null, shield: false }); h.g.position.set(rr.x + 3, 0, rr.z + rr.hz - 1.5); F.group.add(h.g); F.rpInter.push({ x: rr.x + 3, z: rr.z + rr.hz - 0.6, r: 1.6, label: '和飼育員說話', act: () => R.townTalk('動物園的飼育員', [pick(['「這座遺跡的核心很安靜，生物都不太兇。公會評估過才開放的。」', '「吃的先收起來，別餵。牠們主要吸收魔力，不是每樣東西都能吃。」', '「請不要敲柵欄，牠們會緊張。」', '「每一隻都有名字喔。那隻叫小麻糬。」'])]) }); }
     }
     // 哈米莉亞的平靜樓層：溫馴的小生物（不在動物園也有）
     if (F.calm && !F.zoo && run.grade.id === 'hamilia') {

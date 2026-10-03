@@ -20,7 +20,7 @@
     clearInterval(timer);
     const h = $('pick-cards');
     $('pick-h').textContent = '勇者登記・' + { race: '一、種族', look: '二、外觀', cls: '三、登記武器' }[st.step];
-    $('pick-intro').textContent = { race: '公會東鶴分館的登記處。戴眼鏡的館員推了推眼鏡：「下一位。種族、名字、武器，一項一項來。」', look: '「勇者證上要貼照片。」館員指了指牆邊的鏡子。', cls: '「最後，登記武器。勇者證上寫的是你的主要武器，公會照武器的類別派委託。之後隨時可以來改，每一類的等級分開算；練到 8 級、交一顆魔力核心，就能轉職。」' }[st.step];
+    $('pick-intro').textContent = { race: '輪到你時，館員把登記表轉過來。「先填名字，接著確認種族和武器。不清楚的地方再問我。」', look: '「勇者證上要貼照片。」館員指了指牆邊的鏡子。', cls: '「最後是主要武器。你平常用哪一種？以後要換，再來改登記就好。」各類武器的等級分開計算；轉職條件可在公會的武器登記頁查看。' }[st.step];
     if (st.step === 'race') R.raceGacha(h, id => { st.race = id; st.look = defaultLook(id); st.name = R.randomName(id); st.step = 'look'; step(); }, { ten: true });
     else if (st.step === 'look') lookStep(h);
     else clsStep(h);
@@ -118,7 +118,7 @@
       R.addDeed && R.addDeed('勇者證的種族欄重新登記為「' + r.name + '」。');
       R.save(); if (R.restyleSelf) R.restyleSelf();
       done && done('種族重新登記為「' + r.name + '」（手續費 ' + R.RACE_CHANGE_FEE + ' 費拉）。');
-    }, { title: '種族重新登記', intro: '登記處的館員推了推眼鏡：「要重新驗魔力波、改種族欄？」最多抽 4 次，選一個登記，手續費 ' + R.RACE_CHANGE_FEE + ' 費拉；都不喜歡就按「先不要」，種族不變、不收錢。一天只能驗一次。', cancel: () => { el.hidden = true; done && done('種族沒有改。'); } });
+    }, { title: '種族重新登記', intro: '館員翻到你的資料。「要重新驗魔力波嗎？驗完再決定要不要改種族欄。」最多抽 4 次，選一個登記，手續費 ' + R.RACE_CHANGE_FEE + ' 費拉；都不喜歡就按「先不要」，種族不變、不收錢。一天只能驗一次。', cancel: () => { el.hidden = true; done && done('種族沒有改。'); } });
   };
   // 舊存檔：補登記種族、外觀（在公會的登記處）
   R.lateRegister = done => {

@@ -46,7 +46,7 @@
     R.townTalk('戰利品架', lines);
   };
   const sleep = () => {
-    R.sheet('<p class="kicker">302 室</p><h2>棉被</h2><p>暖桌關了，窗外的雪停了。要睡到明天早上嗎？</p>', '<div class="row"><button type="button" class="btn pri" id="hm-zz">睡覺</button><button type="button" class="btn" id="hm-no">還不睏</button></div>');
+    R.sheet('<p class="kicker">302 室</p><h2>棉被</h2><p>你把暖桌關掉，拉開棉被。要睡到明天早上嗎？</p>', '<div class="row"><button type="button" class="btn pri" id="hm-zz">睡覺</button><button type="button" class="btn" id="hm-no">還不睏</button></div>');
     document.getElementById('hm-no').onclick = R.closeSheet;
     document.getElementById('hm-zz').onclick = () => { R.closeSheet(); R.fade(() => { R.advanceDays(1); const from = W.town ? W.town.from : null, d = door(); R.enterTownNow(from, d ? [d[0], d[1] + 1.2] : null); R.toast(pick(['在自己的棉被裡睡了一整晚。', '鬧鐘響了三次才起來。', '夢到了遺跡。醒來的時候還記得一點點。'])); }); };
   };
@@ -63,7 +63,7 @@
       // 暖桌
       bx(1.6, 0.4, 1.6, '#7A5A3A', -HW + 2.6, 0.2, 1.2); bx(2.2, 0.06, 2.2, '#C83A3A', -HW + 2.6, 0.36, 1.2); bx(1.7, 0.05, 1.7, '#8A6A44', -HW + 2.6, 0.44, 1.2);
       mesh(new TH.SphereGeometry(0.08, 6, 5), '#E8823A', -HW + 2.4, 0.52, 1.0); mesh(new TH.SphereGeometry(0.08, 6, 5), '#E8823A', -HW + 2.6, 0.52, 1.2); mesh(new TH.SphereGeometry(0.08, 6, 5), '#E8823A', -HW + 2.8, 0.52, 1.0);   // 橘子
-      block(-HW + 1.6, -HW + 3.6, 0.2, 2.2, 'table'); inter(-HW + 2.6, 2.6, 1.5, '鑽進暖桌', () => R.townTalk('暖桌', [pick(['腳伸進去的一瞬間，整個人都不想動了。', '剝了一顆橘子。', '貓……沒有貓。下次養一隻好了。'])]));
+      block(-HW + 1.6, -HW + 3.6, 0.2, 2.2, 'table'); inter(-HW + 2.6, 2.6, 1.5, '鑽進暖桌', () => R.townTalk('暖桌', [pick(['腳伸進去的一瞬間，整個人都不想動了。', '剝了一顆橘子。', '再坐一下。外套先放旁邊。'])]));
       // 電視
       bx(1.0, 0.7, 0.6, '#2A2A30', -HW + 4.4, 0.65, -HD + 0.5); const scr = bx(0.8, 0.5, 0.02, new TH.MeshBasicMaterial({ color: '#7A9ACF' }), -HW + 4.4, 0.68, -HD + 0.81); scr.castShadow = false; bx(1.2, 0.3, 0.6, '#6A4A30', -HW + 4.4, 0.15, -HD + 0.5);
       block(-HW + 3.8, -HW + 5.0, -HD + 0.2, -HD + 0.8, 'tv'); inter(-HW + 4.4, -HD + 1.6, 1.4, '看電視', tv);
@@ -82,7 +82,7 @@
       block(SX - 0.7, SX + 0.7, SZ - 0.2, SZ + 0.25, 'shelf'); inter(SX, -HD + 1.4, 1.4, '看戰利品架', trophies);
       // 書桌：寫日記（存檔）
       bx(1.2, 0.75, 0.6, '#7A5A3A', HW - 0.7, 0.375, HD - 2.4); bx(0.5, 0.04, 0.35, '#F2ECD8', HW - 0.7, 0.77, HD - 2.4); block(HW - 1.3, HW - 0.1, HD - 2.7, HD - 2.1, 'table');
-      inter(HW - 1.6, HD - 2.4, 1.3, '寫日記（存檔）', () => { R.save && R.save(); R.townTalk('日記', ['第 ' + (S().day || 0) + ' 天。', pick(['今天也活著回來了。', '雪還是很大。', '明天要去哪一座遺跡呢。', '存了一點錢。……一點點。']), '（存檔了）']); });
+      inter(HW - 1.6, HD - 2.4, 1.3, '寫日記（存檔）', () => { R.save && R.save(); R.townTalk('日記', ['第 ' + (S().day || 0) + ' 天。', pick(['今天也活著回來了。', '有幾件事忘了記，現在又想不起來。', '明天要去哪一座遺跡呢。', '存了一點錢。……一點點。']), '（存檔了）']); });
       lamp(0, 2.5, 0, '#FFF0D0', 0.8, 10); lamp(-HW + 2.6, 1.2, 1.2, '#FF9A5A', 0.35, 3);
       if (K && K.plantAt) K.plantAt(c, HW - 0.6, HD - 0.6);
     };

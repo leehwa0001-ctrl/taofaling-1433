@@ -10,7 +10,7 @@
   const hour = () => (R.hourNow ? ((R.hourNow() % 24) + 24) % 24 : 12);
   const HS = ['short', 'long', 'ponytail', 'bun', 'bob', 'crop', 'spiky'];
   const ROLES = {
-    old: { name: '老人家', hair: ['#C8C0B0', '#8A8A88'], lines: ['「年輕的時候，東鶴還沒有魔導路燈，晚上黑漆漆的。」', '「舊城的城牆，以前有四座城門。」', '「冬天曬太陽最舒服。」', '「我孫子也想當勇者……我叫他去念書。」'] },
+    old: { name: '老人家', hair: ['#C8C0B0', '#8A8A88'], lines: ['「年輕的時候，東鶴還沒有魔導路燈，晚上黑漆漆的。」', '「以前要約人，就約在城門。我到現在還是不太會認新路名。」', '「冬天曬太陽最舒服。」', '「我孫子也想當勇者……我叫他去念書。」'] },
     student: { name: '學生', top: ['#2E3A5A', '#1E2A3A'], lines: ['「明天要考試……可是好想去遊樂場。」', '「聽說城西遺跡的入口，晚上會發光。」', '「勇者證要十六歲才能考。再等兩年。」'] },
     salary: { name: '上班族', top: ['#2E2E38', '#3A3A48'], lines: ['「午休只剩十分鐘……」', '「德克斯凡的新機器，課長說要學會操作。」', '「最近竊案很多，公司的保險箱多加了一道鎖。」'] },
     mama: { name: '主婦', top: ['#8A4A5A', '#6A5A3A', '#C8A888'], lines: ['「河西超市的白蘿蔔今天特價。」', '「孩子的學費又漲了。」', '「聽說赤提燈的老闆娘以前也是勇者。」'] }
@@ -71,7 +71,7 @@
     const parks = [C.Z && C.Z.park, C.PARKS && C.PARKS[0]].filter(Boolean);
     parks.forEach(pk => { const cx = C.WX((pk[0] + pk[2]) / 2), cz = C.WZ((pk[1] + pk[3]) / 2), rr = Math.min(pk[2] - pk[0], pk[3] - pk[1]) * C.S * 0.3; for (let i = 0; i < 3; i++) { const k = mkNpc(tw, cx, cz, 0, 'student', { off: true, cx, cz, rr: rr * (0.6 + i * 0.25), ph: i * 2.1, sp: 0.5 + rnd() * 0.3 }); L.kids.push(k); tw.inter.push({ follow: k, x: k.x, z: k.z, r: 1.6, label: '和玩雪的學生說話', act: () => say('玩雪的學生', [pick(['「要不要一起打雪仗？」', '「我堆的雪人比較大！」', '「放學了！」'])]), when: () => k.h.g.visible }); } });
     // 站前的街頭藝人
-    { const p = freeNear(C.WX(604), C.WZ(302)); if (p) { const n = mkNpc(tw, p[0], p[1], 0, 'old'); L.busk = n; tw.inter.push({ follow: n, x: n.x, z: n.z, r: 2.2, label: '聽街頭藝人彈三味線（投 1 費拉）', when: () => n.h.g.visible, act: () => { if (R.S.gold < 1) { say('街頭藝人', ['（他朝你點點頭，繼續彈。）']); return; } R.S.gold -= 1; R.save(); shamisen(); say('街頭藝人', [pick(['「謝啦。這一首叫《雪夜的渡口》。」', '「東鶴的冬天，就適合這種曲子。」', '「年輕人，下遺跡要小心。」']), '（琴聲在站前廣場上散開。）']); } }); } }
+    { const p = freeNear(C.WX(604), C.WZ(302)); if (p) { const n = mkNpc(tw, p[0], p[1], 0, 'old'); L.busk = n; tw.inter.push({ follow: n, x: n.x, z: n.z, r: 2.2, label: '聽街頭藝人彈三味線（投 1 費拉）', when: () => n.h.g.visible, act: () => { if (R.S.gold < 1) { say('街頭藝人', ['（他朝你點點頭，繼續彈。）']); return; } R.S.gold -= 1; R.save(); shamisen(); say('街頭藝人', [pick(['「謝啦。這一首叫《雪夜的渡口》。」', '「還想聽哪首？先說，我不一定會彈。」', '「年輕人，下遺跡要小心。」']), '（琴聲在站前廣場上散開。）']); } }); } }
     // 屋台：拉麵、關東煮（晚上才擺出來）
     const cart = (sx, sy, name, col, menu) => {
       const p = freeNear(C.WX(sx), C.WZ(sy)); if (!p) return; const [x, z] = p, g = new TH.Group(), lam = c2 => new TH.MeshLambertMaterial({ color: c2 });
@@ -87,7 +87,7 @@
       L.carts.push({ g, b, v });
     };
     const eat = (who, food, price, buff, lines) => () => { if (R.S.gold < price) { R.toast('錢不夠。'); return; } R.S.gold -= price; R.S.buff = { kind: 'yatai', b: buff, until: R.S.day }; R.save(); say(who, lines.concat(['（下一趟遺跡：' + Object.keys(buff).map(k => ({ hp: '生命', mp: '魔力', regen: '回復' })[k] + ' 稍微提高').join('、') + '）'])); };
-    cart(566, 312, '屋台拉麵（一碗 8 費拉）', '#C83A3A', eat('拉麵屋台的老闆', '拉麵', 8, { hp: 0.05 }, ['「醬油拉麵一碗——來了！」', '熱湯一下肚，凍僵的手指都回來了。']));
+    cart(566, 312, '屋台拉麵（一碗 8 費拉）', '#C83A3A', eat('拉麵屋台的老闆', '拉麵', 8, { hp: 0.05 }, ['「醬油拉麵一碗——來了！」', '你喝了幾口湯，老闆把裝白蘿蔔的小碟推過來，叫你小心燙。']));
     cart(674, 312, '屋台關東煮（一份 6 費拉）', '#E8C04A', eat('關東煮屋台的阿婆', '關東煮', 6, { mp: 0.06 }, ['「白蘿蔔、蛋、竹輪，再來一塊豆腐？」', '湯頭是昆布熬的，很清甜。']));
   };
   // ---------- 每一格 ----------

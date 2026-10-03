@@ -226,7 +226,7 @@
   // 兌換所：驗貨幣（私人委託拿到的赤金是真是假）
   R.exchangeSheet = () => {
     const s = S(), fakes = s.fake || 0;
-    R.sheet('<p class="kicker">西市兌換所</p><h2>驗貨幣</h2><p>「昭旭的舊銅錢一天比一天不值錢。要換公會的費拉，還是要驗東西？」</p>'
+    R.sheet('<p class="kicker">西市兌換所</p><h2>驗貨幣</h2><p>「昭旭的舊銅錢一天比一天不值錢。要換費拉，還是驗貨幣？」</p>'
       + '<p class="note">費拉的硬幣：白條 1、貝勒 5、綠幣 10、碧光 50、黃十 100、四文 500、赤金 1000、彩碧 5000。赤金的鳴文是紅色的漩渦。</p>'
       + (fakes ? '<p class="hand">你身上有 ' + fakes + ' 枚私人委託付的「赤金」。掌櫃拿起來對著燈看：鳴文是藍色的直紋——假的。</p>' : '<p class="note">身上沒有可疑的錢。</p>'),
       '<div class="row">' + (fakes ? '<button type="button" class="btn pri" id="ex-report">交給衛兵（假幣）</button>' : '') + '<button type="button" class="btn" id="ex-x">好</button></div>');
@@ -244,7 +244,7 @@
     $('fs-pull').onclick = () => { if (done2) { R.closeSheet(); return; } done2 = true; clearInterval(iv); if (t > bite && tm <= 0.7) { s.fishN = (s.fishN || 0) + 1; addGift('fish', 1); R.save(); $('fs-t').textContent = '釣到一條霜背鮒！'; } else $('fs-t').textContent = '收得太早了。'; $('fs-pull').textContent = '好'; };
     $('fs-x').onclick = () => { done2 = true; clearInterval(iv); R.closeSheet(); };
   };
-  R.onsen = () => { const s = S(); if (s.onsenDay === s.day) { R.townTalk('湯山村', ['今天已經泡過了。']); return; } s.onsenDay = s.day; s.buff = { kind: 'onsen', b: { hp: 0.05, regen: 0.3 }, until: s.day }; R.save(); R.townTalk('湯山村', ['熱水從腳趾一路暖到頭頂。', '（今天下遺跡：生命 +5%，慢慢回復）']); };
+  R.onsen = () => { const s = S(); if (s.onsenDay === s.day) { R.townTalk('湯山村', ['今天已經泡過了。']); return; } s.onsenDay = s.day; s.buff = { kind: 'onsen', b: { hp: 0.05, regen: 0.3 }, until: s.day }; R.save(); R.townTalk('湯山村', ['你在池邊坐了一會兒，等水沒那麼燙了才下去。', '（今天下遺跡：生命 +5%，慢慢回復）']); };
   // 手上的加成（籤、熱飲、溫泉）套進遺跡裡的數值；只有當天有效
   const cp = R.calcPlayer;
   R.calcPlayer = cls => {

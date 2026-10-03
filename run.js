@@ -337,7 +337,7 @@
         if (d.type === 'gold') { run.gold += d.n; R.sfx && R.sfx('coin'); }
         else if (d.type === 'mat') { run.mats[d.mat] = (run.mats[d.mat] || 0) + d.n; R.toast('＋' + R.MATS[d.mat].name + ' ×' + d.n); }
         else if (d.type === 'fruit') { R.healP(P.hpMax * 0.15); }
-        else { if (run.bag.length >= R.BAG_MAX) { if (!d.warned) { d.warned = true; R.toast('背包滿了（' + R.BAG_MAX + ' 件）。Tab 打開背包丟掉一些。'); } return; } run.bag.push(d.item); R.toast('撿到：' + R.itemName(d.item), R.rarityColor(d.item)); R.sfx && R.sfx('pick'); }
+        else { if (run.bag.length >= R.BAG_MAX) { if (!d.warned) { d.warned = true; R.toast('背包滿了（' + R.BAG_MAX + ' 件）。打開背包，丟掉一些再撿。'); } return; } run.bag.push(d.item); R.toast('撿到：' + R.itemName(d.item), R.rarityColor(d.item)); R.sfx && R.sfx('pick'); }
         d.gone = true; W.scene.remove(d.mesh); R.disposeObj(d.mesh);
       }
     });

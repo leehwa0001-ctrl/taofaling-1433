@@ -269,7 +269,7 @@
       inter(x + 1.2, z + 4.3, 2.4, '走進老岩的鐵匠鋪（鑑定、製作、強化）', () => R.enterInterior('smith'), { door: 1 });
       const ap = npc(x - 1.6, z + 5.4, { top: '#6A5A48', hair: '#3A2A1C', cloak: '#4A3A30' }, '鐵匠鋪的學徒', 0.4);
       ap.watch = { range: 9, fov: 1.15 }; tw.watchers.push(ap);
-      inter(x - 1.6, z + 6.4, 1.6, '和鐵匠鋪的學徒說話', () => talk('鐵匠鋪的學徒', ['「師父在裡面打鐵，直接進去就好。」', '「礦車是師父的，別亂碰。……我可是一直看著的喔。」']));
+      inter(x - 1.6, z + 6.4, 1.6, '和鐵匠鋪的學徒說話', () => talk('鐵匠鋪的學徒', ['「師父在裡面打鐵，直接進去就好。」', '「那台礦車先別動，輪子還沒修好。師父說等他來看。」']));
       { const cx = x + 5.6, cz = z + 3.4; SB.add(G3.box, lam('#5A4A3A', { tex: 'planks' }), cx, 0.65, cz, 1.4, 0.8, 1.9); SB.add(G3.box, lam('#7A7068', { tex: 0 }), cx, 1.08, cz, 1.2, 0.2, 1.7);
         [[-0.25, -0.35], [0.3, 0.3], [-0.1, 0.4]].forEach(([a, b2], i) => SB.add(G3.box, i === 1 ? lam('#9A7AFF', { em: '#3A2A8A', ei: 0.5 }) : lam('#A3ACB6', { tex: 0 }), cx + a, 1.3, cz + b2, 0.36, 0.3, 0.36, 0.6, i, 0.3));
         [-0.6, 0.6].forEach(o => SB.add(G3.cyl, lam('#2A2A30', { tex: 0 }), cx + o * 1.12, 0.3, cz, 0.6, 0.12, 0.6, 0, 0, Math.PI / 2));
@@ -447,7 +447,7 @@
       [[432, 1.7], [508, -1.7]].forEach(([sx, o]) => { const x = WX(sx), z = ay + o; SB.add(G3.cyl, lam('#4A4A50', { tex: 0 }), x, 0.45, z, 0.7, 0.9, 0.7); SB.add(G3.cyl, lam('#3A3A40', { tex: 0 }), x, 0.92, z, 0.74, 0.06, 0.74); propBox(x, z, 0.4); inter(x, z + (o > 0 ? -1 : 1), 1.4, '翻垃圾桶', () => (R.searchTrash ? R.searchTrash(sx) : null)); });
       tw.alley = { x: WX(466), z: ay };
       const board = [WX(484), ay - 2.2]; SB.add(G3.box, lam('#5A4A3A', { tex: 'planks' }), board[0], 1.5, board[1], 2.2, 1.4, 0.1); for (let i = 0; i < 4; i++) SB.add(G3.box, lam('#E8DCC0', { tex: 0 }), board[0] - 0.7 + i * 0.48, 1.5 + (i % 2 ? 0.15 : -0.15), board[1] + 0.06, 0.4, 0.5, 0.02);
-      inter(board[0], board[1] + 1.1, 1.8, '私人委託的木板（不是公會的委託）', () => (R.privateBoard ? R.privateBoard() : talk('私人委託', ['木板上貼著幾張手寫的紙。', '最上面一張用紅筆寫著：「公會不保障私人委託。被騙了別哭。」'])));
+      inter(board[0], board[1] + 1.1, 1.8, '私人委託的木板（不是公會的委託）', () => (R.privateBoard ? R.privateBoard() : talk('私人委託', ['木板上貼著幾張手寫的紙。', '最上面貼著紅字告示：「私人委託不受公會保障，請自行確認委託人的身分與付款方式。」'])));
     }
     // 菅婆婆的糰子攤：烤爐在前面，菅婆婆站在後面，紅傘插在她後面（從鏡頭看不會擋住人）
     { const [x, z] = at2('suga');
@@ -473,11 +473,11 @@
       if (steal && R.addSteal) R.addSteal(Object.assign({ x: x + 1.1, z: z + 1.0, r: 1.3, time: 1.0, owner: who, max: 2 }, steal));
     };
     stall(FAC.stalls[0][0], FAC.stalls[0][1], '#2E4A6A', [['#A8B8C8', 'fish'], ['#C8D0D8', 'fish'], ['#9AA8B8', 'fish'], ['#B8C4D0', 'fish'], ['#A8B8C8', 'fish']], '魚販', { top: '#3E5A6E', hair: '#2A2420', cloak: '#2E4A5A' }, ['「霜溪今天結了薄冰，魚倒是肥的。」', '「霜背鮒最便宜，一條五費拉。」'], { label: '摸走一條魚', loot: () => ({ gift: 'fish', n: 1 }) });
-    stall(FAC.stalls[1][0], FAC.stalls[1][1], '#3E5A3A', [['#F0ECE2', 'ball'], ['#E8823A', 'ball'], ['#5A8A4A', 'ball'], ['#C8323A', 'ball'], ['#F0ECE2', 'ball']], '菜攤的大叔', { top: '#6A5A3A', hair: '#8A6A4A', cloak: '#4A3A2A' }, ['「冬天的蘿蔔最甜。」', '「北郊的農家說冰鼬又來偷雞了，菜倒是沒偷。」']);
+    stall(FAC.stalls[1][0], FAC.stalls[1][1], '#3E5A3A', [['#F0ECE2', 'ball'], ['#E8823A', 'ball'], ['#5A8A4A', 'ball'], ['#C8323A', 'ball'], ['#F0ECE2', 'ball']], '菜攤的大叔', { top: '#6A5A3A', hair: '#8A6A4A', cloak: '#4A3A2A' }, ['「冬天的蘿蔔最甜。」', '「北郊那家又被冰鼬偷雞，今天沒蛋送來。你要蛋的話，明天再問問。」']);
     stall(FAC.stalls[2][0], FAC.stalls[2][1], '#8A2A24', [['#8A6A4A', 'pot'], ['#5A4A3A', 'pot'], ['#C8B898', 'pot'], ['#7A5A3A', 'pot'], ['#9A8A6A', 'pot']], '雜貨店的老闆', { top: '#5A3A5A', hair: '#D8D2C4', cloak: '#4A2A4A' }, ['「繩子、火石、燈油，下遺跡的都會買。」', '「記事本、三味線的弦、釣具，要的話這裡也有。」'], { label: '順手拿一本記事本', loot: () => ({ gift: 'notebook', n: 1 }) });
 
     // --- 街景：水井、長椅、雪人、路牌、木箱、推車、自行車（路燈、電線桿在 cityscape.js） ---
-    function well(x, z) { SB.add(G3.cyl, lam('#8C8A82', { tex: 'wall' }), x, 0.4, z, 1.8, 0.8, 1.8); SB.add(G3.cyl, lam('#1A2A3A', { tex: 0 }), x, 0.81, z, 1.5, 0.02, 1.5); [-0.95, 0.95].forEach(o => SB.add(G3.box, lam('#5A3E26', { tex: 0 }), x + o, 1.2, z, 0.14, 2.4, 0.14)); SB.add(G3.box, lam('#4A3A34', { tex: 'cap' }), x, 2.5, z, 2.6, 0.12, 1.6, 0.2, 0, 0); SB.add(G3.box, lam('#F2F6F8', { tex: 'ground' }), x, 2.6, z, 2.5, 0.08, 1.5, 0.2, 0, 0); SB.add(G3.box, lam('#6A4A2E', { tex: 0 }), x, 1.6, z, 0.3, 0.3, 0.3); propBox(x, z, 1); inter(x, z + 1.6, 1.6, '打一桶井水來喝', () => R.townToast('井水冰得刺骨。精神好多了。')); }
+    function well(x, z) { SB.add(G3.cyl, lam('#8C8A82', { tex: 'wall' }), x, 0.4, z, 1.8, 0.8, 1.8); SB.add(G3.cyl, lam('#1A2A3A', { tex: 0 }), x, 0.81, z, 1.5, 0.02, 1.5); [-0.95, 0.95].forEach(o => SB.add(G3.box, lam('#5A3E26', { tex: 0 }), x + o, 1.2, z, 0.14, 2.4, 0.14)); SB.add(G3.box, lam('#4A3A34', { tex: 'cap' }), x, 2.5, z, 2.6, 0.12, 1.6, 0.2, 0, 0); SB.add(G3.box, lam('#F2F6F8', { tex: 'ground' }), x, 2.6, z, 2.5, 0.08, 1.5, 0.2, 0, 0); SB.add(G3.box, lam('#6A4A2E', { tex: 0 }), x, 1.6, z, 0.3, 0.3, 0.3); propBox(x, z, 1); inter(x, z + 1.6, 1.6, '打一桶井水來喝', () => R.townToast('井水很冰，你只喝了兩口就放下水桶。')); }
     function bench(x, z, rotY) { const c = Math.cos(rotY), s = Math.sin(rotY); SB.add(G3.box, lam('#6A4A2E', { tex: 'planks' }), x, 0.48, z, 2.2, 0.1, 0.5, 0, rotY, 0); [-0.9, 0.9].forEach(o => SB.add(G3.box, lam('#4A3424', { tex: 0 }), x + c * o, 0.24, z - s * o, 0.12, 0.48, 0.4, 0, rotY, 0)); SB.add(G3.box, lam('#F2F6F8', { tex: 'ground' }), x, 0.55, z, 2.0, 0.05, 0.4, 0, rotY, 0); block(x - 1.1, x + 1.1, z - 0.3, z + 0.3, 'deco'); inter(x, z + 0.8, 1.4, '坐一下', () => R.sitDown && R.sitDown(x, z + 0.32)); }
     function snowman(x, z) { const sw = lam('#F4F8FA', { tex: 'ground' }); SB.add(G3.sph, sw, x, 0.55, z, 1.1, 1.0, 1.1); SB.add(G3.sph, sw, x, 1.3, z, 0.78, 0.74, 0.78); SB.add(G3.sph, sw, x, 1.85, z, 0.52, 0.5, 0.52); SB.add(G3.cyl, lam('#3A3A40', { tex: 0 }), x, 2.17, z, 0.42, 0.3, 0.42); SB.add(G3.cone, lam('#E8823A', { tex: 0 }), x, 1.85, z + 0.3, 0.1, 0.3, 0.1, Math.PI / 2, 0, 0); [-0.1, 0.1].forEach(o => SB.add(G3.sph, lam('#1A1A1A', { tex: 0 }), x + o, 1.92, z + 0.23, 0.07, 0.07, 0.07)); SB.add(G3.box, lam('#C8323A', { tex: 0 }), x, 1.6, z, 0.62, 0.12, 0.62); propBox(x, z, 0.55); inter(x, z + 1.1, 1.4, '雪人', () => R.townToast('不知道是誰堆的雪人。圍巾是紅的。')); }
     function signpost(x, z, lines) { SB.add(G3.box, lam('#5A3E26', { tex: 0 }), x, 1.2, z, 0.14, 2.4, 0.14); SB.add(G3.box, lam('#8A6A44', { tex: 'planks' }), x + 0.45, 2.0, z, 0.9, 0.24, 0.06); SB.add(G3.box, lam('#8A6A44', { tex: 'planks' }), x - 0.35, 1.6, z, 0.8, 0.22, 0.06, 0, 0.5, 0); SB.add(G3.box, lam('#F2F6F8', { tex: 'ground' }), x, 2.42, z, 0.2, 0.06, 0.2); propBox(x, z, 0.15); if (lines) inter(x, z + 0.9, 1.4, '看路牌', () => talk('路牌', lines)); }
@@ -563,12 +563,12 @@
     ruinGate('dh-josai', 96, 318, (x, z) => { bx(1.2, 4.4, 1.2, lam('#6E6A60', { tex: 'wall' }), x - 2.4, 2.2, z); bx(1.2, 4.4, 1.2, lam('#6E6A60', { tex: 'wall' }), x + 2.4, 2.2, z); bx(6.4, 1, 1.4, lam('#5E5A52', { tex: 'wall' }), x, 4.6, z); bx(3.6, 3.8, 0.3, lam('#0A080C', { tex: 0 }), x, 1.9, z - 0.3); block(x - 3, x + 3, z - 0.8, z + 0.6, 'rock');
       const tent = new TH.Mesh(new TH.CylinderGeometry(0.05, 3, 2.6, 4, 1), lam('#C8B888', { tex: 0 })); tent.rotation.y = Math.PI / 4; tent.position.set(x + 7, 1.3, z + 3); tent.castShadow = true; group.add(tent); block(x + 5, x + 9, z + 1, z + 5);
       bx(0.1, 4, 0.1, lam('#5A4A3A', { tex: 0 }), x + 9.5, 2, z + 5.5); const sf = new TH.Mesh(new TH.PlaneGeometry(1.3, 0.9), new TH.MeshLambertMaterial({ map: R.guildFlagTex(16, 11), side: TH.DoubleSide })); sf.position.set(x + 10.2, 3.5, z + 5.5); group.add(sf);
-      npc(x + 6, z + 6, { top: '#3E5A48', hair: '#2A2420', cloak: '#3E5A48' }, '真壁', Math.PI * 0.8); inter(x + 6, z + 7, 2.4, '和調查點主任真壁說話', () => talk('真壁', R.eventsToday && R.eventsToday().josaiSealed ? ['「封鎖中。總部的調查委員會還在裡面。」', '「……那天的事，我會一直記著。」'] : ['城西遺跡裡的魔力濃度，這幾天又往上升了。', '外圍第一層標出了十二處危險點。進去的話，別逞強。', '報告每天都要送回分館。……你要進去就去吧，我會記下來。']));
+      npc(x + 6, z + 6, { top: '#3E5A48', hair: '#2A2420', cloak: '#3E5A48' }, '真壁', Math.PI * 0.8); inter(x + 6, z + 7, 2.4, '和調查點主任真壁說話', () => talk('真壁', R.eventsToday && R.eventsToday().josaiSealed ? ['「封鎖中。總部的調查委員會還在裡面。」', '「……那天的事，我會一直記著。」'] : ['城西遺跡裡的魔力濃度，這幾天又往上升了。', '外圍第一層標出了十二處危險點。進去的話，別逞強。', '要進去的話，先在我這裡登記。我每天要把出入紀錄一起送回分館。']));
       tw.survey = { x: x + 3, z: z + 8 }; });
     ruinGate('dh-kouzan', 560, 46, (x, z) => { bx(0.5, 4, 0.5, lam('#5A3E26', { tex: 'planks' }), x - 2.2, 2, z); bx(0.5, 4, 0.5, lam('#5A3E26', { tex: 'planks' }), x + 2.2, 2, z); bx(5.2, 0.6, 0.6, lam('#5A3E26', { tex: 'planks' }), x, 4.1, z); bx(3.8, 3.6, 0.3, lam('#0A080C', { tex: 0 }), x, 1.8, z - 0.3); bx(10, 6, 3, lam('#7A8088', { tex: 'wall' }), x, 3, z - 2.2); block(x - 5, x + 5, z - 3.7, z + 0.2, 'rock');
       [-0.6, 0.6].forEach(o => bx(0.12, 0.08, 9, lam('#6A6A70', { tex: 0 }), x + o, 0.05, z + 4.5)); bx(1.4, 0.9, 2, lam('#5A4A3A', { tex: 'planks' }), x, 0.6, z + 6); block(x - 0.8, x + 0.8, z + 5, z + 7); });
     { const x = WX(150), z = WZ(66); for (let i = 0; i < 4; i++) house(70 + i * 26, 34 + (i % 2) * 6, 5, 4, 3, '#A8927A', 0, { two: false, shop: i === 1 });
-      block(x - 5.6, x + 5.6, z - 3.2, z + 3.2, 'water'); tw.steam = { x, z }; inter(x, z + 4.2, 3, '泡一下溫泉', () => (R.eventsToday && R.eventsToday().blizzard ? talk('湯山村', ['暴風雪。矮丘山口封了，今天到不了。']) : (R.onsen ? R.onsen() : talk('湯山村', ['熱水從腳趾一路暖到頭頂。'])))); }
+      block(x - 5.6, x + 5.6, z - 3.2, z + 3.2, 'water'); tw.steam = { x, z }; inter(x, z + 4.2, 3, '泡一下溫泉', () => (R.eventsToday && R.eventsToday().blizzard ? talk('湯山村', ['暴風雪。矮丘山口封了，今天到不了。']) : (R.onsen ? R.onsen() : talk('湯山村', ['你在池邊坐了一會兒，才把整個身體泡進熱水裡。'])))); }
     { const [fx, fy] = FAC.farmhouse, p = house(fx, fy, 6, 4.5, 3.2, '#9A7A5A', 0, { two: false, shop: false });
       for (let i = 0; i < 14; i++) SB.add(G3.box, lam('#6A4A2E', { tex: 0 }), WX(fx + 14) + i * 2.1, 0.45, WZ(fy + 14), 0.15, 0.9, 0.15);
       inter(p.doorX, p.doorZ, 2.6, '敲北郊農舍的門', () => talk('北郊農舍', ['「冰鼬又來偷雞了……」屋裡的人嘆了一口氣。'])); }
@@ -643,7 +643,7 @@
   const askRuin = s => {
     R.syncStatus(); if (R.applyEvents) R.applyEvents();
     if (s.sealed) { R.townTalk(s.name, [s.sealed]); return; }
-    if (s.status !== 'open') { const g = R.gradeById(s.grade), u = g.unlock ? R.gradeById(g.unlock) : null; R.townTalk(s.name, ['入口有公會的封條。', u ? '要先從' + u.name + '遺跡的最深處活著回來，公會才會發這一級的委託。' : '']); return; }
+    if (s.status !== 'open') { const g = R.gradeById(s.grade), u = g.unlock ? R.gradeById(g.unlock) : null; R.townTalk(s.name, ['入口有公會的封條。', u ? '要先從' + u.name + '遺跡的最深處返回，公會才會受理這一級的委託。' : '']); return; }
     const g = R.gradeById(s.grade);
     R.sheet('<p class="kicker">' + R.esc(g.name) + '・' + R.esc(R.TYPES[s.type].name) + '</p><h2>' + R.esc(s.name) + '</h2><p>' + R.esc(s.desc) + '</p><p class="note">' + R.esc(R.clsName(R.S.cls)) + ' Lv ' + R.S.classes[R.S.cls].lv + '・回復藥 ' + R.S.potions.hp + '・魔力藥 ' + R.S.potions.mp + (R.today ? '・' + R.esc(R.shortDate()) : '') + '</p>' + (R.runNote ? R.runNote(s) : ''),
       '<div class="row"><button type="button" class="btn pri" id="rg-go">進去</button><button type="button" class="btn" id="rg-no">再準備一下</button></div>');

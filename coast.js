@@ -102,7 +102,7 @@
       const [hx, hy] = F.beachHut, hcx = WX(hx), hcz = WZ(hy);
       box(lam('#C8A060'), hcx, 1.2, hcz, 4.2, 2.4, 3.2); box(lam('#3A6A9A'), hcx, 2.55, hcz, 4.8, 0.3, 3.8); box(lam('#8A6A44'), hcx, 1.0, hcz + 1.62, 3.2, 1.6, 0.05); block(hcx - 2.1, hcx + 2.1, hcz - 1.6, hcz + 1.6, 'house');
       for (let i = 0; i < 4; i++) { const ux = x0 - 2 - i * 2.6, uz = (sz0 + sz1) / 2 + (i % 2 ? 4 : -3); box(lam('#E8E4DC'), ux, 0.9, uz, 0.08, 1.8, 0.08); box(lam(['#C8323A', '#3A6ACF', '#F2C84A', '#3A8A5A'][i]), ux, 1.6, uz, 0.3, 0.9, 0.3); }
-      tw.inter.push({ x: hcx, z: hcz + 2.3, r: 2.6, label: '海之家（冬季休業）', act: () => R.townTalk('海之家', ['門上貼著一張紙：「冬季休業。夏峰月見。」', '（門縫裡飄出一點醬油和炒麵的味道……大概是錯覺。）']) });
+      tw.inter.push({ x: hcx, z: hcz + 2.3, r: 2.6, label: '海之家（冬季休業）', act: () => R.townTalk('海之家', ['門上貼著一張紙：「冬季休業。夏峰月見。」', '門後堆著收起來的桌椅，菜單也翻到了背面。']) });
       tw.inter.push({ x: x0 - 3, z: (sz0 + sz1) / 2, r: 3.5, label: '在沙灘上撿貝殼', act: shells });
       tw.inter.push({ x: x0 - 1.5, z: sz0 + 4, r: 2.5, label: '看海', act: () => R.townTalk('東濱', [pick(['冬天的海是鉛灰色的。浪一波一波打上來，又退回去。', '遠方有一艘貨船，往北邊的千歲空開去。', '風很冷，帶著鹽的味道。海鷗在浪上飛。', '天氣好的時候，可以看到南邊的空知川。'])]) }); }
     // 碼頭盡頭：釣魚、看海；燈塔

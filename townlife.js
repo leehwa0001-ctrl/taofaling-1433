@@ -123,7 +123,7 @@
     const xeno = R.xenoLevel ? R.xenoLevel() : 0, heat = R.crime ? R.crime.heat : 0;
     let line;
     if (a.kind === 'cat') line = xeno >= 3 ? '貓盯著你的角看了一下，尾巴炸開，跑掉了。' : pick(['貓瞇起眼睛，喉嚨咕嚕咕嚕地響。', '貓聞了聞你的手指，轉頭走了。', '貓翻過來露出肚子——一摸就被抓了一下。', '貓用頭頂你的手，要你再摸一下。']);
-    else if (heat > 0) line = '狗對著你低吼。牠好像知道你剛剛做了什麼。';
+    else if (heat > 0) line = '狗往後退了兩步，對著你低吼。';
     else if (a.mode === 'walk') line = pick(['「牠很親人，摸吧。」狗搖著尾巴。', '狗舔了舔你的手。牽著牠的人笑了一下。', '「別餵牠吃的喔。」狗在你腳邊轉了一圈。']);
     else line = pick(['狗搖著尾巴，把頭靠過來。', '狗翻過身，要你摸肚子。', '狗聞了聞你身上遺跡的味道，打了個噴嚏。']);
     if (a.kind === 'cat' && (xeno >= 3 || rnd() < 0.25)) { a.st = 'flee'; a.t = 1.6; }

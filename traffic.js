@@ -85,7 +85,7 @@
       R.sheet('<p class="kicker">東鶴醫院・掛號處</p><h2>治療：' + T.n + '</h2><p>' + esc(T.d) + '</p><p class="note">不治療的話還要 ' + (i.until - s.day) + ' 天才會好。治療費 ' + T.cure + ' 費拉（費拉 ' + s.gold + '）。</p>',
         '<div class="row"><button type="button" class="btn pri" id="ij-go"' + (s.gold < T.cure ? ' disabled' : '') + '>治療（' + T.cure + ' 費拉）</button><button type="button" class="btn" id="ij-x">不用了</button></div>');
       $('ij-x').onclick = R.closeSheet;
-      $('ij-go').onclick = () => { if (s.gold < T.cure) return; s.gold -= T.cure; s.injury = null; R.save(); R.closeSheet(); R.toast('包紮、上了石膏、打了一針。傷好了。', '#7AE0A0'); R.sfx && R.sfx('drink'); };
+      $('ij-go').onclick = () => { if (s.gold < T.cure) return; s.gold -= T.cure; s.injury = null; R.save(); R.closeSheet(); R.toast('完成治療，傷勢造成的數值減益已解除。', '#7AE0A0'); R.sfx && R.sfx('drink'); };
     };
   };
 
@@ -103,7 +103,7 @@
   const appealSheet = () => {
     const f = canAppeal(), s = S(); if (!f) { R.toast('沒有可以申訴的罰金（被抓之後三天內才能申訴）。'); return; }
     const odds = Math.max(10, Math.min(80, 45 - 12 * f.prior - 6 * (f.heat - 1) + Math.max(-15, Math.min(15, s.rep || 0))));
-    R.sheet('<p class="kicker">東鶴地方法院・申訴窗口</p><h2>對罰金不服</h2><p>罰金 ' + f.amt + ' 費拉（第 ' + f.day + ' 天）。申訴的話，法院明天判決：贏了退回罰金；輸了維持原判，訴訟費不退。</p><p class="note">訴訟費 20 費拉。看起來的勝算：大約 ' + odds + '%（前科越多、通緝越重越難；名聲好一點有幫助）。</p>',
+    R.sheet('<p class="kicker">東鶴地方法院・申訴窗口</p><h2>對罰金不服</h2><p>罰金 ' + f.amt + ' 費拉（第 ' + f.day + ' 天）。申訴的話，法院明天判決：贏了退回罰金；輸了維持原判，訴訟費不退。</p><p class="note">訴訟費 20 費拉。預估申訴成功率：約 ' + odds + '%（前科越多、通緝越重越難；名聲好一點有幫助）。</p>',
       '<div class="row"><button type="button" class="btn pri" id="ap-go"' + (s.gold < 20 ? ' disabled' : '') + '>提出申訴（20 費拉）</button><button type="button" class="btn" id="ap-x">算了</button></div>');
     $('ap-x').onclick = R.closeSheet;
     $('ap-go').onclick = () => { if (s.gold < 20) return; s.gold -= 20; f.appealed = 1; s.appeal = { amt: f.amt, odds, day: s.day }; R.save(); R.closeSheet(); R.toast('申訴書遞出去了。明天判決。', '#E8C04A'); };

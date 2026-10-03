@@ -40,7 +40,7 @@ window.R = window.R || {};
       { id: 'gladiator', name: '劍鬥士', path: '變化', skill: 'combo', desc: '技能「迴旋連斬」：連續三次環形斬擊並擊退。被動：攻速 +20%。' },
       { id: 'onimusha', name: '鬼武者', path: '昭旭・遺跡', skill: 'on_rend', desc: '戴上遺跡裡撿到的鬼面，把佩特拉的惡意變成力氣。技能「鬼斬」：往前大範圍斬擊，打中的敵人被嚇得愣住。被動：生命低於一半時，受到的傷害 −20%、傷害 +15%。' },
       // 內修者搬到武術家（2026-10-04）；之前就轉成內修者的戰士照舊（legacy：轉職畫面不再出現）
-      { id: 'inner', name: '內修者', path: '昭旭・遺跡', skill: 'qijin', legacy: 1, desc: '吐納遺跡裡飄散的殘存魔力質。技能「氣勁」：蓄氣一掌震退周圍敵人，打中的行壁直接碎裂。被動：站著不動時回復生命與魔力；攻擊不會讓佩特拉的注意上升。' }],
+      { id: 'inner', name: '內修者', path: '昭旭・遺跡', skill: 'qijin', legacy: 1, desc: '透過吐納吸收遺跡裡的殘存魔力質。技能「氣勁」：蓄氣一掌震退周圍敵人，打中的行壁直接碎裂。被動：站著不動時回復生命與魔力；攻擊不會讓佩特拉的注意上升。' }],
     mage: [
       { id: 'elementalist', name: '元素師', path: '強化', skill: 'meteor', desc: '技能「隕石」：在準心處落下隕石，大範圍傷害並燃燒。被動：命中時 20% 機率燃燒或減速。' },
       { id: 'hexer', name: '咒術師', path: '變化', skill: 'hex', desc: '技能「咒縛」：詛咒一片範圍的敵人：受到的傷害 +30%、移動變慢。被動：被詛咒的敵人死掉時，詛咒會傳給旁邊的敵人。' },
@@ -351,7 +351,7 @@ window.R = window.R || {};
     { id: 'dh-town', map: 'donghe', x: 57, y: 62, kind: 'city', name: '東鶴', src: '設定', desc: '公會東鶴分館、鐵匠鋪、白藤堂、倉庫。遺跡回來的第一站。', hub: 1 },
     { id: 'dh-sokkutsu', map: 'donghe', x: 80, y: 7, kind: 'ruin', grade: 'hamilia', type: 'maze', name: '霜溪石窟', src: '遊戲', desc: '霜溪上游的哈米莉亞級遺跡。一般民眾經登記也能進去採藥草。第一次下遺跡就從這裡開始。', status: 'open' },
     { id: 'dh-josai', map: 'donghe', x: 10, y: 32, kind: 'ruin', grade: 'amile', type: 'maze', name: '城西遺跡', src: '館員', desc: '公會在入口設了調查點，調查點主任真壁每天派人把報告送回分館。最近遺跡裡的魔力濃度一直往上升，外圍第一層已經標出了十二處危險點。', status: 'open' },
-    { id: 'dh-kouzan', map: 'donghe', x: 56, y: 5, kind: 'ruin', grade: 'amile', type: 'city', name: '北山礦坑・深層', src: '遊戲', desc: '德克斯凡礦務公司的北山礦坑，往下挖穿了一座遺跡。礦殼成群，整面牆都是礦脈。礦坑本身出自《公會館員日誌》。', status: 'open' },
+    { id: 'dh-kouzan', map: 'donghe', x: 56, y: 5, kind: 'ruin', grade: 'amile', type: 'city', name: '北山礦坑・深層', src: '遊戲', desc: '德克斯凡礦務公司的北山礦坑，往下挖穿了一座遺跡。礦殼成群，整面牆都是礦脈。入口仍留著礦務公司的運輸軌道。', status: 'open' },
     { id: 'dh-yuyama', map: 'donghe', x: 13, y: 6, kind: 'village', name: '湯山村', src: '東鶴', desc: '矮丘山口另一邊的溫泉村。' },
     { id: 'dh-farm', map: 'donghe', x: 76, y: 18, kind: 'village', name: '北郊農舍', src: '東鶴', desc: '冬天常被冰鼬騷擾的農家。' }
   ];

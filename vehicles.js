@@ -146,7 +146,7 @@
   };
   const rentSheet = () => {
     const s = S(), has = s.bikeDay === s.day;
-    R.sheet('<p class="kicker">站前廣場</p><h2>租腳踏車</h2><p>「一天 8 費拉，晚上還回來不用，明天自己會回到這裡。」</p>', '<div class="row"><button type="button" class="btn pri" id="rt-go"' + (has ? ' disabled' : '') + '>' + (has ? '今天已經租了' : '租一台（8 費拉）') + '</button><button type="button" class="btn" id="rt-x">不用了</button></div>');
+    R.sheet('<p class="kicker">站前廣場</p><h2>租腳踏車</h2><p>「一天 8 費拉。晚上不用特地送回來，我們會收車。」</p>', '<div class="row"><button type="button" class="btn pri" id="rt-go"' + (has ? ' disabled' : '') + '>' + (has ? '今天已經租了' : '租一台（8 費拉）') + '</button><button type="button" class="btn" id="rt-x">不用了</button></div>');
     document.getElementById('rt-x').onclick = R.closeSheet;
     const go = document.getElementById('rt-go'); if (go) go.onclick = () => { if (s.gold < 8) { R.toast('錢不夠。'); return; } s.gold -= 8; s.bikeDay = s.day; R.save(); R.closeSheet(); const Pl = P(), bk = park('bike', 'bike', Pl.x + 1.2, Pl.z, 0, { rent: true, col: '#C8B040' }); if (bk) mount(bk); };
   };
