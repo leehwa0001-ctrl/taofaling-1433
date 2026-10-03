@@ -89,7 +89,7 @@
     擬態族種: { tier: 'SR', W: 0.6, xeno: 2, from: '地表平原・擬態族種', skins: ['#B9A6D6', '#A993C9'], hairs: ['#2B2340', '#E6E0F2'], b: { mp: 0.2, calm: 0.18 }, look: { ears: 'elf', horns: 'small' }, line: '擬態族種：擅長擬態，佩特拉不太注意得到。' },
     光影族種: { tier: 'SSR', W: 0.5, xeno: 2, from: '地下靈魂迴廊・光影族種', skins: SK.shade, eye: '#B8E0FF', b: { dodge: 0.25, back: 0.2, calm: 0.12 }, look: { wisp: 1 }, line: '光影族種：身上飄著光或影子。', per: { 光源人族: { skins: SK.light, look: { halo: 1 }, b: { regen: 0.4 } }, 鏡人族: { b: { thorns: 0.2 } }, 隱人族: { b: { calm: 0.1 } } } },
     寰星族種: { tier: 'SSR', W: 0.4, xeno: 2, from: '天外・寰星族種', skins: SK.star, eye: '#FFE08A', b: { mp: 0.2, magic: 0.1, luck: 2 }, look: { gem: 1, halo: 1 }, line: '寰星族種：從天外落下來的族種，額頭上的晶石像星星。', per: { 恆星人族: { b: { ignite: 0.12 } }, 隕星人族: { b: { def: 3 } } } },
-    吸血族種: { tier: 'SSR', W: 0.5, xeno: 2, from: '地表荒原・吸血族種', skins: SK.blood, hairs: ['#1A1418', '#3A1A22', '#D8D4D8'], eye: '#C8323A', b: { vamp: 0.05, critMult: 0.15, night: 0.12 }, look: {}, line: '吸血族種：吸血〇〇族能長期儲血、消耗低；噬血〇〇族存不久，但轉化得快。',
+    吸血族種: { tier: 'SSR', W: 0.5, xeno: 2, from: '地表荒原・吸血族種', skins: SK.blood, hairs: ['#1A1418', '#3A1A22', '#D8D4D8'], eye: '#C8323A', b: { vamp: 0.05, critMult: 0.15, night: 0.12 }, look: {}, line: '吸血族種：名字有「吸血」的能把血長期存在儲血袋裡、消耗低；有「噬血」的存不久，但轉化得快。',
       sub: n => (/噬血/.test(n) ? { b: { dmg: 0.08, vamp: 0.02 } } : { b: { hp: 0.06 } }) },
     巨像族種: { tier: 'SSR', W: 0.4, xeno: 2, from: '地下・巨像族種', skins: SK.rock, b: { hp: 0.3, def: 5, speed: -0.08 }, look: { rock: 1, beard: 1 }, line: '巨像族種：大得像一座雕像。' },
     穴甲族種: { tier: 'SR', W: 0.6, xeno: 2, from: '地下礦脈・穴甲族種', skins: SK.rock, b: { def: 4, ore: 0.5 }, look: { ears: 'antenna', rock: 1, bald: 1 }, line: '穴甲族種：背著礦殼的蟲人，跟礦殼是遠親。' },

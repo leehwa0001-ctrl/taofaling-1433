@@ -71,8 +71,8 @@
   };
 
   // 透視的程度：鏡頭的視角（度）。0 ＝ 原本的正交鏡頭。一般鏡頭是 44 度，這裡收窄成 26 度，看起來只有「一點」透視
-  // 2026-10-04 作者：不要用移軸透視，改回原本的——一律不透視（存檔裡記的「鏡頭」設定不管），選單的「鏡頭」按鈕拿掉（camfov.js 不載入）
-  R.PIX_FOV = () => 0;   // 2026-10-04 作者：透視之後感覺變差——預設改回不透視（45 度俯角留著），選單的「鏡頭」還是可以開
+  // 透視的程度：鏡頭的視角（度），0＝不透視。預設 26（作者的截圖那一種）；存檔裡舊的設定（移軸透視那時候的）重設一次
+  R.PIX_FOV = () => { const o = R.S && R.S.opts; if (o && o.camV !== 3) { o.fov = 26; o.camV = 3; } return o && o.fov != null ? o.fov : 26; };
   // 換鏡頭：像素風用透視（窄角）或正交鏡頭（位置、方向照舊，鏡頭的程式不用改）
   const useCam = (W, pix, w, h) => {
     if (!W.pcam) W.pcam = W.camera;
@@ -99,31 +99,19 @@
     const s = Math.max(1, Math.round(bh / want)), rw = 2 * Math.ceil(bw / s / 2), rh = 2 * Math.ceil(bh / s / 2);
     return { bw, bh, s, rw, rh, hw: rw / 2 * PX, hh: rh / 2 * PX };
   };
-  // 透視鏡頭（「移軸」的做法，2026-10-04 作者：一般透視的牆和房子像往外倒、斜邊一格一格）：
-  // 鏡頭本身是水平看出去的，畫面往下移到角色那裡（像建築攝影的移軸鏡頭）——直的東西在畫面上永遠是直的，
-  // 只有往畫面深處延伸的線（走廊兩邊的牆、地板的縫）會往中間收一點，牆的側面跟著鏡頭的位置露出來一點。
-  // 角色那個距離：橫的、直的、地面的縮放都和原本的正交鏡頭一模一樣（像素一格、人物的 TILT 都對）。
-  // （放在 placeCam 裡做：霧、名牌、滑鼠瞄準都用同一個鏡頭）
+  // 透視鏡頭（2026-10-04 作者給的截圖「改為這種」——就是第一版的一般透視，不要移軸透視）：
+  // placeCam 擺好之後，沿著同一個方向往後退，退到「角色那個距離，畫面一格剛好是一個點陣像素」，視角收窄（預設 26 度）。
+  // （放在 placeCam 裡做：霧、名牌、滑鼠瞄準都用同一個鏡頭位置）
   const pc0 = R.placeCam;
   R.placeCam = (...a) => {
     const r = pc0(...a), W = R.W, P0 = W.P;
     if (!W.scene || !W.scene.userData.pix || !P0 || !W.renderer) return r;
     const z = sizeOf(W); useCam(W, true, z.bw, z.bh);
     const cam = W.camera; if (!cam.isPerspectiveCamera) return r;
-    const yaw = W.cam ? W.cam.yaw : 0, hx = Math.sin(yaw), hz = Math.cos(yaw), p = cam.position;
-    // 鏡頭的俯角（照原本的鏡頭）；晃動只留橫向的
-    const rx = p.x - P0.x, rz = p.z - P0.z, along = rx * hx + rz * hz, ty = R.PIX.LOOKY;
-    const tx = P0.x + rx - along * hx, tz = P0.z + rz - along * hz;
-    const p0y = p.y, tanP = Math.max(0.2, (p.y - ty) / Math.max(0.1, along)), cosP = 1 / Math.hypot(1, tanP), sinP = tanP * cosP;
-    // 往後退多遠：越遠越不透視。角度 f 對應到「跟一般透視鏡頭差不多的收斂程度」
-    const f = R.PIX_FOV(), Zh = z.hh / Math.tan(f / 2 * Math.PI / 180) / cosP, H = Zh * tanP;
-    p.set(tx + hx * Zh, ty + H, tz + hz * Zh);
-    cam.up.set(0, 1, 0); cam.lookAt(p.x - hx, p.y, p.z - hz);
-    const n = Math.max(1, Zh - 45), fr = Zh + 220, yc = -n * tanP, th = n * z.hh / (Zh * cosP), tw = n * z.hw / Zh;
-    cam.fov = f; cam.aspect = z.rw / z.rh; cam.near = n; cam.far = fr;
-    cam.projectionMatrix.makePerspective(-tw, tw, yc + th, yc - th, n, fr); cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
-    cam.userData.shift = { sinP, Zh, d: Math.hypot(Zh, H - 1 + ty) - Zh, k: Math.hypot(along, p0y - ty) / Zh };
-    cam.updateMatrixWorld();
+    const f = R.PIX_FOV(), D = z.hh / Math.tan(f / 2 * Math.PI / 180), p = cam.position;
+    const tx = P0.x, ty = R.PIX.LOOKY, tz = P0.z, dx = p.x - tx, dy = p.y - ty, dz = p.z - tz, d0 = Math.hypot(dx, dy, dz) || 1;
+    p.set(tx + dx / d0 * D, ty + dy / d0 * D, tz + dz / d0 * D);
+    cam.fov = f; cam.aspect = z.rw / z.rh; cam.near = Math.max(1, D - 34); cam.far = D + 220; cam.userData.shift = null; cam.updateProjectionMatrix(); cam.updateMatrixWorld();
     return r;
   };
 
