@@ -18,6 +18,9 @@
     if (W.moon) W.moon.intensity = 0.6 * (1 - k) * 0.8 + 0.05;
     if (sc.fog) { sc.fog.density = 0.02 * (1 + k * 0.7); sc.fog.color.multiplyScalar(1 - k * 0.35); if (sc.background && sc.background.isColor) sc.background.copy(sc.fog.color); }
     if (W.torch) { W.torch.intensity = D.torchI = 2.3; W.torch.distance = 15 + (1 - k) * 6; W.torch.decay = 1.4; }
+    // 霧改成「從角色那裡才開始算」（2026-10-04 作者回報：濃霧樓層完全看不到）：
+    // 原本的 FogExp2 照離鏡頭的距離算，鏡頭在角色上方二十幾公尺，角色自己就埋在霧裡。改成線性的霧，近端每一格對齊鏡頭到角色的距離（updateLights）
+    if (sc.fog) { const c = sc.fog.color.clone(); sc.fog = new (T().Fog)(c, 20, 60); }
     if (W.F && W.F.lights) W.F.lights.forEach(L => { L.I *= 0.85; });
     D.flick = 1; D.flickT = 0; D.nextT = 25 + rnd() * 20; removeShadow();
     return r;
@@ -94,6 +97,8 @@
     if (D.flickT > 0) { D.flickT -= dt; D.flick = D.flickT > 0 ? (rnd() < 0.15 ? 0.6 : 0.08) : 1; }
     if (W.torch) W.torch.intensity = D.torchI * D.flick * (0.9 + Math.sin(t * 7.3) * 0.04 + Math.sin(t * 17.1) * 0.03 + (rnd() < 0.01 ? -0.25 : 0));
     if (D.flick < 1 && W.pool) W.pool.forEach(l => { l.intensity *= D.flick; });
+    // 霧：角色周圍一定看得清楚；一般看得到 30 公尺左右（越暗越近），濃霧樓層（ruinvar.js 的 F.fogMin）10 公尺
+    { const fg = W.scene && W.scene.fog; if (fg && fg.isFog && W.camera) { const cd = Math.hypot(W.camera.position.x - P.x, W.camera.position.y - 1, W.camera.position.z - P.z), vis = W.F && W.F.fogMin ? 10 : 30 - D.k * 12; fg.near = Math.max(1, cd - 3); fg.far = cd + vis; } }
     // 四周的黑：注意越高、生命越少越黑
     if (veil) veil.style.opacity = Math.min(0.95, 0.22 + D.k * 0.2 + run.aware / 100 * 0.25 + Math.max(0, 0.5 - P.hp / P.hpMax) * 0.4).toFixed(3);
     // 黑影：走近或時間到就不見
