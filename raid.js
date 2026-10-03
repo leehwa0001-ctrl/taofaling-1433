@@ -139,10 +139,14 @@
     const stacks = []; Object.keys(run.mats).forEach(k => { let n = run.mats[k]; while (n > 0) { stacks.push({ k, n: Math.min(STACK, n) }); n -= STACK; } });
     const cells = Array.from({ length: g.w * g.h }, (_, i) => '<div class="tk-cell" style="grid-column:' + (i % g.w + 1) + ';grid-row:' + (Math.floor(i / g.w) + 1) + '"></div>').join('');
     const items = run.bag.map((it, i) => { const p = g.at.get(it); if (!p) return ''; const [w, h] = dims(it, p.r); return '<div class="tk-item' + (sel && sel.it === it ? ' sel' : '') + '" data-bi="' + i + '" style="grid-column:' + (p.x + 1) + '/span ' + w + ';grid-row:' + (p.y + 1) + '/span ' + h + ';--c:' + R.rarityColor(it) + '">' + icon(it) + '<small>' + esc(R.itemName(it)) + '</small></div>'; }).join('');
-    const matsHtml = stacks.map((st, j) => { const i = free[j]; if (i == null) return ''; return '<div class="tk-mat" style="grid-column:' + (i % g.w + 1) + ';grid-row:' + (Math.floor(i / g.w) + 1) + ';--c:' + (R.MATS[st.k].color || '#C8B88A') + '" title="' + esc(R.MATS[st.k].name) + '"><i></i><b>' + st.n + '</b></div>'; }).join('');
+    const matsHtml = stacks.map((st, j) => { const i = free[j]; if (i == null) return ''; return '<div class="tk-mat' + (sel && sel.mat === st.k ? ' sel' : '') + '" data-mk="' + st.k + '" style="grid-column:' + (i % g.w + 1) + ';grid-row:' + (Math.floor(i / g.w) + 1) + ';--c:' + (R.MATS[st.k].color || '#C8B88A') + '" title="' + esc(R.MATS[st.k].name) + '"><i></i><b>' + st.n + '</b></div>'; }).join('');
     const loose = run.bag.filter(it => !g.at.get(it));
     let info = '<p class="note">點一下看說明；拖曳搬動，拖的時候按 R 或右鍵轉向；拖到左邊的裝備欄就是穿上。</p>';
-    if (sel && (sel.it || sel.slot)) {
+    if (sel && sel.mat && run.mats[sel.mat] > 0) {   // 選了素材（作者 2026-10-04：裝備可以丟出來，素材也要可以）
+      const k = sel.mat, n = run.mats[k], M = R.MATS[k];
+      info = '<div class="tk-info"><b style="color:' + (M.color || '#C8B88A') + '">' + esc(M.name) + ' ×' + n + '</b><small>' + esc(M.desc || '') + (M.desc ? '・' : '') + '一格疊 ' + STACK + ' 個，現在佔 ' + Math.ceil(n / STACK) + ' 格</small><div class="row">'
+        + '<button type="button" class="btn" data-mdrop="1">丟在地上（' + Math.min(STACK, n) + ' 個）</button>' + (n > STACK ? '<button type="button" class="btn" data-mdrop="all">全部丟在地上（' + n + ' 個）</button>' : '') + '</div></div>';
+    } else if (sel && (sel.it || sel.slot)) {
       const it = sel.it || eq[sel.slot];
       if (it) {
         const k = slotOf(it), can = k && R.GEAR_KEYS.includes(k) && (!R.canUse || R.canUse(it, s.cls));
@@ -162,6 +166,8 @@
     $('bag-x').onclick = () => { sel = null; R.closeSheet(); };
     const box = $('r-sheet');
     box.querySelectorAll('[data-slot]').forEach(el => { el.onclick = () => { sel = { slot: el.dataset.slot }; R.bagSheet(); }; });
+    box.querySelectorAll('[data-mk]').forEach(el => { el.onclick = () => { sel = { mat: el.dataset.mk }; R.bagSheet(); }; });
+    box.querySelectorAll('[data-mdrop]').forEach(el => { el.onclick = () => { const k = sel && sel.mat, n = Math.min(el.dataset.mdrop === 'all' ? 1e9 : STACK, (k && run.mats[k]) || 0); if (!n) return; run.mats[k] -= n; if (run.mats[k] <= 0) { delete run.mats[k]; sel = null; } const P = W().P; if (R.addDrop && P) { const d = R.addDrop({ type: 'mat', mat: k, n, x: P.x + 2.4, z: P.z }); if (d) d.noPick = true; } R.bagSheet(); }; });
     box.querySelectorAll('[data-dm]').forEach(el => { el.onclick = () => { const k = el.dataset.dm, n = Math.min(STACK, run.mats[k] || 0); if (!n) return; run.mats[k] -= n; if (run.mats[k] <= 0) delete run.mats[k]; const P = W().P; if (R.addDrop && P) { const d = R.addDrop({ type: 'mat', mat: k, n, x: P.x + 2.4, z: P.z }); if (d) d.noPick = true; } R.bagSheet(); }; });
     box.querySelectorAll('[data-loose]').forEach(el => { el.onclick = () => { const it = run.bag[+el.dataset.loose], sp = it && findSpot(it); if (sp) { g.at.set(it, sp); R.bagSheet(); } else R.toast('還是放不下。'); }; });
     box.querySelectorAll('[data-act]').forEach(el => { el.onclick = () => {
@@ -331,7 +337,7 @@
     + '.tk-gridwrap{max-width:100%;overflow:auto}.tk-grid{display:grid;position:relative;background:#1A1A1E;border:2px solid #4A4A52;padding:0;gap:0;touch-action:none}'
     + '.tk-cell{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02)}.tk-item{position:relative;z-index:2;margin:1px;border:1px solid var(--c);background:linear-gradient(160deg,rgba(255,255,255,.10),rgba(0,0,0,.35));display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;cursor:grab;user-select:none}'
     + '.tk-item small{font-size:9px;line-height:1.1;text-align:center;opacity:.9;padding:0 2px;max-height:2.2em;overflow:hidden}.tk-item.sel{outline:2px solid #FFE08A}.tk-item.dragging{opacity:.35}.tk-item img,.tk-item canvas{max-width:34px;max-height:34px;image-rendering:pixelated;pointer-events:none}'
-    + '.tk-mat{z-index:1;margin:3px;border-radius:4px;background:color-mix(in srgb,var(--c) 45%,#222);border:1px solid var(--c);position:relative}.tk-mat b{position:absolute;right:2px;bottom:0;font-size:11px;text-shadow:0 1px 2px #000}'
+    + '.tk-mat{z-index:1;margin:3px;border-radius:4px;background:color-mix(in srgb,var(--c) 45%,#222);border:1px solid var(--c);position:relative;cursor:pointer}.tk-mat.sel{outline:2px solid #FFE08A;outline-offset:1px}.tk-mat b{position:absolute;right:2px;bottom:0;font-size:11px;text-shadow:0 1px 2px #000}'
     + '.tk-ghost{position:fixed;z-index:99999;pointer-events:none;border:2px solid #7AE07A;background:rgba(122,224,122,.18);display:flex;align-items:center;justify-content:center}.tk-ghost.bad{border-color:#FF6A5A;background:rgba(255,106,90,.18)}'
     + '.tk-info{background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:6px 0}.tk-info small{display:block;opacity:.85;margin:2px 0 4px}'
     + '#rd-search{position:fixed;left:50%;bottom:22%;transform:translateX(-50%);z-index:60;background:rgba(10,8,14,.82);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:6px 12px;min-width:200px;text-align:center;color:#F1E9DA;pointer-events:none}#rd-search i{display:block;height:6px;background:rgba(255,255,255,.12);border-radius:3px;margin-top:4px;overflow:hidden}#rd-search b{display:block;height:100%;width:0;background:#E8C04A}'
