@@ -38,13 +38,13 @@
   const floorOk = (F, r, x, z) => { const t = F.tile, tx = t.tX(x), tz = t.tZ(z); if (tx < 1 || tz < 1 || tx >= t.nx - 1 || tz >= t.nz - 1) return false; for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) { const k = t.id(tx + dx, tz + dz); if (t.T[k] !== 1 || t.RM[k] !== r.i) return false; } return true; };
   // 房間裡的一個點（fx、fz：-1～1）：找離那裡最近、四周都是這間房地板的格子，而且和已經擺的東西隔 2.4 公尺以上
   let used = [];
-  const spot = (F, r, fx, fz) => {
+  const spot = (F, r, fx, fz, pad) => {   // pad：這個東西自己有多寬（寶箱、石碑），別的東西要再離遠一點
     const t = F.tile, wx = r.x + fx * (r.hx - 3), wz = r.z + fz * (r.hz - 3);
     if (!r.okTiles) { r.okTiles = []; for (let k = 0; k < t.nx * t.nz; k++) { if (t.RM[k] !== r.i) continue; const tx = k % t.nx, tz = (k - tx) / t.nx, x = t.cX(tx), z = t.cZ(tz); if (floorOk(F, r, x, z)) r.okTiles.push([x, z]); } }
-    const near = r.okTiles.map(p => [p, Math.hypot(p[0] - wx, p[1] - wz)]).sort((a, b) => a[1] - b[1]), far = p => used.length ? Math.min(...used.map(u => Math.hypot(u[0] - p[0], u[1] - p[1]))) : 99;
+    const near = r.okTiles.map(p => [p, Math.hypot(p[0] - wx, p[1] - wz)]).sort((a, b) => a[1] - b[1]), far = p => used.length ? Math.min(...used.map(u => Math.hypot(u[0] - p[0], u[1] - p[1]) - (u[2] || 0))) : 99;
     let c = null; for (const gap of [2.4, 2.0, 1.7]) { c = near.find(([p]) => far(p) >= gap); if (c) break; }
     if (!c && near.length) c = near.slice().sort((a, b) => far(b[0]) - far(a[0]))[0];   // 真的擺不下：挑離別的東西最遠的（2026-10-04：原本全部疊在房間正中央，石板一踩翻好幾塊，解不開）
-    const p = c ? c[0] : [r.x, r.z]; used.push(p); return p;
+    const p = c ? c[0] : [r.x, r.z]; used.push([p[0], p[1], pad || 0]); return p;
   };
   const glyphTex = (sym, col) => {
     const c = document.createElement('canvas'); c.width = 16; c.height = 16; const x = c.getContext('2d'); x.fillStyle = col; x.strokeStyle = '#140E1A'; x.lineWidth = 2;
@@ -81,13 +81,13 @@
   const build = (scene, run, F, r) => {
     const pz = { r, kind: r.puzzle, solved: false, inter: [], sprites: [], step: 0 };
     used = [];
-    const [tx0, tz0] = spot(F, r, 0, -0.75);
+    const [tx0, tz0] = spot(F, r, 0, -0.75, 0.5);
     // 石碑
     const tab = new (T().Mesh)(new (T().BoxGeometry)(1.5, 1.8, 0.4), mat('#8A86A0', '#2A2440')); tab.material.emissiveIntensity = 0.6; tab.position.set(tx0, 0.85, tz0); tab.castShadow = true; scene.add(tab);
     R.addBox(tx0 - 0.75, tx0 + 0.75, tz0 - 0.22, tz0 + 0.22, 'deco');
     pz.tex = []; pz.mark = sprite(scene, pz, markTex(), tx0, r.puzzle === 'dials' ? 3.2 : 2.5, tz0, 14 / 12); pz.tex.push(pz.mark.material.map);
     // 被封住的金寶箱：先不放進 F.chests（解開才放）
-    const [cx, cz] = spot(F, r, 0.32, -0.5);
+    const [cx, cz] = spot(F, r, 0.32, -0.5, 0.7);   /* 2026-10-04 作者回報：石頭被擋住——寶箱 1.6 公尺寬，別的東西要離遠一點 */
     const ch = R.addChest(scene, F, cx, cz, 2, r.i); F.chests.splice(F.chests.indexOf(ch), 1); pz.chest = ch;
     const seal = new (T().Mesh)(new (T().RingGeometry)(1.1, 1.35, 24), new (T().MeshBasicMaterial)({ color: '#B07AFF', transparent: true, opacity: 0.7, depthWrite: false, side: T().DoubleSide })); seal.rotation.x = -Math.PI / 2; seal.position.set(cx, 0.06, cz); scene.add(seal); pz.seal = seal;
     pz.inter.push({ x: cx, z: cz, r: 2, label: '寶箱被機關封著', when: () => !pz.solved, act: () => say(NAMES[pz.kind], '寶箱的鎖孔上有一圈發光的紋路。先解開這一區的機關。') });
@@ -168,7 +168,16 @@
     F.puzzles.push(pz);
   };
   const bf = R.buildFloor;
-  R.buildFloor = (scene, run, F) => { const out = bf(scene, run, F); F.puzzles = []; F.rooms.forEach(r => { if (r.type === 'puzzle') build(scene, run, F, r); }); return out; };
+  // 謎題擺好之後：石頭、石板、轉盤、石碑旁邊原本就有的東西（罈子、木箱、碎石堆）拿掉（2026-10-04 作者回報：有時候被擋住，踩不到）
+  const clearNear = (F, n0) => {
+    const pts = []; F.puzzles.forEach(pz => [pz.stones, pz.plates, pz.dials, pz.inter].forEach(L => (L || []).forEach(o => { if (o && o.x != null) pts.push([o.x, o.z]); })));
+    R.col.list.slice(0, n0).forEach(c => {
+      if (!c.on || c.tag === 'wall' || c.tag === 'pit') return;
+      if (!pts.some(([x, z]) => Math.max(c.x0 - x, 0, x - c.x1) ** 2 + Math.max(c.z0 - z, 0, z - c.z1) ** 2 < 1.6 * 1.6)) return;
+      c.on = false; const p = c.ref; if (p && p.mesh) { p.alive = false; if (p.mesh.parent) p.mesh.parent.remove(p.mesh); }
+    });
+  };
+  R.buildFloor = (scene, run, F) => { const out = bf(scene, run, F); F.puzzles = []; const n0 = R.col.list.length; F.rooms.forEach(r => { if (r.type === 'puzzle') build(scene, run, F, r); }); if (F.puzzles.length) { try { clearNear(F, n0); } catch (e) { console.warn('[puzzle]', e); } } return out; };
 
   // ---------- 互動：和原本的寶箱、水晶一起比誰最近 ----------
   const ni = R.nearestInteract;

@@ -20,7 +20,7 @@
   // ---------- 五種形式 ----------
   // shapes：一般房間的形狀；calm：入口、寶箱、通道房；boss：最深處；corr：通道的樣子；pit：深淵的顏色
   R.FORM = {
-    tower: { shapes: ['circle', 'ring', 'ring', 'octagon'], calm: 'circle', boss: 'circle', corr: 'bridge', corrW: 2, wallH: [3.6, 4.6], pit: '#2A1640' },
+    tower: { shapes: ['circle', 'ring', 'octagon', 'gear', 'twin', 'hexagon', 'moat', 'ring'],   /* 2026-10-04 作者：高塔型的房間太像——多了齒輪、雙圓、六角、中央平台 */ calm: ['circle', 'octagon', 'hexagon', 'gear'], boss: 'circle', corr: 'bridge', corrW: 2, wallH: [3.6, 4.6], pit: '#2A1640' },
     city: { shapes: ['plaza', 'rect', 'plaza'], calm: 'rect', boss: 'plaza', corr: 'street', corrW: 3, wallH: [3.6, 5.6], facade: 1, big: 1.1, pit: '#08070A' },
     maze: { shapes: ['blob', 'blob', 'circle'], calm: 'blob', boss: 'blob', corr: 'wind', corrW: 2, wallH: [3.0, 4.2], roots: 1, pit: '#08070A' },
     tomb: { shapes: ['hall', 'cross', 'hall'], calm: 'octagon', boss: 'octagon', corr: 'straight', corrW: 2, wallH: [2.9, 3.2], stepped: 1, pit: '#08070A' },
@@ -30,7 +30,10 @@
     const nx = dx / hx, nz = dz / hz, ax = Math.abs(nx), az = Math.abs(nz);
     if (s === 'rect') return ax <= 1 && az <= 1 && ax + az <= 1.72;
     if (s === 'octagon') return ax <= 1 && az <= 1 && ax + az <= 1.42;
-    if (s === 'circle' || s === 'ring') return nx * nx + nz * nz <= 1;
+    if (s === 'circle' || s === 'ring' || s === 'moat') return nx * nx + nz * nz <= 1;
+    if (s === 'hexagon') return az <= 0.9 && ax + az * 0.55 <= 1;
+    if (s === 'gear') { const r = Math.cos(8 * Math.atan2(nz, nx)) > -0.25 ? 1 : 0.8; return nx * nx + nz * nz <= r * r; }   // 齒輪：一凹一凸（正四個方向是凸的，門接得到）
+    if (s === 'twin') { const u = seed % 2 < 1 ? nx : nz, v = seed % 2 < 1 ? nz : nx; return (u - 0.42) * (u - 0.42) + v * v <= 0.38 || (u + 0.42) * (u + 0.42) + v * v <= 0.38; }   // 兩個圓接在一起
     if (s === 'cross') return (ax <= 1 && az <= 0.46) || (ax <= 0.46 && az <= 1);
     if (s === 'hall') return ax <= 1 && az <= 1;
     const a = Math.atan2(nz, nx);
@@ -84,7 +87,7 @@
       const hs = r.type === 'boss' ? [15, 12] : r.type === 'lord' ? [13.5, 11] : r.type === 'start' ? [8, 7] : r.type === 'chest' ? [7.5, 6.5] : r.type === 'deep' ? (r.nest ? [12.5, 10] : [10, 8]) : r.type === 'stairs' ? [9.5, 8] : [rnd(10.5, 15), rnd(8.5, 12)];
       const big = form.big || 1;
       r.hx = Math.min(16.5, hs[0] * big); r.hz = Math.min(13, hs[1] * big);
-      r.shape = r.type === 'boss' || r.type === 'lord' ? form.boss : ['start', 'chest', 'stairs', 'deep', 'trap'].includes(r.type) ? form.calm : pick(form.shapes);
+      r.shape = r.type === 'boss' || r.type === 'lord' ? form.boss : ['start', 'chest', 'stairs', 'deep', 'trap'].includes(r.type) ? (Array.isArray(form.calm) ? pick(form.calm) : form.calm) : pick(form.shapes);
       r.seed = Math.random() * 10;
       r.x = r.gx * CW; r.z = r.gy * CH; r.w = r.hx * 2; r.h = r.hz * 2;
       r.cleared = r.type === 'start' || r.type === 'stairs' || (r.type === 'deep' && !r.nest); r.visited = false;
@@ -168,13 +171,13 @@
     // 房間裡的結構：柱子、有缺口的隔牆、石塊、L 形的牆（入口、寶箱、樓梯、最深處、領主、核心的房間不放）
     // 只放在離房間邊緣三格以上的地方（門口和繞一圈的路都留著），放完確認整間還是連通的，不通就拿掉
     rooms.forEach(r => {
-      if (run.type === 'tower' || !['fight', 'trap', 'ore'].includes(r.type) || (!r.big && Math.random() < 0.3)) return;
+      if ((run.type === 'tower' && (!['circle', 'octagon', 'hexagon'].includes(r.shape) || Math.random() < 0.5)) || !['fight', 'trap', 'ore'].includes(r.type) || (!r.big && Math.random() < 0.3)) return;   // 高塔：圓、八角、六角的房間一半立柱子
       const set = new Set(r.tiles), depth = new Map(), q = [];
       r.tiles.forEach(k => { const tx = k % nx, tz = (k - tx) / nx; if (N4.some(([dx, dz]) => !set.has(id(tx + dx, tz + dz)))) { depth.set(k, 0); q.push(k); } });
       for (let i = 0; i < q.length; i++) { const k = q[i], tx = k % nx, tz = (k - tx) / nx; N4.forEach(([dx, dz]) => { const m = id(tx + dx, tz + dz); if (set.has(m) && !depth.has(m)) { depth.set(m, depth.get(k) + 1); q.push(m); } }); }
       const ok = (tx, tz) => { const m = id(tx, tz); return set.has(m) && depth.get(m) >= 3; };
       const cx = tX(r.x), cz = tZ(r.z), wall = new Set(), put = (tx, tz) => { if (ok(tx, tz)) wall.add(id(tx, tz)); };
-      const kind = run.type === 'tomb' ? pick(['pillars', 'partition']) : run.type === 'city' ? pick(['blocks', 'partition', 'blocks']) : run.type === 'maze' ? pick(['ell', 'ell', 'blocks']) : pick(['pillars', 'blocks', 'ell', 'partition']);
+      const kind = run.type === 'tower' ? 'pillars' : run.type === 'tomb' ? pick(['pillars', 'partition']) : run.type === 'city' ? pick(['blocks', 'partition', 'blocks']) : run.type === 'maze' ? pick(['ell', 'ell', 'blocks']) : pick(['pillars', 'blocks', 'ell', 'partition']);
       const kinds = r.big ? [kind, pick(['blocks', 'ell', 'pillars'])] : [kind];
       kinds.forEach(kd => {
         if (kd === 'pillars') { const step = rint(3, 4); for (let tz = cz - 12; tz <= cz + 12; tz += step) for (let tx = cx - 16; tx <= cx + 16; tx += step) if (Math.abs(tx - cx) + Math.abs(tz - cz) > 2) put(tx, tz); }
@@ -191,10 +194,11 @@
       const solid = form.edge === 'pit' ? PIT : WALL;
       wall.forEach(k => { T[k] = solid; RM[k] = -1; }); r.tiles = rest; r.inner = wall.size;
     });
-    // 高塔的塔室：中間是往下看得到深淵的井
+    // 高塔的塔室：中間是往下看得到深淵的井；中央平台（moat）：一圈深淵，十字形的四條橋通到中間
     rooms.forEach(r => {
-      if (r.shape !== 'ring') return;
-      r.tiles = r.tiles.filter(k => { const tx = k % nx, tz = (k - tx) / nx, dx = (cX(tx) - r.x) / r.hx, dz = (cZ(tz) - r.z) / r.hz; if (dx * dx + dz * dz < 0.17) { T[k] = PIT; RM[k] = -1; return false; } return true; });
+      if (r.shape !== 'ring' && r.shape !== 'moat') return;
+      const pit = (dx, dz) => { const d2 = dx * dx + dz * dz; return r.shape === 'ring' ? d2 < 0.17 : d2 > 0.1 && d2 < 0.36 && Math.abs(dx) > 0.17 && Math.abs(dz) > 0.17; /* 橋寬：最小的房間也有一格以上（格子 2 公尺） */ };
+      r.tiles = r.tiles.filter(k => { const tx = k % nx, tz = (k - tx) / nx, dx = (cX(tx) - r.x) / r.hx, dz = (cZ(tz) - r.z) / r.hz; if (pit(dx, dz)) { T[k] = PIT; RM[k] = -1; return false; } return true; });
     });
     // 牆與深淵：地板旁邊的空格，一般是牆；橋的兩邊、浮島的邊緣是深淵
     for (let tz = 0; tz < nz; tz++) for (let tx = 0; tx < nx; tx++) {
@@ -543,7 +547,7 @@
     };
     // --- 房間裡可以打破的東西、寶箱、水晶、樓層通道 ---
     F.rooms.forEach(r => {
-      if (r.type !== 'start' && r.type !== 'boss') {
+      if (r.type !== 'start' && r.type !== 'boss' && r.type !== 'puzzle') {   /* 解謎房間不擺罈子、木箱（2026-10-04 作者回報：石頭被擋住、踩不到） */
         const nb = r.type === 'chest' ? 3 : rint(3, 7);
         for (let k = 0; k < nb; k++) { const s = spot(r, { wall: Math.random() < 0.7, rad: 0.7 }); if (!s) continue; const kind = Math.random() < 0.45 ? 'jar' : Math.random() < 0.6 ? 'crate' : 'crystal'; R.addProp(group, F, kind, s[0], s[1], th, r.i); }
       }
@@ -674,7 +678,7 @@
     };
     const THEMES_BY = { city: ['storage', 'shrine', 'camp', 'armory', 'library', 'collapsed'], maze: ['garden', 'collapsed', 'camp', 'pool', 'bones', 'garden'], tomb: ['shrine', 'bones', 'library', 'collapsed', 'bones'], tower: ['library', 'shrine', 'collapsed', 'armory'], island: ['pool', 'camp', 'garden', 'collapsed'] };
     F.rooms.forEach(r => {
-      let theme = r.type === 'start' ? 'camp' : r.type === 'stairs' ? 'shrine' : r.type === 'trap' ? 'bones' : r.type === 'boss' || r.type === 'deep' || r.type === 'lord' ? null : pick(THEMES_BY[run.type] || THEMES_BY.city);
+      let theme = r.type === 'start' ? 'camp' : r.type === 'stairs' ? 'shrine' : r.type === 'trap' ? 'bones' : r.type === 'boss' || r.type === 'deep' || r.type === 'lord' || r.type === 'puzzle' ? null : pick(THEMES_BY[run.type] || THEMES_BY.city);   /* 解謎房間：不擺倒下的柱子、樹叢這些 */
       if (r.type === 'ore') theme = 'collapsed';
       r.theme = theme; if (theme) DRESS[theme](r);
       torchesIn(r); decals(r);
