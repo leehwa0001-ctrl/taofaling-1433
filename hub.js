@@ -90,7 +90,7 @@
           + (cur ? '<span class="tag">現在登記的</span>' : '<button type="button" class="mini" data-cls="' + c + '">改登記這一類</button>')
           + (st.lv >= R.PROMOTE_LV ? '<button type="button" class="mini gold" data-promo="' + c + '">' + (adv ? '重選轉職' : '轉職') + '</button>' : '') + '</div>'; }).join('') + '</div>'
       + ((S.cards || []).length ? '<h3>撿到的勇者證</h3><p class="note">在遺跡裡偷襲你的人留下的勇者證。交給公會：註銷名單上的冒用證件有獎金。</p><ul class="loot">' + S.cards.map(c => '<li>' + esc(c.no) + '　' + esc(c.name) + (c.revoked ? '　<b style="color:#E04A3A">註銷名單上的號碼</b>' : '') + '</li>').join('') + '</ul><button type="button" class="btn pri" data-cards="1">全部交給公會</button>' : '')
-      + '<h3>素材收購</h3><p class="note">公會收購從遺跡帶回來的素材。魔力核心留著轉職用，公會不收。</p><div class="sellmats">' + (Object.keys(R.MATS).filter(k => k !== 'core' && S.mats[k] > 0).map(k => '<div class="sellmat"><span>' + esc(R.MATS[k].name) + ' ×' + S.mats[k] + '（每個 ' + R.MATS[k].value + ' 費拉）</span><button type="button" class="mini" data-sellmat="' + k + ':1">賣 1</button><button type="button" class="mini" data-sellmat="' + k + ':all">全賣</button></div>').join('') || '<span class="note">沒有可以賣的素材。</span>') + '</div>'
+      + '<h3>素材收購</h3><p class="note">公會收購從遺跡帶回來的素材。魔力核心留著轉職用，公會不收。</p><div class="sellmats">' + (Object.keys(R.MATS).filter(k => k !== 'core' && S.mats[k] > 0).map(k => '<div class="sellmat"><span>' + esc(R.MATS[k].name) + ' ×' + S.mats[k] + '（每個 ' + R.MATS[k].value + ' 費拉）</span>' + [1, 10, 100].map(q => '<button type="button" class="mini" data-sellmat="' + k + ':' + q + '"' + (S.mats[k] < q ? ' disabled' : '') + '>賣 ' + q + '</button>').join('') + '<button type="button" class="mini" data-sellmat="' + k + ':all">全賣</button></div>').join('') || '<span class="note">沒有可以賣的素材。</span>') + '</div>'
       + '<h3>手邊的素材</h3><div class="mats">' + matsLine() + '</div></section>';
   };
   // 在公會裡面走到哪裡，就只看那一塊（告示板＝委託、登記處＝職業與隊伍、收購窗口＝素材）
@@ -174,7 +174,7 @@
     on('[data-buy]', b => { const [k, p] = b.dataset.buy.split(':'); if (S.gold >= +p) { S.gold -= +p; S.potions[k]++; R.hub(); } });
     on('[data-herb]', () => { if (S.mats.herb >= 3) { S.mats.herb -= 3; S.potions.hp++; R.hub(); } });
     on('[data-branch]', () => { S.gold += S.mats.branch; S.mats.branch = 0; R.hub(); });
-    on('[data-sellmat]', b => { const [k, q] = b.dataset.sellmat.split(':'), n = q === 'all' ? S.mats[k] : Math.min(1, S.mats[k]); if (!n) return; S.mats[k] -= n; S.gold += n * R.MATS[k].value; R.hub(); flashMsg('賣了 ' + R.MATS[k].name + ' ×' + n + '：' + n * R.MATS[k].value + ' 費拉'); });
+    on('[data-sellmat]', b => { const [k, q] = b.dataset.sellmat.split(':'), n = q === 'all' ? S.mats[k] : Math.min(+q || 1, S.mats[k]);   /* 賣 1／10／100／全賣（2026-10-04 作者） */ if (!n) return; S.mats[k] -= n; S.gold += n * R.MATS[k].value; R.hub(); flashMsg('賣了 ' + R.MATS[k].name + ' ×' + n + '：' + n * R.MATS[k].value + ' 費拉'); });
   };
   const flashMsg = (txt, color) => { const el = $('hub-msg'); el.textContent = txt; el.style.color = color || ''; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); };
   R.say = flashMsg;
