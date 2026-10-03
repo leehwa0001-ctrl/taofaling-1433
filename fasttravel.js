@@ -17,6 +17,8 @@
   const go = sp => {
     const P = W.P; if (!P || !W.town) return;
     R.closeSheet && R.closeSheet();
+    // 在建築物裡面（新手指引的「前往」會直接叫這裡）：先走出門，回到城裡的場景再搭車——不然會被傳到建築物場景外面的一片黑暗裡
+    if (W.inside) { if (R.exitInterior) R.exitInterior(); let n = 0; const t = setInterval(() => { if (!W.inside) { clearInterval(t); go(sp); } else if (++n > 40) clearInterval(t); }, 100); return; }
     R.fade(() => {
       P.x = sp.x; P.z = sp.z + 1.6; if (R.collide) R.collide(P, 0.42); if (P.h) P.h.g.position.set(P.x, 0, P.z);
       (W.town.allies || []).forEach((a, i) => { a.x = P.x + (i ? 1.5 : -1.5); a.z = P.z + 1.5; });
@@ -28,7 +30,7 @@
   R.fastTravel = () => {
     if (!W.town || W.run) return;
     if (W.town.hosu) { R.toast('奉主沒有公會的接駁馬車。回東鶴要到奉主站搭電車。'); return; }
-    if (W.inside) { R.toast('先走到外面再搭馬車。'); return; }
+    if (W.inside) { if (R.exitInterior) R.exitInterior(); let n = 0; const t = setInterval(() => { if (!W.inside) { clearInterval(t); R.fastTravel(); } else if (++n > 40) clearInterval(t); }, 100); return; }   // 在建築物裡：先走出門再叫車（也救得了之前被傳進黑暗裡的人）
     if (R.VEH && R.VEH.cur) { R.toast('先下車。'); return; }
     if (R.crime && R.crime.heat > 0) { R.toast('被通緝的時候，接駁馬車不載你。', '#FF9A6A'); return; }
     const list = spots();
@@ -40,7 +42,7 @@
   };
   // T 鍵
   window.addEventListener('keydown', e => {
-    if (e.key.toLowerCase() !== 't' || e.repeat || !W.town || W.run || W.inside || !$('run') || $('run').hidden || (R.sheetOpen && R.sheetOpen()) || (e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) return;
+    if (e.key.toLowerCase() !== 't' || e.repeat || !W.town || W.run || !$('run') || $('run').hidden || (R.sheetOpen && R.sheetOpen()) || (e.target && /INPUT|TEXTAREA/.test(e.target.tagName))) return;
     R.fastTravel();
   });
   // 城裡的選單：多一顆「快速移動」
