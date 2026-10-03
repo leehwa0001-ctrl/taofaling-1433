@@ -8,7 +8,14 @@
   // { h: 雜湊, gold: 費拉, name: 說明 }；unban：清空勇者證的停權（S.banUntil），停權中才能用，可以重複用
   const CODES = [
     { h: 'bit89vmj5t', gold: 10000, name: '10000 費拉' },   // 2026-10-03
-    { h: 'fbgaw0yec7', unban: 1, name: '清空停權', msg: '勇者證的停權解除了，公會又會派委託給你。' }   // 2026-10-03
+    { h: 'fbgaw0yec7', unban: 1, name: '清空停權', msg: '勇者證的停權解除了，公會又會派委託給你。' },   // 2026-10-03
+    // 2026-10-04（作者：加一個新序號清空停權、多開幾個序號）。potions：回復藥／魔力藥；pack：背包（raid.js 的 R.PACKS）
+    { h: 'srwgfv0bxo', unban: 1, name: '清空停權', msg: '勇者證的停權解除了，公會又會派委託給你。' },
+    { h: '20cl2jgv4kc', gold: 20000, name: '20000 費拉' },
+    { h: '14mtti70wl0', gold: 50000, name: '50000 費拉' },
+    { h: '94w97gwi52', potions: { hp: 10, mp: 10 }, name: '回復藥、魔力藥各 10 瓶', msg: '回復藥、魔力藥各 10 瓶放進背包了。' },
+    { h: '1j7z0nr40yn', pack: 'guild', name: '公會遠征背包', msg: '公會遠征背包送到了。到公會的商店選要背哪一個。' },
+    { h: '22giv0b4d2i', gold: 3000, potions: { hp: 5, mp: 5 }, pack: 'leather', name: '新手禮包', msg: '3000 費拉、回復藥魔力藥各 5 瓶、一個皮背包。' }
   ];
   const cyrb53 = (str, seed = 0) => { let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed; for (let i = 0, ch; i < str.length; i++) { ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); } h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507); h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507); h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909); return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36); };
   const hashOf = s => cyrb53('taofaling1433:' + String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, ''));
@@ -22,6 +29,8 @@
     if (S.redeemed[h]) return '這個序號這個存檔已經兌換過了。';
     S.redeemed[h] = S.day || 1;
     if (c.gold) S.gold += c.gold;
+    if (c.potions) { S.potions = S.potions || {}; Object.keys(c.potions).forEach(k => { S.potions[k] = (S.potions[k] || 0) + c.potions[k]; }); }
+    if (c.pack) { S.packs = S.packs || { sack: 1 }; S.packs[c.pack] = (S.packs[c.pack] || 0) + 1; }
     R.save();
     return null;
   };
