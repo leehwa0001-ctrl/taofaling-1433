@@ -91,7 +91,7 @@
       const P = w.P, room = R.roomAt(P.x, P.z) || w.F.rooms[0], [mx, mz] = R.roomPoint ? R.roomPoint(room, { away: P, min: 4 }) : [room.x, room.z];
       const m = R.spawnEnemy('gaki', mx, mz, room.i, { aggro: true });
       if (m) {
-        m.hp = m.hpMax = 260 + 220 * lv; m.dmg *= 2.2; m.speed *= 0.5; m.bioMother = true; m.spawnT = 5;
+        m.hp = m.hpMax = (260 + 220 * lv) * Math.max(1, m.hpMax / R.ENEMIES.gaki.hp); m.dmg *= 2.2;   /* 2026-10-04 作者：一個技能就全死了——母體的生命照深度、玩家等級一起加強（和其他遺跡生物一樣），不再是固定的 */ m.speed *= 0.5; m.bioMother = true; m.spawnT = 5;
         if (m.m && m.m.g) m.m.g.scale.set(2.4, 2.4, 2.4);
         R.fx('spawn', mx, 0.2, mz, { color: '#C86A7A' });
         setTimeout(() => R.toast && R.toast('房間裡長出一大塊肉體組織——打爛它，其他的肉芽才會枯掉', '#E07A9A'), 1200);
@@ -107,6 +107,9 @@
     if (was && e.dead) { (W().enemies || []).filter(k => k.bioKid && !k.dead).forEach(k => R.killEnemy(k)); R.toast && R.toast('肉體組織被打爛了，肉芽跟著枯掉', '#7AE0A0'); }
     return r;
   };
+  // 母體一下最多只掉一部分血（2026-10-04：練度高的時候一招打爛母體、肉芽全部跟著枯掉，太快了）——至少要打好幾下
+  const heB = R.hurtEnemy;
+  R.hurtEnemy = (e, raw, o) => { if (e && e.bioMother && !e.dead) { const P = W().P; raw = Math.min(raw, e.hpMax * 0.15 / Math.max(1, (P && P.dmgMult) || 1)); } return heB(e, raw, o); };
   // ---------- 斷尾型的肉壁：打了才會破，沒打就長回去；破了會再長 ----------
   const hp0 = R.hitProp;
   R.hitProp = (p, dmg, by) => {

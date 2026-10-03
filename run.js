@@ -96,7 +96,7 @@
   // ---------- 房間 ----------
   // 抽一種生物：遺跡的形式偏好的多抽幾次；精英很少見
   const pickId = (pool, run, not) => {
-    const fav = (R.TYPES[run.type] && R.TYPES[run.type].favor) || {}, list = [];
+    const fav = Object.assign({}, (R.TYPES[run.type] && R.TYPES[run.type].favor) || {}, R.biomeFavor ? R.biomeFavor(run) : null), list = [];   // biome.js：這一帶的景色常見的生物多抽幾次
     pool.forEach(id => { if (not && not.includes(id)) return; list.push([id, R.ENEMIES[id].elite ? 0.35 : 1 + (fav[id] || 0)]); });
     let s = list.reduce((a, b) => a + b[1], 0) * Math.random();
     for (const [id, w] of list) { s -= w; if (s <= 0) return id; }
