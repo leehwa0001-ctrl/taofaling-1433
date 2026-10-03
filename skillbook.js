@@ -155,7 +155,7 @@
   // ---------- 學會了沒、裝了什麼 ----------
   const need = (s, st) => (R.skillNeedLv ? R.skillNeedLv(s, st) : s.lv);   // 轉職路線的技能：轉職等級調高以後往後挪（promote.js）
   const known = (cls, st, id) => { const s = info(id); return !!s && s.cls === cls && st.lv >= need(s, st) && (!s.adv || s.adv === st.adv); };
-  const allOf = cls => Object.keys(OLD).filter(id => OLD[id].cls === cls).concat(Object.keys(LIB).filter(id => LIB[id].cls === cls));
+  const allOf = cls => [...new Set(Object.keys(OLD).filter(id => OLD[id].cls === cls).concat(Object.keys(LIB).filter(id => LIB[id].cls === cls)))];   // 去掉重複（2026-10-04 作者：鬼武者有兩招一樣——轉職技能「鬼斬」同時也在技能書的清單裡）
   const NSLOT = () => R.SKILL_UNLOCK.length;   // 技能格的數目（skills.js；2026-10-04 起五格）
   const defaults = (cls, st) => [st.adv ? R.ADV[cls].find(a => a.id === st.adv).skill : R.CLASSES[cls].skill, (R.SKILL_SLOTS[cls] || [])[0], (R.SKILL_SLOTS[cls] || [])[1]].concat(Array(Math.max(0, NSLOT() - 3)).fill(null));
   R.loadoutOf = cls => {
