@@ -120,4 +120,19 @@
     return r;
   };
   R.fieldFx = () => S;   // 測試用
+  // 左上角一直顯示這一層的場地效果（2026-10-04 作者：克森特級以上的場地效果會放在左上角）；點一下再看一次說明
+  const ENVN = { volcano: '火山', desert: '沙漠', deep: '深海', snow: '凍原' };
+  let hudT = 0;
+  const st1 = R.step;
+  R.step = dt => {
+    const r = st1(dt); hudT -= dt; if (hudT > 0) return r; hudT = 0.4;
+    try {
+      const run = W().run; let el = document.getElementById('kfx-box');
+      if (!S || !on(run)) { if (el) el.hidden = true; return r; }
+      if (!el) { const tl = document.getElementById('r-tl'); if (!tl) return r; el = document.createElement('div'); el.id = 'kfx-box'; el.className = 'glass dungeon-only r-misc'; el.style.cursor = 'pointer'; el.title = '點一下看說明'; el.onclick = () => R.toast && S && R.toast(TIP[S.env], '#FFB45A'); tl.appendChild(el); }
+      const st = (S.env === 'desert' || S.env === 'snow') ? (S.storm > 0 ? '・<b style="color:#FF9A6A">' + (S.env === 'desert' ? '沙暴' : '暴風雪') + '來了</b>' : S.calm <= 2.5 ? '・<b style="color:#FFD27A">快要來了</b>' : '') : '';
+      el.hidden = false; el.innerHTML = '場地：<b style="color:#FFB45A">' + (ENVN[S.env] || '') + '</b>・' + (NAME[S.env] || '') + st;
+    } catch (e) { }
+    return r;
+  };
 })(window.R);
