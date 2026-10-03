@@ -3,10 +3,13 @@
 //   上面兩個分頁「遺跡生物／領主體」；遺跡生物照第一次出現的分級分段（哈米莉亞、阿彌勒、摩爾斯、克森特……），另外有「極端環境」「其他」。
 //   每一段是一排小頭像（打倒過的寫隻數，沒打倒過的暗暗的）；點小頭像跳出完整的卡片（就是原本那一張）。
 // - 荒、獰、淵的變種不另外列一格，收在本體的詳細資料裡。
+// - 2026-10-04 作者找的參考圖（像一本書：左頁照地區分段的小頭像、右頁是點到的那一隻：名字、帶背景的大立繪、數值、說明、打倒過幾隻）：
+//   寬的畫面改成左右兩頁，點小頭像直接在右頁顯示（變種列在下面）；窄的畫面（手機）照舊跳出卡片。左頁底下是收集的進度。
 // 放在 main.js 前面就好（看 #cards 的變化，不包任何函式）。
 (function (R) {
   const $ = id => document.getElementById(id), esc = s => R.esc(s);
-  let tab = 'mob';
+  let tab = 'mob', sel = null;
+  const wide = () => window.matchMedia && window.matchMedia('(min-width: 780px)').matches;
   const baseOf = id => { const e = R.ENEMIES[id]; return (e && e.vbase) || (/_v\d$/.test(id) ? id.replace(/_v\d$/, '') : id); };
   const isLord = e => !!(e && e.boss);
   const kills = ids => { const k = R.S && R.S.dexKills; if (!k) return 0; return ids.reduce((a, id) => a + (k[id] || 0), 0); };
@@ -29,12 +32,25 @@
     const body = list => SECTIONS.map(([sid, nm]) => { const l = list.filter(b => sectionOf(b) === sid); return l.length ? '<h3 class="dx-h">' + esc(nm) + '<small>' + l.length + ' 種</small></h3>' + grid(l) : ''; }).join('');
     const seen = l => l.filter(b => kills([b].concat(variantsOf(b)))).length;
     host.dataset.dexui = '1';
-    host.innerHTML = '<div class="dx-tabs"><button type="button" class="dx-tab' + (tab === 'mob' ? ' on' : '') + '" data-dxtab="mob">遺跡生物 <small>' + seen(mobs) + '／' + mobs.length + '</small></button>'
+    const all = mobs.concat(lords), got = seen(all);
+    host.innerHTML = '<div class="dx-book"><div class="dx-page dx-left"><div class="dx-tabs"><button type="button" class="dx-tab' + (tab === 'mob' ? ' on' : '') + '" data-dxtab="mob">遺跡生物 <small>' + seen(mobs) + '／' + mobs.length + '</small></button>'
       + '<button type="button" class="dx-tab' + (tab === 'lord' ? ' on' : '') + '" data-dxtab="lord">領主體 <small>' + seen(lords) + '／' + lords.length + '</small></button></div>'
       + '<p class="note dx-note">點小頭像看完整的資料。數字是打倒過的隻數（包括荒、獰、淵）；暗的是還沒打倒過的。</p>'
-      + (tab === 'mob' ? body(mobs) + (extra.length ? '<h3 class="dx-h">不是敵人</h3><div class="dx-grid"><button type="button" class="dx-th" data-dxextra="0" title="牆瞳"><span class="dx-ch" style="background:#EDE0D6;color:#3A2E2A">瞳</span></button></div>' : '') : body(lords));
+      + (tab === 'mob' ? body(mobs) + (extra.length ? '<h3 class="dx-h">不是敵人</h3><div class="dx-grid"><button type="button" class="dx-th" data-dxextra="0" title="牆瞳"><span class="dx-ch" style="background:#EDE0D6;color:#3A2E2A">瞳</span></button></div>' : '') : body(lords))
+      + '<p class="dx-count">已記錄 <b>' + got + '</b>／' + all.length + '</p></div><div class="dx-page dx-right" id="dx-detail"></div></div>';
+    // 右頁：點到的那一隻（名字、帶背景的大立繪、原本那張卡片的數值和說明、變種）
+    const detail = id => {
+      const pane = $('dx-detail'), e = R.ENEMIES[id]; if (!pane || !e) return; sel = id;
+      host.querySelectorAll('[data-dx]').forEach(b => b.classList.toggle('sel', b.dataset.dx === id));
+      const g = R.GRADES.find(g => (g.pool || []).includes(id) || (g.lords || []).includes(id) || g.boss === id), th = g && R.THEMES && R.THEMES[g.id];
+      const bg = (e.env && R.ENVS && R.ENVS[e.env] && R.ENVS[e.env].floor) || (th && th.floor) || '#3A3046', url = R.beastIconURL ? R.beastIconURL(id, 6) : '', n = kills([id].concat(variantsOf(id)));
+      pane.innerHTML = '<div class="dx-banner">' + esc(e.name) + '</div><div class="dx-portrait' + (n ? '' : ' unseen') + '" style="--bg:' + bg + '">' + (url ? '<img src="' + url + '" alt="">' : '<span class="dx-ch" style="background:' + (e.color || '#5A4A6A') + '">' + esc(e.name.split('・').pop()[0]) + '</span>') + '</div>'
+        + '<div class="dx-card">' + card[id] + '</div>'   /* 打倒過幾隻：卡片的數值列裡就有（monlabel.js 的 R.dexStats） */
+        + (variantsOf(id).length ? '<h4 class="dx-h">分級變種</h4><div class="dx-vlist">' + variantsOf(id).map(v => { const ve = R.ENEMIES[v], k = R.S && R.S.dexKills ? R.S.dexKills[v] || 0 : 0; return '<div class="dx-var' + (k ? '' : ' dim') + '">' + thumb(v) + '<span>' + esc(ve.name) + '<small>' + (k ? '打倒 ' + k : '還沒打倒過') + '</small></span></div>'; }).join('') + '</div>' : '');
+    };
     host.querySelectorAll('[data-dxtab]').forEach(b => { b.onclick = () => { tab = b.dataset.dxtab; build(host, cardsHtml, ids); }; });
-    host.querySelectorAll('[data-dx]').forEach(b => { b.onclick = () => { const id = b.dataset.dx; open([card[id]].concat(variantsOf(id).map(vcard)), []); }; });
+    host.querySelectorAll('[data-dx]').forEach(b => { b.onclick = () => { const id = b.dataset.dx; if (wide()) detail(id); else open([card[id]].concat(variantsOf(id).map(vcard)), []); }; });
+    if (wide()) { const list = tab === 'mob' ? mobs : lords; detail(list.includes(sel) ? sel : (list.find(b => kills([b].concat(variantsOf(b)))) || list[0])); }
     host.querySelectorAll('[data-dxextra]').forEach(b => { b.onclick = () => open([extra[+b.dataset.dxextra]], []); });
   };
   // 荒、獰、淵（variants.js 的變種不進圖鑑，這裡直接從資料做小卡片）
@@ -66,6 +82,15 @@
 
   const css = document.createElement('style');
   css.textContent = '#cards[data-dexui]{display:block}'
+    + '.dx-book{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:0;align-items:start;background:linear-gradient(90deg,rgba(0,0,0,0) 0,rgba(0,0,0,0) calc(60% - 10px),rgba(0,0,0,.35) 60%,rgba(0,0,0,0) calc(60% + 10px));border:1px solid var(--line);border-radius:12px;padding:12px}'
+    + '.dx-page{min-width:0;padding:4px 14px}.dx-right{position:sticky;top:8px}.dx-count{text-align:center;opacity:.85;margin:14px 0 2px}.dx-count b{color:var(--gold,#C9A13A)}'
+    + '.dx-th.sel{border-color:var(--gold,#C9A13A);box-shadow:0 0 0 2px rgba(201,161,58,.5) inset}'
+    + '.dx-banner{text-align:center;font-weight:700;font-size:18px;padding:6px 12px;margin:0 auto 10px;max-width:90%;background:linear-gradient(90deg,transparent,rgba(201,161,58,.35) 18%,rgba(201,161,58,.35) 82%,transparent);border-radius:4px}'
+    + '.dx-portrait{width:min(220px,80%);aspect-ratio:1;margin:0 auto 10px;display:grid;place-items:center;border:3px solid #6A5238;border-radius:6px;background:radial-gradient(circle at 50% 60%,color-mix(in srgb,var(--bg) 70%,#fff 30%),var(--bg) 70%);box-shadow:0 4px 14px rgba(0,0,0,.45) inset}'
+    + '.dx-portrait img{width:78%;height:78%;object-fit:contain;image-rendering:pixelated}.dx-portrait.unseen img{filter:brightness(0) opacity(.7)}.dx-portrait .dx-ch{width:50%;font-size:28px}'
+    + '.dx-card .card{display:block;background:none;border:0;padding:0;box-shadow:none}.dx-card .card>*{margin:4px 0}.dx-card .card>.em,.dx-card .card>b:first-of-type{display:none}.dx-kills{margin:8px 0;opacity:.9}.dx-kills b{color:var(--gold,#C9A13A)}'
+    + '.dx-vlist{display:grid;gap:6px}.dx-var{display:flex;align-items:center;gap:8px}.dx-var img,.dx-var .dx-ch{width:34px;height:34px;image-rendering:pixelated}.dx-var small{display:block;opacity:.75}.dx-var.dim img{filter:grayscale(1) brightness(.55)}'
+    + '@media (max-width:779px){.dx-book{display:block;background:none;border:0;padding:0}.dx-right{display:none}}'
     + '.dx-tabs{display:flex;gap:6px;margin:0 0 8px}.dx-tab{flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:inherit;font:inherit;font-weight:700;cursor:pointer}'
     + '.dx-tab.on{background:var(--gold,#C9A13A);color:#1A1410;border-color:transparent}.dx-tab small{font-weight:400;opacity:.8;margin-left:4px}'
     + '.dx-note{margin:4px 0 10px}.dx-h{display:flex;align-items:baseline;gap:8px;margin:14px 0 6px;font-size:15px}.dx-h small{font-weight:400;opacity:.7;font-size:12px}'
