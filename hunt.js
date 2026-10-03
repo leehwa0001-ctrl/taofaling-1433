@@ -65,8 +65,8 @@
     let r; try { r = ke0(e, by); } finally { wildKill = false; }
     if (wild && e.dead) {
       const run = W().run; if (run) { run.huntKills = run.huntKills || {}; run.huntKills[e.id] = (run.huntKills[e.id] || 0) + 1; }
-      if (e.id === 'minobear') { R.dropMat('bearfur', 1, e.x, e.z); R.dropMat('meat', 2, e.x + 0.6, e.z); } else { R.dropMat('boarplate', 1, e.x, e.z); R.dropMat('meat', 1, e.x + 0.6, e.z); }
-      if (run && run.exam) setTimeout(() => R.toast && R.toast('專員：「' + e.def.name + '，一頭。」他在本子上記了一筆。', '#C8D4DC'), 600);
+      if (e.id === 'minobear') { R.dropMat('bearfur', 1, e.x, e.z); R.dropMat('meat', 2, e.x + 0.6, e.z); } else if (e.id === 'yoroiboar') { R.dropMat('boarplate', 1, e.x, e.z); R.dropMat('meat', 1, e.x + 0.6, e.z); } else if (e.def.wildDrop) e.def.wildDrop(e);   /* 雪蛛（huntspider.js）之類的：自己的掉落 */
+      if (run && run.exam && NEED[e.id]) setTimeout(() => R.toast && R.toast('專員：「' + e.def.name + '，一頭。」他在本子上記了一筆。', '#C8D4DC'), 600);
     }
     return r;
   };
