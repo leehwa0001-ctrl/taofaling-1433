@@ -13,6 +13,10 @@
   const k = (m, d, y) => R.absOf(y || 2836, m, d);
   const S = () => R.S;
   const aff = id => (S().aff[id] || 0);
+  // 好感：越往後每一格要的進度越多（2026-10-04 作者：戀人的好感不要累積這麼快）。說話一天 1 點、送禮 0～3 點，進度存在 s.affX
+  const COST = a => (a < 3 ? 1 : a < 6 ? 2 : 5);
+  const gain = (id, pts) => { const s = S(); s.affX = s.affX || {}; let x = (s.affX[id] || 0) + pts, a = aff(id); while (a < 10 && x >= COST(a)) { x -= COST(a); a++; } s.affX[id] = a >= 10 ? 0 : x; s.aff[id] = a; return a; };
+  R.personExtras = R.personExtras || [];   // 對話畫面多的按鈕：{ html(id), bind(id) }（takiteach.js）
 
   // ---------- 人 ----------
   // spot：town:地點 或 室內的種類:位置編號；sched(dd, E)：今天在哪裡（null＝不在東鶴／不出門）；chance：出現的機率
@@ -198,7 +202,7 @@
     const first = !s.met[id];
     if (first) { s.met[id] = s.day; delete s.sil[id]; reveal(id); }
     if (id === 'churu' && R.today().abs === k(10, 29) && !s.evt.churuBye) { s.evt.churuBye = s.day; R.save(); churuBye(); return; }
-    if (s.talked[id] !== s.day && p.romance != null) { s.talked[id] = s.day; s.aff[id] = Math.min(10, aff(id) + 1); }
+    if (s.talked[id] !== s.day && p.romance != null) { s.talked[id] = s.day; gain(id, 1); }
     else if (s.talked[id] !== s.day) s.talked[id] = s.day;
     R.save();
     if (eventDue(id)) { runEvent(id); return; }
@@ -213,14 +217,16 @@
     R.sheet('<p class="kicker">' + (first && p.sil ? '第一次見面' : (p.rank ? esc(p.rank) + '・' : '') + esc(R.RACES[p.race] ? R.RACES[p.race].name : '')) + '</p><h2>' + esc(p.name) + ' ' + rel + '</h2>'
       + (first && p.sil ? '<p class="hand">剪影慢慢有了顏色。是' + esc(p.name) + '。</p>' : '')
       + '<p>' + esc(line) + '</p>'
-      + (p.romance != null ? '<p class="note">好感 ' + '♥'.repeat(Math.ceil(a / 2)) + '♡'.repeat(5 - Math.ceil(a / 2)) + '（' + a + '／10）' + (s.gifted[id] === s.day ? '・今天已經送過禮了' : '') + '</p>' : '')
+      + (p.romance != null ? '<p class="note">好感 ' + '♥'.repeat(Math.ceil(a / 2)) + '♡'.repeat(5 - Math.ceil(a / 2)) + '（' + a + '／10' + (a < 10 ? '・下一格 ' + ((s.affX || {})[id] || 0) + '／' + COST(a) : '') + '）' + (s.gifted[id] === s.day ? '・今天已經送過禮了' : '') + '</p>' : '')
       + (busy && p.recruit ? '<p class="note">' + esc(busy) + '</p>' : ''),
       '<div class="row">' + (p.romance != null && giftable.length && s.gifted[id] !== s.day ? '<button type="button" class="btn" id="pp-gift">送禮</button>' : '')
       + (p.shop ? '<button type="button" class="btn pri" id="pp-shop">看看貨</button>' : '') + (p.fortune ? '<button type="button" class="btn pri" id="pp-fort">算一下（10 費拉）</button>' : '')
       + (can ? '<button type="button" class="btn pri" id="pp-inv"' + (s.party.length >= R.PARTY_MAX ? ' disabled' : '') + '>邀請一起下遺跡' + (s.party.length >= R.PARTY_MAX ? '（隊伍滿了）' : '') + '</button>' : '')
       + (inParty ? '<button type="button" class="btn" id="pp-bye">請' + esc(p.short) + '先離隊</button>' : '')
+      + R.personExtras.map(x => (x.html && x.html(id)) || '').join('')
       + '<button type="button" class="btn" id="pp-x">好</button></div>');
     $('pp-x').onclick = R.closeSheet;
+    R.personExtras.forEach(x => { try { x.bind && x.bind(id); } catch (e) { console.warn('[people]', e); } });
     if ($('pp-gift')) $('pp-gift').onclick = () => giftSheet(id);
     if ($('pp-shop')) $('pp-shop').onclick = () => (p.shop === 'hood' ? hoodShop() : merchantShop());
     if ($('pp-fort')) $('pp-fort').onclick = fortune;
@@ -233,8 +239,8 @@
     $('gf-x').onclick = () => sheet(id);
     document.querySelectorAll('[data-give]').forEach(b => { b.onclick = () => {
       const g = b.dataset.give; s.gifts[g]--; s.gifted[id] = s.day; const v = (p.likes || {})[g] != null ? p.likes[g] : 0, pts = v >= 3 ? 3 : v === 2 ? 2 : v === 1 ? 1 : 0;
-      s.aff[id] = Math.min(10, aff(id) + pts); R.save();
-      R.townTalk(p.short, [pts >= 3 ? reactLove(id, g) : pts === 2 ? '「謝謝。……我很喜歡。」' : pts === 1 ? '「謝謝你。」' : '「……嗯。謝謝。」', '（好感 ' + (pts ? '+' + pts : '沒有變') + '）']);
+      gain(id, pts); R.save();
+      R.townTalk(p.short, [pts >= 3 ? reactLove(id, g) : pts === 2 ? '「謝謝。……我很喜歡。」' : pts === 1 ? '「謝謝你。」' : '「……嗯。謝謝。」', '（好感的進度 ' + (pts ? '+' + pts : '沒有變') + '）']);
     }; });
   };
   const reactLove = (id, g) => ({ taki: { strings: '……三味線的弦。（她把弦捲起來，收進懷裡。）……今晚會彈。', tackle: '……這個鉤子，好。（她馬上把它綁上釣線：繞三圈，多一個結。）' }, reno: { notebook: '新的冊子！（耳朵豎了起來。）……我會一頁一頁寫滿。' }, churu: { oil: '欸——德克斯凡的機油！你怎麼知道我的車剛好缺這個！', parts: '這個齒輪……剛好！我明天就裝上去。' }, achan: { dango: '糰子！（她馬上咬了一口。）……還是熱的！' } }[id] || {})[g] || '「……謝謝！我好開心。」';
@@ -257,7 +263,7 @@
     return true;
   };
   // 隊伍裡的劇情人物：升級跟著你走（最多到他們原本的等級）
-  R.syncStoryLv = () => { const s = S(); (s.party || []).forEach(m => { if (m.story) m.lv = Math.max(m.story === 'taki' ? 15 : 1, Math.min(P[m.story].lv, s.classes[s.cls].lv + (m.story === 'taki' ? 12 : 2))); }); };
+  R.syncStoryLv = () => { const s = S(); (s.party || []).forEach(m => { if (m.story) m.lv = Math.max(m.story === 'taki' ? 20 : 1, Math.min(P[m.story].lv, s.classes[s.cls].lv + (m.story === 'taki' ? 15 : 2))); }); };   // 瀧：你的等級 +15、至少 20（2026-10-04 作者：瀧太弱了）
   R.STORY_LOOK = id => P[id] && P[id].look;   // storylooks.js：隊伍裡的劇情人物換成最新的樣子
   // 戀人在隊伍裡：多一點力氣
   R.partyBond = Pl => { const s = S(); if (!s || !W.run) return; const lover = (s.party || []).find(m => m.story && s.rel[m.story] === 'lover'); if (lover) { Pl.dmgMult *= 1.06; Pl.def += 2; Pl.bond = lover.story; } };
@@ -338,7 +344,7 @@
       '<div class="row"><button type="button" class="btn pri" data-by="s">「往南。」</button><button type="button" class="btn" data-by="e">「往海邊。」</button><button type="button" class="btn" data-by="w">「騎慢一點就好。」</button></div>');
     document.querySelectorAll('[data-by]').forEach(b => { b.onclick = () => {
       const r = { s: '往南啊……好，那就往南。', e: '海邊啊……好，就海邊。', w: '哈，你跟我媽一樣。' }[b.dataset.by];
-      s.aff.churu = Math.min(10, aff('churu') + 1); R.save();
+      gain('churu', 1); R.save();
       R.townTalk('楚璐', [r, '春天的時候，我會再騎回來看看。', lover ? '（她把一個小小的齒輪放在你手心。）「這個幫我收著。」' : '（引擎聲響起，重機往城門騎去。）']);
     }; });
   };

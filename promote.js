@@ -11,7 +11,7 @@
   const BASE = 8;   // 路線技能的等級原本是照 8 級轉職寫的
   // 舊存檔：已經轉職的職業記為 legacy（只做一次）
   const migrate = () => { const s = S(); if (!s || s.promoV2) return; s.promoV2 = 1; Object.values(s.classes || {}).forEach(st => { if (st && st.adv) st.advLegacy = 1; }); };
-  R.skillNeedLv = (sk, st) => { if (!sk) return 99; if (!sk.adv) return sk.lv; migrate(); return st && st.advLegacy ? sk.lv : sk.lv + (R.PROMOTE_LV - BASE); };
+  R.skillNeedLv = (sk, st) => { if (!sk) return 99; if (sk.taught) { const t = S() && S().taught; return t && t[sk.id] ? 1 : 999; }   /* 望月瀧教的（takiteach.js） */ if (!sk.adv) return sk.lv; migrate(); return st && st.advLegacy ? sk.lv : sk.lv + (R.PROMOTE_LV - BASE); };
 
   // ---------- 條件 ----------
   const rankOk = () => { const r = S().rank; return !!r && (r.dan > 1 || (r.dan === 1 && r.tier >= 2)); };

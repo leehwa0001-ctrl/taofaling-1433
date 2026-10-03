@@ -329,14 +329,15 @@
   const book = (host, close) => {
     const S = R.S, cls = S.cls, st = S.classes[cls], lo = R.loadoutOf(cls), keys = KEYS();
     const ids = allOf(cls), learned = ids.filter(id => known(cls, st, id)), locked = ids.filter(id => !known(cls, st, id));
-    const req = id => { const s = info(id); if (s.adv && s.adv !== st.adv) return '轉職：' + R.ADV[cls].find(a => a.id === s.adv).name + (need(s, st) > R.PROMOTE_LV ? '・Lv ' + need(s, st) : ''); return '職業等級 ' + need(s, st); };
+    const req = id => { const s = info(id); if (s.taught) return '望月瀧教的：成為戀人之後向她學'; if (s.adv && s.adv !== st.adv) return '轉職：' + R.ADV[cls].find(a => a.id === s.adv).name + (need(s, st) > R.PROMOTE_LV ? '・Lv ' + need(s, st) : ''); return '職業等級 ' + need(s, st); };
     // 照轉職路線分段：基本技能、你走的那條路線、其他路線（收起來）
     const groups = ids => {
       const advs = (R.ADV[cls] || []).map(a => a.id).sort((a, b) => (b === st.adv) - (a === st.adv));
-      return [null].concat(advs).map(r => {
-        const list = ids.filter(id => ((info(id) || {}).adv || null) === r); if (!list.length) return '';
-        const a = r && R.ADV[cls].find(x => x.id === r), got = list.filter(id => known(cls, st, id)), mine = !r || r === st.adv || !st.adv;
-        const title = r ? '轉職・' + a.name + (r === st.adv ? '（你的路線）' : st.adv ? '（別的路線）' : '（職業等級 ' + R.PROMOTE_LV + ' 轉職以後）') : '基本・' + R.CLASSES[cls].name;
+      const gk = id => { const s = info(id) || {}; return s.taught ? 'taught' : (s.adv || null); };   // 望月瀧教的（takiteach.js）自己一段
+      return [null].concat(advs, ['taught']).map(r => {
+        const list = ids.filter(id => gk(id) === r); if (!list.length) return '';
+        const a = r && r !== 'taught' && R.ADV[cls].find(x => x.id === r), got = list.filter(id => known(cls, st, id)), mine = r === 'taught' ? got.length > 0 : (!r || r === st.adv || !st.adv);
+        const title = r === 'taught' ? '望月瀧教的' : r ? '轉職・' + a.name + (r === st.adv ? '（你的路線）' : st.adv ? '（別的路線）' : '（職業等級 ' + R.PROMOTE_LV + ' 轉職以後）') : '基本・' + R.CLASSES[cls].name;
         return '<details class="sb-group"' + (mine ? ' open' : '') + '><summary><b>' + esc(title) + '</b> <small>學會 ' + got.length + '／' + list.length + '</small></summary><div class="recipes sb-list">'
           + got.map(id => card(id, true)).join('') + list.filter(id => !known(cls, st, id)).map(id => card(id, false)).join('') + '</div></details>';
       }).join('');
