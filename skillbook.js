@@ -329,11 +329,21 @@
     const S = R.S, cls = S.cls, st = S.classes[cls], lo = R.loadoutOf(cls), keys = KEYS();
     const ids = allOf(cls), learned = ids.filter(id => known(cls, st, id)), locked = ids.filter(id => !known(cls, st, id));
     const req = id => { const s = info(id); if (s.adv && s.adv !== st.adv) return '轉職：' + R.ADV[cls].find(a => a.id === s.adv).name + (s.lv > R.PROMOTE_LV ? '・Lv ' + s.lv : ''); return '職業等級 ' + s.lv; };
+    // 照轉職路線分段：基本技能、你走的那條路線、其他路線（收起來）
+    const groups = ids => {
+      const advs = (R.ADV[cls] || []).map(a => a.id).sort((a, b) => (b === st.adv) - (a === st.adv));
+      return [null].concat(advs).map(r => {
+        const list = ids.filter(id => ((info(id) || {}).adv || null) === r); if (!list.length) return '';
+        const a = r && R.ADV[cls].find(x => x.id === r), got = list.filter(id => known(cls, st, id)), mine = !r || r === st.adv || !st.adv;
+        const title = r ? '轉職・' + a.name + (r === st.adv ? '（你的路線）' : st.adv ? '（別的路線）' : '（職業等級 ' + R.PROMOTE_LV + ' 轉職以後）') : '基本・' + R.CLASSES[cls].name;
+        return '<details class="sb-group"' + (mine ? ' open' : '') + '><summary><b>' + esc(title) + '</b> <small>學會 ' + got.length + '／' + list.length + '</small></summary><div class="recipes sb-list">'
+          + got.map(id => card(id, true)).join('') + list.filter(id => !known(cls, st, id)).map(id => card(id, false)).join('') + '</div></details>';
+      }).join('');
+    };
     const card = (id, ok) => { const sk = R.SKILLS[id], at = lo.indexOf(id), s = info(id); return '<button type="button" class="recipe sb-card' + (at >= 0 ? ' on' : '') + (ok ? '' : ' lock') + '" data-sk="' + id + '"' + (ok ? '' : ' disabled') + '><b>' + esc(sk.name) + (s.adv ? ' <small class="sb-adv">' + esc(R.ADV[cls].find(a => a.id === s.adv).name) + '</small>' : '') + (at >= 0 ? ' <small class="sb-at">裝在「' + keys[at] + '」</small>' : '') + '</b><small>' + (R.skillTag && R.skillTag(id) ? esc(R.skillTag(id)) + '・' : '') + '冷卻 ' + sk.cd + ' 秒・魔力 ' + sk.mp + (ok ? '' : '・' + esc(req(id))) + '</small><span>' + esc(sk.desc) + '</span></button>'; };
     host.innerHTML = '<h2>技能書・' + esc(R.clsName(cls)) + ' Lv ' + st.lv + '</h2><p class="note">每一格技能都可以換。先點上面的一格，再點下面學會的技能。第二到第五格在職業等級 ' + R.SKILL_UNLOCK.slice(1).join('、') + ' 打開。進了遺跡就不能換。</p>'
       + '<div class="row sb-slots">' + Array.from({ length: NSLOT() }, (_, i) => i).map(i => { const open = i === 0 || st.lv >= R.SKILL_UNLOCK[i]; return '<button type="button" class="btn' + (pickSlot === i ? ' pri' : '') + '" data-slot="' + i + '"' + (open ? '' : ' disabled') + '>' + keys[i] + '：' + (open ? esc(R.SKILLS[lo[i]].name) : 'Lv ' + R.SKILL_UNLOCK[i] + ' 打開') + '</button>'; }).join('') + '<button type="button" class="btn" data-reset="1">恢復預設</button></div>'
-      + '<h3>學會的技能（' + learned.length + '）</h3><div class="recipes sb-list">' + learned.map(id => card(id, true)).join('') + '</div>'
-      + '<h3>還沒學會（' + locked.length + '）</h3><div class="recipes sb-list">' + locked.map(id => card(id, false)).join('') + '</div>'
+      + '<p class="note">學會 ' + learned.length + '／' + ids.length + ' 種。照轉職的路線分開（2026-10-04 作者：技能照轉職職業分類）。</p>' + groups(ids)
       + '<div class="row"><button type="button" class="btn pri" data-close="1">好了</button></div>';
     host.querySelectorAll('[data-slot]').forEach(b => { b.onclick = () => { pickSlot = +b.dataset.slot; book(host, close); }; });
     host.querySelectorAll('[data-sk]').forEach(b => { b.onclick = () => {
