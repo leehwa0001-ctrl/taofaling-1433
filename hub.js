@@ -47,6 +47,7 @@
   // ---------- 東鶴 ----------
   let tab = 'guild', sub = 'id', focus = null;
   // f：在公會裡站在哪裡（告示板、登記處、收購窗口）；鐵匠鋪是哪一個分頁
+  let craftPick = null;   // 鐵匠鋪：選了要做哪一件（畫面重畫也記住）
   R.hub = (t, f) => {
     if (t) { tab = t; focus = null; if (f) { if (t === 'smith') sub = f; else focus = f; } }
     const S = R.S; R.ensureKit(S.cls);
@@ -114,11 +115,16 @@
     if (sub === 'id' && uid.length > 1) { const tot = uid.reduce((a, it) => a + R.idPrice(it), 0); h += '<div class="row"><button type="button" class="btn gold" id="id-all"' + (S.gold < R.idPrice(uid[0]) ? ' disabled' : '') + '>一鍵鑑定全部（' + uid.length + ' 件・共 ' + tot + ' 費拉' + (S.gold < tot ? '，錢不夠的話鑑定到錢用完為止' : '') + '）</button></div>'; }
     if (sub === 'id') h += uid.length ? '<div class="items">' + uid.map(it => itemCard(it, '<button type="button" class="btn pri" data-ident="' + it.id + '"' + (S.gold < R.idPrice(it) ? ' disabled' : '') + '>鑑定（' + R.idPrice(it) + ' 費拉）</button>')).join('') + '</div>' : '<p class="note">沒有要鑑定的東西。從遺跡寶箱開出來的武器，大多要鑑定過才知道是什麼。</p>';
     if (sub === 'craft') {
-      const opt = (v, n) => '<option value="' + v + '">' + esc(n) + '</option>';
-      const groups = '<optgroup label="武器">' + R.weaponsFor(S.cls).map(k => opt('weapon:' + k, R.WEAPONS[k].name)).join('') + '</optgroup>'
-        + R.SLOTS.map(sl => '<optgroup label="' + sl.name + '">' + Object.keys(R.ARMOR).filter(k => R.ARMOR[k].slot === sl.id).map(k => opt('armor:' + k, R.ARMOR[k].name)).join('') + '</optgroup>').join('')
-        + '<optgroup label="護符">' + opt('charm:charm', '護符') + '</optgroup>';
-      h += '<p class="note">做出來的東西當場就鑑定好了。現在的職業：' + esc(R.clsName(S.cls)) + '。</p><label class="field">要做什麼<select id="craft-base">' + groups + '</select></label>'
+      // 2026-10-04 作者：做武器選擇的時候可以看適合的職業、要有圖片、做完不要跳回第一個——下拉選單改成有圖示的卡片，選的那一個記住
+      const mine = R.weaponsFor(S.cls), wks = mine.concat(Object.keys(R.WEAPONS).filter(k => !mine.includes(k)));
+      if (!craftPick) craftPick = 'weapon:' + (mine[0] || wks[0]);
+      const pic = (kind, base) => { try { return R.itemIconTag({ kind, base, identified: true, rarity: 1, ilvl: 1, id: 'cf' }, 'sm'); } catch (e) { return ''; } };
+      const card = (v, name, sub2, ok) => '<button type="button" class="cf-card' + (craftPick === v ? ' on' : '') + (ok ? '' : ' other') + '" data-cfpick="' + v + '">' + pic(v.split(':')[0], v.split(':')[1]) + '<b>' + esc(name) + '</b><small>' + sub2 + '</small></button>';
+      const wHtml = wks.map(k => { const w = R.WEAPONS[k], cl = (w.cls || []).map(c => R.CLASSES[c] ? R.CLASSES[c].name : c).join('、'); return card('weapon:' + k, w.name, esc(cl) + (mine.includes(k) ? '' : '<br><i>要換職業才能用</i>'), mine.includes(k)); }).join('');
+      const aHtml = R.SLOTS.map(sl => '<h4 class="cf-h">' + esc(sl.name) + '</h4><div class="cf-grid">' + Object.keys(R.ARMOR).filter(k => R.ARMOR[k].slot === sl.id).map(k => { const a = R.ARMOR[k], ok = !R.canUse || R.canUse({ kind: 'armor', base: k, identified: true, rarity: 1, ilvl: 1 }, S.cls); return card('armor:' + k, a.name, ok ? '每個職業都能穿' : '這個職業穿不動', ok); }).join('') + '</div>').join('');
+      const pk = craftPick.split(':'), pkName = pk[0] === 'weapon' ? (R.WEAPONS[pk[1]] || {}).name : pk[0] === 'armor' ? (R.ARMOR[pk[1]] || {}).name : '護符';
+      h += '<p class="note">做出來的東西當場就鑑定好了。現在的職業：' + esc(R.clsName(S.cls)) + '。先點要做的東西，再挑材料的配方。</p>'
+        + '<details class="cf-box" open><summary>要做什麼：<b>' + esc(pkName || '') + '</b></summary><h4 class="cf-h">武器</h4><div class="cf-grid">' + wHtml + '</div>' + aHtml + '<h4 class="cf-h">護符</h4><div class="cf-grid">' + card('charm:charm', '護符', '每個職業都能戴', true) + '</div></details>'
         + '<div class="recipes">' + R.RECIPES.map((rc, i) => '<div class="recipe"><b>' + esc(rc.name) + '（物品等級 ' + rc.ilvl + '）</b><small>' + Object.keys(rc.mats).map(k => esc(R.MATS[k].name) + ' ' + (S.mats[k] || 0) + '／' + rc.mats[k]).join('・') + '・' + rc.gold + ' 費拉</small><small>可能的稀有度：' + rc.weights.map((w, k) => w ? R.RARITY[k].name : '').filter(Boolean).join('、') + '</small><button type="button" class="btn pri" data-craft="' + i + '"' + (R.canCraft(rc) ? '' : ' disabled') + '>打造</button></div>').join('') + '</div>';
     }
     if (sub === 'up') { const eqU = R.equippedIds(), ok = S.stash.filter(it => it.identified).sort((a, b) => (eqU.has(b.id) - eqU.has(a.id)) || b.rarity - a.rarity); h += '<p class="note">強化最多到 +5。每一級：武器傷害 +8%，防具防禦 +1.5。</p><div class="items">' + ok.map(it => { const c = R.upgradePrice(it); return itemCard(it, (eqU.has(it.id) ? '<span class="tag">裝備中</span>' : '') + (it.plus >= 5 ? '<span class="note">已經 +5</span>' : '<button type="button" class="btn pri" data-up="' + it.id + '"' + (S.gold >= c.gold && S.mats.crystal >= c.crystal ? '' : ' disabled') + '>強化（' + c.gold + ' 費拉・魔力水晶 ' + c.crystal + '）</button>')); }).join('') + '</div>'; }
@@ -164,7 +170,8 @@
     on('[data-sub]', b => { sub = b.dataset.sub; R.hub(); });
     on('#id-all', () => { const list = R.S.stash.filter(it => !it.identified); let n = 0, best = null; list.forEach(it => { if (R.identify(it)) { n++; if (!best || it.rarity > best.rarity) best = it; } }); R.save(); R.hub(); flashMsg(n ? '一次鑑定了 ' + n + ' 件' + (best ? '，最好的是：' + R.itemName(best) : '') + (n < list.length ? '（錢不夠，還剩 ' + (list.length - n) + ' 件）' : '') : '錢不夠，一件也鑑定不了。', best ? R.rarityColor(best) : undefined); });
     on('[data-ident]', b => { const it = R.itemById(b.dataset.ident); if (R.identify(it)) { R.hub(); flashMsg('鑑定出來了：' + R.itemName(it), R.rarityColor(it)); } });
-    on('[data-craft]', b => { const [kind, base] = $('craft-base').value.split(':'); const it = R.craft(R.RECIPES[+b.dataset.craft], kind, base); if (it) { R.hub(); flashMsg('打造好了：' + R.itemName(it), R.rarityColor(it)); } });
+    on('[data-cfpick]', b => { craftPick = b.dataset.cfpick; R.hub(); });
+    on('[data-craft]', b => { const [kind, base] = (craftPick || '').split(':'); const it = R.craft(R.RECIPES[+b.dataset.craft], kind, base); if (it) { R.hub(); flashMsg('打造好了：' + R.itemName(it), R.rarityColor(it)); } });
     on('[data-up]', b => { const it = R.itemById(b.dataset.up); if (R.upgrade(it)) { R.hub(); flashMsg('強化成功：' + R.itemName(it), R.rarityColor(it)); } });
     on('[data-salv]', b => { const got = R.salvage(R.itemById(b.dataset.salv)); R.hub(); flashMsg('拆出來了：' + Object.keys(got).map(k => R.MATS[k].name + ' ×' + got[k]).join('、')); });
     on('[data-equip]', b => { const it = R.itemById(b.dataset.equip); S.equip[S.cls][R.slotOf(it)] = it.id; R.hub(); });
