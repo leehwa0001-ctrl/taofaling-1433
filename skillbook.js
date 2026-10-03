@@ -126,10 +126,14 @@
     ['fs_hundred', '百裂拳', 'monk', 8, 8, 14, 'arc', { range: 2.4, arc: 1.8, k: 0.5, hits: 8, gap: 60 }, '一口氣打出八拳。', 'fistsaint'],
     ['fs_rising', '昇龍拳', 'monk', 14, 10, 16, 'nova', { r: 2.6, k: 2.8, stun: 1.2, color: '#FF9A4A' }, '一記上勾拳把身邊的敵人打飛、暈眩。', 'fistsaint'],
     ['fs_iron', '鐵布衫', 'monk', 14, 16, 12, 'buff', { t: 6, def: 0.4, dmg: 1.1, color: '#C8B898' }, '繃緊全身：6 秒內受到的傷害 −40%、傷害 +10%。', 'fistsaint'],
-    // 外修者（外修派「東方派」的氣道：體外的魔力罩當矛也當盾）
-    ['wx_burst', '氣爆', 'monk', 8, 8, 14, 'nova', { r: 3.4, k: 1.9, kb: 4, color: '#9AE8FF' }, '把體外的魔力罩一口氣炸開：震飛、震傷周圍的敵人。', 'waixiu'],
-    ['wx_palm', '隔空掌', 'monk', 14, 5, 10, 'shots', { k: 2.2, kind: 'eorb', sp: 30, pierce: 1 }, '用魔力罩的魔力隔空打一掌，幾乎沒有前搖。', 'waixiu'],
-    ['wx_shell', '氣罩', 'monk', 14, 14, 14, 'heal', { shield: 0.35, color: '#9AE8FF' }, '把魔力罩一口氣撐厚：得到吸收 35% 生命的護盾。', 'waixiu'],
+    // 棍僧（武術家的變化路線）
+    ['sm_wheel', '風車棍', 'monk', 8, 8, 14, 'arc', { range: 3.3, arc: 6.28, k: 0.8, hits: 4, gap: 120 }, '長棍掄四圈，掃開身邊所有敵人。', 'staffmonk'],
+    ['sm_vault', '撐竿跳', 'monk', 14, 8, 10, 'blink', { range: 7, iframe: 0.35, end: { r: 2.4, k: 1.6, color: '#C8A878' } }, '長棍一撐跳到準心處，落地掃一圈。', 'staffmonk'],
+    ['sm_sweep', '掃堂棍', 'monk', 14, 9, 12, 'arc', { range: 3.4, arc: 3.2, k: 1.6, stun: 1 }, '貼地一掃：前方的敵人被絆倒（暈眩 1 秒）。', 'staffmonk'],
+    // 外修者（術士的外修派「東方派」：體外的魔力罩當矛也當盾；2026-10-04 從武術家搬過來）
+    ['wx_burst', '氣爆', 'mage', 8, 8, 14, 'nova', { r: 3.4, k: 1.9, kb: 4, color: '#9AE8FF' }, '把體外的魔力罩一口氣炸開：震飛、震傷周圍的敵人。', 'waixiu'],
+    ['wx_palm', '隔空掌', 'mage', 14, 5, 10, 'shots', { k: 2.2, kind: 'eorb', sp: 30, pierce: 1 }, '用魔力罩的魔力隔空打一掌，幾乎沒有前搖。', 'waixiu'],
+    ['wx_shell', '氣罩', 'mage', 14, 14, 14, 'heal', { shield: 0.35, color: '#9AE8FF' }, '把魔力罩一口氣撐厚：得到吸收 35% 生命的護盾。', 'waixiu'],
     // 鬼武者（戰士的第三條路，2026-10-04 內修者搬到武術家之後補上）
     ['on_rend', '鬼斬', 'warrior', 8, 8, 14, 'arc', { range: 3.4, arc: 2.6, k: 2.4, stun: 0.6, kb: 1.5 }, '戴著鬼面往前大斬一刀，打中的敵人被嚇得愣住。', 'onimusha'],
     ['on_mask', '鬼面', 'warrior', 14, 16, 12, 'buff', { t: 6, dmg: 1.3, def: -0.1, color: '#C83A3A' }, '讓鬼面的惡意上身：6 秒內傷害 +30%，但受到的傷害 +10%。', 'onimusha'],

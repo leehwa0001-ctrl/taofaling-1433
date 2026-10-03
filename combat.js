@@ -33,6 +33,7 @@
     if (st.adv === 'gladiator') P.ws.rate *= 1.2;
     if (st.adv === 'dragoon' && P.ws.kind === 'thrust') P.ws.range *= 1.25;
     if (st.adv === 'fistsaint') { P.ws.rate *= 1.2; P.ws.crit += 0.05; }   // 拳聖
+    if (st.adv === 'staffmonk') { P.ws.range *= 1.2; if (P.ws.arc) P.ws.arc *= 1.2; }   // 棍僧
     if (st.adv === 'waixiu') { P.skillCdMult *= 0.85; P.calm -= 0.2; P.wxShield = 0.15; }   // 外修者：施法快、魔力罩；魔力外放，佩特拉比較注意得到
     P.critMult = st.adv === 'kensei' ? 2.3 : 1.8;
     P.skill = st.adv ? R.ADV[cls].find(a => a.id === st.adv).skill : c.skill;
@@ -118,6 +119,7 @@
     if (P.buff.fortress > 0) dmg *= 0.3;
     if (P.adv === 'templar') dmg *= 0.85;
     if (P.adv === 'onimusha' && P.hp < P.hpMax * 0.5) dmg *= 0.8;   // 鬼武者
+    if (P.adv === 'staffmonk') dmg *= 0.9;   // 棍僧
     if (P.buff.kekkai > 0 && src && dist(src, P) < 4.5) dmg *= 0.6;
     // 騎士的盾：沒在攻擊時，擋下正面來的傷害
     if (R.CLASSES[P.cls].shield && src && P.atkHold <= 0) { const fa = Math.abs(wrap(angTo(P, src) - P.yaw)); if (fa < 1) { dmg *= 0.7; R.fx('block', P.x, 1.2, P.z); if (P.adv === 'paladin') R.healP(2, true); } }
