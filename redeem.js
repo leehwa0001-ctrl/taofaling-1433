@@ -18,7 +18,8 @@
     { h: '1j7z0nr40yn', pack: 'guild', name: '公會遠征背包', msg: '公會遠征背包送到了。到公會的商店選要背哪一個。' },
     { h: '22giv0b4d2i', gold: 3000, potions: { hp: 5, mp: 5 }, pack: 'leather', name: '新手禮包', msg: '3000 費拉、回復藥魔力藥各 5 瓶、一個皮背包。' },
     // 2026-10-04：原本限時補償（compensation.js）的內容，補償拿掉、改成序號。books：升 10 等經驗書；tickets：種族抽選券；core：魔力核心（tickets.js 讀經驗書、用抽選券）
-    { h: 'l81lia6u52', gold: 5000, books: 1, tickets: 200, core: 1, name: '補償禮包', msg: '5000 費拉、升 10 等經驗書一本、種族抽選券 200 張、魔力核心一顆，放進背包了。抽選券在公會的登記處用。' }
+    { h: 'l81lia6u52', gold: 5000, books: 1, tickets: 200, core: 1, name: '補償禮包', msg: '5000 費拉、升 10 等經驗書一本、種族抽選券 200 張、魔力核心一顆，放進背包了。抽選券在公會的登記處用。' },
+    { h: '28uxjbs55z7', tickets: 1000, name: '種族抽選券 1000 張', msg: '種族抽選券 1000 張放進背包了。到公會的登記處抽種族。' },   // 2026-10-04（作者：1000 張種族序號卷）
   ];
   const cyrb53 = (str, seed = 0) => { let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed; for (let i = 0, ch; i < str.length; i++) { ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); } h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507); h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507); h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909); return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36); };
   const hashOf = s => cyrb53('taofaling1433:' + String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, ''));
