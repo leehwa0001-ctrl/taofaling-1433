@@ -13,7 +13,7 @@
     ht0(dt);
     const P = W.P; if (!P || !W.run) return;
     const c = (R.CLASS_GLOW && R.CLASS_GLOW[P.cls]) || '#E8C04A', dock = $('h2-dock'); if (dock && dock.dataset.c !== c) { dock.dataset.c = c; dock.style.setProperty('--cc', c); }
-    [['r-skill', 0], ['r-skill2', 1], ['r-skill3', 2]].forEach(([id, i]) => {
+    [['r-skill', 0], ['r-skill2', 1], ['r-skill3', 2], ['r-skill4', 3], ['r-skill5', 4]].forEach(([id, i]) => {
       const b = $(id); if (!b) return; const sid = R.slotSkill ? R.slotSkill(P, i) : (i ? null : P.skill), sk = sid && R.SKILLS[sid];
       const t = sk && sk.mp ? String(sk.mp) : ''; if (b.dataset.mp !== t) b.dataset.mp = t; b.classList.toggle('none', !sk);
     });
@@ -46,7 +46,7 @@
     sel('.act .h2-n') + '{right:auto!important;left:3px!important;bottom:2px!important;top:auto!important;font-size:10px!important}',
     // 順序：藥水｜分隔｜技能｜翻滾｜分隔｜背包・指揮
     sel('[data-tact="hp"]') + '{order:1!important;margin:0!important}', sel('[data-h2="mp"]') + '{order:2!important;margin:0 10px 0 0!important}',
-    sel('[data-tact="skill"]') + '{order:3!important}', sel('[data-tact="skill2"]') + '{order:4!important}', sel('[data-tact="skill3"]') + '{order:5!important}',
+    sel('[data-tact="skill"]') + '{order:3!important}', sel('[data-tact="skill2"]') + '{order:4!important}', sel('[data-tact="skill3"]') + '{order:5!important}', sel('[data-tact="skill4"]', '[data-tact="skill5"]') + '{order:5!important}',
     sel('[data-tact="dodge"]') + '{order:6!important;margin:0 10px 0 0!important}', sel('[data-tact="bag"]') + '{order:8!important}', sel('[data-tact="order"]') + '{order:9!important}',
     // 分隔：小小的青銅菱形
     sel('[data-h2="mp"]::before', '[data-tact="dodge"]::before') + '{content:"";position:absolute;right:-9px;top:50%;width:6px;height:6px;margin-top:-3px;transform:rotate(45deg);background:#8A6A3A;box-shadow:0 0 0 1px #000;z-index:5}',

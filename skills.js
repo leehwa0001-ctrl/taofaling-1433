@@ -27,7 +27,7 @@
     guard: { name: '挺身護衛', cd: 15, mp: 12, desc: '5 秒內受到的傷害 −40%，周圍的敵人改打你；身邊隊友受到的傷害 −30%。' }
   });
   R.SKILL_SLOTS = { gunner: ['flashbang', 'barrage'], archer: ['pin', 'leap'], warrior: ['quake', 'warcry'], mage: ['frostnova', 'chain'], priest: ['smite', 'ward'], blade: ['flurry', 'parry'], knight: ['shieldbash', 'guard'] };
-  R.SKILL_UNLOCK = [1, 3, 6];
+  R.SKILL_UNLOCK = [1, 3, 6, 10, 15];   // 2026-10-04 玩家回饋：技能格多一點（原本三格：1、3、6 級）——第四格 10 級、第五格 15 級，按鍵 5、6
   R.SKILL_KEYS = ['R／右鍵', '3', '4'];
   // 第 i 格（0～2）的技能；還沒學會是 null
   R.slotSkill = (P, i) => (i === 0 ? P.skill : P.lv >= R.SKILL_UNLOCK[i] ? (R.SKILL_SLOTS[P.cls] || [])[i - 1] || null : null);
@@ -159,7 +159,7 @@
     const w = W(), P = w.P;
     if (w.hitStop > 0) { w.hitStop -= dt; dt *= 0.06; }
     if (P) {
-      if (P.skCd) for (let i = 1; i < 3; i++) if (P.skCd[i] > 0) P.skCd[i] = Math.max(0, P.skCd[i] - dt);
+      if (P.skCd) for (let i = 1; i < R.SKILL_UNLOCK.length; i++) if (P.skCd[i] > 0) P.skCd[i] = Math.max(0, P.skCd[i] - dt);
       if (P.parryT > 0) P.parryT -= dt;
       if (P.taunt > 0) P.taunt -= dt;
     }
@@ -173,6 +173,7 @@
     const st = R.S.classes[R.S.cls], before = st.lv;
     gainXp0(v);
     const P = W().P;
+    R.SKILL_UNLOCK.forEach((u, i) => { if (i >= 3 && before < u && st.lv >= u) setTimeout(() => R.banner('技能多一格（第 ' + (i + 1) + ' 格，按鍵 ' + (i + 2) + '）', '到技能書把學會的技能裝上去'), 2400); });
     [1, 2].forEach(i => { if (before < R.SKILL_UNLOCK[i] && st.lv >= R.SKILL_UNLOCK[i]) { const id = (R.SKILL_SLOTS[R.S.cls] || [])[i - 1]; if (id) setTimeout(() => R.banner('學會新技能：' + R.SKILLS[id].name, (R.touch ? '技能按鈕' : '按 ' + R.SKILL_KEYS[i]) + '・' + R.SKILLS[id].desc), 1800); } });
     if (P) { P.lv = st.lv; hudSkills(true); }
   };
@@ -182,23 +183,23 @@
   let shown = '';
   const hudSkills = force => {
     const P = W().P; if (!P) return;
-    const key = [0, 1, 2].map(i => R.slotSkill(P, i)).join('|') + P.lv;
+    const key = R.SKILL_UNLOCK.map((u, i) => R.slotSkill(P, i)).join('|') + P.lv;
     if (!force && key === shown) return; shown = key;
-    [1, 2].forEach(i => {
+    R.SKILL_UNLOCK.slice(1).map((u, k) => k + 1).forEach(i => {
       const el = slotEl(i); if (!el.b) return; const id = R.slotSkill(P, i), sk = id && R.SKILLS[id];
       el.n.textContent = sk ? sk.name : 'Lv ' + R.SKILL_UNLOCK[i];
       el.b.classList.toggle('locked', !sk);
-      el.b.title = sk ? sk.name + '：' + sk.desc + '（魔力 ' + sk.mp + '、冷卻 ' + sk.cd + ' 秒）' : '職業等級 ' + R.SKILL_UNLOCK[i] + ' 學會：' + R.SKILLS[(R.SKILL_SLOTS[P.cls] || [])[i - 1]].name;
+      el.b.title = sk ? sk.name + '：' + sk.desc + '（魔力 ' + sk.mp + '、冷卻 ' + sk.cd + ' 秒）' : '職業等級 ' + R.SKILL_UNLOCK[i] + ' 打開這一格' + ((R.SKILL_SLOTS[P.cls] || [])[i - 1] && R.SKILLS[(R.SKILL_SLOTS[P.cls] || [])[i - 1]] ? '：' + R.SKILLS[(R.SKILL_SLOTS[P.cls] || [])[i - 1]].name : '（到技能書裝技能）');
     });
   };
   const hudFloor0 = R.hudFloor;
-  R.hudFloor = () => { hudFloor0(); hudSkills(true); };
+  R.hudFloor = () => { hudFloor0(); const r3 = $('r-skill3'), r4 = $('r-skill4'), r5 = $('r-skill5'); if (r3 && r4 && r5 && r3.nextElementSibling !== r4) r3.after(r4, r5); hudSkills(true); };   // 第四、五格緊跟在第三格後面（大招鈕之前）
   const hudTick0 = R.hudTick;
   R.hudTick = dt => {
     hudTick0(dt);
     const P = W().P; if (!P) return;
     hudSkills(false);
-    [1, 2].forEach(i => { const el = slotEl(i), id = R.slotSkill(P, i); if (!el.cd) return; el.cd.style.height = id ? (cdOf(P, i) / (R.SKILLS[id].cd * P.skillCdMult) * 100) + '%' : '0%'; });
+    R.SKILL_UNLOCK.slice(1).map((u, k) => k + 1).forEach(i => { const el = slotEl(i), id = R.slotSkill(P, i); if (!el.cd) return; el.cd.style.height = id ? (cdOf(P, i) / (R.SKILLS[id].cd * P.skillCdMult) * 100) + '%' : '0%'; });
   };
 
   // ---------- 按鍵：3、4（指揮選單打開時 1～5 是選命令，不放技能）----------
@@ -206,8 +207,8 @@
   window.addEventListener('keydown', e => {
     const w = W(); if (!w.run || w.town || !$('run') || $('run').hidden || w.paused || (R.sheetOpen && R.sheetOpen())) return;
     if (R.orderOpen && R.orderOpen()) return;
-    if (e.key === '3') R.castSlot(1); else if (e.key === '4') R.castSlot(2);
+    if (e.key === '3') R.castSlot(1); else if (e.key === '4') R.castSlot(2); else if (e.key === '5') R.castSlot(3); else if (e.key === '6') R.castSlot(4);
   }, true);
   const tact0 = R.tact;
-  R.tact = a => { if (a === 'skill2' || a === 'skill3') { if (W().run && !W().town) R.castSlot(a === 'skill2' ? 1 : 2); return; } tact0(a); };
+  R.tact = a => { const m = /^skill([2-5])$/.exec(a); if (m) { if (W().run && !W().town) R.castSlot(+m[1] - 1); return; } tact0(a); };
 })(window.R);

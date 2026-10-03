@@ -9,7 +9,7 @@
   const ACTS = [
     ['up', '往上走', 'w', 'KeyW'], ['left', '往左走', 'a', 'KeyA'], ['down', '往下走', 's', 'KeyS'], ['right', '往右走', 'd', 'KeyD'],
     ['dodge', '翻滾（點一下）／跑步（按住）', 'shift', 'ShiftLeft'], ['use', '互動', ' ', 'Space'],
-    ['skill1', '技能一（右鍵也可以）', 'r', 'KeyR'], ['skill2', '技能二', '3', 'Digit3'], ['skill3', '技能三', '4', 'Digit4'],
+    ['skill1', '技能一（右鍵也可以）', 'r', 'KeyR'], ['skill2', '技能二', '3', 'Digit3'], ['skill3', '技能三', '4', 'Digit4'], ['skill4', '技能四', '5', 'Digit5'], ['skill5', '技能五', '6', 'Digit6'],
     ['auto', '自動打最近的敵人（按住）', 'f', 'KeyF'], ['reload', '換彈', 'x', 'KeyX'],
     ['hp', '回復藥', '1', 'Digit1'], ['mp', '魔力藥', '2', 'Digit2'], ['bag', '背包', 'i', 'KeyI'], ['map', '地圖', 'tab', 'Tab'], ['bigmap', '城裡的大地圖', 'm', 'KeyM'],
     ['rotl', '視角往左轉', 'q', 'KeyQ'], ['rotr', '視角往右轉', 'e', 'KeyE'], ['order', '指揮隊友', 'c', 'KeyC'], ['hood', '兜帽', 'h', 'KeyH'], ['pause', '暫停', 'escape', 'Escape']
@@ -66,7 +66,7 @@
   const labelHud = () => {
     const set = (sel, txt) => { const el = document.querySelector(sel); if (el) el.textContent = txt; };
     set('[data-tact="hp"] kbd', R.keyName('hp')); set('[data-tact="bag"] kbd', R.keyName('bag')); set('[data-tact="order"] kbd', R.keyName('order'));
-    set('[data-tact="dodge"] kbd', '點 ' + R.keyName('dodge')); set('#r-skill2 kbd', R.keyName('skill2')); set('#r-skill3 kbd', R.keyName('skill3')); set('#r-skill kbd', R.keyName('skill1') + '／右鍵');
+    set('[data-tact="dodge"] kbd', '點 ' + R.keyName('dodge')); set('#r-skill2 kbd', R.keyName('skill2')); set('#r-skill3 kbd', R.keyName('skill3')); set('#r-skill4 kbd', R.keyName('skill4')); set('#r-skill5 kbd', R.keyName('skill5')); set('#r-skill kbd', R.keyName('skill1') + '／右鍵');
     set('[data-tact="rotl"] .key-only', R.keyName('rotl')); set('[data-tact="rotr"] .key-only', R.keyName('rotr'));
   };
   const back = { fn: null };

@@ -25,7 +25,7 @@
     // 魔王
     const boss = $('r-boss'); if (boss) { const m = $('r-boss-hp').parentNode; m.classList.add('bh-bar'); const t = document.createElement('b'); t.className = 'bh-trail'; t.id = 'bh-boss-tr'; m.insertBefore(t, $('r-boss-hp')); const p = document.createElement('small'); p.id = 'bh-boss-p'; boss.appendChild(p); }
     // 技能鈕：冷卻的秒數
-    ['r-skill', 'r-skill2', 'r-skill3', 'r-dodge-cd'].forEach(id => { const b = id === 'r-dodge-cd' ? $(id) && $(id).parentNode : $(id); if (!b || b.querySelector('.bh-sec')) return; const s = document.createElement('span'); s.className = 'bh-sec'; b.appendChild(s); });
+    ['r-skill', 'r-skill2', 'r-skill3', 'r-skill4', 'r-skill5', 'r-dodge-cd'].forEach(id => { const b = id === 'r-dodge-cd' ? $(id) && $(id).parentNode : $(id); if (!b || b.querySelector('.bh-sec')) return; const s = document.createElement('span'); s.className = 'bh-sec'; b.appendChild(s); });
   };
   // 頭像：身上那張圖的第一格（正面、站著）切上半身，放大兩倍
   const face = P => {
@@ -54,7 +54,7 @@
     const shEl = $('bh-shield'); if (shEl) { const s = P.shield > 0 ? Math.min(1, P.shield / P.hpMax) : 0; shEl.style.width = s * 100 + '%'; shEl.style.left = Math.min(100 - s * 100, hp * 100) + '%'; shEl.hidden = !s; }
     $('r-bl').classList.toggle('low', hp > 0 && hp < 0.3);
     // 技能鈕：扇形冷卻、秒數、魔力不夠、好了亮一下
-    const slots = [['r-skill', 0], ['r-skill2', 1], ['r-skill3', 2]];
+    const slots = [['r-skill', 0], ['r-skill2', 1], ['r-skill3', 2], ['r-skill4', 3], ['r-skill5', 4]];
     slots.forEach(([id, i]) => {
       const b = $(id); if (!b) return; const sid = R.slotSkill ? R.slotSkill(P, i) : (i ? null : P.skill), sk = sid && R.SKILLS[sid];
       const cd = i === 0 ? P.skillCd : (P.skCd && P.skCd[i]) || 0, max = sk ? sk.cd * (P.skillCdMult || 1) : 1, p = sk ? Math.max(0, Math.min(1, cd / max)) : 0;

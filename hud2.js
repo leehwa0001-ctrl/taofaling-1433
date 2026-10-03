@@ -95,7 +95,7 @@
     if (bh) { setF(bh, hp); setF(bh, hpT, '--t'); setF(bh, P.shield > 0 ? Math.min(1, P.shield / P.hpMax) : 0, '--s'); bh.classList.toggle('low', hp > 0 && hp < 0.3); const n = $('h2-hp-n'); const v = Math.ceil(P.hp); if (n && n.textContent !== String(v)) n.textContent = v; }
     if (bm) { setF(bm, mp); setF(bm, mpT, '--t'); const n = $('h2-mp-n'); const v = Math.floor(P.mp); if (n && n.textContent !== String(v)) n.textContent = v; }
     // 快捷欄：技能的圖示、亮不亮
-    const S = R.S, slots = [['r-skill', 0], ['r-skill2', 1], ['r-skill3', 2]];
+    const S = R.S, slots = [['r-skill', 0], ['r-skill2', 1], ['r-skill3', 2], ['r-skill4', 3], ['r-skill5', 4]];
     slots.forEach(([id, i]) => {
       const b = $(id); if (!b) return; const sid = R.slotSkill ? R.slotSkill(P, i) : (i ? null : P.skill), sk = sid && R.SKILLS[sid];
       const cd = i === 0 ? P.skillCd : (P.skCd && P.skCd[i]) || 0, ic = b.querySelector('.h2-ic'), k = iconFor(sid);
@@ -125,7 +125,7 @@
     'body:not(.touch) #r-br{position:static;display:flex;gap:3px;padding:4px;background:rgba(18,14,12,.86);border:2px solid #4A3E34;box-shadow:inset 0 0 0 1px #0E0A08,0 4px 14px rgba(0,0,0,.5);border-radius:6px}',
     'body:not(.touch) #r-br .act{width:56px;height:56px;border-radius:4px;background:linear-gradient(#2E2620,#1E1814);border:2px solid #3E342C;box-shadow:inset 2px 2px 0 rgba(255,255,255,.06),inset -2px -2px 0 rgba(0,0,0,.45);padding:0;display:block;font-size:0;transition:border-color .15s,box-shadow .15s,filter .15s}',
     'body:not(.touch) #r-br .act.big{width:64px;height:64px}body:not(.touch) #r-br .act.touch-only{display:none}',
-    'body:not(.touch) #r-br [data-tact="skill"]{order:1}body:not(.touch) #r-br [data-tact="skill2"]{order:2}body:not(.touch) #r-br [data-tact="skill3"]{order:3}body:not(.touch) #r-br [data-tact="dodge"]{order:4;margin-right:8px}body:not(.touch) #r-br [data-tact="hp"]{order:5}body:not(.touch) #r-br [data-h2="mp"]{order:6;margin-right:8px}body:not(.touch) #r-br [data-tact="bag"]{order:7}body:not(.touch) #r-br [data-tact="order"]{order:8}',
+    'body:not(.touch) #r-br [data-tact="skill"]{order:1}body:not(.touch) #r-br [data-tact="skill2"]{order:2}body:not(.touch) #r-br [data-tact="skill3"]{order:3}body:not(.touch) #r-br [data-tact="skill4"],body:not(.touch) #r-br [data-tact="skill5"]{order:3}body:not(.touch) #r-br [data-tact="dodge"]{order:4;margin-right:8px}body:not(.touch) #r-br [data-tact="hp"]{order:5}body:not(.touch) #r-br [data-h2="mp"]{order:6;margin-right:8px}body:not(.touch) #r-br [data-tact="bag"]{order:7}body:not(.touch) #r-br [data-tact="order"]{order:8}',
     'body:not(.touch) #r-br .h2-ic{position:absolute;left:50%;top:44%;width:32px;height:32px;transform:translate(-50%,-50%);image-rendering:pixelated;filter:brightness(.55) saturate(.6);transition:filter .15s}',
     'body:not(.touch) #r-br .act.big .h2-ic{width:40px;height:40px}',
     'body:not(.touch) #r-br .act kbd{position:absolute;left:2px;top:1px;font-size:9.5px;line-height:1.2;padding:0 3px;border:0;background:rgba(0,0,0,.55);color:#C8C0B0;max-width:52px;overflow:hidden;white-space:nowrap;z-index:4}',

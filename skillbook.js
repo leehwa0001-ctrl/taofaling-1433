@@ -128,13 +128,16 @@
   // ---------- 學會了沒、裝了什麼 ----------
   const known = (cls, st, id) => { const s = info(id); return !!s && s.cls === cls && st.lv >= s.lv && (!s.adv || s.adv === st.adv); };
   const allOf = cls => Object.keys(OLD).filter(id => OLD[id].cls === cls).concat(Object.keys(LIB).filter(id => LIB[id].cls === cls));
-  const defaults = (cls, st) => [st.adv ? R.ADV[cls].find(a => a.id === st.adv).skill : R.CLASSES[cls].skill, (R.SKILL_SLOTS[cls] || [])[0], (R.SKILL_SLOTS[cls] || [])[1]];
+  const NSLOT = () => R.SKILL_UNLOCK.length;   // 技能格的數目（skills.js；2026-10-04 起五格）
+  const defaults = (cls, st) => [st.adv ? R.ADV[cls].find(a => a.id === st.adv).skill : R.CLASSES[cls].skill, (R.SKILL_SLOTS[cls] || [])[0], (R.SKILL_SLOTS[cls] || [])[1]].concat(Array(Math.max(0, NSLOT() - 3)).fill(null));
   R.loadoutOf = cls => {
     const S = R.S, st = S.classes[cls], def = defaults(cls, st);
-    S.loadout = S.loadout || {}; const lo = S.loadout[cls] || [null, null, null];
-    const out = [0, 1, 2].map(i => (lo[i] && known(cls, st, lo[i]) ? lo[i] : null));
+    S.loadout = S.loadout || {}; const lo = S.loadout[cls] || [];
+    const out = Array.from({ length: NSLOT() }, (_, i) => (lo[i] && known(cls, st, lo[i]) ? lo[i] : null));
     // 沒換過的格子用預設；預設的技能已經被放在別格，就找一個還沒裝的
-    return out.map((id, i) => { if (id) return id; const d = def[i]; if (d && !out.includes(d)) return d; return allOf(cls).find(k => known(cls, st, k) && !out.includes(k) && k !== d) || d; });
+    // 一格一格填：已經裝上的（包括這一輪剛填的）不再重複；新的第四、五格沒有預設，就填還沒裝的學會的技能（沒有就空著）
+    const used = new Set(out.filter(Boolean));
+    return out.map((id, i) => { if (id) return id; const d = def[i]; if (d && !used.has(d)) { used.add(d); return d; } const k = allOf(cls).find(x => known(cls, st, x) && !used.has(x)); if (k) { used.add(k); return k; } return i < 3 ? d : null; });
   };
   const cp0 = R.calcPlayer;
   R.calcPlayer = cls => { const P = cp0(cls); try { P.skill = R.loadoutOf(cls)[0]; } catch (e) { } return P; };
@@ -320,15 +323,15 @@
   };
 
   // ---------- 技能書（換技能的畫面） ----------
-  const KEYS = () => (R.touch ? ['技能鈕', '第二鈕', '第三鈕'] : ['R／右鍵', '3', '4']);
+  const KEYS = () => (R.touch ? ['技能鈕', '第二鈕', '第三鈕', '第四鈕', '第五鈕'] : ['R／右鍵', '3', '4', '5', '6']);
   let pickSlot = 0;
   const book = (host, close) => {
     const S = R.S, cls = S.cls, st = S.classes[cls], lo = R.loadoutOf(cls), keys = KEYS();
     const ids = allOf(cls), learned = ids.filter(id => known(cls, st, id)), locked = ids.filter(id => !known(cls, st, id));
     const req = id => { const s = info(id); if (s.adv && s.adv !== st.adv) return '轉職：' + R.ADV[cls].find(a => a.id === s.adv).name + (s.lv > R.PROMOTE_LV ? '・Lv ' + s.lv : ''); return '職業等級 ' + s.lv; };
     const card = (id, ok) => { const sk = R.SKILLS[id], at = lo.indexOf(id), s = info(id); return '<button type="button" class="recipe sb-card' + (at >= 0 ? ' on' : '') + (ok ? '' : ' lock') + '" data-sk="' + id + '"' + (ok ? '' : ' disabled') + '><b>' + esc(sk.name) + (s.adv ? ' <small class="sb-adv">' + esc(R.ADV[cls].find(a => a.id === s.adv).name) + '</small>' : '') + (at >= 0 ? ' <small class="sb-at">裝在「' + keys[at] + '」</small>' : '') + '</b><small>' + (R.skillTag && R.skillTag(id) ? esc(R.skillTag(id)) + '・' : '') + '冷卻 ' + sk.cd + ' 秒・魔力 ' + sk.mp + (ok ? '' : '・' + esc(req(id))) + '</small><span>' + esc(sk.desc) + '</span></button>'; };
-    host.innerHTML = '<h2>技能書・' + esc(R.clsName(cls)) + ' Lv ' + st.lv + '</h2><p class="note">三格技能都可以換。先點上面的一格，再點下面學會的技能。第二、三格在職業等級 ' + R.SKILL_UNLOCK[1] + '、' + R.SKILL_UNLOCK[2] + ' 打開。進了遺跡就不能換。</p>'
-      + '<div class="row sb-slots">' + [0, 1, 2].map(i => { const open = i === 0 || st.lv >= R.SKILL_UNLOCK[i]; return '<button type="button" class="btn' + (pickSlot === i ? ' pri' : '') + '" data-slot="' + i + '"' + (open ? '' : ' disabled') + '>' + keys[i] + '：' + (open ? esc(R.SKILLS[lo[i]].name) : 'Lv ' + R.SKILL_UNLOCK[i] + ' 打開') + '</button>'; }).join('') + '<button type="button" class="btn" data-reset="1">恢復預設</button></div>'
+    host.innerHTML = '<h2>技能書・' + esc(R.clsName(cls)) + ' Lv ' + st.lv + '</h2><p class="note">每一格技能都可以換。先點上面的一格，再點下面學會的技能。第二到第五格在職業等級 ' + R.SKILL_UNLOCK.slice(1).join('、') + ' 打開。進了遺跡就不能換。</p>'
+      + '<div class="row sb-slots">' + Array.from({ length: NSLOT() }, (_, i) => i).map(i => { const open = i === 0 || st.lv >= R.SKILL_UNLOCK[i]; return '<button type="button" class="btn' + (pickSlot === i ? ' pri' : '') + '" data-slot="' + i + '"' + (open ? '' : ' disabled') + '>' + keys[i] + '：' + (open ? esc(R.SKILLS[lo[i]].name) : 'Lv ' + R.SKILL_UNLOCK[i] + ' 打開') + '</button>'; }).join('') + '<button type="button" class="btn" data-reset="1">恢復預設</button></div>'
       + '<h3>學會的技能（' + learned.length + '）</h3><div class="recipes sb-list">' + learned.map(id => card(id, true)).join('') + '</div>'
       + '<h3>還沒學會（' + locked.length + '）</h3><div class="recipes sb-list">' + locked.map(id => card(id, false)).join('') + '</div>'
       + '<div class="row"><button type="button" class="btn pri" data-close="1">好了</button></div>';
