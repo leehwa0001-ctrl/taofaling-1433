@@ -32,12 +32,14 @@
   }
   Object.assign(R.ENEMIES, {
     minobear: { name: '蓑背熊', ref: '〈浮標〉', hp: 900, dmg: 26, speed: 3.2, xp: 60, size: 1.6, ai: 'chase', color: '#5A4232', eye: '#F0D060', wild: 1, noDex: 1, desc: '背上的毛又長又亂，會把樹枝捲進去，遠看像披著蓑衣。從背後打，刀會卡在樹枝和毛裡。' },
-    yoroiboar: { name: '土鎧豬', ref: '〈浮標〉', hp: 260, dmg: 18, speed: 3.4, xp: 22, size: 1.0, ai: 'charge', color: '#6A5040', eye: '#F0D060', wild: 1, noDex: 1, desc: '額頭上長著一塊厚厚的甲，低頭衝過來的時候正面打不動。從側面或背後下手。' }
+    yoroiboar: { name: '土鎧豬', ref: '〈浮標〉', hp: 260, dmg: 18, speed: 3.4, xp: 22, size: 1.0, ai: 'charge', color: '#6A5040', eye: '#F0D060', wild: 1, noDex: 1, desc: '額頭上長著一塊厚厚的甲，低頭衝過來的時候正面打不動。從側面或背後下手。肉很好吃，湯山村的人冬天就等這一味。' }
   });
   Object.assign(R.MATS, {
     bearfur: { name: '蓑背熊的毛皮', color: '#5A4232', value: 45, desc: '又厚又暖，裡面還纏著幾根樹枝。' },
     boarplate: { name: '土鎧豬的額甲', color: '#8C8A80', value: 30, desc: '土鎧豬額頭上的硬甲，敲起來像石頭。' },
-    meat: { name: '野獸肉', color: '#B85A4A', value: 6, desc: '冬天的野獸肉，湯山村的人拿來燉鍋。' }
+    meat: { name: '野獸肉', color: '#B85A4A', value: 6, desc: '冬天的野獸肉，湯山村的人拿來燉鍋。' },
+    // 2026-10-04 作者：加一個設定，土鎧豬的肉很好吃
+    boarmeat: { name: '土鎧豬的肉', color: '#D07A6A', value: 24, desc: '湯山村的人說，後山最好吃的就是土鎧豬：整天拿額頭頂土翻樹根找吃的，肉結實、油花細，烤了會滴油。帶去燒肉・炭火，老闆會幫你烤。' }
   });
   if (R.ACC_RECIPES) R.ACC_RECIPES.push(
     { name: '鎧豬額甲的胸針', kind: 'acc', base: 'brooch', ilvl: 4, mats: { boarplate: 2, thread: 1 }, gold: 60, weights: [10, 50, 35, 5, 0, 0], extra: 'tough', note: '土鎧豬的額甲磨成的胸針，很硬。' },
@@ -65,7 +67,7 @@
     let r; try { r = ke0(e, by); } finally { wildKill = false; }
     if (wild && e.dead) {
       const run = W().run; if (run) { run.huntKills = run.huntKills || {}; run.huntKills[e.id] = (run.huntKills[e.id] || 0) + 1; }
-      if (e.id === 'minobear') { R.dropMat('bearfur', 1, e.x, e.z); R.dropMat('meat', 2, e.x + 0.6, e.z); } else if (e.id === 'yoroiboar') { R.dropMat('boarplate', 1, e.x, e.z); R.dropMat('meat', 1, e.x + 0.6, e.z); } else if (e.def.wildDrop) e.def.wildDrop(e);   /* 雪蛛（huntspider.js）之類的：自己的掉落 */
+      if (e.id === 'minobear') { R.dropMat('bearfur', 1, e.x, e.z); R.dropMat('meat', 2, e.x + 0.6, e.z); } else if (e.id === 'yoroiboar') { R.dropMat('boarplate', 1, e.x, e.z); R.dropMat('boarmeat', 1, e.x + 0.6, e.z); } else if (e.def.wildDrop) e.def.wildDrop(e);   /* 雪蛛（huntspider.js）之類的：自己的掉落 */
       if (run && run.exam && NEED[e.id]) setTimeout(() => R.toast && R.toast('專員：「' + e.def.name + '，一頭。」他在本子上記了一筆。', '#C8D4DC'), 600);
     }
     return r;

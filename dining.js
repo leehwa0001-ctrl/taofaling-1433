@@ -25,7 +25,8 @@
       menu: [['霜背鮒手卷', 9, '東鶴近海的霜背鮒', { aware: 0.1 }], ['鮭魚親子丼', 14, '鮭魚和鮭魚卵滿到碗外面', { hp: 0.06, mp: 0.04 }], ['上握壽司', 24, '今天早上魚市場進的貨，十貫', { hp: 0.08, regen: 0.2 }]],
       say: ['「今天的魚是早上在魚市場挑的。」', '「山葵要嗎？」'], guest: ['吃壽司的漁夫', ['「我早上捕的魚，中午就在這裡吃到了。」', '「冬天的魚最肥。」']], style: 'counter' },
     yakiniku: { name: '燒肉・炭火', wall: '#5A4A40', cap: '#4A2A1A', floor: '#2E2622', chef: '炭火的老闆', look: { top: '#2A2A2E', hair: '#3A2A1C' }, hint: '炭火和烤肉的煙',
-      menu: [['燒肉定食', 15, '醬汁醃過的五花，附白飯和湯', { dmg: 0.05 }], ['石鍋拌飯', 12, '鍋巴焦得剛好', { hp: 0.06 }], ['霜降拼盤', 30, '昭旭和牛的霜降，四人份', { dmg: 0.08, hp: 0.05 }]],
+      menu: [['燒肉定食', 15, '醬汁醃過的五花，附白飯和湯', { dmg: 0.05 }], ['石鍋拌飯', 12, '鍋巴焦得剛好', { hp: 0.06 }], ['霜降拼盤', 30, '昭旭和牛的霜降，四人份', { dmg: 0.08, hp: 0.05 }],
+        ['鎧豬燒肉', 5, '帶自己打的土鎧豬肉來，老闆只收炭火錢：油花在炭上滋滋作響，越嚼越香', { dmg: 0.1, hp: 0.1, regen: 0.25 }, { boarmeat: 1 }]],   // 2026-10-04 作者：土鎧豬的肉很好吃
       say: ['「炭是北山的。」', '「下遺跡回來的勇者都點霜降。」'], guest: ['慶功的勇者小隊', ['「乾杯！今天三個人都活著回來了！」', '「下一趟去摩爾斯級。」']], style: 'grill' }
   };
   R.DINING = SHOPS;
@@ -38,17 +39,18 @@
     });
   }
   // ---------- 菜單 ----------
-  const BN = { hp: '生命', mp: '魔力', dmg: '傷害', skillCd: '技能冷卻', regen: '回復', aware: '佩特拉的注意' };
+  const BN = { hp: '生命', mp: '魔力', dmg: '傷害', skillCd: '技能冷卻', regen: '生命', aware: '佩特拉的注意' };   // regen：「生命慢慢回復」
   const buffTxt = b => Object.keys(b).map(k => BN[k] + (k === 'aware' ? '上升變慢' : k === 'skillCd' ? ' −' + Math.round(b[k] * 100) + '%' : k === 'regen' ? '慢慢回復' : ' +' + Math.round(b[k] * 100) + '%')).join('、');
+  const hasMats = m => !m[4] || Object.keys(m[4]).every(k => ((R.S.mats || {})[k] || 0) >= m[4][k]);   // 帶自己的食材（像土鎧豬的肉）
   const menuSheet = k => {
     const s = SHOPS[k], S = R.S;
     R.sheet('<p class="kicker">' + esc(s.name) + '</p><h2>菜單</h2><p class="note">吃了之後，今天下遺跡有加成（一天算最後吃的那一餐）。' + (S.buff && S.buff.until === S.day ? '現在：已經吃過了。' : '') + '</p><div class="dn-menu">'
-      + s.menu.map((m, i) => '<button type="button" class="dn-item" data-dn="' + i + '"' + (S.gold < m[1] ? ' disabled' : '') + '><b>' + esc(m[0]) + '</b><span>' + m[1] + ' 費拉</span><small>' + esc(m[2]) + '</small><i>下一趟遺跡：' + esc(buffTxt(m[3])) + '</i></button>').join('') + '</div>',
+      + s.menu.map((m, i) => '<button type="button" class="dn-item" data-dn="' + i + '"' + (S.gold < m[1] || !hasMats(m) ? ' disabled' : '') + '><b>' + esc(m[0]) + '</b><span>' + m[1] + ' 費拉</span><small>' + esc(m[2]) + (m[4] ? '（要' + Object.keys(m[4]).map(k => R.MATS[k].name + ' ×' + m[4][k] + '，有 ' + ((S.mats || {})[k] || 0)).join('、') + '）' : '') + '</small><i>下一趟遺跡：' + esc(buffTxt(m[3])) + '</i></button>').join('') + '</div>',
       '<div class="row"><button type="button" class="btn" id="dn-x">不吃了</button></div>');
     document.getElementById('dn-x').onclick = R.closeSheet;
     document.querySelectorAll('[data-dn]').forEach(b => { b.onclick = () => {
-      const m = s.menu[+b.dataset.dn]; if (S.gold < m[1]) return; S.gold -= m[1]; S.buff = { kind: 'food', b: m[3], until: S.day }; R.save(); R.sfx && R.sfx('coin');
-      R.closeSheet(); R.townTalk ? R.townTalk(s.chef, ['「' + m[0] + '，久等了！」', '（' + m[2] + '。）', '（今天下遺跡：' + buffTxt(m[3]) + '）']) : R.toast('吃了' + m[0]);
+      const m = s.menu[+b.dataset.dn]; if (S.gold < m[1] || !hasMats(m)) return; S.gold -= m[1]; if (m[4]) Object.keys(m[4]).forEach(k => { S.mats[k] -= m[4][k]; }); S.buff = { kind: 'food', b: m[3], until: S.day }; R.save(); R.sfx && R.sfx('coin');
+      R.closeSheet(); R.townTalk ? R.townTalk(s.chef, [m[4] && m[4].boarmeat ? '「後山的土鎧豬？……這塊油花真漂亮。」（老闆把肉切成厚片，擺上炭火。）' : '', '「' + m[0] + '，久等了！」', '（' + m[2] + '。）', '（今天下遺跡：' + buffTxt(m[3]) + '）']) : R.toast('吃了' + m[0]);
     }; });
   };
   // ---------- 店內 ----------
