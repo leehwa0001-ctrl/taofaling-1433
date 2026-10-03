@@ -1,6 +1,6 @@
 // 討伐令 1433：被衛兵抓到的懲罰（作者：要嚴重）
 // props.js 的 arrest 交給 R.arrestPunish：
-//  - 罰金：照通緝的星星、前科加重；身上的錢至少拿走三成。
+//  - 罰金：照通緝的星星、前科加重，再加身上的錢的 5%（有上限）。（作者 2026-10-04：罰款有點多——原本至少拿走身上的三成）
 //  - 拘留：一顆星一天、每一次前科多一天；罰金付不出來，每差 150 費拉多關一天（最多七天）。日子照樣往前走。
 //  - 勇者證停權（第二次被抓起）：公會不派委託，也不讓你下遺跡（R.startRun 擋下來）。
 //  - 前科：名聲大降；店家一陣子收「有前科的人價」（貴三成）；花錢請的同行勇者離開隊伍。
@@ -9,7 +9,7 @@
   const W = R.W, $ = id => document.getElementById(id), esc = s => R.esc(s);
   R.arrestPunish = heat => {
     const S = R.S, prior = S.caughtN || 0, stars = Math.max(1, heat || 1);
-    const base = Math.round((120 + 160 * stars) * (1 + 0.6 * prior)), fine = Math.max(base, Math.round(S.gold * 0.3));
+    const base = Math.round((60 + 80 * stars) * (1 + 0.4 * prior)), fine = base + Math.min(Math.round(S.gold * 0.05), 150 * stars);
     const paid = Math.min(S.gold, fine), unpaid = fine - paid; S.gold -= paid;
     const days = Math.min(7, stars + prior + Math.ceil(unpaid / 150));
     const ban = prior >= 1 ? Math.min(10, prior * 2 + stars) : 0;

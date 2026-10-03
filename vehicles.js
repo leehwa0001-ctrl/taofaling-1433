@@ -106,7 +106,9 @@
       if (n.off || !n.h.g.visible || n.chase) return; const dx = n.x - v.x, dz = n.z - v.z, al = dx * fx + dz * fz, sd = dx * -fz + dz * fx;
       if (Math.abs(al) < M.len / 2 + 0.6 && Math.abs(sd) < 1.5) {
         const side = sd >= 0 ? 1 : -1; n.x += -fz * side * 1.4; n.z += fx * side * 1.4; if (n.h) n.h.g.position.set(n.x, 0, n.z); if (n.walk) { n.flee = 2; n.tx = n.x - fz * side * 6; n.tz = n.z + fx * side * 6; }
-        if (Math.abs(v.v) > 6 && !n.guard) { v.v *= 0.7; V.hitT = (V.hitT || 0); if (V.hitT <= 0) { V.hitT = 4; const Cr = R.crime; if (Cr) { Cr.heat = Math.min(3, Math.max(Cr.heat, 0) + 1); Cr.lostT = 0; if (R.alertGuards) R.alertGuards(v.x, v.z, 60); } R.banner('撞到人了！', '路人被撞倒在雪地上——衛兵往這裡來了（通緝 ' + '★'.repeat(R.crime ? R.crime.heat : 1) + '）'); R.sfx && R.sfx('swing'); } }
+        // 只有在人走的地方（人行道、斑馬線、巷子……）撞到人才罰；在車道上亂穿越的不罰（traffic.js 的 R.pedZone，作者 2026-10-04）
+        if (Math.abs(v.v) > 6 && !n.guard && R.pedZone && !R.pedZone(n.x, n.z)) { v.v *= 0.7; if (V.hitT <= 0) { V.hitT = 4; R.toast('撞到在車道上亂穿越的人了。……衛兵沒有追究。', '#E8C04A'); } }
+        else if (Math.abs(v.v) > 6 && !n.guard) { v.v *= 0.7; if (R.crime) R.crime.cause = 'traffic'; V.hitT = (V.hitT || 0); if (V.hitT <= 0) { V.hitT = 4; const Cr = R.crime; if (Cr) { Cr.heat = Math.min(3, Math.max(Cr.heat, 0) + 1); Cr.lostT = 0; if (R.alertGuards) R.alertGuards(v.x, v.z, 60); } R.banner('撞到人了！', '路人被撞倒在雪地上——衛兵往這裡來了（通緝 ' + '★'.repeat(R.crime ? R.crime.heat : 1) + '）'); R.sfx && R.sfx('swing'); } }
         else if (Math.abs(v.v) > 2 && hitMsgT <= 0) { hitMsgT = 1.5; R.toast('「哇！看路啊！」'); }
       }
     });

@@ -13,13 +13,15 @@
     const nearWall = (x, z, r) => H.some(b => Math.abs((b.x0 + b.x1) / 2 - x) < 40 && Math.abs((b.z0 + b.z1) / 2 - z) < 40 && dBox(x, z, b) < r);
     const dropTree = (x, z) => R.col.list.forEach(b => { if (b.tag === 'tree' && b.on !== false && x > b.x0 - 0.2 && x < b.x1 + 0.2 && z > b.z0 - 0.2 && z < b.z1 + 0.2) b.on = false; });
     let n = 0;
+    // 種在車道上的樹也收（例如舊城北門底下的本町通——作者 2026-10-04 回報 x=52.7 z=-15.3）
+    const C = R.CITY, onCar = (x, z) => !!(C && C.inCarriage && C.inCarriage(x / C.S + 500, z / C.S + 500, 0));
     // 點陣圖的樹：一個群組只有看板（自己帶 onBeforeRender 的平面）和影子。
     // （2026-10-04 修：原本只看 onBeforeRender——每個 three.js 物件都有這個函式——把整個東鶴港、停著的車、腳踏車都當成樹收掉了）
     const isTree = o => o.isGroup && o.visible && o.position.y <= 1 && (o.position.x || o.position.z) && o.children.length <= 2 && o.children[0] && o.children[0].isMesh && o.children[0].geometry && o.children[0].geometry.type === 'PlaneGeometry' && Object.prototype.hasOwnProperty.call(o.children[0], 'onBeforeRender');
-    tw.group.children.forEach(o => { if (!isTree(o)) return; if ((tw.npcs || []).some(q => q.h && q.h.g === o)) return; if (nearWall(o.position.x, o.position.z, 1.0)) { o.visible = false; dropTree(o.position.x, o.position.z); n++; } });
+    tw.group.children.forEach(o => { if (!isTree(o)) return; if ((tw.npcs || []).some(q => q.h && q.h.g === o)) return; if (nearWall(o.position.x, o.position.z, 1.0) || onCar(o.position.x, o.position.z)) { o.visible = false; dropTree(o.position.x, o.position.z); n++; } });
     // 行道樹（sprites.js 的 R.treeField）：用它自己的 hide（轉鏡頭重排的時候才不會又冒出來），影子也收
     const zero = new THREE.Matrix4().makeScale(0, 0, 0);
-    if (tw.trees && tw.trees.out) { tw.trees.out.forEach(({ L, sh }) => { let ch = false; L.forEach((t, i) => { if (t.hide || !nearWall(t.x, t.z, 1.1)) return; t.hide = true; if (sh) sh.setMatrixAt(i, zero); dropTree(t.x, t.z); ch = true; n++; }); if (ch && sh) sh.instanceMatrix.needsUpdate = true; }); tw.trees.update(W.cam ? W.cam.yaw : 0, true); }
+    if (tw.trees && tw.trees.out) { tw.trees.out.forEach(({ L, sh }) => { let ch = false; L.forEach((t, i) => { if (t.hide || !(nearWall(t.x, t.z, 1.1) || onCar(t.x, t.z))) return; t.hide = true; if (sh) sh.setMatrixAt(i, zero); dropTree(t.x, t.z); ch = true; n++; }); if (ch && sh) sh.instanceMatrix.needsUpdate = true; }); tw.trees.update(W.cam ? W.cam.yaw : 0, true); }
     if (n) console.info('[tidy2] 牆邊的樹收起來：' + n);
     return n;
   };
