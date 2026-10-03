@@ -13,8 +13,8 @@
     const a = Math.atan2(P.x - e.x, P.z - e.z); let t = 0.35;
     R.fx('ring', e.x, 0.1, e.z, { r: 7, color: '#C86A7A' }); R.shake && R.shake(0.5);
     P.knockT = Math.max(P.knockT || 0, 0.35);
-    if (!(P.iframe > 0)) R.hurtPlayer(e.dmg * 0.6, e, { knock: 0.35 });
-    W().dyn.push(dt => { t -= dt; if (t <= 0 || P.dead) return false; P.x += Math.sin(a) * 11 * dt; P.z += Math.cos(a) * 11 * dt; R.collide(P, 0.42); return true; });
+    if (!(P.iframe > 0)) R.hurtPlayer(e.dmg * 1.1, e, { knock: 0.45 }); /* 2026-10-04 作者：要更狠（原本 0.6 倍、推 11） */
+    W().dyn.push(dt => { t -= dt; if (t <= 0 || P.dead) return false; P.x += Math.sin(a) * 15 * dt; P.z += Math.cos(a) * 15 * dt; R.collide(P, 0.42); return true; });
   };
   // 核心在你身邊：慢慢飄過來、每三秒推一次
   const drive = (e, o) => {
@@ -23,8 +23,8 @@
       if (e.dead || w.run !== run) return false;
       const P = w.P; if (P.dead) return true;
       const d = Math.hypot(P.x - e.x, P.z - e.z);
-      if (d > 4) { const a = Math.atan2(P.x - e.x, P.z - e.z), sp = 1.7; e.x += Math.sin(a) * sp * dt; e.z += Math.cos(a) * sp * dt; e.m.g.position.x = e.x; e.m.g.position.z = e.z; const rm = R.roomAt(e.x, e.z); if (rm) e.room = rm.i; }
-      push -= dt; if (push <= 0 && d < 7.5) { push = 3; shove(e, P); }
+      if (d > 4) { const a = Math.atan2(P.x - e.x, P.z - e.z), sp = d > 12 ? 5 : 3.2; /* 原本 1.7：太慢，拉開距離就甩掉了 */ e.x += Math.sin(a) * sp * dt; e.z += Math.cos(a) * sp * dt; e.m.g.position.x = e.x; e.m.g.position.z = e.z; const rm = R.roomAt(e.x, e.z); if (rm) e.room = rm.i; }
+      push -= dt; if (push <= 0 && d < 8.5) { push = 2.2; shove(e, P); }
       if (o.stay) {
         left -= dt;
         const hurt = !e.invuln && e.hp < hp0 - e.hpMax * 0.3;
@@ -41,13 +41,13 @@
   // 核心過來：先有預兆（地面震動、落點的記號），再現身
   const visit = (why) => {
     const w = W(), run = w.run, P = w.P; if (!run || run.expelVisit) return;
-    const d = dist(run); if (d > 1) return;
+    const d = dist(run);   // 2026-10-04 作者：「離太遠不過來」很尷尬——多遠都會過來，越遠越久才到
     run.expelVisit = true;
     const room = R.roomAt(P.x, P.z) || w.F.rooms[0];
     // 最深那一層、核心已經在：直接移過來
     let core = d === 0 ? w.enemies.find(e => e.id === 'petra' && !e.dead) : null;
     R.banner('佩特拉核心要過來了', why);
-    let t = d === 0 ? 3 : 8, shakeT = 0, mark = null;
+    let t = d === 0 ? 3 : Math.min(20, 5 + 3 * d), shakeT = 0, mark = null;
     w.dyn.push(dt => {
       if (w.run !== run) return false;
       t -= dt; shakeT -= dt; if (shakeT <= 0) { shakeT = 1.6; R.shake && R.shake(0.35); }
@@ -60,8 +60,8 @@
         if (reserve(run)) core.invuln = true;
         if (d === 0) { const br = w.F.rooms.find(r => r.type === 'boss'); if (br) { br.coreOut = true; br.cleared = true; } }
       }
-      R.banner('佩特拉核心親自過來了', reserve(run) ? '保留區的核心打不動，也不准打。它會把你推開——離開這一區！' : d === 0 ? '驅逐型：它會一路逼近，把破壞者推出去' : '它從下面一層鑽上來了：撐過去，或打傷它讓它退回去');
-      drive(core, { stay: d === 0 && !reserve(run) ? 0 : reserve(run) ? 18 : 22 });
+      R.banner('佩特拉核心親自過來了', reserve(run) ? '保留區的核心打不動，也不准打。它會把你推開——離開這一區！' : d === 0 ? '驅逐型：它會一路逼近，把破壞者推出去' : '它從 ' + d + ' 層下面鑽上來了：撐過去，或打傷它讓它退回去');
+      drive(core, { stay: d === 0 && !reserve(run) ? 0 : reserve(run) ? 22 : 26 });
       return false;
     });
   };
@@ -74,8 +74,7 @@
     run.reacting = true; run.reactCount++; run.reactionKnown = true;
     setTimeout(() => { if (W().run === run) { run.aware = 35; run.reacting = false; } }, 9000);
     run.expelMark = (run.expelMark || 0) + 1;
-    if (d >= 2) { R.banner('佩特拉察覺到了破壞：驅逐型', '核心離這裡太遠，過不來——但它記住你了。走得越深，它越快找上你。'); R.shake && R.shake(0.4); return; }
-    R.banner('佩特拉察覺到了破壞：驅逐型', d === 1 ? '腳下傳來很深的聲音——核心就在下一層，正在往上爬。' : '核心就在這一層。');
+    R.banner('佩特拉察覺到了破壞：驅逐型', d >= 2 ? '腳下很深的地方有東西動了——核心在 ' + d + ' 層下面，正在一路往上爬。' : d === 1 ? '腳下傳來很深的聲音——核心就在下一層，正在往上爬。' : '核心就在這一層。');
     run.expelVisit = false; visit(d === 1 ? '腳下的震動越來越近。' : '它要親自把你趕出去。');
   };
   // 換樓層：被記住了，又走到離核心夠近的地方——它會自己找上來

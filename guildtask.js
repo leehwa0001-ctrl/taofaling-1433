@@ -5,7 +5,8 @@
 // - 回到地面＝申請「任務完成」。五軌：
 //   完成度：實際／要求（巡查：走到第幾層）；效率：時限內 100%，超過每小時扣 3%，最低 1%；
 //   創傷：申請完成時的身體狀況（任務中治療不算，「能使自己在戰後恢復的與戰前無異，也是實力」），倒下＝1%，隊友倒著也扣；
-//   環境：打壞的東西、引起佩特拉的反應會扣（巡查不是戰鬥任務，固定 100%）；反饋：專員事後調查民眾和環境的反應。
+//   環境（2026-10-04 作者：要嚴查，照佩特拉核心的關注算）：佩特拉的注意每跨過 25、50、75 算一次關注，扣 5；注意滿了引起反應，扣 20。
+//   打壞東西、殺多少遺跡生物都不直接扣（打壞東西會讓注意上升，就會算進去）；巡查一樣算；反饋：專員事後調查民眾和環境的反應。
 //   五項平均是這個任務的成績。成績不會馬上知道：專員調查、分館綜合後，隔天才登錄到勇者證（公會登記處查詢）。
 // - 2026-10-04（作者：委託必須到公會分館找櫃台繳交後才算完成；忘了配裝、出個遺跡就被結算了）：遺跡的委託回到地面不再馬上結算，
 //   進度記在 R.S.heldTask（可以再下去同一座遺跡繼續做，擊倒數、時間、走到的層數累積），回公會登記處按「繳交委託」才打成績、付報酬（報酬先扣住，見 turnin.js）。
@@ -70,7 +71,7 @@
     const free = freeId === id, cont = contId === id; freeId = null; contId = null;
     const r = sr1(id), run = W().run, h = S().heldTask;
     if (cont && run && h && run.site && run.site.id === h.siteId && !run.task) {
-      run.task = { kind: h.kind, need: h.need, limitH: h.limitH, letter: h.letter, floors: h.floors, t: h.t, props: h.props, deepest: h.deepest, kills0: h.kills, react0: h.react, rankExam: h.rankExam, cont: 1 };
+      run.task = { kind: h.kind, need: h.need, limitH: h.limitH, letter: h.letter, floors: h.floors, t: h.t, props: h.props, deepest: h.deepest, kills0: h.kills, react0: h.react, notice0: h.notice, rankExam: h.rankExam, cont: 1 };
       run.pact = h.pact || { sel: {}, pts: 0 };   // 加注條款照第一趟的（pact.js 看到 run.pact 就不會再加一次）
       setTimeout(() => R.toast && R.toast('繼續委託：' + R.heldLine(h), '#E8C04A'), 2600);
       return r;
@@ -101,7 +102,7 @@
   const record = (h, failed) => {
     const s = S(), hh = h.t / HOUR, done = h.kind === 'patrol' ? Math.min(h.deepest, h.floors) : h.kills;
     const comp = clamp(100 * done / h.need), eff = hh <= h.limitH ? 100 : clamp(100 - 3 * Math.ceil(hh - h.limitH));
-    const hurt = failed ? 1 : clamp(100 * h.hp - 15 * h.downAllies), env = h.kind === 'patrol' ? 100 : clamp(100 - 2 * h.props - 15 * h.react);
+    const hurt = failed ? 1 : clamp(100 * h.hp - 15 * h.downAllies), env = clamp(100 - 5 * (h.notice || 0) - 20 * (h.react || 0));
     s.tasks = s.tasks || [];
     const t = { id: s.tasks.length + 1, site: h.site, grade: h.grade, letter: h.letter, kind: h.kind, need: h.need, done, limitH: h.limitH, h: Math.round(hh * 10) / 10, s: [comp, eff, hurt, env, null], day: s.day, ready: s.day + 1, failed: !!failed };
     s.tasks.push(t); return t;
@@ -122,7 +123,7 @@
     const run = W().run, tk = run && run.task, s = S(), P = W().P; if (!tk || tk.posted) return; tk.posted = 1;
     const prev = s.heldTask && s.heldTask.siteId === run.site.id ? s.heldTask : null;
     const h = { siteId: run.site.id, site: run.site.name, grade: run.grade.id, letter: tk.letter, kind: tk.kind, need: tk.need, floors: tk.floors, limitH: tk.limitH, t: tk.t, props: tk.props, deepest: tk.deepest,
-      kills: run.kills + (tk.kills0 || 0), react: (run.reactCount || 0) + (tk.react0 || 0), hp: P ? P.hp / P.hpMax : 1, downAllies: (W().allies || []).filter(a => a.downed).length,
+      kills: run.kills + (tk.kills0 || 0), react: (run.reactCount || 0) + (tk.react0 || 0), notice: (run.noticeCount || 0) + (tk.notice0 || 0), hp: P ? P.hp / P.hpMax : 1, downAllies: (W().allies || []).filter(a => a.downed).length,
       pay: prev ? prev.pay || 0 : 0, day0: prev ? prev.day0 : s.day, trips: (prev ? prev.trips || 1 : 0) + 1, rankExam: tk.rankExam, boss: (prev && prev.boss) || !!run.bossDown, pact: run.pact || null };
     // 遺跡的委託：回到地面先記在手上，到公會繳交才算（倒下＝失敗，馬上記；狩獵場照舊馬上記）
     if (!failed && run.site.kind === 'ruin') { s.heldTask = h; R.save(); return; }

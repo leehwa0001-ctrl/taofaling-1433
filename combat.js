@@ -660,12 +660,12 @@
   R.tailCut = room => {
     const w = W(), TH = T(), run = w.run, F = w.F, t = F.tile, TS = t.TS, P = w.P;
     if (!room || !room.doors || !room.doors.length) { R.collapse(room || F.rooms[0]); return; }
-    const T0 = Math.max(4, 7 - run.grade.lv * 0.7);
+    const T0 = Math.max(3, 5 - run.grade.lv * 0.5);   // 2026-10-04 作者：斷尾型要更狠（原本 7 − 0.7×分級，最少 4 秒）
     if (room.locked) R.lockRoom(room, false);
     R.banner('斷尾型：這一區要被切掉了', Math.ceil(T0) + ' 秒內離開這個房間！前後的出入口都在封死');
     const mat = new TH.MeshLambertMaterial({ color: '#7A3A4A', emissive: '#4A0A18', emissiveIntensity: 0.7 }), g = new TH.BoxGeometry(TS, 2.8, TS);
     const plugs = room.doors.map(k => { const tx = k % t.nx, tz = (k - tx) / t.nx, x = t.cX(tx), z = t.cZ(tz), m = new TH.Mesh(g, mat); m.position.set(x, -1.4, z); m.castShadow = true; F.group.add(m); return { m, x, z }; });
-    let left = T0, last = Math.ceil(T0), sealed = false, tick = 0;
+    let left = T0, last = Math.ceil(T0), sealed = false, tick = 0, swallow = null;
     w.dyn.push(dt => {
       if (!w.run || w.run !== run || w.F !== F) return false;
       if (!sealed) {
@@ -674,16 +674,24 @@
         if (Math.ceil(left) < last && left > 0) { last = Math.ceil(left); R.toast('出入口封死還有 ' + last + ' 秒' + (R.roomIndexAt(P.x, P.z) === room.i ? '——快出去！' : '')); }
         if (left > 0) return true;
         sealed = true; room.severed = true; room.cleared = true;
-        plugs.forEach(p => { p.m.scale.x = p.m.scale.z = 1; p.prop = { kind: 'plug', x: p.x, z: p.z, hp: 90 + run.grade.lv * 60, alive: true, mesh: p.m }; p.prop.col = R.addBox(p.x - TS / 2, p.x + TS / 2, p.z - TS / 2, p.z + TS / 2, 'prop', p.prop); F.props.push(p.prop); });
+        plugs.forEach(p => { p.m.scale.x = p.m.scale.z = 1; p.prop = { kind: 'plug', x: p.x, z: p.z, hp: 260 + run.grade.lv * 180, hpMax: 260 + run.grade.lv * 180, alive: true, mesh: p.m, room: room.i }; /* 肉壁很硬，沒被打會長回去、打破了還會再長（petra2.js） */ p.prop.col = R.addBox(p.x - TS / 2, p.x + TS / 2, p.z - TS / 2, p.z + TS / 2, 'prop', p.prop); F.props.push(p.prop); });
         if (F.stairs && F.stairs.room === room.i) { F.stairs.sealed = true; R.sealStairs(); }
         if (F.up && R.roomIndexAt(F.up.x, F.up.z) === room.i) F.up.sealed = true;
         const inside = R.roomIndexAt(P.x, P.z) === room.i;
-        R.banner('這一區被切掉了', inside ? '你被困在裡面！打破肉壁逃出去' : (F.stairs && F.stairs.sealed ? '樓層通道在那一區裡：往下的路沒了，只能找回歸水晶' : '那個房間再也進不去了'));
+        if (inside && !(run.coop && !run.coop.solo)) swallow = 5;
+        R.banner('這一區被切掉了', inside ? '你被困在裡面！5 秒內打破肉壁逃出去，不然整區會被吞掉' : (F.stairs && F.stairs.sealed ? '樓層通道在那一區裡：往下的路沒了，只能找回歸水晶' : '那個房間再也進不去了'));
         R.shake(0.6); R.drawMinimap(true);
+      }
+      // 沒逃出來：整區被佩特拉吞掉，人被吐到上下兩層內的隨機樓層（作者：斷尾過後會跑到隨機樓層）
+      if (swallow != null) {
+        if (P.dead || R.roomIndexAt(P.x, P.z) !== room.i) swallow = null;
+        else { const s0 = Math.ceil(swallow); swallow -= dt; if (Math.ceil(swallow) < s0 && swallow > 0) R.toast('被吞掉還有 ' + Math.ceil(swallow) + ' 秒——打破肉壁！', '#FF6A6A');
+          if (swallow <= 0) { swallow = null; const f0 = run.floor, cand = [-2, -1, 1, 2].map(k => f0 + k).filter(f => f >= 0 && f < run.floors && f !== f0), to = cand[Math.floor(Math.random() * cand.length)];
+            if (to != null) { R.shake(1); R.fade(() => { R.loadFloor(to, to < f0 ? { up: true } : {}); if (W().P) W().P.petraCurse = 90; R.banner('被佩特拉吞掉了', '90 秒內生命、魔力的回復減半。被切掉的那一區連你一起被吞下去，吐到了' + (R.floorLabel ? R.floorLabel(run) : '第 ' + (to + 1) + ' 層') + '。'); }); return false; } } }
       }
       // 被切掉的區域往內擠：還在裡面的一直受傷
       tick -= dt; if (tick > 0) return true; tick = 1;
-      if (!P.dead && R.roomIndexAt(P.x, P.z) === room.i) { P.iframe = 0; R.hurtPlayer(P.hpMax * 0.07, null); }
+      if (!P.dead && R.roomIndexAt(P.x, P.z) === room.i) { P.iframe = 0; R.hurtPlayer(P.hpMax * 0.14, null); }
       (w.allies || []).forEach(a => { if (!a.downed && R.roomIndexAt(a.x, a.z) === room.i) { a.iframe = 0; R.hurtAlly(a, a.hpMax * 0.07, null); } });
       w.enemies.forEach(e => { if (!e.dead && e.room === room.i) R.hurtEnemy(e, e.hpMax * 0.12, { fromBehind: false }); });
       return true;
