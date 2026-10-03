@@ -8,6 +8,9 @@
   const $ = id => document.getElementById(id), esc = s => R.esc(s);
   Object.assign(R.TIERS.N, { w: 45 }); Object.assign(R.TIERS.R, { w: 32 }); Object.assign(R.TIERS.SR, { w: 18 }); Object.assign(R.TIERS.SSR, { w: 4.5 }); Object.assign(R.TIERS.UR, { w: 0.5 });
   if (R.RACES.human) R.RACES.human.w = 4;
+  // 已經刪掉的種族（2026-10-04 純潔族）：讀存檔的時候換回大陸人族，還 10 張抽選券
+  const mg0 = R.migrate;
+  R.migrate = s => { s = mg0 ? mg0(s) : s; try { if (s && s.race && !R.RACES[s.race]) { s.race = 'human'; s.raceTickets = (s.raceTickets || 0) + 10; s.raceRefund = 1; } } catch (e) { } return s; };
 
   const famOf = id => { const r = R.RACES[id]; if (r.mixed) return '混血（原本的種族）'; if (r.hd) return '半魔族'; if (r.divine) return r.from; if (r.fam) return r.fam; const m = /・([^・]+族種)/.exec(r.from || ''); return m ? m[1] : '其他'; };
   const XENO = ['不被排擠', '有人多看兩眼', '被排擠', '被整座城怕'];

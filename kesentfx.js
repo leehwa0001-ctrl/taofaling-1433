@@ -29,7 +29,13 @@
     S = { env: run.env, k, t: 0, q: [], next: rnd(4, 6), storm: 0, calm: rnd(14, 20), cur: [], ice: [], vx: 0, vz: 0, px: P ? P.x : 0, pz: P ? P.z : 0, chip: 0 };
     // 暗流、冰：一層擺幾個（找地板上的點）
     const spots = n => { const out = [], rooms = (w.F.rooms || []).filter(r => !r.rest); for (let i = 0; i < n * 3 && out.length < n; i++) { const rm = rooms[Math.floor(Math.random() * rooms.length)]; if (!rm) break; const [x, z] = nearFloor(rm.x + rnd(-rm.hx, rm.hx) * 0.7, rm.z + rnd(-rm.hz, rm.hz) * 0.7); if (P && Math.hypot(x - P.x, z - P.z) < 6) continue; out.push([x, z]); } return out; };
-    if (S.env === 'deep') S.cur = spots(Math.round(6 * k)).map(([x, z]) => { const a = Math.random() * Math.PI * 2, r = rnd(2.2, 3.4); zone({ kind: 'current', x, z, r, life: 1e9 }, '#3A9AD8'); return { x, z, r, dx: Math.sin(a), dz: Math.cos(a) }; });
+    if (S.env === 'deep') S.cur = spots(Math.round(6 * k)).map(([x, z]) => {
+      const a = Math.random() * Math.PI * 2, r = rnd(2.2, 3.4); zone({ kind: 'current', x, z, r, life: 1e9 }, '#3A9AD8');
+      // 圈裡一排會流動的箭頭：看得出水往哪邊沖（2026-10-04 作者：深海那個沒有提示）
+      const TH = THREE, arrows = [], am = new TH.MeshBasicMaterial({ color: '#BFF0FF', transparent: true, opacity: 0.75, depthWrite: false, side: TH.DoubleSide });
+      for (let i = 0; i < 3; i++) { const g = new TH.ShapeGeometry(new TH.Shape([new TH.Vector2(-0.35, -0.25), new TH.Vector2(0, 0.35), new TH.Vector2(0.35, -0.25), new TH.Vector2(0, -0.05)])); const m = new TH.Mesh(g, am); m.rotation.x = -Math.PI / 2; m.rotation.z = -a; w.F.group.add(m); arrows.push(m); }
+      return { x, z, r, dx: Math.sin(a), dz: Math.cos(a), arrows, ph: Math.random() };
+    });
     if (S.env === 'snow') S.ice = spots(Math.round(7 * k)).map(([x, z]) => { const r = rnd(2.4, 3.8); zone({ kind: 'ice', x, z, r, life: 1e9 }, '#E8F4FF'); return { x, z, r }; });
     setTimeout(() => { if (S && R.toast) R.toast(TIP[S.env], '#FFB45A'); }, 1200);
   };
@@ -75,15 +81,16 @@
     if (S.env === 'deep') {
       // 暗流：在圈裡會被沖走（遺跡生物也是）
       S.cur.forEach(c => {
+        c.ph = (c.ph + dt * 0.6) % 1; c.arrows.forEach((m, i) => { const u = ((c.ph + i / 3) % 1) * 2 - 1; m.position.set(c.x + c.dx * u * c.r * 0.8, 0.12, c.z + c.dz * u * c.r * 0.8); m.material.opacity = 0.8 * (1 - Math.abs(u)); });
         const sp = 4.2 * k * dt;
-        if (Math.hypot(P.x - c.x, P.z - c.z) < c.r && !P.air) { push(P, c.dx * sp, c.dz * sp); if (Math.random() < dt * 6) R.fx('spark', P.x, 0.3, P.z, { color: '#8AD8FF' }); }
+        if (Math.hypot(P.x - c.x, P.z - c.z) < c.r && !P.air) { if (!S.curSaid) { S.curSaid = 1; R.toast && R.toast('暗流！藍色的圈會照箭頭的方向把人沖走——走出圈外就好；也可以拿來把遺跡生物沖開。', '#8AD8FF'); } push(P, c.dx * sp, c.dz * sp); if (Math.random() < dt * 6) R.fx('spark', P.x, 0.3, P.z, { color: '#8AD8FF' }); }
         w.enemies.forEach(e => { if (!e.dead && !e.def.boss && Math.hypot(e.x - c.x, e.z - c.z) < c.r) push(e, c.dx * sp * 0.6, c.dz * sp * 0.6); });
       });
       // 水壓：一縮，往四周推開
       S.next -= dt;
       if (S.next <= 0) {
         S.next = rnd(10, 14) / k; const cx = P.x, cz = P.z;
-        R.fx('ring', cx, 0.1, cz, { r: 4, color: '#5FC8E0' }); R.toast && R.toast('水壓一緊……', '#8AD8FF');
+        R.fx('ring', cx, 0.1, cz, { r: 4, color: '#5FC8E0' }); R.fx('mark', cx, 0, cz, { r: 4.5, t: 1.3, color: '#5FC8E0' }); R.toast && R.toast('水壓一緊……快離開藍圈（1 秒後往外推、會受傷）', '#8AD8FF');
         later(1.3, () => {
           R.fx('ring', cx, 0.2, cz, { r: 6, color: '#BFF0FF' }); if (R.shake) R.shake(0.2);
           const d = Math.hypot(P.x - cx, P.z - cz);

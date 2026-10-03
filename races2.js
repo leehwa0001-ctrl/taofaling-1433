@@ -127,7 +127,8 @@
   FAMS.forEach(([fam, list]) => list.forEach(name => {
     if (existing.has(name)) return;
     const d = mk(fam, name); if (!d) return;
-    const id = 'r' + (++n); made.push([id, d, fam, d.group]);
+    const id = 'r' + (++n); if (fam === '純潔族種') return;   // 2026-10-04 作者：純潔族刪掉（編號照算，後面的種族編號不變）
+    made.push([id, d, fam, d.group]);
   }));
   // 權重：同一個族種、同一組外貌的子族平分那一組的總權重（races.js 原本的種族各 1）
   const groupW = (fam, group) => { const f = F[fam]; if (!f.forms) return f.W; const fm = f.forms.find(x => x[1] === group); return fm ? fm[3] : 1; };
@@ -145,10 +146,10 @@
       d.name = hn; d.tier = 'UR'; d.xeno = 3; d.hd = 1; d.eye = '#C8323A'; d.from = '魔界與人界之間・半魔族（' + fam.replace('族種', '魔族種') + '）';
       d.b = add(d.b, { mp: 0.1, dmg: 0.06 }); if (!d.look.horns) d.look = Object.assign({}, d.look, { horns: 'small' });
       d.line = '半魔族：' + d.line + '東鶴的人怕半魔族，跟怕魔族一樣。';
-      HD.push(d);
+      HD.push(fam === '純潔族種' ? null : d);   // 純潔族刪掉：留一個空位，編號不變
     });
   });
-  HD.forEach(d => { d.w = Math.round(1.5 / HD.length * 10000) / 10000; R.RACES['h' + (++n)] = d; });
+  HD.forEach(d => { const id = 'h' + (++n); if (!d) return; d.w = Math.round(1.5 / HD.length * 10000) / 10000; R.RACES[id] = d; });
 
   // ---------- 半神種・薩恰族、賦神種・牧德族（UR） ----------
   const GOD = [

@@ -206,6 +206,20 @@
       else { p(hx + 1, hy - 13, 1, 17, wood); p(hx + 1, hy - 13, 1, 1, '#C9A13A'); p(hx + 1, hy + 3, 1, 1, '#C9A13A'); }
       return;
     }
+    // 新職業的武器（2026-10-04 classes2.js）：拿在手上的小東西
+    const HELD = { lute: 1, flute: 1, tome: 1, bell: 1, chalk: 1, disc: 1, scrollb: 1, talisman: 1 };
+    if (HELD[wp]) {
+      const x0 = side ? hx : hx - 1, y0 = side ? hy - 2 : hy - 3;
+      if (wp === 'lute') { p(x0 - 1, y0, 4, 4, '#A8743A'); p(x0, y0 + 1, 2, 2, '#3A2A1C'); p(x0 + 1, y0 - 6, 1, 6, '#6A4A2A'); p(x0, y0 - 7, 3, 1, '#4A3020'); }
+      else if (wp === 'flute') { p(x0 + 1, y0 - 6, 1, 10, '#D8C8A8'); p(x0 + 1, y0 - 4, 1, 1, '#3A2A1C'); p(x0 + 1, y0 - 1, 1, 1, '#3A2A1C'); }
+      else if (wp === 'tome') { p(x0 - 1, y0, 4, 4, '#6A2A3A'); p(x0 - 1, y0, 4, 1, '#E8D8A8'); p(x0 + 2, y0, 1, 4, '#C9A13A'); }
+      else if (wp === 'bell') { p(x0, y0, 3, 3, '#E8C04A'); p(x0, y0, 1, 1, '#FFF0A0'); p(x0 + 1, y0 - 2, 1, 2, '#8A6A2A'); }
+      else if (wp === 'chalk') { p(x0 + 1, y0 - 7, 1, 9, '#F2EEE4'); p(x0 + 1, y0 - 8, 1, 1, '#7AC8E8'); }
+      else if (wp === 'disc') { p(x0 - 1, y0, 4, 4, '#4A8AA8'); p(x0, y0 + 1, 2, 2, '#BFF0FF'); }
+      else if (wp === 'scrollb') { p(x0 - 1, y0 - 1, 4, 5, '#F2E8D0'); p(x0 - 1, y0 - 1, 4, 1, '#8A6A3A'); p(x0 - 1, y0 + 3, 4, 1, '#8A6A3A'); p(x0, y0 + 1, 2, 1, '#C83A3A'); }
+      else if (wp === 'talisman') { p(x0, y0 - 2, 2, 5, '#F2E6A0'); p(x0, y0 - 1, 2, 1, '#C83A3A'); p(x0, y0 + 1, 2, 1, '#C83A3A'); }
+      return;
+    }
     if (swingP && wp === 'spear') {
       // 長槍：舉起＝往後收、砍下＝刺到最遠、收招＝收回一點；正面看槍尖朝著鏡頭（縮短）
       if (side) { const back2 = swingP === 'wind' ? -6 : swingP === 'follow' ? -3 : -1, n = swingP === 'wind' ? 9 : 8; p(hx + back2, hy, n, 1, wood); p(hx + back2 + n, hy - 1, 2, 3, metal); return; }
