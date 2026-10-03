@@ -5,7 +5,7 @@
 //   觀光遺跡、狩獵場照舊。
 // - 難度照「走到第幾成」算：遺跡生物的強度、寶箱的等級，用「換算回原本層數」的那一層（run.depthK）——
 //   最上層到最深處的難度幅度和原本一樣；層數少的每一層差比較多，層數多的慢慢變強。
-// - 存檔點（savepoint.js）的間隔：9 層以下每 3 層、22 層以下每 5 層、45 層以下每 8 層（卡索以上每 10 層）、再深每 20 層（R.saveEvery）。
+// - 存檔點（savepoint.js）的間隔：9 層以下每 3 層、22 層以下每 5 層、再深每 8 層；克森特級每 10 層、卡索級以上每 20 層（R.saveEvery）。
 // 放在 deeper.js、ruinplus.js 後面；run.js、guildtask.js、main.js 用 R.floorsFor。
 (function (R) {
   const W = () => R.W;
@@ -19,7 +19,8 @@
     const [a, b] = RANGE[g.id], n = Math.round((a + (b - a) * hash(site.id)) * (TYPEK[site.type] || 1));
     return Math.max(Math.max(2, Math.round(a * 0.65)), Math.min(MAXF, Math.round(b * 1.3), n));
   };
-  R.saveEvery = run => { const n = run.floors - (run.f0 ? 1 : 0), lv = run.grade ? run.grade.lv || 0 : 0; return n <= 9 ? 3 : n <= 22 ? 5 : n <= 45 && lv < 5 ? 8 : n <= 45 ? 10 : 20; };
+  // 克森特級每 10 層、卡索級以上每 20 層（2026-10-04 作者：每 20 層一個是後面的等級；克森特級怎麼沒有存檔點）
+  R.saveEvery = run => { const n = run.floors - (run.f0 ? 1 : 0), g = run.grade ? run.grade.id : ''; if (g === 'kaso' || g === 'kansait') return 20; if (g === 'kesent') return 10; return n <= 9 ? 3 : n <= 22 ? 5 : 8; };
   // 出發：記下難度換算的比例
   const sr0 = R.startRun;
   R.startRun = id => {

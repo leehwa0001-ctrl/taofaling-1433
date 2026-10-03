@@ -32,7 +32,8 @@
     };
     // 每 5 層：記錄碑
     const every = R.saveEvery ? R.saveEvery(run) : EVERY;   // depth.js：層數少的 3 層一個、多的 8 層一個
-    if (n > 0 && n % every === 0) { const [x, z] = placeNear(r, SPOTS); F.save = Object.assign(stone(x, z, '#7AC8FF'), { n }); }
+    if (n > 0 && n % every === 0) { const [x, z] = placeNear(r, SPOTS); F.save = Object.assign(stone(x, z, '#7AC8FF'), { n }); setTimeout(() => { if (W().F === F && R.toast) R.toast('這一層有存檔點：入口房間發藍光的記錄碑，走過去按空白鍵記下。', '#7AC8FF'); }, 1600); }
+    else if (run.floor === 0 && every > 0) setTimeout(() => { if (W().F === F && R.toast) R.toast('這座遺跡每 ' + every + ' 層有一個存檔點（第 ' + every + ' 層的入口房間）。', '#7AC8FF'); }, 2600);
     // 入口那一層：轉送到記下的那一層
     const best = wp()[run.site.id] || 0, entry = has0(run) ? 0 : 0;
     if (run.floor === entry && best >= 3 && floorOf(run, best) < run.floors) { const [x, z] = placeNear(r, WARP_SPOTS); F.warp = Object.assign(stone(x, z, '#B88AFF'), { n: best }); }
