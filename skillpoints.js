@@ -11,7 +11,8 @@
   const TAL = [
     ['vit', '體魄', 0, 5, '生命 +3%'], ['str', '力量', 0, 10, '傷害 +2%'], ['wis', '魔力', 0, 5, '魔力 +4%'],
     ['acc', '精準', 1, 10, '暴擊率 +1%'], ['spd', '迅捷', 1, 5, '攻擊速度 +2%'], ['eva', '身法', 1, 5, '翻滾冷卻 −4%'], ['rec', '調息', 1, 5, '每秒回復 0.3 生命'],
-    ['med', '冥想', 2, 10, '技能冷卻 −2%'], ['tou', '堅韌', 2, 10, '受到的傷害 −1.5%'], ['fat', '致命', 2, 5, '暴擊傷害 +6%']
+    ['med', '冥想', 2, 10, '技能冷卻 −2%'], ['tou', '堅韌', 2, 10, '受到的傷害 −1.5%'], ['fat', '致命', 2, 5, '暴擊傷害 +6%'],
+    ['mpr', '回魔', 1, 5, '每秒回復魔力 +0.4'], ['pen', '穿透', 2, 5, '無視敵人護甲 +4%']   // 2026-10-04 作者：天賦新增回魔和穿透
   ];
   const TIER = ['基礎', '進階', '精通'], TIER_NEED = [0, 10, 25], MAXR = 5, PROF = [20, 60, 140, 260, 450];
   R.TALENTS = TAL;
@@ -66,6 +67,7 @@
       P.hpMax = Math.round(P.hpMax * (1 + 0.03 * t('vit'))); P.mpMax = Math.round(P.mpMax * (1 + 0.04 * t('wis'))); P.dmgMult *= 1 + 0.02 * t('str');
       if (P.ws) { P.ws.crit += 0.01 * t('acc'); P.ws.rate *= 1 + 0.02 * t('spd'); }
       P.dodgeCdMax *= 1 - 0.04 * t('eva'); P.regen = (P.regen || 0) + 0.3 * t('rec'); P.skillCdMult *= 1 - 0.02 * t('med'); P.critMult += 0.06 * t('fat'); P.talGuard = 0.015 * t('tou');
+      P.mpRegen = (P.mpRegen || 0) + 0.4 * t('mpr'); P.pen = Math.min(0.8, (P.pen || 0) + 0.04 * t('pen'));
     } catch (e) { }
     return P;
   };
