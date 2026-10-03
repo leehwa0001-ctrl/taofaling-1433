@@ -11,6 +11,7 @@
     { h: 'fbgaw0yec7', unban: 1, name: '清空停權', msg: '勇者證的停權解除了，公會又會派委託給你。' },   // 2026-10-03
     // 2026-10-04（作者：加一個新序號清空停權、多開幾個序號）。potions：回復藥／魔力藥；pack：背包（raid.js 的 R.PACKS）
     { h: 'srwgfv0bxo', unban: 1, name: '清空停權', msg: '勇者證的停權解除了，公會又會派委託給你。' },
+    { h: '72swoczdyr', unban: 1, name: '清空停權', msg: '勇者證的停權解除了，公會又會派委託給你。' },
     { h: '20cl2jgv4kc', gold: 20000, name: '20000 費拉' },
     { h: '14mtti70wl0', gold: 50000, name: '50000 費拉' },
     { h: '94w97gwi52', potions: { hp: 10, mp: 10 }, name: '回復藥、魔力藥各 10 瓶', msg: '回復藥、魔力藥各 10 瓶放進背包了。' },
