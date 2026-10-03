@@ -57,7 +57,7 @@
       if (!r.spec) return;
       if (r.spec === 'shrine') { const a = altar(F, r); F.specs.push({ r, kind: 'shrine', x: r.x, z: r.z + 1.2, a, used: false }); }
       else if (r.spec === 'spring') { const a = fountain(F, r); F.specs.push({ r, kind: 'spring', x: r.x, z: r.z + 1.8, a, used: false }); }
-      else if (r.spec === 'merchant') { let h = null; try { h = R.makeHero('warrior', null, { lite: 1, weapon: null, shield: false, top: '#6A5A3A', cloak: '#4A3A2A', hair: '#2A2420' }); h.g.position.set(r.x, 0, r.z - 0.6); F.group.add(h.g); } catch (e) { } const TH = THREE, mat = new TH.Mesh(new TH.BoxGeometry(2.2, 0.06, 1.2), new TH.MeshLambertMaterial({ color: '#7A2A2A' })); mat.position.set(r.x, 0.03, r.z + 0.5); F.group.add(mat); F.specs.push({ r, kind: 'merchant', x: r.x, z: r.z + 0.9, stock: null }); }
+      else if (r.spec === 'merchant') { let h = null; try { h = R.makeHero('warrior', null, { lite: 1, weapon: null, shield: false, top: '#6A5A3A', cloak: '#4A3A2A', hair: '#2A2420' }); h.g.position.set(r.x, 0, r.z - 0.6); F.group.add(h.g); R.addBox(r.x - 0.4, r.x + 0.4, r.z - 1.0, r.z - 0.2, 'npc'); } catch (e) { } const TH = THREE, mat = new TH.Mesh(new TH.BoxGeometry(2.2, 0.06, 1.2), new TH.MeshLambertMaterial({ color: '#7A2A2A' })); mat.position.set(r.x, 0.03, r.z + 0.5); F.group.add(mat); F.specs.push({ r, kind: 'merchant', h, x: r.x, z: r.z + 0.9, stock: null }); }
     });
     // 樓層的狀態
     const m = F.mod; if (m) {
@@ -161,6 +161,8 @@
     st0(dt);
     const w = W(), run = w.run, F = w.F, P = w.P; if (!run || run.done || !F || !P) return;
     if (F.fogMin && w.scene && w.scene.fog && w.scene.fog.density < F.fogMin) w.scene.fog.density = F.fogMin;
+    // 擺攤的勇者：點陣人物要每一格更新才畫得出來（作者 2026-10-04：擺攤勇者沒人顧攤）；看著走近的人
+    (F.specs || []).forEach(s => { if (!s.h) return; const d = Math.hypot(P.x - s.h.g.position.x, P.z - s.h.g.position.z); if (d < 5) s.h.g.rotation.y = Math.atan2(P.x - s.h.g.position.x, P.z - s.h.g.position.z); R.animHero(s.h, 0, dt, false); });
     if (F.mod === 'rockfall') { rf -= dt; if (rf <= 0) { rf = 3.5 + rnd() * 2.5; for (let i = 0; i < 2; i++) { const a = rnd() * Math.PI * 2, d = i ? 1 + rnd() * 3 : 0, [x, z] = floorAt(P.x + Math.sin(a) * d, P.z + Math.cos(a) * d); R.fx('mark', x, 0, z, { r: 1.5, t: 1.1 }); later(() => { R.fx('boom', x, 0.6, z, { r: 1.5, color: '#8A7A6A' }); R.shake && R.shake(0.2); const Q = W().P; if (Q && !Q.dead && Math.hypot(Q.x - x, Q.z - z) < 1.5 && !(Q.iframe > 0)) R.hurtPlayer(Q.hpMax * 0.1, null); }, 1100); } } }
   };
   const css = document.createElement('style');

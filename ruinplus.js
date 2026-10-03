@@ -67,16 +67,22 @@
       g.position.set(cx, 0, cz); F.group.add(g); F.fire = { fl, fl2, L }; R.addBox(cx - 0.6, cx + 0.6, cz - 0.6, cz + 0.6, 'deco');
       // 帳篷、木箱、長椅（圓木）
       const tent = (x, z, col) => { const t = new TH.Mesh(new TH.ConeGeometry(1.5, 1.8, 4), new TH.MeshLambertMaterial({ color: col })); t.rotation.y = Math.PI / 4; t.position.set(x, 0.9, z); t.castShadow = true; F.group.add(t); R.addBox(x - 1.1, x + 1.1, z - 1.1, z + 1.1, 'deco'); };
-      tent(cx - 7, cz - 4, '#6A7A5A'); tent(cx + 7, cz - 4.5, '#7A5A4A');
+      // 擺東西之前先看那裡是不是地板：房間小、形狀不規則的時候，照固定的距離擺會擺進牆裡（作者 2026-10-04：安全區的專員會在牆裡）。
+      // 不是地板（或已經有東西）就往房間中心一點一點挪。
+      const t = F.tile, okAt = (x, z, rad) => { if (!t) return true; const n = Math.ceil((rad || 1) / 2); const tx = t.tX(x), tz = t.tZ(z); for (let dz = -n; dz <= n; dz++) for (let dx = -n; dx <= n; dx++) { const k = t.id(tx + dx, tz + dz); if (t.T[k] !== 1) return false; } return !(R.pointBlocked && R.pointBlocked(x, z)); };
+      const fit = (x, z, rad) => { let px = x, pz = z; for (let i = 0; i < 16 && !okAt(px, pz, rad); i++) { px += (r.x - px) * 0.2; pz += (cz - pz) * 0.2; } return [px, pz]; };
+      tent(...fit(cx - 7, cz - 4, 1.6), '#6A7A5A'); tent(...fit(cx + 7, cz - 4.5, 1.6), '#7A5A4A');
       [[cx - 2.4, cz + 0.4, 0], [cx + 2.4, cz + 0.4, 0], [cx, cz + 2.6, Math.PI / 2]].forEach(([x, z, ry]) => { const lgm = new TH.Mesh(new TH.CylinderGeometry(0.25, 0.25, 1.8, 7), new TH.MeshLambertMaterial({ color: '#6A4A30' })); lgm.rotation.z = Math.PI / 2; lgm.rotation.y = ry + Math.PI / 2; lgm.position.set(x, 0.25, z); F.group.add(lgm); });
-      for (let i = 0; i < 4; i++) { const b = new TH.Mesh(new TH.BoxGeometry(0.8, 0.6, 0.8), new TH.MeshLambertMaterial({ color: '#8A6A44' })); b.position.set(cx + 6 + (i % 2) * 0.9, 0.3 + Math.floor(i / 2) * 0.6, cz + 3); b.castShadow = true; F.group.add(b); }
-      R.addBox(cx + 5.6, cx + 7.4, cz + 2.6, cz + 3.4, 'deco');
+      const [bx0, bz0] = fit(cx + 6.45, cz + 3, 1.2);
+      for (let i = 0; i < 4; i++) { const b = new TH.Mesh(new TH.BoxGeometry(0.8, 0.6, 0.8), new TH.MeshLambertMaterial({ color: '#8A6A44' })); b.position.set(bx0 - 0.45 + (i % 2) * 0.9, 0.3 + Math.floor(i / 2) * 0.6, bz0); b.castShadow = true; F.group.add(b); }
+      R.addBox(bx0 - 0.85, bx0 + 0.95, bz0 - 0.4, bz0 + 0.4, 'deco');
       // 調查點的桌子和告示板
-      const desk = new TH.Mesh(new TH.BoxGeometry(2.2, 0.8, 0.9), new TH.MeshLambertMaterial({ color: '#7A5A3A' })); desk.position.set(cx - 6, 0.4, cz + 3); F.group.add(desk); R.addBox(cx - 7.1, cx - 4.9, cz + 2.55, cz + 3.45, 'deco');
-      const board = new TH.Mesh(new TH.BoxGeometry(1.8, 1.2, 0.1), new TH.MeshLambertMaterial({ color: '#E8DCC0' })); board.position.set(cx + 3, 1.3, cz - 5.5); F.group.add(board); const pole = new TH.Mesh(new TH.BoxGeometry(0.12, 1.3, 0.12), new TH.MeshLambertMaterial({ color: '#4A3424' })); pole.position.set(cx + 3, 0.65, cz - 5.5); F.group.add(pole);
-      const clerk = npc(cx - 6, cz + 2.1, { top: '#3E5A4A', hair: '#2A2420', cloak: '#2E4A3A' }, { pool: 'clerk', still: true, rot: 0 });
-      F.rpInter.push({ x: cx - 6, z: cz + 1.3, r: 2, label: '公會調查點的職員（補給）', act: supply });
-      F.rpInter.push({ x: cx + 3, z: cz - 4.6, r: 1.8, label: '看告示板', act: () => say('第 0 層・告示板', ['「' + run.site.name + '」：' + run.grade.name + '，第 0 層以下共 ' + (run.floors - 1) + ' 層。', run.grade.desc || '', run.reactionKnown ? '已知的反應：' + R.REACTIONS[run.reaction].name : '「佩特拉的反應：未確認。請回報。」——調查點'].filter(Boolean)) });
+      const [dx0, dz0] = fit(cx - 6, cz + 2.6, 2), [gx0, gz0] = fit(cx + 3, cz - 5.5, 1);   // 桌子和職員（職員站在桌子北邊）、告示板
+      const desk = new TH.Mesh(new TH.BoxGeometry(2.2, 0.8, 0.9), new TH.MeshLambertMaterial({ color: '#7A5A3A' })); desk.position.set(dx0, 0.4, dz0 + 0.4); F.group.add(desk); R.addBox(dx0 - 1.1, dx0 + 1.1, dz0 - 0.05, dz0 + 0.85, 'deco');
+      const board = new TH.Mesh(new TH.BoxGeometry(1.8, 1.2, 0.1), new TH.MeshLambertMaterial({ color: '#E8DCC0' })); board.position.set(gx0, 1.3, gz0); F.group.add(board); const pole = new TH.Mesh(new TH.BoxGeometry(0.12, 1.3, 0.12), new TH.MeshLambertMaterial({ color: '#4A3424' })); pole.position.set(gx0, 0.65, gz0); F.group.add(pole);
+      const clerk = npc(dx0, dz0 - 0.5, { top: '#3E5A4A', hair: '#2A2420', cloak: '#2E4A3A' }, { pool: 'clerk', still: true, rot: 0 });
+      F.rpInter.push({ x: dx0, z: dz0 - 1.3, r: 2, label: '公會調查點的職員（補給）', act: supply });
+      F.rpInter.push({ x: gx0, z: gz0 + 0.9, r: 1.8, label: '看告示板', act: () => say('第 0 層・告示板', ['「' + run.site.name + '」：' + run.grade.name + '，第 0 層以下共 ' + (run.floors - 1) + ' 層。', run.grade.desc || '', run.reactionKnown ? '已知的反應：' + R.REACTIONS[run.reaction].name : '「佩特拉的反應：未確認。請回報。」——調查點'].filter(Boolean)) });
       F.rpInter.push({ x: cx, z: cz + 1.2, r: 2.2, label: '在營火旁休息（回復）', act: rest });
       // 休息的勇者
       ADV.forEach(([nm, lines], i) => { const a = (i + 0.5) * Math.PI, n = npc(cx + Math.cos(a) * 2.4, cz + Math.sin(a) * 1.2 + 0.4, { top: pick(TOPS), hair: pick(HAIRS), cloak: pick(TOPS) }, { pool: 'adv' + i, still: true, sit: true, weapon: i ? 'spear' : 'sword' }); n.h.sit = true; n.h.g.rotation.y = Math.atan2(cx - n.x, cz - n.z); F.rpInter.push({ x: n.x, z: n.z + 0.9, r: 1.5, label: '和' + nm + '說話', act: () => say(nm, [pick(lines)]) }); });
