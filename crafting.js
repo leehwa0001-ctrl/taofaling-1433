@@ -64,7 +64,9 @@
   const ACCDEF = id => R.A_AFFIX.find(a => a.id === id) || R.ACC_AFFIX.find(a => a.id === id);
   const isTrinket = it => it && (it.kind === 'acc' || it.kind === 'charm');
   const defOf = it => (it.kind === 'acc' ? ACC[it.base] : it.kind === 'charm' ? CHARM2[it.base] : null);
-  const mult = it => (isTrinket(it) ? 1 + 0.08 * (it.plus || 0) : 1);
+  // 強化：詞綴的效果每一級 ×0.08（2026-10-04 作者：武器、防具也要，原本只有護符、飾品）
+  const mult = it => (it && it.plus ? 1 + 0.08 * it.plus : 1);
+  const FLAT = { pierce: 1, multi: 1 };   // 貫穿、多重是「多一發」，不跟著強化變大
 
   // 新的裝備欄
   if (!R.GEAR_KEYS.includes('acc')) R.GEAR_KEYS.push('acc');
@@ -73,7 +75,7 @@
   const bn0 = R.baseName; R.baseName = it => (it.kind === 'acc' ? ACC[it.base].name : it.kind === 'charm' && CHARM2[it.base] ? CHARM2[it.base].name : bn0(it));
   const ad0 = R.affixDef; R.affixDef = (it, id) => (isTrinket(it) ? ACCDEF(id) : ad0(it, id));
   // 護符、飾品：強化讓詞綴的效果變強
-  R.affixSum = (items, id) => items.reduce((s, it) => s + (it && it.identified ? it.affixes.filter(a => a.id === id).reduce((q, a) => q + a.v, 0) * mult(it) : 0), 0);
+  R.affixSum = (items, id) => items.reduce((s, it) => s + (it && it.identified ? it.affixes.filter(a => a.id === id).reduce((q, a) => q + (FLAT[a.id] ? a.v : a.v * mult(it)), 0) : 0), 0);
   // 產生：飾品、御守、根付有本身的效果；其他詞綴從飾品＋防具的詞綴裡挑
   const mk0 = R.makeItem;
   R.makeItem = o => {
@@ -88,7 +90,7 @@
   // 說明
   const il0 = R.itemLines;
   R.itemLines = it => {
-    if (!isTrinket(it)) { const L = il0(it), a = it.enchant && it.identified && it.affixes.find(x => x.ench), df = a && R.W_AFFIX.find(x => x.id === a.id), i = df ? L.lastIndexOf('・' + df.txt(a.v)) : -1; if (i >= 0) L[i] += '（附魔）'; return L; }
+    if (!isTrinket(it)) { const L = il0(it), a = it.enchant && it.identified && it.affixes.find(x => x.ench), df = a && R.W_AFFIX.find(x => x.id === a.id), i = df ? L.lastIndexOf('・' + df.txt(a.v)) : -1; if (i >= 0) L[i] += '（附魔）'; if (it.plus && it.identified && it.affixes.length) L.push('強化 +' + it.plus + '：詞綴的效果 ×' + mult(it).toFixed(2)); return L; }
     const d = defOf(it), L = [(it.kind === 'acc' ? '飾品・' : '護符・') + R.baseName(it), '物品等級 ' + it.ilvl];
     if (!it.identified) { L.push('？？？　稀有度與詞綴要鑑定後才知道，也才會生效。'); return L; }
     const m = mult(it);

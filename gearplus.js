@@ -29,7 +29,7 @@
   R.itemIconURL = (it, k) => { const a = it && it.kind === 'armor' && R.ARMOR[it.base]; return icon0(a && a.icon ? Object.assign({}, it, { base: a.icon }) : it, k); };
 
   // ---------- 力量 ----------
-  const raceStr = () => { const r = R.raceOf && R.raceOf(); if (!r) return 0; const half = r.name.indexOf('混血') >= 0, v = RACE_STR[r.name.replace(/（混血）/, '')] || 0; return half ? (v > 0 ? Math.ceil(v / 2) : Math.trunc(v / 2)) : v; };
+  const raceStr = () => { const r = R.raceOf && R.raceOf(); if (!r) return 0; const half = r.name.indexOf('混血') >= 0, v = RACE_STR[r.name.replace(/（混血）/, '')] || r.str || 0; /* races2.js 的子族：照族種（r.str） */ return half ? (v > 0 ? Math.ceil(v / 2) : Math.trunc(v / 2)) : v; };
   R.strOf = cls => { const s = S(); cls = cls || s.cls; const st = s.classes[cls] || { lv: 1 }; return (BASE_STR[cls] || 4) + raceStr() + Math.floor(st.lv / 5) + (R.profLv && R.profLv.str ? R.profLv.str() : 0); };
   R.strNeed = it => { if (!it || it.kind !== 'armor') return 0; const a = R.ARMOR[it.base]; if (!a) return 0; return a.str != null ? a.str : (NEED[a.w] || {})[a.slot] || 0; };
   const tooHeavy = (it, cls) => R.strNeed(it) > R.strOf(cls);

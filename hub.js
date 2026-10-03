@@ -110,6 +110,8 @@
     const S = R.S, uid = S.stash.filter(it => !it.identified);
     const subs = [['id', '鑑定（' + uid.length + '）'], ['craft', '製作'], ['up', '強化'], ['salv', '分解']];
     let h = '<section class="panel-doc"><h2>老岩的鐵匠鋪</h2><p class="note">「遺跡裡帶出來的東西，十件有八件看不出是什麼。拿來，我看。」</p><div class="subtabs">' + subs.map(([k, n]) => '<button type="button" class="tab' + (sub === k ? ' on' : '') + '" data-sub="' + k + '">' + n + '</button>').join('') + '</div>';
+    // 一鍵鑑定（2026-10-04 作者：就像賣掉一樣）：照順序鑑定到錢不夠為止
+    if (sub === 'id' && uid.length > 1) { const tot = uid.reduce((a, it) => a + R.idPrice(it), 0); h += '<div class="row"><button type="button" class="btn gold" id="id-all"' + (S.gold < R.idPrice(uid[0]) ? ' disabled' : '') + '>一鍵鑑定全部（' + uid.length + ' 件・共 ' + tot + ' 費拉' + (S.gold < tot ? '，錢不夠的話鑑定到錢用完為止' : '') + '）</button></div>'; }
     if (sub === 'id') h += uid.length ? '<div class="items">' + uid.map(it => itemCard(it, '<button type="button" class="btn pri" data-ident="' + it.id + '"' + (S.gold < R.idPrice(it) ? ' disabled' : '') + '>鑑定（' + R.idPrice(it) + ' 費拉）</button>')).join('') + '</div>' : '<p class="note">沒有要鑑定的東西。從遺跡寶箱開出來的武器，大多要鑑定過才知道是什麼。</p>';
     if (sub === 'craft') {
       const opt = (v, n) => '<option value="' + v + '">' + esc(n) + '</option>';
@@ -160,6 +162,7 @@
     on('[data-dismiss]', b => { const m = S.party[+b.dataset.dismiss]; R.dismiss(+b.dataset.dismiss); R.hub(); flashMsg(m.name + '離開了隊伍'); });
     on('[data-promo]', b => promoSheet(b.dataset.promo));
     on('[data-sub]', b => { sub = b.dataset.sub; R.hub(); });
+    on('#id-all', () => { const list = R.S.stash.filter(it => !it.identified); let n = 0, best = null; list.forEach(it => { if (R.identify(it)) { n++; if (!best || it.rarity > best.rarity) best = it; } }); R.save(); R.hub(); flashMsg(n ? '一次鑑定了 ' + n + ' 件' + (best ? '，最好的是：' + R.itemName(best) : '') + (n < list.length ? '（錢不夠，還剩 ' + (list.length - n) + ' 件）' : '') : '錢不夠，一件也鑑定不了。', best ? R.rarityColor(best) : undefined); });
     on('[data-ident]', b => { const it = R.itemById(b.dataset.ident); if (R.identify(it)) { R.hub(); flashMsg('鑑定出來了：' + R.itemName(it), R.rarityColor(it)); } });
     on('[data-craft]', b => { const [kind, base] = $('craft-base').value.split(':'); const it = R.craft(R.RECIPES[+b.dataset.craft], kind, base); if (it) { R.hub(); flashMsg('打造好了：' + R.itemName(it), R.rarityColor(it)); } });
     on('[data-up]', b => { const it = R.itemById(b.dataset.up); if (R.upgrade(it)) { R.hub(); flashMsg('強化成功：' + R.itemName(it), R.rarityColor(it)); } });
