@@ -451,7 +451,8 @@
   };
   R.shake = a => { W.shakeT = 0.3; W.shakeA = a * 3; };
   // 鏡頭：以人物為中心。像《飢荒》一樣每次轉 45 度（Z／C），滾輪拉近拉遠
-  R.CAM = { h: 19, back: 12.5, zMin: 0.65, zMax: 1.45 };
+  // 2026-10-04 作者：仿《飢荒》——鏡頭放低到 45 度左右（原本 h 19、back 12.5，56.7 度），人物看起來比較站得起來
+  R.CAM = { h: 16.1, back: 16.1, zMin: 0.65, zMax: 1.45 };
   R.placeCam = (dt, shake) => {
     const c = W.cam, P = W.P;
     if (dt == null) { c.yaw = c.yawT; c.zoom = c.zoomT; }

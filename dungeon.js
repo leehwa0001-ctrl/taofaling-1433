@@ -728,7 +728,28 @@
       const tx = ptx + dx, tz = ptz + dz; if (tx < 0 || tz < 0 || tx >= t.nx || tz >= t.nz) continue;
       const i = F.wallAt[tz * t.nx + tx]; if (i < 0) continue;
       const wx = t.cX(tx) - P.x, wz = t.cZ(tz) - P.z, along = wx * cy + wz * cz, side = Math.abs(wx * cz - wz * cy);
-      if (along > -0.6 && along < 7.5 && side < 3.4 - along * 0.15) want.add(i);
+      if (along > -0.6 && along < 4.5 && side < 2.6 - along * 0.15) want.add(i);
+    }
+    // 照真正的鏡頭擋不擋（2026-10-04 作者：開透視之後東西會被擋住）：從人物、遺跡生物、同伴、寶箱往鏡頭拉一條線，
+    // 線經過的牆比線高，就換成半透明的。透視鏡頭畫面邊邊的視線是斜的，只看人物正前方那一條不夠。
+    const C = W.camera && W.camera.position;
+    if (C) {
+      const ray = (x, y, z, wide) => {
+        const hx = C.x - x, hz = C.z - z, hd = Math.hypot(hx, hz) || 1, ux = hx / hd, uz = hz / hd, k = (C.y - y) / hd;
+        const reach = Math.min(hd, Math.max(0, (7 - y) / Math.max(0.05, k)));   // 線比 7 公尺高之後，沒有牆擋得到
+        for (let s0 = 0.3; s0 <= reach; s0 += 0.5) {
+          const ry = y + s0 * k;
+          for (let o = -wide; o <= wide; o += wide || 1) {
+            const px = x + ux * s0 - uz * o, pz = z + uz * s0 + ux * o, tx = Math.floor((px - t.X0) / TS), tz = Math.floor((pz - t.Z0) / TS);
+            if (tx < 0 || tz < 0 || tx >= t.nx || tz >= t.nz) continue;
+            const i = F.wallAt[tz * t.nx + tx]; if (i >= 0 && F.wallH[i] + 0.4 > ry) want.add(i);
+          }
+        }
+      };
+      ray(P.x, 0.2, P.z, 0.45); ray(P.x, 1.4, P.z, 0.45);
+      (W.allies || []).forEach(a => { if (a && !a.dead && Math.hypot(a.x - P.x, a.z - P.z) < 24) ray(a.x, 0.6, a.z, 0.3); });
+      (W.enemies || []).forEach(e => { if (!e.dead && !e.under && Math.hypot(e.x - P.x, e.z - P.z) < 22) ray(e.x, 0.6, e.z, Math.min(0.8, 0.25 + (e.def && e.def.size || 1) * 0.25)); });
+      (F.chests || []).forEach(c => { if (!c.opened && Math.hypot(c.x - P.x, c.z - P.z) < 20) ray(c.x, 0.4, c.z, 0); });
     }
     // 擋住的牆：本體縮成 0，換上同樣大小的半透明幽靈牆
     if (!_zero) _zero = new (T().Matrix4)().makeScale(0, 0, 0);

@@ -9,7 +9,8 @@
   const T = () => THREE;
   // PX：人物、牆面的一個像素；TOP：地面、牆頂的一個像素（鏡頭斜著看，地面在畫面上會縮成 PX 那麼高）
   // LOOKY：鏡頭看的高度，讓腳底剛好落在畫面像素的格線上（走路時人物不會上下跳一格）
-  const PX = 1 / 12, TILT = 1 / Math.cos(Math.atan2(19, 12.5)), TOP = 0.1;
+  // 俯角跟著鏡頭（run.js 的 R.CAM）：TILT 補直立的東西被壓扁的部分，TOP 讓地面的一格在畫面上剛好是一個像素
+  const PITCH = Math.atan2(R.CAM.h, R.CAM.back), PX = 1 / 12, TILT = 1 / Math.cos(PITCH), TOP = PX / Math.sin(PITCH);
   R.PIX = { PX, TILT, TOP, LOOKY: 3 * PX * TILT };
   const cvs = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
   const rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];

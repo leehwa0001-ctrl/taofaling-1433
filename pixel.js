@@ -98,18 +98,31 @@
     const s = Math.max(1, Math.round(bh / want)), rw = 2 * Math.ceil(bw / s / 2), rh = 2 * Math.ceil(bh / s / 2);
     return { bw, bh, s, rw, rh, hw: rw / 2 * PX, hh: rh / 2 * PX };
   };
-  // 透視鏡頭：placeCam 擺好之後，沿著同一個方向往後退，退到「角色那個距離，畫面一格剛好是一個點陣像素」
-  // （放在 placeCam 裡做：霧、名牌、滑鼠瞄準都用同一個鏡頭位置）
+  // 透視鏡頭（「移軸」的做法，2026-10-04 作者：一般透視的牆和房子像往外倒、斜邊一格一格）：
+  // 鏡頭本身是水平看出去的，畫面往下移到角色那裡（像建築攝影的移軸鏡頭）——直的東西在畫面上永遠是直的，
+  // 只有往畫面深處延伸的線（走廊兩邊的牆、地板的縫）會往中間收一點，牆的側面跟著鏡頭的位置露出來一點。
+  // 角色那個距離：橫的、直的、地面的縮放都和原本的正交鏡頭一模一樣（像素一格、人物的 TILT 都對）。
+  // （放在 placeCam 裡做：霧、名牌、滑鼠瞄準都用同一個鏡頭）
   const pc0 = R.placeCam;
   R.placeCam = (...a) => {
     const r = pc0(...a), W = R.W, P0 = W.P;
     if (!W.scene || !W.scene.userData.pix || !P0 || !W.renderer) return r;
     const z = sizeOf(W); useCam(W, true, z.bw, z.bh);
     const cam = W.camera; if (!cam.isPerspectiveCamera) return r;
-    const f = R.PIX_FOV(), D = z.hh / Math.tan(f / 2 * Math.PI / 180), p = cam.position;
-    const tx = P0.x, ty = R.PIX.LOOKY, tz = P0.z, dx = p.x - tx, dy = p.y - ty, dz = p.z - tz, d0 = Math.hypot(dx, dy, dz) || 1;
-    p.set(tx + dx / d0 * D, ty + dy / d0 * D, tz + dz / d0 * D);
-    cam.fov = f; cam.aspect = z.rw / z.rh; cam.near = Math.max(1, D - 34); cam.far = D + 220; cam.updateProjectionMatrix(); cam.updateMatrixWorld();
+    const yaw = W.cam ? W.cam.yaw : 0, hx = Math.sin(yaw), hz = Math.cos(yaw), p = cam.position;
+    // 鏡頭的俯角（照原本的鏡頭）；晃動只留橫向的
+    const rx = p.x - P0.x, rz = p.z - P0.z, along = rx * hx + rz * hz, ty = R.PIX.LOOKY;
+    const tx = P0.x + rx - along * hx, tz = P0.z + rz - along * hz;
+    const p0y = p.y, tanP = Math.max(0.2, (p.y - ty) / Math.max(0.1, along)), cosP = 1 / Math.hypot(1, tanP), sinP = tanP * cosP;
+    // 往後退多遠：越遠越不透視。角度 f 對應到「跟一般透視鏡頭差不多的收斂程度」
+    const f = R.PIX_FOV(), Zh = z.hh / Math.tan(f / 2 * Math.PI / 180) / cosP, H = Zh * tanP;
+    p.set(tx + hx * Zh, ty + H, tz + hz * Zh);
+    cam.up.set(0, 1, 0); cam.lookAt(p.x - hx, p.y, p.z - hz);
+    const n = Math.max(1, Zh - 45), fr = Zh + 220, yc = -n * tanP, th = n * z.hh / (Zh * cosP), tw = n * z.hw / Zh;
+    cam.fov = f; cam.aspect = z.rw / z.rh; cam.near = n; cam.far = fr;
+    cam.projectionMatrix.makePerspective(-tw, tw, yc + th, yc - th, n, fr); cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
+    cam.userData.shift = { sinP, Zh, d: Math.hypot(Zh, H - 1 + ty) - Zh, k: Math.hypot(along, p0y - ty) / Zh };
+    cam.updateMatrixWorld();
     return r;
   };
 
@@ -129,11 +142,20 @@
     // 鏡頭對齊像素格：畫面的橫、直方向都挪到整數格（不動的東西每一幀都落在同樣的像素上）
     cam.updateMatrixWorld();
     const e = cam.matrixWorld.elements, p = cam.position;
-    const pr = p.x * e[0] + p.y * e[1] + p.z * e[2], pu = p.x * e[4] + p.y * e[5] + p.z * e[6];
-    const dr = Math.round(pr / PX) * PX - pr, du = Math.round(pu / PX) * PX - pu;
-    p.x += dr * e[0] + du * e[4]; p.y += dr * e[1] + du * e[5]; p.z += dr * e[2] + du * e[6];
+    // 移軸鏡頭：直的方向是鏡頭往前後走（地面上一格 ＝ PX / sinP 公尺）
+    const sh = cam.isPerspectiveCamera && cam.userData.shift, ui = sh ? 8 : 4, us = sh ? PX / sh.sinP : PX;
+    const pr = p.x * e[0] + p.y * e[1] + p.z * e[2], pu = p.x * e[ui] + p.y * e[ui + 1] + p.z * e[ui + 2];
+    const dr = Math.round(pr / PX) * PX - pr, du = Math.round(pu / us) * us - pu;
+    p.x += dr * e[0] + du * e[ui]; p.y += dr * e[1] + du * e[ui + 1]; p.z += dr * e[2] + du * e[ui + 2];
     cam.updateMatrixWorld();
+    // 霧（dread.js）照「鏡頭到角色的直線距離」算；移軸鏡頭的霧是照水平的深度算，畫的時候扣掉差的那一段，畫完放回去
+    // 城裡的霧（FogExp2）照深度的平方算：濃度照原本的鏡頭距離和現在的深度的比例調淡
+    const fg = sh && W.scene.fog && W.scene.fog.isFog ? W.scene.fog : null, fn = fg && fg.near, ff = fg && fg.far;
+    const fx = sh && W.scene.fog && W.scene.fog.isFogExp2 ? W.scene.fog : null, fd = fx && fx.density;
+    if (fg) { fg.near = Math.max(0.1, fn - sh.d); fg.far = Math.max(fg.near + 1, ff - sh.d); }
+    if (fx) fx.density = fd * sh.k;
     W.renderer.setRenderTarget(P.rt); W.renderer.render(W.scene, cam);
+    if (fg) { fg.near = fn; fg.far = ff; } if (fx) fx.density = fd;
     W.renderer.setRenderTarget(null); W.renderer.render(P.scene, P.cam);
   };
 })(window.R);
