@@ -11,6 +11,8 @@
   const floorOf = (run, n) => has0(run) ? n : n - 1;
   const ok = run => run && run.site && run.site.id !== 'kanko' && run.grade && run.grade.id !== 'hunt' && !run.site.outdoor;
   const wp = () => { const s = S(); s.waypoints = s.waypoints || {}; return s.waypoints; };
+  // 記過的每一層（2026-10-04 作者：存檔點可以選擇紀錄過的層數）。R.S.waypointList[遺跡 id] = [5, 10, 15……]；以前只記最深那一層的存檔也算進去
+  const wl = id => { const s = S(); s.waypointList = s.waypointList || {}; const L = s.waypointList[id] = s.waypointList[id] || []; const b = wp()[id]; if (b && !L.includes(b)) L.push(b); L.sort((a, c) => a - c); return L; };
   const free = (x, z) => { const F = W().F, t = F && F.tile; if (t) { const tx = t.tX(x), tz = t.tZ(z); for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) if (t.T[t.id(tx + dx, tz + dz)] !== 1) return false; } return !(R.pointBlocked && R.pointBlocked(x, z)); };
   const placeNear = (r, prefer) => { for (const [dx, dz] of prefer) { const x = r.x + dx, z = r.z + dz; if (free(x, z)) return [x, z]; } return R.roomPoint ? R.roomPoint(r, {}) : [r.x, r.z]; };
   const SPOTS = [[-3.6, -2.4], [3.6, -2.4], [-3.6, 2.6], [3.6, 2.6], [0, -3.4], [-5, 0], [5, 0], [0, 3.6]];
@@ -35,33 +37,34 @@
     if (n > 0 && n % every === 0) { const [x, z] = placeNear(r, SPOTS); F.save = Object.assign(stone(x, z, '#7AC8FF'), { n }); setTimeout(() => { if (W().F === F && R.toast) R.toast('這一層有存檔點：入口房間發藍光的記錄碑，走過去按空白鍵記下。', '#7AC8FF'); }, 1600); }
     else if (run.floor === 0 && every > 0) setTimeout(() => { if (W().F === F && R.toast) R.toast('這座遺跡每 ' + every + ' 層有一個存檔點（第 ' + every + ' 層的入口房間）。', '#7AC8FF'); }, 2600);
     // 入口那一層：轉送到記下的那一層
-    const best = wp()[run.site.id] || 0, entry = has0(run) ? 0 : 0;
-    if (run.floor === entry && best >= 3 && floorOf(run, best) < run.floors) { const [x, z] = placeNear(r, WARP_SPOTS); F.warp = Object.assign(stone(x, z, '#B88AFF'), { n: best }); }
+    const list = wl(run.site.id).filter(n => n >= 3 && floorOf(run, n) < run.floors), entry = 0;
+    if (run.floor === entry && list.length) { const [x, z] = placeNear(r, WARP_SPOTS); F.warp = Object.assign(stone(x, z, '#B88AFF'), { n: list[list.length - 1], list }); }
   };
   const lf0 = R.loadFloor;
   R.loadFloor = (f, o) => { const r = lf0(f, o); try { build(); } catch (e) { console.warn('[savepoint]', e); } return r; };
 
   const record = () => {
     const run = W().run, F = W().F; if (!F || !F.save) return;
-    const m = wp(), id = run.site.id, n = F.save.n, was = m[id] || 0;
-    if (n > was) { m[id] = n; R.save(); }
+    const m = wp(), id = run.site.id, n = F.save.n, was = m[id] || 0, L = wl(id), fresh = !L.includes(n);
+    if (n > was) m[id] = n; if (fresh) { L.push(n); L.sort((a, c) => a - c); } R.save();
     R.sfx && R.sfx('magic'); if (R.fx) R.fx('spawn', F.save.x, 0.1, F.save.z, { color: '#7AC8FF' });
-    R.toast(n > was ? '存檔點：記下了第 ' + n + ' 層。下次進「' + run.site.name + '」，入口可以直接到這一層。' : '這一層之前記過了（記到第 ' + was + ' 層）。', '#7AC8FF');
+    R.toast(fresh ? '存檔點：記下了第 ' + n + ' 層。下次進「' + run.site.name + '」，入口可以選這一層直接過去。' : '這一層之前記過了（記過：第 ' + L.join('、') + ' 層）。', '#7AC8FF');
   };
   const warp = () => {
     const run = W().run, F = W().F; if (!F || !F.warp) return;
-    const n = F.warp.n, f = floorOf(run, n);
-    R.sheet('<p class="kicker">公會的轉送陣</p><h2>存檔點：第 ' + n + ' 層</h2><p>記錄碑記得你走到過第 ' + n + ' 層。要直接過去嗎？</p><p class="note">中間的樓層就不會經過了（寶箱、經驗也一樣）。</p>',
-      '<div class="row"><button type="button" class="btn pri" id="sp-go">直接到第 ' + n + ' 層</button><button type="button" class="btn" id="sp-no">從頭走</button></div>');
+    const list = F.warp.list || [F.warp.n];
+    R.sheet('<p class="kicker">公會的轉送陣</p><h2>存檔點：選一層過去</h2><p>記錄碑記得你在這座遺跡記過的樓層。要從哪一層開始？</p><p class="note">中間的樓層就不會經過了（寶箱、經驗也一樣）。</p>'
+      + '<div class="row sp-list">' + list.slice().reverse().map((n, i) => '<button type="button" class="btn' + (i ? '' : ' pri') + '" data-spgo="' + n + '">第 ' + n + ' 層</button>').join('') + '</div>',
+      '<div class="row"><button type="button" class="btn" id="sp-no">從頭走</button></div>');
     document.getElementById('sp-no').onclick = R.closeSheet;
-    document.getElementById('sp-go').onclick = () => { R.closeSheet(); if (R.stairBusy && R.stairBusy()) return; R.fade(() => { R.loadFloor(f); R.banner(R.floorLabel ? R.floorLabel(W().run) : '第 ' + n + ' 層', '從存檔點過來了'); }); };
+    document.querySelectorAll('[data-spgo]').forEach(b => { b.onclick = () => { const n = +b.dataset.spgo, f = floorOf(run, n); R.closeSheet(); if (R.stairBusy && R.stairBusy()) return; R.fade(() => { R.loadFloor(f); R.banner(R.floorLabel ? R.floorLabel(W().run) : '第 ' + n + ' 層', '從存檔點過來了'); }); }; });
   };
   const ni0 = R.nearestInteract;
   R.nearestInteract = () => {
     const best = ni0(), P = W().P, F = W().F; if (!P || !F) return best;
     let bd = best ? Math.hypot(best.x - P.x, best.z - P.z) : 1e9, mine = null;
     if (F.save) { const d = Math.hypot(F.save.x - P.x, F.save.z - P.z); if (d < 2 && (d < bd || d < 1.6)) { bd = d; mine = { x: F.save.x, z: F.save.z, r: 2, label: '存檔點（公會的記錄碑）：記下第 ' + F.save.n + ' 層', act: record }; } }
-    if (F.warp) { const d = Math.hypot(F.warp.x - P.x, F.warp.z - P.z); if (d < 2 && (d < bd || d < 1.6)) { bd = d; mine = { x: F.warp.x, z: F.warp.z, r: 2, label: '存檔點：直接到第 ' + F.warp.n + ' 層', act: warp }; } }
+    if (F.warp) { const d = Math.hypot(F.warp.x - P.x, F.warp.z - P.z); if (d < 2 && (d < bd || d < 1.6)) { bd = d; mine = { x: F.warp.x, z: F.warp.z, r: 2, label: '存檔點：選一層直接過去（記過 ' + (F.warp.list || [F.warp.n]).length + ' 層）', act: warp }; } }
     return mine || best;
   };
   // 符文一亮一暗
