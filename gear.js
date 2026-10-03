@@ -23,7 +23,8 @@
     const poly = (pts, col) => { x.fillStyle = col; x.beginPath(); pts.forEach(([a, b], i) => (i ? x.lineTo(a, b) : x.moveTo(a, b))); x.closePath(); x.fill(); };
     const circ = (a, b, r, col) => { x.fillStyle = col; x.beginPath(); x.arc(a, b, r, 0, 7); x.fill(); };
     const arc = (a, b, r, s0, s1, col, w) => { x.strokeStyle = col; x.lineWidth = w || 1.4; x.beginPath(); x.arc(a, b, r, s0, s1); x.stroke(); };
-    switch (base) {
+    if (R.ICON_EXTRA && R.ICON_EXTRA[base]) R.ICON_EXTRA[base]({ ln, rc, poly, circ, arc, m, tier, WOOD, LEATHER, CLOTH, GEM });   // 別的檔案加的武器、防具（gearmore.js）
+    else switch (base) {
       case 'sword': ln(13, 2, 6, 9, m[0], 2); ln(13, 2, 7, 8, m[1], 1); ln(3, 8, 7, 12, m[2], 2); ln(5, 10, 2, 13, WOOD[1], 2); rc(1, 13, 2, 2, m[1]); break;
       case 'greatsword': ln(14, 1, 6, 9, m[0], 3); ln(14, 1, 7, 8, m[1], 1); ln(2, 7, 8, 13, m[2], 2); ln(5, 10, 2, 13, WOOD[1], 2); rc(1, 13, 2, 2, m[1]); break;
       case 'katana': ln(14, 2, 10, 5, m[0], 2); ln(10, 5, 6, 9, m[0], 2); ln(13, 2, 9, 5, m[1], 1); rc(4, 9, 3, 3, m[2]); ln(5, 11, 2, 14, '#2A2420', 2); break;
