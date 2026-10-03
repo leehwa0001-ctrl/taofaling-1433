@@ -73,10 +73,14 @@
     const held = [];
     w.drops.forEach(d => {
       if (d.gone || (d.type !== 'item' && d.type !== 'mat')) return;
-      if (Math.hypot(d.x - P.x, d.z - P.z) >= 1.1) return;
+      // 自己從背包丟出去的：走開 2.4 公尺以上才會再撿（作者 2026-10-04：背包滿的時候站在裝備上整理背包，
+      // 丟下去的東西一落地就被自動撿回來，背包又滿了，地上那件就一直撿不起來）
+      const dist = Math.hypot(d.x - P.x, d.z - P.z);
+      if (d.noPick) { if (dist > (d.type === 'mat' ? 4.5 : 2.4)) d.noPick = false; else { held.push(d); return; } }   // 素材在 3.5 公尺內會被吸過來，要走更遠
+      if (dist >= 1.1) return;
       if (d.type === 'item') {
         const sp = findSpot(d.item);
-        if (!sp) { if (!d.warned) { d.warned = true; R.toast('背包放不下：' + R.itemName(d.item) + '（佔 ' + sizeOf(d.item).join('×') + ' 格）。按 I 整理背包。', '#FF9A6A'); } held.push(d); return; }
+        if (!sp) { if (!d.warned) { d.warned = true; const mc = matCells(); R.toast('背包放不下：' + R.itemName(d.item) + '（佔 ' + sizeOf(d.item).join('×') + ' 格）。按 I 整理背包' + (mc ? '（素材佔了 ' + mc + ' 格）' : '') + '；整理好再走過來就會撿。', '#FF9A6A'); } held.push(d); return; }
         run.bag.push(d.item); G().at.set(d.item, sp); R.toast('撿到：' + R.itemName(d.item), R.rarityColor(d.item)); R.sfx && R.sfx('pick');
       } else {
         const g = G(), o = occ(g);
@@ -153,18 +157,19 @@
       + '<div class="tk-gridwrap"><div class="tk-grid" id="tk-grid" style="grid-template-columns:repeat(' + g.w + ',' + CELL + 'px);grid-template-rows:repeat(' + g.h + ',' + CELL + 'px)">' + cells + matsHtml + items + '</div></div></div>'
       + (loose.length ? '<p class="note" style="color:#FF9A6A">放不下的東西（整理出空間再放進去，不然出遺跡時一樣帶得走，但會一直佔著）：' + loose.map(it => '<button type="button" class="mini" data-loose="' + run.bag.indexOf(it) + '">' + esc(R.itemName(it)) + '</button>').join('') + '</p>' : '')
       + info
-      + '<p class="note">素材：' + (Object.keys(run.mats).map(k => R.MATS[k].name + ' ×' + run.mats[k]).join('、') || '沒有') + '（一格疊 ' + STACK + ' 個）。倒下的話，背包、身上的裝備都會留在遺跡裡。</p>',
+      + '<p class="note">素材：' + (Object.keys(run.mats).filter(k => run.mats[k] > 0).map(k => R.MATS[k].name + ' ×' + run.mats[k] + ' <button type="button" class="mini" data-dm="' + k + '">丟掉一格</button>').join('、') || '沒有') + '（一格疊 ' + STACK + ' 個）。倒下的話，背包、身上的裝備都會留在遺跡裡。</p>',
       '<div class="row"><button type="button" class="btn pri" id="bag-x">關上（I）</button></div>');
     $('bag-x').onclick = () => { sel = null; R.closeSheet(); };
     const box = $('r-sheet');
     box.querySelectorAll('[data-slot]').forEach(el => { el.onclick = () => { sel = { slot: el.dataset.slot }; R.bagSheet(); }; });
+    box.querySelectorAll('[data-dm]').forEach(el => { el.onclick = () => { const k = el.dataset.dm, n = Math.min(STACK, run.mats[k] || 0); if (!n) return; run.mats[k] -= n; if (run.mats[k] <= 0) delete run.mats[k]; const P = W().P; if (R.addDrop && P) { const d = R.addDrop({ type: 'mat', mat: k, n, x: P.x + 2.4, z: P.z }); if (d) d.noPick = true; } R.bagSheet(); }; });
     box.querySelectorAll('[data-loose]').forEach(el => { el.onclick = () => { const it = run.bag[+el.dataset.loose], sp = it && findSpot(it); if (sp) { g.at.set(it, sp); R.bagSheet(); } else R.toast('還是放不下。'); }; });
     box.querySelectorAll('[data-act]').forEach(el => { el.onclick = () => {
       const a = el.dataset.act, it = sel && sel.it; let err = null;
       if (a === 'eq' && it) { err = equip(it); if (!err) sel = { slot: slotOf(it) }; }
       else if (a === 'uneq' && sel.slot) { const was = R.equipped(s.cls)[sel.slot]; err = unequip(sel.slot); if (!err) sel = { it: was }; }
       else if (a === 'rot' && it) { const p = g.at.get(it); if (p && fitsAt(it, p.x, p.y, 1 - p.r, it)) p.r = 1 - p.r; else { const sp = findSpot(it, it); if (sp && sp.r !== (p && p.r)) g.at.set(it, sp); else err = '轉不過來（旁邊沒有空間）。'; } }
-      else if (a === 'drop' && it) { run.bag = run.bag.filter(x => x !== it); g.at.delete(it); const P = W().P; if (R.dropItem && P) { const d = R.dropItem(it, P.x + 1.6, P.z); if (d) d.warned = true; } sel = null; }
+      else if (a === 'drop' && it) { run.bag = run.bag.filter(x => x !== it); g.at.delete(it); const P = W().P; if (R.dropItem && P) { const d = R.dropItem(it, P.x + 2.4, P.z); if (d) { d.warned = true; d.noPick = true; } } sel = null; }
       if (err) R.toast(err, '#FF9A6A'); R.bagSheet();
     }; });
     // 拖曳
