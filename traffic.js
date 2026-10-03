@@ -21,6 +21,23 @@
   }));
   R.pedZone = (x, z) => { if (W.town && W.town.hosu) return true; const sx = x / C.S + 500, sy = z / C.S + 500; return !carriage(sx, sy) || crosswalk(sx, sy); };
 
+  // 路人：被別的東西移開（回家又出來、被撞開、讓路……）之後，記得的下一個點可能在馬路對面，會直直斜穿過去。
+  // 每半秒看一次：要走的那一段會穿過車道，就先走到身邊最近、不用過馬路的點（pedpaths.js）。
+  let pedT = 0;
+  const pedCheck = () => {
+    const tw = W.town; if (!tw || tw.hosu || W.inside || !R.pedCross || !R.pedNearest) return;
+    const P = W.P, k = 1 / C.S;
+    tw.npcs.forEach(n => {
+      if (!n.walk || !n.next || n.chase || n.patrol || n.off || n.flee > 0 || n.guard) return;
+      if (P && (Math.abs(n.x - P.x) > 90 || Math.abs(n.z - P.z) > 90)) return;
+      const a = [n.x * k + 500, n.z * k + 500], b = [n.tx * k + 500, n.tz * k + 500]; if (!R.pedCross(a, b)) return;
+      const j = R.pedNearest(a[0], a[1]); if (j < 0) return;
+      n.ni = j; n.prev = undefined; n.tx = (C.nodes[j][0] - 500) * C.S; n.tz = (C.nodes[j][1] - 500) * C.S;
+    });
+  };
+  const tsp = R.townStep;
+  R.townStep = dt => { tsp(dt); pedT -= dt; if (pedT <= 0) { pedT = 0.5; try { pedCheck(); } catch (e) { } } };
+
   // ---------- 2. 車禍受傷 ----------
   const INJ = [null,
     { n: '輕傷', days: 2, hp: 0.1, dmg: 0, spd: 0.05, cure: 40, d: '擦傷、瘀青。生命上限 -10%、走路慢一點。' },
