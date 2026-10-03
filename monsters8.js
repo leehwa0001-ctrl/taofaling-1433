@@ -44,6 +44,7 @@
     // 腳下的光圈
     try { const TH = THREE, ring = new TH.Mesh(new TH.RingGeometry(0.55 * (e.def.size || 1), 0.75 * (e.def.size || 1), 20), new TH.MeshBasicMaterial({ color: AFX[list[0]].c, transparent: true, opacity: 0.55, side: TH.DoubleSide, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.05; e.m.g.add(ring); e.afxRing = ring; } catch (err) { }
   };
+  R.applyMonAffix = (e, list) => { if (e && !e.afx) apply(e, list || [KEYS[Math.floor(rnd() * KEYS.length)]]); };   // 別的檔案用（ruinvar.js 的寂靜層）
   // ---------- 每一格：迅捷出手快、狂怒、冰霜、閃現、護盾、喚群、毒霧 ----------
   let acc = 0;
   const st0 = R.step;
