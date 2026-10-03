@@ -203,21 +203,21 @@
     if (wp === 'staffpole') {
       if (swingP) { if (side) ray(hx - 6, hy + 2, 1, -0.35, 14, wood); else ray(1, 12, 1, 0.25, 15, wood); }
       else if (side && atk) p(hx - 4, hy, 12, 1, wood);
-      else { p(hx + 1, hy - 13, 1, 17, wood); p(hx + 1, hy - 13, 1, 1, '#C9A13A'); p(hx + 1, hy + 3, 1, 1, '#C9A13A'); }
+      else { p(hx + 1, hy - 10, 1, 14, wood); p(hx + 1, hy - 10, 1, 1, '#C9A13A'); p(hx + 1, hy + 3, 1, 1, '#C9A13A'); }
       return;
     }
-    // 新職業的武器（2026-10-04 classes2.js）：拿在手上的小東西
+    // 新職業的武器（2026-10-04 classes2.js）：拿在手上的小東西（2026-10-04 作者：武器的大小統一一點——原本 3～4 格，放大到 5～7 格）
     const HELD = { lute: 1, flute: 1, tome: 1, bell: 1, chalk: 1, disc: 1, scrollb: 1, talisman: 1 };
     if (HELD[wp]) {
       const x0 = side ? hx : hx - 1, y0 = side ? hy - 2 : hy - 3;
-      if (wp === 'lute') { p(x0 - 1, y0, 4, 4, '#A8743A'); p(x0, y0 + 1, 2, 2, '#3A2A1C'); p(x0 + 1, y0 - 6, 1, 6, '#6A4A2A'); p(x0, y0 - 7, 3, 1, '#4A3020'); }
+      if (wp === 'lute') { p(x0 - 2, y0, 5, 5, '#A8743A'); p(x0 - 1, y0 + 1, 3, 3, '#3A2A1C'); p(x0 + 1, y0 - 7, 1, 7, '#6A4A2A'); p(x0, y0 - 8, 3, 1, '#4A3020'); }
       else if (wp === 'flute') { p(x0 + 1, y0 - 6, 1, 10, '#D8C8A8'); p(x0 + 1, y0 - 4, 1, 1, '#3A2A1C'); p(x0 + 1, y0 - 1, 1, 1, '#3A2A1C'); }
-      else if (wp === 'tome') { p(x0 - 1, y0, 4, 4, '#6A2A3A'); p(x0 - 1, y0, 4, 1, '#E8D8A8'); p(x0 + 2, y0, 1, 4, '#C9A13A'); }
-      else if (wp === 'bell') { p(x0, y0, 3, 3, '#E8C04A'); p(x0, y0, 1, 1, '#FFF0A0'); p(x0 + 1, y0 - 2, 1, 2, '#8A6A2A'); }
+      else if (wp === 'tome') { p(x0 - 2, y0 - 1, 5, 6, '#6A2A3A'); p(x0 - 2, y0 - 1, 5, 1, '#E8D8A8'); p(x0 + 2, y0 - 1, 1, 6, '#C9A13A'); p(x0 - 1, y0 + 1, 2, 2, '#9AE8FF'); }
+      else if (wp === 'bell') { p(x0 - 1, y0, 5, 4, '#E8C04A'); p(x0 - 1, y0, 1, 2, '#FFF0A0'); p(x0, y0 + 4, 3, 1, '#C89A2A'); p(x0 + 1, y0 - 3, 1, 3, '#8A6A2A'); }
       else if (wp === 'chalk') { p(x0 + 1, y0 - 7, 1, 9, '#F2EEE4'); p(x0 + 1, y0 - 8, 1, 1, '#7AC8E8'); }
-      else if (wp === 'disc') { p(x0 - 1, y0, 4, 4, '#4A8AA8'); p(x0, y0 + 1, 2, 2, '#BFF0FF'); }
-      else if (wp === 'scrollb') { p(x0 - 1, y0 - 1, 4, 5, '#F2E8D0'); p(x0 - 1, y0 - 1, 4, 1, '#8A6A3A'); p(x0 - 1, y0 + 3, 4, 1, '#8A6A3A'); p(x0, y0 + 1, 2, 1, '#C83A3A'); }
-      else if (wp === 'talisman') { p(x0, y0 - 2, 2, 5, '#F2E6A0'); p(x0, y0 - 1, 2, 1, '#C83A3A'); p(x0, y0 + 1, 2, 1, '#C83A3A'); }
+      else if (wp === 'disc') { p(x0 - 2, y0 - 1, 6, 6, '#4A8AA8'); p(x0 - 1, y0, 4, 4, '#2E5A70'); p(x0, y0 + 1, 2, 2, '#BFF0FF'); }
+      else if (wp === 'scrollb') { p(x0 - 2, y0 - 2, 5, 7, '#F2E8D0'); p(x0 - 2, y0 - 2, 5, 1, '#8A6A3A'); p(x0 - 2, y0 + 4, 5, 1, '#8A6A3A'); p(x0 - 1, y0 + 1, 3, 1, '#C83A3A'); }
+      else if (wp === 'talisman') { p(x0 - 1, y0 - 3, 3, 7, '#F2E6A0'); p(x0, y0 - 2, 1, 1, '#C83A3A'); p(x0 - 1, y0, 3, 1, '#C83A3A'); p(x0, y0 + 2, 1, 1, '#C83A3A'); }
       return;
     }
     if (swingP && wp === 'spear') {
@@ -225,7 +225,7 @@
       if (side) { const back2 = swingP === 'wind' ? -6 : swingP === 'follow' ? -3 : -1, n = swingP === 'wind' ? 9 : 8; p(hx + back2, hy, n, 1, wood); p(hx + back2 + n, hy - 1, 2, 3, metal); return; }
       if (swingP !== 'wind') { const [ex, ey] = ray(7, 12, -0.5, 1, swingP === 'strike' ? 6 : 5, wood); p(ex - 1, ey + 1, 2, 2, metal); p(ex - 1, ey + 3, 1, 1, metal); return; }
     } else if (swingP && k === 'melee' && (side ? swingP !== 'strike' : swingP !== 'wind')) {
-      const len = { greatsword: 11, axe: 8, sword: 8, katana: 9, dualblades: 5, mace: 7 }[wp] || 8, bw = wp === 'greatsword' ? 2 : 1, head = wp === 'axe' || wp === 'mace';
+      const len = { greatsword: 10, axe: 9, sword: 9, katana: 9, dualblades: 7, mace: 8 }[wp] || 8, bw = wp === 'greatsword' ? 2 : 1, head = wp === 'axe' || wp === 'mace';
       const blade = (x0, y0, sx, sy, n) => {
         const [ex, ey] = ray(x0, y0, sx, sy, n, head ? wood : '#FFFFFF');
         if (bw === 2) ray(x0 + 1, y0, sx, sy, n, metal);
@@ -240,12 +240,12 @@
       else { p(4, 13, 1, 1, gold); p(5, 14, 1, 1, gold); blade(4, 14, -0.7, 1, Math.min(len, 7)); if (wp === 'dualblades') ray(2, 15, -0.5, 1, 4, '#FFFFFF'); }
       return;
     }
-    if (k === 'gun') { const len = wp === 'rifle' ? 7 : wp === 'shotgun' ? 6 : 4; if (side) { p(hx, hy - 1, len, 2, dark); p(hx, hy - 1, len, 1, lt(dark)); p(hx, hy + 1, 2, 2, wood); } else { p(hx, hy - 3, 2, len, dark); p(hx, hy - 3, 1, len, lt(dark)); } }
-    else if (k === 'bow') { const h2 = wp === 'longbow' ? 11 : 8, top = side ? hy - Math.floor(h2 / 2) : hy - h2 + 2; p(hx + 1, top, 1, h2, wp === 'crossbow' ? dark : wood); p(hx + 2, top + 1, 1, 1, wood); p(hx + 2, top + h2 - 2, 1, 1, wood); p(hx, top + 1, 1, h2 - 2, '#E8E0D0'); }
+    if (k === 'gun') { const len = wp === 'rifle' ? 7 : wp === 'shotgun' ? 6 : 5; if (side) { p(hx, hy - 1, len, 2, dark); p(hx, hy - 1, len, 1, lt(dark)); p(hx, hy + 1, 2, 2, wood); } else { p(hx, hy - 3, 2, len, dark); p(hx, hy - 3, 1, len, lt(dark)); } }
+    else if (k === 'bow') { const h2 = wp === 'longbow' ? 10 : 9, top = side ? hy - Math.floor(h2 / 2) : hy - h2 + 2; p(hx + 1, top, 1, h2, wp === 'crossbow' ? dark : wood); p(hx + 2, top + 1, 1, 1, wood); p(hx + 2, top + h2 - 2, 1, 1, wood); p(hx, top + 1, 1, h2 - 2, '#E8E0D0'); }
     else if (k === 'magic') { const orb = wp === 'holystaff' ? '#FFE08A' : '#9A7AFF'; if (wp === 'orb') { p(hx, hy - 3, 3, 3, orb); p(hx, hy - 3, 1, 1, '#FFFFFF'); } else { p(hx + 1, hy - 11, 1, 13, wp === 'holystaff' ? '#E6DEC6' : wood); p(hx, hy - 13, 3, 3, orb); p(hx, hy - 13, 1, 1, '#FFFFFF'); } }
-    else if (wp === 'spear') { if (side && atk) { p(hx, hy, 6, 1, wood); p(hx + 6, hy - 1, 2, 3, metal); } else { p(hx + 1, hy - 14, 1, 16, wood); p(hx, hy - 16, 3, 2, metal); p(hx + 1, hy - 17, 1, 1, metal); } }
+    else if (wp === 'spear') { if (side && atk) { p(hx, hy, 6, 1, wood); p(hx + 6, hy - 1, 2, 3, metal); } else { p(hx + 1, hy - 11, 1, 13, wood); p(hx, hy - 13, 3, 2, metal); p(hx + 1, hy - 14, 1, 1, metal); } }
     else {
-      const len = { greatsword: 11, axe: 8, sword: 8, katana: 9, dualblades: 5, mace: 7 }[wp] || 8, bw = wp === 'greatsword' ? 2 : 1, blade = wp === 'mace' ? '#8A8A92' : metal;
+      const len = { greatsword: 10, axe: 9, sword: 9, katana: 9, dualblades: 7, mace: 8 }[wp] || 8, bw = wp === 'greatsword' ? 2 : 1, blade = wp === 'mace' ? '#8A8A92' : metal;
       if (side && atk) { p(hx, hy, Math.min(len, 8), bw, blade); p(hx, hy, Math.min(len, 8), 1, '#FFFFFF'); p(hx - 1, hy - 1, 1, 3, '#C9A13A'); }
       else {
         p(hx + 1, hy - len, bw, len, wp === 'axe' || wp === 'mace' ? wood : blade); if (wp !== 'axe' && wp !== 'mace') p(hx + 1, hy - len, 1, len, '#FFFFFF');
