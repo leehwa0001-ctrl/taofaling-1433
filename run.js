@@ -33,7 +33,7 @@
     if (R.leaveTown) R.leaveTown();
     const site = R.SITES.find(s => s.id === siteId), grade = R.gradeById(site.grade), cls = R.S.cls;
     const type = site.type || 'city';
-    const floors = Math.max(2, grade.floors + (R.TYPES[type] ? R.TYPES[type].floors : 0));
+    const floors = R.floorsFor ? R.floorsFor(site) : Math.max(2, grade.floors + (R.TYPES[type] ? R.TYPES[type].floors : 0));   // depth.js：每座遺跡的層數
     const reactions = Object.keys(R.REACTIONS).filter(k => !(grade.crystal === 'none' && k === 'tail'));
     W.run = { site, grade, type, env: site.env || (grade.env ? ['volcano', 'desert', 'deep'][Math.floor(Math.random() * 3)] : null), floors, floor: 0, bag: [], mats: {}, gold: 0, kills: 0, aware: 0, reaction: reactions[Math.floor(Math.random() * reactions.length)], reactionKnown: false, reactCount: 0, done: false, t: 0, startLv: R.S.classes[cls].lv };
     R.S.stats.runs = (R.S.stats.runs || 0) + 1; R.save();

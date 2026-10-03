@@ -275,7 +275,7 @@ window.R = window.R || {};
     tower: { name: '高塔型', floors: 1, rooms: () => 5, favor: { karasu: 2, ittan: 2, onibi: 1 }, desc: '分層多、分區少，像一座往下長的塔。' },
     city: { name: '城區型', floors: 0, rooms: () => 8, favor: { kasa: 2, chochin: 1, kappa: 1 }, desc: '分層與分區數量相近，方正得像一座城鎮。' },
     maze: { name: '迷宮型', floors: -1, rooms: () => 11, favor: { kodama: 3, nozuchi: 2, okuriinu: 1 }, desc: '分區多、分層少，像迷宮一樣繞。' },
-    tomb: { name: '陵墓型', floors: 0, rooms: f => 4 + f * 2, favor: { honemusha: 4, onibi: 1, chochin: 1 }, lord: 'gashadokuro', desc: '頂部分區少、底部分區多，越往下越寬，像一座倒過來的金字塔。' },
+    tomb: { name: '陵墓型', floors: 0, rooms: f => Math.min(16, 4 + f * 2), favor: { honemusha: 4, onibi: 1, chochin: 1 }, lord: 'gashadokuro', desc: '頂部分區少、底部分區多，越往下越寬，像一座倒過來的金字塔。' },
     island: { name: '浮島型', floors: 0, rooms: () => 7, favor: { kappa: 3, karasu: 2 }, desc: '只出現在海上。分區多，形成島狀，島上還有偽裝成高塔型的遺跡。' }
   };
   // 佩特拉核心的自衛與修復行為（《遺跡》第一章第三節）

@@ -31,10 +31,11 @@
       return { g, top, ring, x, z };
     };
     // 每 5 層：記錄碑
-    if (n > 0 && n % EVERY === 0) { const [x, z] = placeNear(r, SPOTS); F.save = Object.assign(stone(x, z, '#7AC8FF'), { n }); }
+    const every = R.saveEvery ? R.saveEvery(run) : EVERY;   // depth.js：層數少的 3 層一個、多的 8 層一個
+    if (n > 0 && n % every === 0) { const [x, z] = placeNear(r, SPOTS); F.save = Object.assign(stone(x, z, '#7AC8FF'), { n }); }
     // 入口那一層：轉送到記下的那一層
     const best = wp()[run.site.id] || 0, entry = has0(run) ? 0 : 0;
-    if (run.floor === entry && best >= EVERY && floorOf(run, best) < run.floors) { const [x, z] = placeNear(r, WARP_SPOTS); F.warp = Object.assign(stone(x, z, '#B88AFF'), { n: best }); }
+    if (run.floor === entry && best >= 3 && floorOf(run, best) < run.floors) { const [x, z] = placeNear(r, WARP_SPOTS); F.warp = Object.assign(stone(x, z, '#B88AFF'), { n: best }); }
   };
   const lf0 = R.loadFloor;
   R.loadFloor = (f, o) => { const r = lf0(f, o); try { build(); } catch (e) { console.warn('[savepoint]', e); } return r; };

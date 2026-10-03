@@ -34,7 +34,7 @@
 
   // ---------- 遺跡資料 ----------
   const gradeOf = s => R.gradeById(s.grade);
-  const floorsOf = s => { const g = gradeOf(s), t = R.TYPES[s.type]; return g && g.floors ? Math.max(2, g.floors + (t ? t.floors : 0)) : null; };
+  const floorsOf = s => { const g = gradeOf(s), t = R.TYPES[s.type]; return g && g.floors ? (R.floorsFor ? R.floorsFor(s) : Math.max(2, g.floors + (t ? t.floors : 0))) : null; };
   const monstersOf = s => { const g = gradeOf(s); if (!g || !g.pool) return []; let ids = g.pool.slice(); if (s.env) ids = ids.concat(Object.keys(R.ENEMIES).filter(k => R.ENEMIES[k].env === s.env)); if (g.lords) ids = ids.concat(g.lords); if (g.boss) ids.push(g.boss); return ids; };
   const LORE = {
     hamilia: '威脅最低。經公會登記與審核，一般民眾也能進入；轉化效率低，戰利品多半靠人工採集。',

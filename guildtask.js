@@ -20,10 +20,10 @@
   R.FIVE_TRACK = NAMES;
 
   // ---------- 委託書 ----------
-  const floorsOf = site => { const g = R.gradeById(site.grade); return Math.max(2, g.floors + (R.TYPES[site.type] && R.TYPES[site.type].floors || 0)); };
+  const floorsOf = site => { if (R.floorsFor) return R.floorsFor(site); const g = R.gradeById(site.grade); return Math.max(2, g.floors + (R.TYPES[site.type] && R.TYPES[site.type].floors || 0)); };
   R.taskSpec = site => {
     const g = R.gradeById(site.grade), floors = floorsOf(site), patrol = g.id === 'hamilia';
-    return { kind: patrol ? 'patrol' : 'hunt', need: patrol ? floors : Math.max(10, Math.round(floors * (K[g.id] || 12))), limitH: Math.ceil(floors * 4 * (1 + 0.08 * (g.lv - 1))), letter: g.letter || '', floors };
+    return { kind: patrol ? 'patrol' : 'hunt', need: patrol ? floors : Math.max(10, Math.round(Math.min(floors, 10) * (K[g.id] || 12))),   /* 層數變多（depth.js）以後，討伐的數量最多照 10 層算 */ limitH: Math.ceil(floors * 4 * (1 + 0.08 * (g.lv - 1))), letter: g.letter || '', floors };
   };
   const specLines = (site, sp) => { const g = R.gradeById(site.grade); return sp.lines || ['任務分級：' + sp.letter + ' 級（' + g.name + '）', sp.kind === 'patrol' ? '任務內容：巡查（走到最深處，第 ' + sp.floors + ' 層）' : '任務內容：討伐遺跡生物 ' + sp.need + ' 隻（討伐令 1433 令）', '時限：' + sp.limitH + ' 小時（超過每小時扣 3% 的效率分）']; };
   R.taskExtras = [];   // 加注條款之類的：{ html(site), bind(box, site) }
