@@ -683,6 +683,9 @@
         R.shake(0.6); R.drawMinimap(true);
       }
       // 沒逃出來：整區被佩特拉吞掉，人被吐到上下兩層內的隨機樓層（作者：斷尾過後會跑到隨機樓層）
+      // 2026-10-04 作者回報：斷尾型沒有掉到其他樓層、一直受傷——中途離開過一下（打破肉壁、被擊退到門口），倒數就永遠取消了；
+      // 現在只要人還在被切掉的那一區裡，就重新開始 5 秒倒數
+      if (sealed && swallow == null && !P.dead && R.roomIndexAt(P.x, P.z) === room.i && !(run.coop && !run.coop.solo)) { swallow = 5; R.toast('被困在被切掉的那一區——5 秒內打破肉壁逃出去，不然會被吞掉', '#FF6A6A'); }
       if (swallow != null) {
         if (P.dead || R.roomIndexAt(P.x, P.z) !== room.i) swallow = null;
         else { const s0 = Math.ceil(swallow); swallow -= dt; if (Math.ceil(swallow) < s0 && swallow > 0) R.toast('被吞掉還有 ' + Math.ceil(swallow) + ' 秒——打破肉壁！', '#FF6A6A');
