@@ -57,7 +57,7 @@
     R.save();
   };
   const matsLine = () => Object.keys(R.MATS).filter(k => R.S.mats[k]).map(k => '<span class="mat" style="--c:' + R.MATS[k].color + '">' + esc(R.MATS[k].name) + ' ' + R.S.mats[k] + '</span>').join('') || '<span class="note">還沒有素材。</span>';
-  const itemCard = (it, btns) => '<div class="item-card" style="--c:' + R.rarityColor(it) + '">' + (R.itemIconTag ? R.itemIconTag(it, 'card') : '') + '<b>' + esc(R.itemName(it)) + '</b>' + (it.identified ? '<small class="rar">' + R.RARITY[it.rarity].name + '</small>' : '<small class="rar">？？？</small>') + '<ul>' + R.itemLines(it).map(l => '<li>' + esc(l) + '</li>').join('') + '</ul><div class="row">' + btns + '</div></div>';
+  const itemCard = (it, btns) => '<div class="item-card" style="--c:' + R.rarityColor(it) + '">' + (R.itemIconTag ? R.itemIconTag(it, 'card') : '') + '<b>' + esc(R.itemName(it)) + '</b>' + (it.identified ? '<small class="rar">' + R.RARITY[it.rarity].name + '</small>' : '<small class="rar">？？？</small>') + (it.locked ? '<span class="tag lock-tag">🔒 上鎖</span>' : '') + '<ul>' + R.itemLines(it).map(l => '<li>' + esc(l) + '</li>').join('') + '</ul><div class="row">' + btns + '</div></div>';
 
   // 同行的勇者：最多兩個人；每個人分走一成五的委託報酬
   const partyBox = () => {
@@ -117,8 +117,8 @@
       h += '<p class="note">做出來的東西當場就鑑定好了。現在的職業：' + esc(R.clsName(S.cls)) + '。</p><label class="field">要做什麼<select id="craft-base">' + groups + '</select></label>'
         + '<div class="recipes">' + R.RECIPES.map((rc, i) => '<div class="recipe"><b>' + esc(rc.name) + '（物品等級 ' + rc.ilvl + '）</b><small>' + Object.keys(rc.mats).map(k => esc(R.MATS[k].name) + ' ' + (S.mats[k] || 0) + '／' + rc.mats[k]).join('・') + '・' + rc.gold + ' 費拉</small><small>可能的稀有度：' + rc.weights.map((w, k) => w ? R.RARITY[k].name : '').filter(Boolean).join('、') + '</small><button type="button" class="btn pri" data-craft="' + i + '"' + (R.canCraft(rc) ? '' : ' disabled') + '>打造</button></div>').join('') + '</div>';
     }
-    if (sub === 'up') { const ok = S.stash.filter(it => it.identified); h += '<p class="note">強化最多到 +5。每一級：武器傷害 +8%，防具防禦 +1.5。</p><div class="items">' + ok.map(it => { const c = R.upgradePrice(it); return itemCard(it, it.plus >= 5 ? '<span class="note">已經 +5</span>' : '<button type="button" class="btn pri" data-up="' + it.id + '"' + (S.gold >= c.gold && S.mats.crystal >= c.crystal ? '' : ' disabled') + '>強化（' + c.gold + ' 費拉・魔力水晶 ' + c.crystal + '）</button>'); }).join('') + '</div>'; }
-    if (sub === 'salv') { const eqIds = R.equippedIds(); const ok = S.stash.filter(it => !eqIds.has(it.id)); h += '<p class="note">拆掉不要的裝備換素材。裝備中的不能拆。</p><div class="items">' + ok.map(it => itemCard(it, '<button type="button" class="btn" data-salv="' + it.id + '">分解</button>')).join('') + '</div>'; }
+    if (sub === 'up') { const eqU = R.equippedIds(), ok = S.stash.filter(it => it.identified).sort((a, b) => (eqU.has(b.id) - eqU.has(a.id)) || b.rarity - a.rarity); h += '<p class="note">強化最多到 +5。每一級：武器傷害 +8%，防具防禦 +1.5。</p><div class="items">' + ok.map(it => { const c = R.upgradePrice(it); return itemCard(it, (eqU.has(it.id) ? '<span class="tag">裝備中</span>' : '') + (it.plus >= 5 ? '<span class="note">已經 +5</span>' : '<button type="button" class="btn pri" data-up="' + it.id + '"' + (S.gold >= c.gold && S.mats.crystal >= c.crystal ? '' : ' disabled') + '>強化（' + c.gold + ' 費拉・魔力水晶 ' + c.crystal + '）</button>')); }).join('') + '</div>'; }
+    if (sub === 'salv') { const eqIds = R.equippedIds(); const ok = S.stash.filter(it => !eqIds.has(it.id) && !it.locked); h += '<p class="note">拆掉不要的裝備換素材。裝備中的、上鎖的不能拆（在倉庫按「上鎖」）。</p><div class="items">' + ok.map(it => itemCard(it, '<button type="button" class="btn" data-salv="' + it.id + '">分解</button>')).join('') + '</div>'; }
     return h + '<h3>手邊的素材</h3><div class="mats">' + matsLine() + '</div></section>';
   };
   // 倉庫：裝備、賣掉
@@ -128,7 +128,7 @@
     const P = R.calcPlayer(S.cls);
     const rest = S.stash.filter(it => !eqIds.has(it.id));
     return '<section class="panel-doc"><h2>倉庫</h2><p class="note">現在的職業：' + esc(R.CLASSES[S.cls].name) + '。放在倉庫的東西很安全；帶進遺跡的只有身上的裝備。</p><div class="slots">' + R.GEAR_KEYS.map(slot).join('') + '</div><p class="note">生命 ' + P.hpMax + '・魔力 ' + P.mpMax + '・防禦 ' + P.def.toFixed(1) + '・移動速度 ' + P.speed.toFixed(2) + '</p>'
-      + '<h3>倉庫裡的東西（' + rest.length + '）</h3><div class="items">' + rest.map(it => itemCard(it, (R.canUse(it, S.cls) ? '<button type="button" class="btn pri" data-equip="' + it.id + '">穿上（' + R.GEAR_NAME[R.slotOf(it)] + '）</button>' : '<span class="note">' + esc(R.CLASSES[S.cls].name) + '不能用</span>') + '<button type="button" class="btn" data-sell="' + it.id + '">賣掉（' + R.sellPrice(it) + '）</button>')).join('') + '</div></section>';
+      + '<h3>倉庫裡的東西（' + rest.length + '）</h3><div class="items">' + rest.map(it => itemCard(it, (R.canUse(it, S.cls) ? '<button type="button" class="btn pri" data-equip="' + it.id + '">穿上（' + R.GEAR_NAME[R.slotOf(it)] + '）</button>' : '<span class="note">' + esc(R.CLASSES[S.cls].name) + '不能用</span>') + (it.locked ? '<button type="button" class="btn" disabled title="上鎖的不能賣，先解鎖">賣掉（上鎖中）</button>' : '<button type="button" class="btn" data-sell="' + it.id + '">賣掉（' + R.sellPrice(it) + '）</button>') + '<button type="button" class="mini" data-lock="' + it.id + '" title="上鎖的東西不能賣、不能分解，一起賣也不會賣到">' + (it.locked ? '解鎖' : '上鎖') + '</button>')).join('') + '</div></section>';
   };
   // 白藤堂：藥水
   const shop = () => {
@@ -164,6 +164,7 @@
     on('[data-salv]', b => { const got = R.salvage(R.itemById(b.dataset.salv)); R.hub(); flashMsg('拆出來了：' + Object.keys(got).map(k => R.MATS[k].name + ' ×' + got[k]).join('、')); });
     on('[data-equip]', b => { const it = R.itemById(b.dataset.equip); S.equip[S.cls][R.slotOf(it)] = it.id; R.hub(); });
     on('[data-unequip]', b => { S.equip[S.cls][b.dataset.unequip] = null; R.hub(); });
+    on('[data-lock]', b => { const it = R.itemById(b.dataset.lock); if (!it) return; it.locked = !it.locked; R.save(); R.hub(); flashMsg(it.locked ? '上鎖了：' + R.itemName(it) + '（不會被賣掉、分解）' : '解鎖了：' + R.itemName(it)); });
     on('[data-sell]', b => { const p = R.sell(R.itemById(b.dataset.sell)); R.hub(); flashMsg('賣了 ' + p + ' 費拉'); });
     on('[data-buy]', b => { const [k, p] = b.dataset.buy.split(':'); if (S.gold >= +p) { S.gold -= +p; S.potions[k]++; R.hub(); } });
     on('[data-herb]', () => { if (S.mats.herb >= 3) { S.mats.herb -= 3; S.potions.hp++; R.hub(); } });

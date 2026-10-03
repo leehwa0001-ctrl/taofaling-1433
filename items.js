@@ -86,6 +86,7 @@
   // ---------- 鐵匠鋪 ----------
   R.identify = it => { if (it.identified) return false; const p = R.idPrice(it); if (R.S.gold < p) return false; R.S.gold -= p; it.identified = true; return true; };
   R.salvage = it => {
+    if (!it || it.locked) return {};   // 上鎖的不拆
     const t = R.tierOf(it.ilvl), got = { iron: rint(1, 2) };
     if (t >= 1) got.manaore = rint(1, 2);
     if (it.identified && it.rarity >= 2) got.crystal = rint(1, it.rarity);
@@ -95,7 +96,7 @@
     R.removeItem(it.id);
     return got;
   };
-  R.sell = it => { const p = R.sellPrice(it); R.S.gold += p; R.removeItem(it.id); return p; };
+  R.sell = it => { if (!it || it.locked) return 0; const p = R.sellPrice(it); R.S.gold += p; R.removeItem(it.id); return p; };
   R.upgrade = it => {
     if (!it.identified || it.plus >= 5) return false;
     const c = R.upgradePrice(it);

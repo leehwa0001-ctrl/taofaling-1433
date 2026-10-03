@@ -256,7 +256,7 @@
     Object.keys(pay).forEach(i => { G.seats[i].pts -= pay[i]; }); G.seats[w].pts += total + G.kyotaku; const kt = G.kyotaku; G.kyotaku = 0;
     G.result = { kind: tsumo ? 'tsumo' : 'ron', w, from, y, total, kt, hand: (tsumo ? G.seats[w].hand : G.seats[w].hand.concat([G.last.t])).slice().sort((a, b) => a - b), winT: tsumo ? G.drawn : G.last.t, melds: G.seats[w].melds.slice() };
     G.phase = 'result';
-    if (w === 0 && R.S) { const S = R.S; S.mj = S.mj || { games: 0, first: 0, wins: 0, best: 0, bestName: '' }; S.mj.wins++; if (y.han > S.mj.best) { S.mj.best = y.han; S.mj.bestName = y.yaku.map(v => v[0]).join('・'); } }
+    if (w === 0 && R.S) { const S = R.S; S.mj = S.mj || { games: 0, first: 0, wins: 0, best: 0, bestName: '' }; S.mj.wins++; if (y.han > S.mj.best) { S.mj.best = y.han; S.mj.bestName = y.yaku.map(v => v[0]).join('・'); } R.mjEvent && R.mjEvent('win', { y, tsumo, mul: MUL }); }
     R.sfx && R.sfx(w === 0 ? 'chest' : 'pick');
   };
   const exhaust = () => {
@@ -321,7 +321,7 @@
   const finish = () => {
     if (G.kyotaku) { order()[0].pts += G.kyotaku; G.kyotaku = 0; }   // 最後沒人拿的供託給第一名
     const S = R.S, rk = order().findIndex(o => o.i === 0), pr = PRIZE[rk] * MUL;
-    if (S) { S.mj = S.mj || { games: 0, first: 0, wins: 0, best: 0, bestName: '' }; S.mj.games++; if (!rk) S.mj.first++; S.gold += pr; R.save && R.save(); }
+    if (S) { S.mj = S.mj || { games: 0, first: 0, wins: 0, best: 0, bestName: '' }; S.mj.games++; if (!rk) S.mj.first++; S.gold += pr; R.save && R.save(); R.mjEvent && R.mjEvent('end', { rk, pr, mul: MUL }); }
     G.final = { rk, pr };
     R.sfx && R.sfx(rk === 0 ? 'chest' : 'coin');
   };

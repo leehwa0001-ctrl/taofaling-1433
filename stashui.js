@@ -18,7 +18,7 @@
   const tierName = it => it.identified ? (R.RARITY[it.rarity] && R.RARITY[it.rarity].name) || '' : '未鑑定';
   const sameTier = (a, b) => (a.identified ? 1 : 0) === (b.identified ? 1 : 0) && (!a.identified || a.rarity === b.rarity);
   const bulkSell = it => {
-    const s = S(), eqIds = R.equippedIds ? R.equippedIds() : new Set(), list = s.stash.filter(x => !eqIds.has(x.id) && sameTier(x, it));
+    const s = S(), eqIds = R.equippedIds ? R.equippedIds() : new Set(), list = s.stash.filter(x => !eqIds.has(x.id) && !x.locked && sameTier(x, it));   // 上鎖的不賣
     if (!list.length) return;
     if (it.identified && it.rarity >= 3 && !confirm('一次賣掉 ' + list.length + ' 件「' + tierName(it) + '」的東西？')) return;
     let g = 0; list.forEach(x => { g += R.sell(x); });
@@ -26,7 +26,7 @@
   };
   const hold = body => {
     body.querySelectorAll('[data-sell]').forEach(b => {
-      if (b.dataset.hold) return; b.dataset.hold = 1; b.title = '點一下賣這一件；按住 0.6 秒，同一個稀有度的一起賣';
+      if (b.dataset.hold) return; b.dataset.hold = 1; b.title = '點一下賣這一件；按住 0.6 秒，同一個稀有度的一起賣（上鎖的不會賣）';
       let t = null;
       const stop = () => { if (t) { clearTimeout(t); t = null; } b.classList.remove('st-holding'); };
       b.addEventListener('pointerdown', e => {

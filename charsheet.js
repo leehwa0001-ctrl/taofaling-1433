@@ -20,7 +20,7 @@
       + (ws.vamp ? row('吸血', Math.round(ws.vamp * 100) + '%') : '') + (elem ? row('屬性', elem) : '') + (ws.pierce ? row('穿透', ws.pierce) : '') + (ws.range ? row('射程', n1(ws.range) + ' 公尺') : '') + '</div>';
     h += '<div class="cs-sec"><h4>防守・其他</h4>' + row('翻滾冷卻', n1(P.dodgeCdMax || 0) + ' 秒') + row('技能冷卻', pct((P.skillCdMult || 1) - 1)) + row('每秒回復', n1(P.regen || 0) + ' 生命')
       + row('佩特拉的注意', P.calm ? '上升慢 ' + Math.round(P.calm * 100) + '%' : '照常') + (P.greed ? row('撿錢', pct(P.greed)) : '') + ((P.accGuard || P.talGuard) ? row('受到的傷害', '−' + Math.round(((P.accGuard || 0) + (P.talGuard || 0)) * 100) + '%') : '')
-      + (P.accLucky ? row('幸運', pct(P.accLucky)) : '') + (P.immune && Object.keys(P.immune).length ? row('免疫', Object.keys(P.immune).join('、')) : '') + '</div>';
+      + (P.luck ? row('幸運', P.luck + ' 點', '寶箱比較不會空、比較會多開一樣、暴擊率高一點') : '') + (P.accLucky ? row('寶箱多開一樣', pct(P.accLucky)) : '') + (P.immune && Object.keys(P.immune).length ? row('免疫', Object.keys(P.immune).join('、')) : '') + '</div>';
     h += '</div><h4>從哪裡來</h4><div class="cs-src">';
     // 裝備
     const items = R.GEAR_KEYS.map(k => eq[k]).filter(Boolean), aff = {};
