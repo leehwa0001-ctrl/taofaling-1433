@@ -26,6 +26,7 @@
     R.addDeed && R.addDeed('勇者證的種族欄重新登記為「' + r.name + '」。');
     R.save(); if (R.restyleSelf) R.restyleSelf();
   };
+  R.applyRace = applyRace;   // 自選券（raceselect.js）也用
   const ticketGacha = () => {
     const S = R.S, host = $('hub-sheet'), el = $('hub-modal'); el.hidden = false;
     let got = [], pick = null;
