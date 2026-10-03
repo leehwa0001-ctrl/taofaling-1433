@@ -20,7 +20,9 @@ window.R = window.R || {};
     mage: { name: '術士', hp: 76, mp: 110, speed: 5.9, skill: 'fireball', color: '#5A4A8A', desc: '法杖、法球。施法消耗魔力。', look: { top: '#4A3E7A', hair: '#D8D2C4', cloak: '#2E2A4A' } },
     priest: { name: '牧師', hp: 96, mp: 95, speed: 5.9, skill: 'heal', color: '#C9B77A', desc: '聖杖、戰錘。會治療自己。', look: { top: '#E6DEC6', hair: '#6A4A2E', cloak: '#B89A4A' } },
     blade: { name: '刀客', hp: 112, mp: 45, speed: 6.7, skill: 'flash', color: '#3A3A44', desc: '刀、雙刀。快、準，穿過敵人。', look: { top: '#2E2E38', hair: '#101014', cloak: '#6A2A2A' } },
-    knight: { name: '騎士', hp: 152, mp: 35, speed: 5.4, skill: 'charge', color: '#6A7A8A', desc: '長劍、長槍、戰錘，帶盾。正面受到的傷害減少。', look: { top: '#8A96A3', hair: '#C99B55', cloak: '#2F4A6E' }, shield: 1 }
+    knight: { name: '騎士', hp: 152, mp: 35, speed: 5.4, skill: 'charge', color: '#6A7A8A', desc: '長劍、長槍、戰錘，帶盾。正面受到的傷害減少。', look: { top: '#8A96A3', hair: '#C99B55', cloak: '#2F4A6E' }, shield: 1 },
+    // 2026-10-04 作者：加一個武術家，把內修派用到那裡
+    monk: { name: '武術家', hp: 118, mp: 50, speed: 6.6, skill: 'm_flurry', color: '#B8642E', desc: '拳套、長棍。赤手空拳近身連打，或用長棍掃開一片。', look: { top: '#C86A2E', hair: '#2A1E16', cloak: '#5A3A22' } }
   };
   R.CLASS_IDS = Object.keys(R.CLASSES);
   // 上位職業：每個基礎職業三條路——強化原本打法／換個玩法／昭旭與遺跡的路線（作者定案，2026-09-30）
@@ -36,7 +38,9 @@ window.R = window.R || {};
     warrior: [
       { id: 'berserker', name: '狂戰士', path: '強化', skill: 'rage', desc: '技能「狂怒」：6 秒內傷害 +50%、攻速 +30%、吸血。被動：生命越低傷害越高（最多 +40%）。' },
       { id: 'gladiator', name: '劍鬥士', path: '變化', skill: 'combo', desc: '技能「迴旋連斬」：連續三次環形斬擊並擊退。被動：攻速 +20%。' },
-      { id: 'inner', name: '內修者', path: '昭旭・遺跡', skill: 'qijin', desc: '吐納遺跡裡飄散的殘存魔力質。技能「氣勁」：蓄氣一掌震退周圍敵人，打中的行壁直接碎裂。被動：站著不動時回復生命與魔力；攻擊不會讓佩特拉的注意上升。' }],
+      { id: 'onimusha', name: '鬼武者', path: '昭旭・遺跡', skill: 'on_rend', desc: '戴上遺跡裡撿到的鬼面，把佩特拉的惡意變成力氣。技能「鬼斬」：往前大範圍斬擊，打中的敵人被嚇得愣住。被動：生命低於一半時，受到的傷害 −20%、傷害 +15%。' },
+      // 內修者搬到武術家（2026-10-04）；之前就轉成內修者的戰士照舊（legacy：轉職畫面不再出現）
+      { id: 'inner', name: '內修者', path: '昭旭・遺跡', skill: 'qijin', legacy: 1, desc: '吐納遺跡裡飄散的殘存魔力質。技能「氣勁」：蓄氣一掌震退周圍敵人，打中的行壁直接碎裂。被動：站著不動時回復生命與魔力；攻擊不會讓佩特拉的注意上升。' }],
     mage: [
       { id: 'elementalist', name: '元素師', path: '強化', skill: 'meteor', desc: '技能「隕石」：在準心處落下隕石，大範圍傷害並燃燒。被動：命中時 20% 機率燃燒或減速。' },
       { id: 'hexer', name: '咒術師', path: '變化', skill: 'hex', desc: '技能「咒縛」：詛咒一片範圍的敵人：受到的傷害 +30%、移動變慢。被動：被詛咒的敵人死掉時，詛咒會傳給旁邊的敵人。' },
@@ -52,7 +56,13 @@ window.R = window.R || {};
     knight: [
       { id: 'templar', name: '殿堂騎士', path: '強化', skill: 'fortress', desc: '技能「堡壘」：5 秒內受到的傷害 −70%，並反彈 30%。被動：受到傷害 −15%。' },
       { id: 'paladin', name: '聖騎士', path: '變化', skill: 'holycharge', desc: '技能「聖光衝鋒」：衝鋒並放出聖光震波，回復自己。被動：擋下攻擊時回復生命。' },
-      { id: 'dragoon', name: '龍騎士', path: '昭旭・遺跡', skill: 'jump', desc: '技能「龍躍」：高高跳起，落在準心處震飛周圍敵人，跳在空中時不會受傷。被動：長槍的攻擊距離 +25%。' }]
+      { id: 'dragoon', name: '龍騎士', path: '昭旭・遺跡', skill: 'jump', desc: '技能「龍躍」：高高跳起，落在準心處震飛周圍敵人，跳在空中時不會受傷。被動：長槍的攻擊距離 +25%。' }],
+    monk: [
+      { id: 'fistsaint', name: '拳聖', path: '強化', skill: 'fs_hundred', desc: '技能「百裂拳」：一口氣打出八拳。被動：攻速 +20%、暴擊率 +5%。' },
+      // 外修派「東方派」（《法術統整》第五章：華爾納蘭特帝國的「氣道」）：體外一層魔力罩，施法快；魔力外放，很容易被感知
+      { id: 'waixiu', name: '外修者', path: '變化', skill: 'wx_burst', desc: '外修派（東方派）的氣道：體外常駐一層無形的魔力罩。技能「氣爆」：把魔力罩一口氣炸開，震飛周圍的敵人。被動：魔力罩會自己慢慢長回來（最多擋生命的 15%）、技能冷卻 −15%；但魔力外放像黑夜裡的燈火，佩特拉的注意上升 +20%。' },
+      // 內修派（《法術統整》第五章）：魔力注進全身的細胞強化肉體，不往體外施法
+      { id: 'inner', name: '內修者', path: '昭旭・遺跡', skill: 'qijin', desc: '內修派：把魔力質注進全身的細胞，強化肉體和五感。技能「氣勁」：蓄氣一掌震退周圍敵人，打中的行壁直接碎裂。被動：站著不動時回復生命與魔力；攻擊不會讓佩特拉的注意上升。' }]
   };
   R.PROMOTE_LV = 15;   // 轉職：職業等級 15（2026-10-04 作者：調高、還要條件；原本 8），段位、轉職試煉、一顆魔力核心見 promote.js
   R.xpNeed = lv => 60 + lv * 55;   // 硬核：升級要的經驗值多
@@ -107,9 +117,11 @@ window.R = window.R || {};
     mace: { name: '戰錘', cls: ['priest', 'knight'], kind: 'melee', dmg: 19, rate: 1.5, range: 2.2, arc: 1.7, kb: 2, stun: 0.15 },
     katana: { name: '刀', cls: ['blade'], kind: 'melee', dmg: 15, rate: 2.7, range: 2.6, arc: 1.6, kb: 1 },
     dualblades: { name: '雙刀', cls: ['blade'], kind: 'melee', dmg: 8.5, hits: 2, rate: 3.4, range: 2, arc: 1.4 },
-    spear: { name: '長槍', cls: ['knight'], kind: 'thrust', dmg: 17, rate: 1.9, range: 3.7, width: 0.9, kb: 1.5 }
+    spear: { name: '長槍', cls: ['knight'], kind: 'thrust', dmg: 17, rate: 1.9, range: 3.7, width: 0.9, kb: 1.5 },
+    gauntlet: { name: '拳套', cls: ['monk'], kind: 'melee', dmg: 7, hits: 2, rate: 3.5, range: 1.8, arc: 1.5, kb: 0.6 },
+    staffpole: { name: '長棍', cls: ['monk'], kind: 'melee', dmg: 12, rate: 2.3, range: 3, arc: 2.6, kb: 1.6 }
   };
-  R.STARTER = { gunner: 'pistol', archer: 'shortbow', warrior: 'sword', mage: 'staff', priest: 'holystaff', blade: 'katana', knight: 'sword' };
+  R.STARTER = { gunner: 'pistol', archer: 'shortbow', warrior: 'sword', mage: 'staff', priest: 'holystaff', blade: 'katana', knight: 'sword', monk: 'gauntlet' };
   // 登記武器：勇者證上寫的是主要武器，公會照它的類別派委託（類別就是職業）。騎士是「武器＋盾」
   R.REG = [
     { cls: 'gunner', group: '槍械', list: [['pistol', '單發準、換彈快。'], ['rifle', '連射，彈匣大。'], ['shotgun', '近距離一發打一片。']] },
@@ -118,7 +130,8 @@ window.R = window.R || {};
     { cls: 'mage', group: '魔導具', list: [['staff', '會爆炸的法彈。'], ['orb', '三發會追蹤的法彈。']] },
     { cls: 'priest', group: '聖具', list: [['holystaff', '法彈打中會回一點生命。'], ['mace', '近身打，有機會把敵人打暈。']] },
     { cls: 'blade', group: '刀', list: [['katana', '快、準。'], ['dualblades', '一次砍兩下。']] },
-    { cls: 'knight', group: '武器＋盾', list: [['sword', '平衡；正面的傷害減少。'], ['spear', '刺得遠；正面的傷害減少。'], ['mace', '會把敵人打暈；正面的傷害減少。']] }
+    { cls: 'knight', group: '武器＋盾', list: [['sword', '平衡；正面的傷害減少。'], ['spear', '刺得遠；正面的傷害減少。'], ['mace', '會把敵人打暈；正面的傷害減少。']] },
+    { cls: 'monk', group: '拳術', list: [['gauntlet', '近身連打，一次兩拳。'], ['staffpole', '長棍掃一大片，把敵人推開。']] }
   ];
   R.regGroup = cls => R.REG.find(g => g.cls === cls);
   R.regName = (cls, base) => R.WEAPONS[base].name + (cls === 'knight' ? '＋盾' : '');

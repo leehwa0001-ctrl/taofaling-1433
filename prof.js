@@ -13,7 +13,7 @@
   const W = () => R.W, S = () => R.S, $ = id => document.getElementById(id), esc = s => R.esc(s);
   const MAX = 10, lvOf = xp => Math.min(MAX, Math.floor(Math.sqrt((xp || 0) / 30))), need = lv => 30 * lv * lv;
   // 重量：每 1 點走路慢 2.5%
-  const WEIGHT = { greatsword: 3, axe: 2.4, mace: 2, spear: 1.6, sword: 1, shotgun: 0.8, rifle: 0.8, crossbow: 0.8 };
+  const WEIGHT = { staffpole: 1.2, greatsword: 3, axe: 2.4, mace: 2, spear: 1.6, sword: 1, shotgun: 0.8, rifle: 0.8, crossbow: 0.8 };
   R.WEAPON_WEIGHT = WEIGHT;
   const pf = () => { const s = S(); s.prof = s.prof || { w: {}, magic: 0, agi: 0 }; s.prof.w = s.prof.w || {}; return s.prof; };
   R.profLv = { weapon: base => lvOf(pf().w[base]), magic: () => lvOf(pf().magic), agi: () => lvOf(pf().agi), str: () => lvOf(pf().str) };

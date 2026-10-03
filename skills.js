@@ -26,7 +26,7 @@
     shieldbash: { name: '盾擊', cd: 6, mp: 8, desc: '用盾牌撞向前方：敵人受傷、暈眩 1.4 秒並被撞退。' },
     guard: { name: '挺身護衛', cd: 15, mp: 12, desc: '5 秒內受到的傷害 −40%，周圍的敵人改打你；身邊隊友受到的傷害 −30%。' }
   });
-  R.SKILL_SLOTS = { gunner: ['flashbang', 'barrage'], archer: ['pin', 'leap'], warrior: ['quake', 'warcry'], mage: ['frostnova', 'chain'], priest: ['smite', 'ward'], blade: ['flurry', 'parry'], knight: ['shieldbash', 'guard'] };
+  R.SKILL_SLOTS = { gunner: ['flashbang', 'barrage'], archer: ['pin', 'leap'], warrior: ['quake', 'warcry'], mage: ['frostnova', 'chain'], priest: ['smite', 'ward'], blade: ['flurry', 'parry'], knight: ['shieldbash', 'guard'], monk: ['m_palm', 'm_counter'] };
   R.SKILL_UNLOCK = [1, 3, 6, 10, 15];   // 2026-10-04 玩家回饋：技能格多一點（原本三格：1、3、6 級）——第四格 10 級、第五格 15 級，按鍵 5、6
   R.SKILL_KEYS = ['R／右鍵', '3', '4'];
   // 第 i 格（0～2）的技能；還沒學會是 null

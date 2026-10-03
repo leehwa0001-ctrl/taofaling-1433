@@ -8,7 +8,7 @@
   const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
   const later = (f, ms) => { const run = W().run, sc = W().scene; setTimeout(() => { const w = W(); if (w.run === run && w.scene === sc && w.P && !w.P.dead && run && !run.done) f(); }, ms); };
   const power = ws => (ws.dmg * (ws.pellets > 1 ? ws.pellets : 1) * (ws.hits || 1) * ws.rate) / 2;
-  const KIND = { gunner: 'bullet', archer: 'arrow', mage: 'orb', priest: 'holy', blade: 'eorb', warrior: 'eorb', knight: 'eorb' };
+  const KIND = { gunner: 'bullet', archer: 'arrow', mage: 'orb', priest: 'holy', blade: 'eorb', warrior: 'eorb', knight: 'eorb', monk: 'eorb' };
 
   // ---------- 新技能：[id, 名字, 職業, 等級, 冷卻, 魔力, 型, 參數, 說明, 轉職路線] ----------
   const NEW = [
@@ -85,8 +85,8 @@
     ['bs_rampage', '暴走', 'warrior', 14, 14, 16, 'arc', { range: 3.4, arc: 6.28, k: 1.3, hits: 4, gap: 160, kb: 1.5 }, '失去理智地亂砍四圈。', 'berserker'],
     ['gl_counter', '反擊架勢', 'warrior', 8, 8, 8, 'parry', { t: 0.8 }, '擺出架勢 0.8 秒：被遺跡生物打到會擋下，並反擊必定暴擊的一刀。', 'gladiator'],
     ['gl_finale', '終幕', 'warrior', 14, 14, 18, 'arc', { range: 3, arc: 2.4, k: 1.1, hits: 5, gap: 140, kb: 1 }, '鬥技場上的終幕連斬：五連擊。', 'gladiator'],
-    ['in_breath', '吐納', 'warrior', 8, 14, 0, 'heal', { pct: 0.1, mp: 0.3 }, '吐納遺跡裡飄散的魔力質：回復 30% 魔力、10% 生命。', 'inner'],
-    ['in_palm', '崩拳', 'warrior', 14, 9, 14, 'line', { len: 5, width: 1.2, k: 3, kb: 3, stun: 0.8, color: '#BFE8FF' }, '一拳把氣勁打成一直線，震退、震暈前方的敵人。', 'inner'],
+    ['in_breath', '吐納', 'monk', 8, 14, 0, 'heal', { pct: 0.1, mp: 0.3 }, '吐納遺跡裡飄散的魔力質：回復 30% 魔力、10% 生命。', 'inner'],
+    ['in_palm', '崩拳', 'monk', 14, 9, 14, 'line', { len: 5, width: 1.2, k: 3, kb: 3, stun: 0.8, color: '#BFE8FF' }, '一拳把氣勁打成一直線，震退、震暈前方的敵人。', 'inner'],
     ['el_blizzard', '暴風雪', 'mage', 8, 14, 28, 'at', { range: 12, r: 3.5, k: 0.7, slow: 3, waves: 6, gap: 400, fx: 'poof', color: '#DDF2FF' }, '在準心處召來 2.4 秒的暴風雪：敵人持續受傷、變慢。', 'elementalist'],
     ['el_inferno', '煉獄', 'mage', 14, 16, 32, 'nova', { r: 5, k: 2.5, burn: 1, color: '#FF7A3A' }, '以自己為中心燒出一片煉獄：周圍的敵人重傷並燃燒。', 'elementalist'],
     ['hx_drain', '吸取', 'mage', 8, 8, 14, 'drain', { range: 10, k: 2, heal: 0.5 }, '從準心方向最近的敵人身上吸走生命：傷害的一半回到你身上。', 'hexer'],
@@ -110,7 +110,30 @@
     ['pl_hands', '按手禮', 'knight', 8, 16, 20, 'heal', { pct: 0.4, allies: 0.3 }, '你回復 40% 生命，隊友回復 30%。', 'paladin'],
     ['pl_hammer', '審判之錘', 'knight', 14, 10, 18, 'at', { range: 10, r: 2.6, k: 3, stun: 1.2, delay: 400, fx: 'pillar', color: '#FFE8A0' }, '在準心處落下光之錘，敵人暈眩。', 'paladin'],
     ['dg_spear', '擲槍', 'knight', 8, 7, 12, 'shots', { k: 2.6, pierce: 4, kind: 'hama', sp: 30 }, '把長槍擲出去，穿過四隻敵人（槍會自己飛回來）。', 'dragoon'],
-    ['dg_dive', '龍落', 'knight', 14, 12, 20, 'blink', { range: 9, iframe: 0.4, end: { r: 3.5, k: 3, stun: 1, color: '#9AD8FF' } }, '躍上半空，砸在準心處：周圍的敵人重傷、暈眩。', 'dragoon']
+    ['dg_dive', '龍落', 'knight', 14, 12, 20, 'blink', { range: 9, iframe: 0.4, end: { r: 3.5, k: 3, stun: 1, color: '#9AD8FF' } }, '躍上半空，砸在準心處：周圍的敵人重傷、暈眩。', 'dragoon'],
+    // 武術家（2026-10-04 新職業）：拳套近身連打、長棍掃一片；氣功的技能用魔力質（eorb）
+    ['m_flurry', '連環拳', 'monk', 1, 6, 8, 'arc', { range: 2.3, arc: 1.7, k: 0.55, hits: 5, gap: 80 }, '一口氣往前打出五拳。'],
+    ['m_step', '縮地', 'monk', 2, 5, 6, 'dash', { len: 5, dur: 0.15, k: 1.2 }, '一步跨到 5 公尺外，順手打倒擋路的敵人（跨的時候不會受傷）。'],
+    ['m_palm', '推掌', 'monk', 3, 7, 10, 'line', { len: 4.5, width: 1.3, k: 2.2, kb: 3.5, color: '#FFD08A' }, '一掌推出去，直線上的敵人被震飛。'],
+    ['m_kick', '旋風腿', 'monk', 4, 7, 10, 'arc', { range: 2.7, arc: 6.28, k: 1.1, hits: 2, gap: 160 }, '原地旋身踢兩圈，踢到身邊所有的敵人。'],
+    ['m_focus', '運氣', 'monk', 5, 14, 10, 'buff', { t: 8, dmg: 1.15, speed: 1.1, color: '#FFB45A' }, '把氣運到四肢：8 秒內傷害 +15%、移動 +10%。'],
+    ['m_counter', '化勁', 'monk', 6, 8, 8, 'parry', { t: 0.8, buff: { t: 4, dmg: 1.2 } }, '架勢 0.8 秒：卸掉打過來的力道並反擊；之後 4 秒傷害 +20%。'],
+    ['m_wave', '氣功波', 'monk', 8, 8, 14, 'shots', { k: 1.9, pierce: 2, kind: 'eorb', sp: 22 }, '把氣凝成一團打出去，穿過兩隻敵人。'],
+    ['m_stomp', '震腳', 'monk', 10, 10, 14, 'nova', { r: 3.4, k: 1.5, stun: 1, color: '#E8C878' }, '一腳踏地：周圍的敵人震暈 1 秒。'],
+    ['m_breathe', '調息', 'monk', 12, 16, 0, 'heal', { pct: 0.15, mp: 0.25 }, '調勻呼吸：回復 15% 生命、25% 魔力。'],
+    ['m_meteor', '流星腳', 'monk', 15, 12, 18, 'blink', { range: 8, iframe: 0.3, end: { r: 2.8, k: 2.6, stun: 0.8, color: '#FFB45A' } }, '躍起一腳踢到準心處：落地的地方周圍敵人重傷、暈眩。'],
+    // 拳聖
+    ['fs_hundred', '百裂拳', 'monk', 8, 8, 14, 'arc', { range: 2.4, arc: 1.8, k: 0.5, hits: 8, gap: 60 }, '一口氣打出八拳。', 'fistsaint'],
+    ['fs_rising', '昇龍拳', 'monk', 14, 10, 16, 'nova', { r: 2.6, k: 2.8, stun: 1.2, color: '#FF9A4A' }, '一記上勾拳把身邊的敵人打飛、暈眩。', 'fistsaint'],
+    ['fs_iron', '鐵布衫', 'monk', 14, 16, 12, 'buff', { t: 6, def: 0.4, dmg: 1.1, color: '#C8B898' }, '繃緊全身：6 秒內受到的傷害 −40%、傷害 +10%。', 'fistsaint'],
+    // 外修者（外修派「東方派」的氣道：體外的魔力罩當矛也當盾）
+    ['wx_burst', '氣爆', 'monk', 8, 8, 14, 'nova', { r: 3.4, k: 1.9, kb: 4, color: '#9AE8FF' }, '把體外的魔力罩一口氣炸開：震飛、震傷周圍的敵人。', 'waixiu'],
+    ['wx_palm', '隔空掌', 'monk', 14, 5, 10, 'shots', { k: 2.2, kind: 'eorb', sp: 30, pierce: 1 }, '用魔力罩的魔力隔空打一掌，幾乎沒有前搖。', 'waixiu'],
+    ['wx_shell', '氣罩', 'monk', 14, 14, 14, 'heal', { shield: 0.35, color: '#9AE8FF' }, '把魔力罩一口氣撐厚：得到吸收 35% 生命的護盾。', 'waixiu'],
+    // 鬼武者（戰士的第三條路，2026-10-04 內修者搬到武術家之後補上）
+    ['on_rend', '鬼斬', 'warrior', 8, 8, 14, 'arc', { range: 3.4, arc: 2.6, k: 2.4, stun: 0.6, kb: 1.5 }, '戴著鬼面往前大斬一刀，打中的敵人被嚇得愣住。', 'onimusha'],
+    ['on_mask', '鬼面', 'warrior', 14, 16, 12, 'buff', { t: 6, dmg: 1.3, def: -0.1, color: '#C83A3A' }, '讓鬼面的惡意上身：6 秒內傷害 +30%，但受到的傷害 +10%。', 'onimusha'],
+    ['on_howl', '鬼哭', 'warrior', 14, 12, 14, 'nova', { r: 4, k: 1.2, stun: 0.8, taunt: 3, color: '#8A2A2A' }, '一聲鬼哭：周圍的敵人暈眩，接下來 3 秒改打你。', 'onimusha']
   ];
   const LIB = {};
   NEW.forEach(([id, name, cls, lv, cd, mp, type, p, desc, adv]) => { LIB[id] = { id, name, cls, lv, cd, mp, type, p, desc, adv }; R.SKILLS[id] = { name, cd, mp, desc }; });
@@ -332,7 +355,7 @@
     const req = id => { const s = info(id); if (s.taught) return '望月瀧教的：成為戀人之後向她學'; if (s.adv && s.adv !== st.adv) return '轉職：' + R.ADV[cls].find(a => a.id === s.adv).name + (need(s, st) > R.PROMOTE_LV ? '・Lv ' + need(s, st) : ''); return '職業等級 ' + need(s, st); };
     // 照轉職路線分段：基本技能、你走的那條路線、其他路線（收起來）
     const groups = ids => {
-      const advs = (R.ADV[cls] || []).map(a => a.id).sort((a, b) => (b === st.adv) - (a === st.adv));
+      const advs = (R.ADV[cls] || []).filter(a => !a.legacy || a.id === st.adv).map(a => a.id).sort((a, b) => (b === st.adv) - (a === st.adv));
       const gk = id => { const s = info(id) || {}; return s.taught ? 'taught' : (s.adv || null); };   // 望月瀧教的（takiteach.js）自己一段
       return [null].concat(advs, ['taught']).map(r => {
         const list = ids.filter(id => gk(id) === r); if (!list.length) return '';

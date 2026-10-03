@@ -12,7 +12,7 @@
   const { later, aimIn, nova, slowIn } = K;
   const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
   const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
-  const KIND = { gunner: 'bullet', archer: 'arrow', mage: 'orb', priest: 'holy', blade: 'eorb', warrior: 'eorb', knight: 'eorb' };
+  const KIND = { gunner: 'bullet', archer: 'arrow', mage: 'orb', priest: 'holy', blade: 'eorb', warrior: 'eorb', knight: 'eorb', monk: 'eorb' };
   const alive = () => W().enemies.filter(e => !e.dead && !e.under);
   // 一個地方有沒有被牆擋住（照射、推進碰到牆就停）
   const blocked = (x, z) => !!(R.pointBlocked && R.pointBlocked(x, z));

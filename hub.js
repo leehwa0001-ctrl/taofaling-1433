@@ -19,6 +19,8 @@
       Object.values(s.equip).forEach(e => { e.body = e.armor || null; delete e.armor; ['head', 'legs', 'feet'].forEach(k => { e[k] = e[k] || null; }); });
       s.v = 2;
     }
+    // 新的職業（2026-10-04 武術家）：舊存檔補上這個職業的等級、裝備欄
+    if (s.classes && s.equip) R.CLASS_IDS.forEach(c => { if (!s.classes[c]) s.classes[c] = { lv: 1, xp: 0, adv: null }; if (!s.equip[c]) s.equip[c] = { weapon: null, head: null, body: null, legs: null, feet: null, charm: null }; });
     return s;
   };
   R.migrate = migrate;
@@ -178,7 +180,7 @@
     const S = R.S, st = S.classes[cls];
     const el = $('hub-modal'); el.hidden = false;
     $('hub-sheet').innerHTML = '<h2>' + esc(R.CLASSES[cls].name) + '的轉職</h2><p class="note">需要一顆魔力核心（你有 ' + (S.mats.core || 0) + ' 顆）。' + (st.adv ? '已經轉職過了；重選也要一顆。' : '') + '</p><div class="promo">'
-      + R.ADV[cls].map(a => '<button type="button" class="promo-card' + (st.adv === a.id ? ' cur' : '') + '" data-adv="' + a.id + '"' + ((S.mats.core || 0) < 1 || st.adv === a.id ? ' disabled' : '') + '><small>' + esc(a.path) + '</small><b>' + esc(a.name) + '</b><span>' + esc(a.desc) + '</span></button>').join('') + '</div><div class="row"><button type="button" class="btn" id="promo-x">先不要</button></div>';
+      + R.ADV[cls].filter(a => !a.legacy || st.adv === a.id).map(a => '<button type="button" class="promo-card' + (st.adv === a.id ? ' cur' : '') + '" data-adv="' + a.id + '"' + ((S.mats.core || 0) < 1 || st.adv === a.id ? ' disabled' : '') + '><small>' + esc(a.path) + '</small><b>' + esc(a.name) + '</b><span>' + esc(a.desc) + '</span></button>').join('') + '</div><div class="row"><button type="button" class="btn" id="promo-x">先不要</button></div>';
     $('promo-x').onclick = () => { el.hidden = true; };
     $('hub-sheet').querySelectorAll('[data-adv]').forEach(b => { b.onclick = () => { S.mats.core--; st.adv = b.dataset.adv; el.hidden = true; R.hub(); flashMsg('轉職完成：' + R.ADV[cls].find(a => a.id === st.adv).name); }; });
   };

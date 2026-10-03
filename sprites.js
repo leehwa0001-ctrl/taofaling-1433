@@ -194,6 +194,18 @@
       }
       return;
     }
+    // 武術家（2026-10-04）：拳套是兩個拳頭、長棍是一根長木棍
+    if (wp === 'gauntlet') {
+      const gl = '#B8862E', gh = '#E8C87A', f = (x0, y0) => { p(x0, y0, 3, 3, gl); p(x0, y0, 3, 1, gh); };
+      if (side) f(atk ? hx + 3 : hx, hy - 1); else { f(atk && fr === 3 ? 7 : hx, atk && fr === 3 ? hy + 6 : hy); f(1, atk && fr !== 3 ? hy + 5 : hy); }
+      return;
+    }
+    if (wp === 'staffpole') {
+      if (swingP) { if (side) ray(hx - 6, hy + 2, 1, -0.35, 14, wood); else ray(1, 12, 1, 0.25, 15, wood); }
+      else if (side && atk) p(hx - 4, hy, 12, 1, wood);
+      else { p(hx + 1, hy - 13, 1, 17, wood); p(hx + 1, hy - 13, 1, 1, '#C9A13A'); p(hx + 1, hy + 3, 1, 1, '#C9A13A'); }
+      return;
+    }
     if (swingP && wp === 'spear') {
       // 長槍：舉起＝往後收、砍下＝刺到最遠、收招＝收回一點；正面看槍尖朝著鏡頭（縮短）
       if (side) { const back2 = swingP === 'wind' ? -6 : swingP === 'follow' ? -3 : -1, n = swingP === 'wind' ? 9 : 8; p(hx + back2, hy, n, 1, wood); p(hx + back2 + n, hy - 1, 2, 3, metal); return; }

@@ -9,7 +9,7 @@
 // 放在 classbal.js 後面。
 (function (R) {
   const W = () => R.W, S = () => R.S, $ = id => document.getElementById(id), esc = s => R.esc(s);
-  const BASE_STR = { knight: 9, warrior: 8, blade: 5, gunner: 4, archer: 4, priest: 3, mage: 2 };
+  const BASE_STR = { knight: 9, warrior: 8, monk: 6, blade: 5, gunner: 4, archer: 4, priest: 3, mage: 2 };
   const RACE_STR = { 巨人族: 3, 黑石族: 2, 金龍人族: 2, 龍人族: 2, 熔岩人族: 2, 狼人族: 1, 樹人族: 1, 沙人族: 1, 魔族: 1, 精靈族: -1, 翼人族: -1 };
   const NEED = { heavy: { head: 6, body: 8, legs: 7, feet: 5 }, medium: { head: 3, body: 5, legs: 4, feet: 3 } };
 

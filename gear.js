@@ -30,6 +30,8 @@
       case 'dualblades': ln(13, 2, 5, 10, m[0], 2); ln(3, 2, 11, 10, m[0], 2); ln(4, 9, 2, 12, WOOD[1], 2); ln(12, 9, 14, 12, WOOD[1], 2); rc(5, 9, 2, 2, m[2]); rc(9, 9, 2, 2, m[2]); break;
       case 'axe': ln(3, 14, 11, 4, WOOD[0], 2); poly([[9, 1], [15, 4], [14, 9], [10, 7]], m[0]); ln(14, 4, 14, 8, m[1], 1); break;
       case 'mace': ln(3, 14, 10, 6, WOOD[0], 2); circ(11.5, 4.5, 3.4, m[1]); circ(11, 4, 2, m[0]); rc(11, 0, 1, 2, m[2]); rc(15, 4, 1, 1, m[2]); rc(7, 4, 1, 1, m[2]); rc(11, 8, 1, 1, m[2]); break;
+      case 'gauntlet': rc(4, 4, 8, 7, m[1]); rc(4, 4, 8, 2, m[0]); rc(5, 11, 6, 4, LEATHER[0]); rc(6, 6, 1, 1, m[2]); rc(9, 6, 1, 1, m[2]); break;
+      case 'staffpole': ln(2, 14, 14, 2, WOOD[0], 2); rc(13, 1, 2, 2, m[1]); rc(1, 13, 2, 2, m[1]); break;
       case 'spear': ln(1, 15, 11, 5, WOOD[0], 2); poly([[10, 3], [15, 0], [13, 6]], m[0]); rc(10, 5, 2, 2, m[2]); break;
       case 'staff': ln(3, 15, 11, 5, WOOD[0], 2); ln(10, 6, 14, 2, WOOD[1], 2); circ(12, 3.5, 2.4, GEM[tier] || GEM[0]); rc(12, 2, 1, 1, '#FFFFFF'); break;
       case 'orb': circ(8, 7, 5.2, GEM[tier] || GEM[0]); circ(6.5, 5.5, 1.6, '#FFFFFF'); poly([[4, 13], [12, 13], [10, 11], [6, 11]], m[2]); rc(3, 13, 10, 2, m[1]); break;
