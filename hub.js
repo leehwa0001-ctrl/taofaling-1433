@@ -47,7 +47,7 @@
   // ---------- 東鶴 ----------
   let tab = 'guild', sub = 'id', focus = null;
   // f：在公會裡站在哪裡（告示板、登記處、收購窗口）；鐵匠鋪是哪一個分頁
-  let craftPick = null;   // 鐵匠鋪：選了要做哪一件（畫面重畫也記住）
+  let craftPick = null, stashCat = 'all', stashSort = 'rar';   // 鐵匠鋪選了哪一件；倉庫的分類、排序（畫面重畫也記住）   // 鐵匠鋪：選了要做哪一件（畫面重畫也記住）
   R.hub = (t, f) => {
     if (t) { tab = t; focus = null; if (f) { if (t === 'smith') sub = f; else focus = f; } }
     const S = R.S; R.ensureKit(S.cls);
@@ -136,9 +136,15 @@
     const S = R.S, eq = R.equipped(S.cls), eqIds = R.equippedIds();
     const slot = k => R.gearSlot ? R.gearSlot(k, eq[k]) : '<div class="slot"><small>' + R.GEAR_NAME[k] + '</small>' + (eq[k] ? '<b style="color:' + R.rarityColor(eq[k]) + '">' + esc(R.itemName(eq[k])) + '</b>' + (k !== 'weapon' ? '<button type="button" class="mini" data-unequip="' + k + '">脫下</button>' : '') : '<span class="note">（空）</span>') + '</div>';
     const P = R.calcPlayer(S.cls);
-    const rest = S.stash.filter(it => !eqIds.has(it.id));
+    // 分類、排序（2026-10-04 作者：倉庫新增分類系統）
+    const all = S.stash.filter(it => !eqIds.has(it.id)), slotOf = it => (R.slotOf ? R.slotOf(it) : it.kind) || 'other';
+    const CATS = [['all', '全部', () => true]].concat(R.GEAR_KEYS.map(k => [k, R.GEAR_NAME[k] || k, it => slotOf(it) === k]), [['use', '能用的', it => R.canUse(it, S.cls)], ['unid', '未鑑定', it => !it.identified], ['lock', '上鎖', it => it.locked]]);
+    const cat = CATS.find(c => c[0] === stashCat) || CATS[0], SORT = { rar: (a, b) => (b.identified ? b.rarity : -1) - (a.identified ? a.rarity : -1) || (b.ilvl || 0) - (a.ilvl || 0), lvl: (a, b) => (b.ilvl || 0) - (a.ilvl || 0) || (b.rarity || 0) - (a.rarity || 0), new: () => 0 };
+    const rest = all.filter(cat[2]); if (stashSort === 'new') rest.reverse(); else rest.sort(SORT[stashSort] || SORT.rar);
+    const chips = '<div class="st-cats">' + CATS.map(c => { const n = all.filter(c[2]).length; return n || c[0] === 'all' || c[0] === stashCat ? '<button type="button" class="mini' + (c === cat ? ' gold' : '') + '" data-scat="' + c[0] + '">' + esc(c[1]) + ' ' + n + '</button>' : ''; }).join('')
+      + '<select id="st-sort" title="排序">' + [['rar', '稀有度'], ['lvl', '物品等級'], ['new', '最新']].map(([k, n]) => '<option value="' + k + '"' + (stashSort === k ? ' selected' : '') + '>排序：' + n + '</option>').join('') + '</select></div>';
     return '<section class="panel-doc"><h2>倉庫</h2><p class="note">現在的職業：' + esc(R.CLASSES[S.cls].name) + '。放在倉庫的東西很安全；帶進遺跡的只有身上的裝備。</p><div class="slots">' + R.GEAR_KEYS.map(slot).join('') + '</div><p class="note">生命 ' + P.hpMax + '・魔力 ' + P.mpMax + '・防禦 ' + P.def.toFixed(1) + '・移動速度 ' + P.speed.toFixed(2) + '</p>'
-      + '<h3>倉庫裡的東西（' + rest.length + '）</h3><div class="items">' + rest.map(it => itemCard(it, (R.canUse(it, S.cls) ? '<button type="button" class="btn pri" data-equip="' + it.id + '">穿上（' + R.GEAR_NAME[R.slotOf(it)] + '）</button>' : '<span class="note">' + esc(R.CLASSES[S.cls].name) + '不能用</span>') + (it.locked ? '<button type="button" class="btn" disabled title="上鎖的不能賣，先解鎖">賣掉（上鎖中）</button>' : '<button type="button" class="btn" data-sell="' + it.id + '">賣掉（' + R.sellPrice(it) + '）</button>') + '<button type="button" class="mini" data-lock="' + it.id + '" title="上鎖的東西不能賣、不能分解，一起賣也不會賣到">' + (it.locked ? '解鎖' : '上鎖') + '</button>')).join('') + '</div></section>';
+      + '<h3>倉庫裡的東西（' + all.length + '）</h3>' + chips + '<div class="items">' + rest.map(it => itemCard(it, (R.canUse(it, S.cls) ? '<button type="button" class="btn pri" data-equip="' + it.id + '">穿上（' + R.GEAR_NAME[R.slotOf(it)] + '）</button>' : '<span class="note">' + esc(R.CLASSES[S.cls].name) + '不能用</span>') + (it.locked ? '<button type="button" class="btn" disabled title="上鎖的不能賣，先解鎖">賣掉（上鎖中）</button>' : '<button type="button" class="btn" data-sell="' + it.id + '">賣掉（' + R.sellPrice(it) + '）</button>') + '<button type="button" class="mini" data-lock="' + it.id + '" title="上鎖的東西不能賣、不能分解，一起賣也不會賣到">' + (it.locked ? '解鎖' : '上鎖') + '</button>')).join('') + '</div></section>';
   };
   // 白藤堂：藥水
   const shop = () => {
@@ -171,6 +177,8 @@
     on('#id-all', () => { const list = R.S.stash.filter(it => !it.identified); let n = 0, best = null; list.forEach(it => { if (R.identify(it)) { n++; if (!best || it.rarity > best.rarity) best = it; } }); R.save(); R.hub(); flashMsg(n ? '一次鑑定了 ' + n + ' 件' + (best ? '，最好的是：' + R.itemName(best) : '') + (n < list.length ? '（錢不夠，還剩 ' + (list.length - n) + ' 件）' : '') : '錢不夠，一件也鑑定不了。', best ? R.rarityColor(best) : undefined); });
     on('[data-ident]', b => { const it = R.itemById(b.dataset.ident); if (R.identify(it)) { R.hub(); flashMsg('鑑定出來了：' + R.itemName(it), R.rarityColor(it)); } });
     on('[data-cfpick]', b => { craftPick = b.dataset.cfpick; R.hub(); });
+    on('[data-scat]', b => { stashCat = b.dataset.scat; R.hub('stash'); });
+    { const so = $('st-sort'); if (so) so.onchange = () => { stashSort = so.value; R.hub('stash'); }; }
     on('[data-craft]', b => { const [kind, base] = (craftPick || '').split(':'); const it = R.craft(R.RECIPES[+b.dataset.craft], kind, base); if (it) { R.hub(); flashMsg('打造好了：' + R.itemName(it), R.rarityColor(it)); } });
     on('[data-up]', b => { const it = R.itemById(b.dataset.up); if (R.upgrade(it)) { R.hub(); flashMsg('強化成功：' + R.itemName(it), R.rarityColor(it)); } });
     on('[data-salv]', b => { const got = R.salvage(R.itemById(b.dataset.salv)); R.hub(); flashMsg('拆出來了：' + Object.keys(got).map(k => R.MATS[k].name + ' ×' + got[k]).join('、')); });
