@@ -93,6 +93,10 @@
     ['hx_plague', '疫咒', 'mage', 14, 14, 24, 'mark', { range: 12, r: 5, t: 8, slow: 4, k: 0.5 }, '大範圍的詛咒：8 秒內受到的傷害 +30%、變慢。', 'hexer'],
     ['sk_crane', '紙鶴', 'mage', 8, 10, 16, 'shots', { n: 5, spread: 0.6, k: 0.9, homing: 6, kind: 'spirit', sp: 16, life: 1.8 }, '放出五隻紙鶴式神，追著敵人撞上去。', 'shikigami'],
     ['sk_guard', '護法', 'mage', 14, 16, 24, 'orbit', { t: 12, n: 5 }, '五隻式神環繞你 12 秒，自動攻擊靠近的敵人。', 'shikigami'],
+    // 召喚師的式神使（2026-10-04 從術士搬過來；術士的式神使照舊用上面那幾招）
+    ['ss_shiki', '式神', 'summoner', 8, 12, 16, 'orbit', { t: 10, n: 3 }, '放出三隻紙式神環繞你，自動攻擊 10 秒。', 'shikigami'],
+    ['ss_crane', '紙鶴', 'summoner', 11, 10, 16, 'shots', { n: 5, spread: 0.6, k: 0.9, homing: 6, kind: 'spirit', sp: 16, life: 1.8 }, '放出五隻紙鶴式神，追著敵人撞上去。', 'shikigami'],
+    ['ss_guard', '護法', 'summoner', 14, 16, 24, 'orbit', { t: 12, n: 5 }, '五隻式神環繞你 12 秒，自動攻擊靠近的敵人。', 'shikigami'],
     ['bi_miracle', '奇蹟', 'priest', 8, 24, 36, 'heal', { pct: 0.6, allies: 0.5, cleanse: 1 }, '你回復 60% 生命、隊友回復 50%，解除不良狀態。', 'bishop'],
     ['bi_lance', '聖槍', 'priest', 14, 10, 20, 'line', { len: 12, width: 0.8, k: 3.5, color: '#FFE8A0' }, '祈禱化成一支光之槍，貫穿一直線。', 'bishop'],
     ['dr_thorns', '荊棘', 'priest', 8, 10, 16, 'nova', { r: 3.5, k: 1, root: 1.5, color: '#6FB36A' }, '腳下長出荊棘：周圍的敵人受傷、被纏住。', 'druid'],
