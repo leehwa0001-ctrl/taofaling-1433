@@ -127,6 +127,6 @@
       R.S.race = id; R.S.look = R.S.look || defaultLook(id); if (R.RACES[id].hairCol) R.S.look.hair = R.RACES[id].hairCol; if (!R.RACES[id].skins.includes(R.S.look.skin)) R.S.look.skin = R.RACES[id].skins[0];
       R.S.name = R.S.name || R.randomName(id); if (id === 'demon') R.S.watched = true;
       R.save(); el.hidden = true; done && done();
-    }, { ten: true, title: '補登記：種族', intro: '公會更新了勇者證的格式，要補上種族欄。十連抽一次，從抽到的十個裡面選一個登記。', cancel: () => { el.hidden = true; } });
+    }, { ten: true, title: '補登記：種族', intro: '公會更新了勇者證的格式，要補上種族欄。五十連抽一次，從抽到的五十個裡面選一個登記。', cancel: () => { el.hidden = true; } });
   };
 })(window.R);
