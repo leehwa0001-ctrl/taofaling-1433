@@ -413,7 +413,7 @@
     // ---------- 路樹、路燈、販賣機、腳踏車 ----------
     function pine(x, z) { add(g3.cyl, M.trunk, x, 1.2, z, 0.4, 2.4, 0.4); add(g3.cone, M.pine, x, 3, z, 3.2, 2.6, 3.2); add(g3.cone, M.pine, x, 4.6, z, 2.2, 2.2, 2.2); block(x - 0.35, x + 0.35, z - 0.35, z + 0.35, 'tree'); }
     const ginkgo = (x, z) => { add(g3.cyl, M.trunk, x, 1.7, z, 0.35, 3.4, 0.35); add(g3.cone, M.ginkgo, x, 4.6, z, 2.6, 4, 2.6); block(x - 0.3, x + 0.3, z - 0.3, z + 0.3, 'tree'); };
-    for (let z = -64; z < 50; z += 8) { if (z > -60 && z < -50 || z > -14 && z < 4 || z > 12 && z < 42) continue; [-11, 11].forEach(x => ginkgo(x, z)); }
+    for (let z = -48; z < 50; z += 8) { if (z > -14 && z < 4 || z > 12 && z < 42) continue; [-11, 11].forEach(x => ginkgo(x, z)); }   // 不要種在北通、中通、南通的車道上
     for (let x = -48; x <= 48; x += 12) if (Math.abs(x) > 14) ginkgo(x, -69.5);
     const lamp = (x, z, dz) => { add(g3.box, M.lamp, x, 3, z, 0.15, 6, 0.15); add(g3.box, M.lamp, x, 6, z + dz * 0.7, 0.12, 0.12, 1.4); add(g3.box, M.lampH, x, 5.85, z + dz * 1.3, 0.3, 0.15, 0.5); block(x - 0.12, x + 0.12, z - 0.12, z + 0.12, 'deco'); };
     [[-140, 150, -55.4, -1], [-140, 150, -68.6, 1], [-88, 150, -11.6, 1], [-88, 150, 1.6, -1], [-140, 150, 51.4, 1], [-140, 150, 64.6, -1]].forEach(([a, b, z, dz]) => { for (let x = a; x < b; x += 22) if (!ROADS.some(r => r[4] !== '北通' && r[4] !== '中通' && r[4] !== '南通' && x > r[0] - 2 && x < r[2] + 2) && !inR(x, z, ARCADE, 1) && !inR(x, z, PLAZA, 0)) lamp(x, z, dz); });
@@ -598,7 +598,7 @@
       const ux = dx / d, uz = dz / d;
       const stop = [P].concat(tw.cars.filter(o => o !== c && o.route === c.route)).some(o => { const ox = o.x - c.x, oz = o.z - c.z, al = ox * ux + oz * uz, sd = Math.abs(ox * uz - oz * ux); return al > 0.5 && al < (o === P ? 6.5 : 8) && sd < 1.8; });
       c.v = Math.max(0, Math.min(9, (c.v || 0) + (stop ? -16 : 4) * dt)); c.x += ux * c.v * dt; c.z += uz * c.v * dt;
-      c.g.position.set(c.x, 0, c.z); c.g.rotation.y = Math.atan2(ux, uz);
+      c.g.position.set(c.x, 0, c.z); c.g.rotation.y = Math.atan2(-ux, -uz);   // 車頭朝 -z（駕駛座在前面）
     });
     // 環狀線的電車
     tw.trains.forEach(tr => { tr.s += 15 * dt; tr.cars.forEach((g, k) => { const f = pathPos(tw, tr.s - k * 14.8), b = pathPos(tw, tr.s - k * 14.8 - 13.6); g.position.set((f[0] + b[0]) / 2, DECK + 0.75, (f[1] + b[1]) / 2); g.rotation.y = Math.atan2(f[0] - b[0], f[1] - b[1]); }); });

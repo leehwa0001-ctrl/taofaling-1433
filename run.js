@@ -246,17 +246,23 @@
     if (g >= 2 && Math.random() < 0.45) R.dropMat('manaore', 1, o.x, o.z);
     R.sfx && R.sfx('mine'); R.toast('掘礦：背上的礦石敲下來了');
   };
+  // 換層的時候鎖住樓梯：淡出那一下連按空白鍵，原本會排好幾次「下一層」，一口氣連下好幾層（作者 2026-10-04 回報）。
+  // 到了新的一層再等 0.7 秒才能再用樓梯（一直按著才不會又走回去）。
+  let stairLock = 0;
+  const stairBusy = () => performance.now() < stairLock;
+  const stairGo = f => { stairLock = performance.now() + 60000; R.fade(() => { try { f(); } finally { stairLock = performance.now() + 700; } }); };
+  R.stairBusy = stairBusy;
   R.descend = () => {
-    const s = W.F.stairs, run = W.run;
+    const s = W.F.stairs, run = W.run; if (stairBusy()) return;
     if (s.sealed) { R.toast('斷尾：佩特拉封住了往下的路。這一層只能回去了。'); return; }
-    R.fade(() => R.loadFloor(run.floor + 1));
+    stairGo(() => R.loadFloor(run.floor + 1));
   };
   // 往上走：遺跡一直在長，回去的路和來的時候不一樣（上一層重新長過）
   R.ascend = () => {
-    const run = W.run, up = W.F.up; if (!up) return;
+    const run = W.run, up = W.F.up; if (!up || stairBusy()) return;
     if (up.sealed) { R.toast('往回的路被斷尾封死了'); return; }
     if (up.exit) { R.askLeave(); return; }
-    R.fade(() => { R.loadFloor(run.floor - 1, { up: true }); R.banner('回去的路變了樣', '遺跡一直在長：上一層已經不是來的時候的樣子'); });
+    stairGo(() => { R.loadFloor(run.floor - 1, { up: true }); R.banner('回去的路變了樣', '遺跡一直在長：上一層已經不是來的時候的樣子'); });
   };
   R.askLeave = () => {
     R.sheet('<h2>從入口走出去？</h2><p>外面的光從入口照進來。走出去就回到地面，身上的東西都帶得走。</p>', '<div class="row"><button type="button" class="btn pri" id="lv-yes">走出去</button><button type="button" class="btn" id="lv-no">再逛逛</button></div>');
