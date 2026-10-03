@@ -313,7 +313,9 @@
       R.GEAR_KEYS.forEach(k => { const it = eq[k] ? R.itemById(eq[k]) : null; if (!it) return; lostEq.push(it); R.removeItem(it.id); if (ins.has(it.id)) back.push(it); });
       run.bag.forEach(it => { if (ins.has(it.id)) back.push(it); });   // 保了之後在遺跡裡換下來、放進背包的，一樣算
       if (run.packId !== 'sack') { packs(); s.packs[run.packId] = Math.max(0, (s.packs[run.packId] || 0) - 1); packLost = run.packId; if (run.insPack) back.push({ pack: run.packId }); if (!(s.packs[run.packId] > 0)) s.pack = 'sack'; }
-      if (back.length) { s.insReturn = s.insReturn || []; s.insReturn.push({ day: (s.day || 0) + 2, list: back }); }
+      // 2026-10-04 作者：找回要過一段時間，越深的地方越久、越容易找不到；高品質的可能找不到，之後出現在黑市
+      const depth = (run.floor || 0) + (run.f0 ? 0 : 1);
+      if (back.length) { s.insReturn = s.insReturn || []; s.insReturn.push({ day: (s.day || 0) + Math.min(6, 2 + Math.floor(depth / 10)), depth, list: back }); }
       if (R.ensureKit) R.ensureKit(s.cls);
       R.save();
     }
@@ -328,10 +330,32 @@
     nd0(); const s = S(); if (!s || !s.insReturn || !s.insReturn.length) return;
     const due = s.insReturn.filter(x => x.day <= s.day); if (!due.length) return; s.insReturn = s.insReturn.filter(x => x.day > s.day);
     const got = [], miss = [];
-    due.forEach(x => x.list.forEach(o => { if (Math.random() < 0.8) { if (o.pack) { packs(); s.packs[o.pack] = (s.packs[o.pack] || 0) + 1; got.push(PACKS[o.pack].name); } else { s.stash.push(o); got.push(R.itemName(o)); } } else miss.push(o.pack ? PACKS[o.pack].name : R.itemName(o)); }));
+    let black = 0;
+    due.forEach(x => x.list.forEach(o => {
+      const dp = x.depth || 1, rar = o.pack ? 0 : (o.rarity || 0), lose = Math.min(0.6, 0.15 + 0.012 * dp) + (rar >= 5 ? 0.25 : rar >= 4 ? 0.15 : rar >= 3 ? 0.08 : 0);
+      if (Math.random() >= lose) { if (o.pack) { packs(); s.packs[o.pack] = (s.packs[o.pack] || 0) + 1; got.push(PACKS[o.pack].name); } else { s.stash.push(o); got.push(R.itemName(o)); } return; }
+      miss.push(o.pack ? PACKS[o.pack].name : R.itemName(o));
+      if (!o.pack && rar >= 3) { s.blackMarket = s.blackMarket || []; s.blackMarket.push({ it: o, price: Math.round(R.sellPrice(o) * 3), from: (s.day || 0) + 2 }); black++; }   // 被撿走的好東西：過兩天在後巷的黑市賣
+    }));
     R.save();
-    setTimeout(() => R.banner && R.banner('霧島把東西撿回來了', (got.length ? '放進倉庫：' + got.join('、') + '。' : '') + (miss.length ? '「' + miss.join('、') + '……被別人先撿走了，抱歉。」' : '')), 2400);
+    setTimeout(() => R.banner && R.banner('霧島把東西撿回來了', (got.length ? '放進倉庫：' + got.join('、') + '。' : '') + (miss.length ? '「' + miss.join('、') + '……被別人先撿走了，抱歉。' + (black ? '聽說後巷的黑市，有人在賣遺跡裡撿來的好貨。' : '') + '」' : '')), 2400);
   };
+
+  // ---------- 後巷的黑市：被別人撿走的好裝備（後巷的斗篷商那裡；people.js 的 R.personExtras） ----------
+  const bmList = () => { const s = S(); return (s.blackMarket || []).filter(x => x.from <= (s.day || 0)); };
+  const bmSheet = () => {
+    const s = S(), L = bmList();
+    R.sheet('<p class="kicker">後巷</p><h2>黑市的貨</h2><p>斗篷商掀開一塊布：「遺跡裡撿來的，來路別問。……看你的眼神，這些是你的？那就算你便宜一點。」</p>'
+      + (L.length ? '<div class="recipes">' + L.map((x, i) => '<div class="recipe"><b style="color:' + R.rarityColor(x.it) + '">' + esc(R.itemName(x.it)) + '</b><small>' + esc((R.itemLines ? R.itemLines(x.it) : []).join('・')) + '</small><button type="button" class="btn pri" data-bm="' + i + '"' + (s.gold < x.price ? ' disabled' : '') + '>買回來（' + x.price + ' 費拉）</button></div>').join('') + '</div>' : '<p class="note">今天沒有貨。</p>'),
+      '<div class="row"><button type="button" class="btn" id="bm-x">走了</button></div>');
+    $('bm-x').onclick = R.closeSheet;
+    document.querySelectorAll('[data-bm]').forEach(b => { b.onclick = () => { const x = bmList()[+b.dataset.bm]; if (!x || s.gold < x.price) return; s.gold -= x.price; s.stash.push(x.it); s.blackMarket = s.blackMarket.filter(y => y !== x); R.save(); R.sfx && R.sfx('coin'); R.toast('買回來了：' + R.itemName(x.it) + '（放進倉庫）', '#E8C04A'); bmSheet(); }; });
+  };
+  R.personExtras = R.personExtras || [];
+  R.personExtras.push({
+    html: id => { if (id !== 'hooder') return ''; const n = bmList().length; return n ? '<button type="button" class="btn" id="bm-open">黑市的貨（' + n + ' 件）</button>' : ''; },
+    bind: id => { const b = $('bm-open'); if (b && id === 'hooder') b.onclick = bmSheet; }
+  });
 
   // ---------- 公會的商店：背包 ----------
   const hub0 = R.hub;
