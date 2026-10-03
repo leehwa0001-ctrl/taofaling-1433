@@ -25,7 +25,8 @@
   };
   const move = (c, dt, bounds, sp) => {
     c.t += dt;
-    if (c.hop > 0) { c.hop -= dt; c.m.g.position.y = c.hop > 0 ? Math.abs(Math.sin(c.hop * 11)) * 0.28 : 0; }   // 被摸的時候蹦一下 const d = Math.hypot(c.tx - c.x, c.tz - c.z);
+    if (c.hop > 0) { c.hop -= dt; c.m.g.position.y = c.hop > 0 ? Math.abs(Math.sin(c.hop * 11)) * 0.28 : 0; }   // 被摸的時候蹦一下
+    const d = Math.hypot(c.tx - c.x, c.tz - c.z);
     if (d < 0.25) { c.wait -= dt; if (c.wait <= 0) { c.wait = 1 + rnd() * 3; c.tx = bounds[0] + rnd() * (bounds[1] - bounds[0]); c.tz = bounds[2] + rnd() * (bounds[3] - bounds[2]); } R.animBeast(c.m, c.vid, c.t, false); return; }
     const a = Math.atan2(c.tx - c.x, c.tz - c.z), s = sp || 1; c.x += Math.sin(a) * s * dt; c.z += Math.cos(a) * s * dt; c.m.g.position.set(c.x, 0, c.z); c.m.g.rotation.y = a; R.animBeast(c.m, c.vid, c.t, true);
   };
