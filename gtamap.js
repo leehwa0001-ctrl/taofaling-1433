@@ -145,7 +145,7 @@
   const RADAR_M = 150;   // 雷達的直徑代表幾公尺
   R.drawTownMinimap = (x, s) => {
     const P = W.P, tw = W.town; if (!tw || !P) return;
-    const yaw = W.cam.yaw, N = tw.groundCanvas.width, k = N / (HALF * 2), ppm = s / RADAR_M;
+    const yaw = W.cam.yaw, N = tw.groundCanvas.width, k = tw.mapK || N / (HALF * 2), ppm = s / RADAR_M;   // mapK：底圖往東接了港區（harbor.js），寬度不再等於 2×HALF
     x.save(); x.translate(s / 2, s / 2); x.rotate(yaw); x.scale(ppm / k, ppm / k); x.translate(-(P.x + HALF) * k, -(P.z + HALF) * k);
     x.imageSmoothingEnabled = false; x.drawImage(tw.groundCanvas, 0, 0); x.restore();
     const c = Math.cos(yaw), sn = Math.sin(yaw), pt = (wx, wz) => { const dx = (wx - P.x) * ppm, dz = (wz - P.z) * ppm; return [s / 2 + dx * c - dz * sn, s / 2 + dx * sn + dz * c]; };
@@ -172,7 +172,7 @@
   let cvBig = null;
   const drawBig = () => {
     const cv = cvBig, tw = W.town; if (!cv || !cv.isConnected || !tw) return;
-    const g = cv.getContext('2d'), cw = cv.width, ch = cv.height, P = here(), N = tw.groundCanvas.width, k = N / (HALF * 2);
+    const g = cv.getContext('2d'), cw = cv.width, ch = cv.height, P = here(), N = tw.groundCanvas.width, k = tw.mapK || N / (HALF * 2);
     g.fillStyle = '#0E0C12'; g.fillRect(0, 0, cw, ch);
     g.save(); g.translate(cw / 2, ch / 2); g.scale(view.ppm / k, view.ppm / k); g.translate(-(view.cx + HALF) * k, -(view.cz + HALF) * k); g.imageSmoothingEnabled = view.ppm < 2.6; g.drawImage(tw.groundCanvas, 0, 0); g.restore();
     const pt = (wx, wz) => [cw / 2 + (wx - view.cx) * view.ppm, ch / 2 + (wz - view.cz) * view.ppm];
@@ -215,7 +215,7 @@
     $('r-sheet').classList.add('wide');
     cvBig = $('gmap-cv');
     $('gm-x').onclick = R.closeSheet; $('gm-me').onclick = () => { view.cx = P.x; view.cz = P.z; view.ppm = 2.2; drawBig(); };
-    $('gm-all').onclick = () => { view.cx = 0; view.cz = 0; view.ppm = Math.min(cw, ch) / (HALF * 2 + 20); drawBig(); };
+    $('gm-all').onclick = () => { view.cx = tw.mapCx || 0; view.cz = 0; view.ppm = Math.min(cw / ((tw.mapW || HALF * 2) + 20), ch / (HALF * 2 + 20)); drawBig(); };
     $('gm-clear').onclick = () => { R.clearWaypoint(); drawBig(); };
     document.querySelectorAll('[data-dest]').forEach(b => { b.onclick = () => { const o = dests[+b.dataset.dest], [sx, sy] = toS(o.x, o.z); R.setWaypoint(sx, sy, o.name); updateRoute(); view.cx = (P.x + o.x) / 2; view.cz = (P.z + o.z) / 2; drawBig(); }; });
     // 拖曳、縮放、點一下
@@ -234,7 +234,7 @@
       if (moved > 6) return;
       const [wx, wz, u, v] = toWorld(e.clientX, e.clientY), cur = wpPos();
       if (cur) { const mx = cvBig.width / 2 + (cur[0] - view.cx) * view.ppm, my = cvBig.height / 2 + (cur[1] - view.cz) * view.ppm; if (Math.hypot(mx - u, my - v + 14) < 18 || Math.hypot(mx - u, my - v) < 12) { R.clearWaypoint(); drawBig(); return; } }
-      if (Math.abs(wx) > HALF || Math.abs(wz) > HALF) return;
+      if (wx < -HALF || wx > (W.town.mapX1 || HALF) || Math.abs(wz) > HALF) return;
       // 點在圖示上（或很近）：目的地就是那個設施
       const near = facilities().map(o => [o, Math.hypot(o.x - wx, o.z - wz) * view.ppm]).sort((a, b) => a[1] - b[1])[0];
       if (near && near[1] < 16) { const [sx, sy] = toS(near[0].x, near[0].z); R.setWaypoint(sx, sy, near[0].name); }

@@ -718,13 +718,13 @@
       const im = new TH.InstancedMesh(sp.m.geometry, sp.mat, L.length); im.renderOrder = 1; im.frustumCulled = false;
       const sg = new TH.CircleGeometry(0.3 + c.width * 0.012, 10), sh = new TH.InstancedMesh(sg, new TH.MeshBasicMaterial({ color: '#000000', transparent: true, opacity: 0.3, depthWrite: false }), L.length);
       L.forEach((t, i) => { dummy.position.set(t.x, 0.03, t.z); dummy.rotation.set(-Math.PI / 2, 0, 0); dummy.updateMatrix(); sh.setMatrixAt(i, dummy.matrix); });
-      group.add(im); group.add(sh); out.push({ im, L });
+      group.add(im); group.add(sh); out.push({ im, L, sh });
     });
     let last = null;
     // force：清單裡的 hide 改了，鏡頭沒轉也重排一次（hide 的樹移到地底下）
     const update = (yaw, force) => { if (yaw === last && !force) return; last = yaw; out.forEach(({ im, L }) => { L.forEach((t, i) => { dummy.position.set(t.x, t.hide ? -50 : 0, t.z); dummy.rotation.set(0, yaw, 0); dummy.updateMatrix(); im.setMatrixAt(i, dummy.matrix); }); im.instanceMatrix.needsUpdate = true; }); };
     update(R.W.cam ? R.W.cam.yaw : 0);
-    return { update };
+    return { update, out };   // out：tidy2.js 收牆邊的樹用（t.hide、影子 sh）
   };
   // 換場景：把只屬於舊場景的形狀、材質、貼圖丟掉（共用的、keep 裡的不丟）
   R.disposeScene = (sc, keep) => {

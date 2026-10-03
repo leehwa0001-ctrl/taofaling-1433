@@ -148,8 +148,29 @@
         else { for (let t = 0; t < pos.count; t += 3) if (sea(t) && sea(t + 1) && sea(t + 2)) { pos.setXYZ(t + 1, pos.getX(t), pos.getY(t), pos.getZ(t)); pos.setXYZ(t + 2, pos.getX(t), pos.getY(t), pos.getZ(t)); } pos.needsUpdate = true; }
       }); }
   };
+  // ---------- 小地圖、大地圖：原本的底圖只畫到 x = HALF（東鶴近郊），港區在外面一片黑（作者 2026-10-04：超出三界之外）。
+  // 往東接一塊畫上港區；gtamap.js 照 tw.mapK（每公尺幾個像素）畫，原點一樣是 (-HALF, -HALF)。
+  let ext = null;
+  const extendMap = tw => {
+    const base = tw.groundCanvas; if (!base || tw.mapK) return;
+    const HALF = C.HALF, N = base.width, k = N / (HALF * 2), x1 = X0 + REGION[1] + 24;
+    if (!ext || ext.src !== base) {
+      const c = document.createElement('canvas'); c.width = Math.ceil((x1 + HALF) * k); c.height = base.height; const g = c.getContext('2d');
+      const sp = base.getContext('2d').getImageData(N - 2, Math.floor(N / 2), 1, 1).data;
+      g.fillStyle = 'rgb(' + sp[0] + ',' + sp[1] + ',' + sp[2] + ')'; g.fillRect(0, 0, c.width, c.height); g.drawImage(base, 0, 0);
+      const px = x => (x + HALF) * k, pz = z => (z + HALF) * k, rc = (x0, z0, x2, z2, col) => { g.fillStyle = col; g.fillRect(px(x0), pz(z0), (x2 - x0) * k, (z2 - z0) * k); };
+      Object.keys(LAND).forEach(key => { const [a, b, z0, z1] = rect(key); rc(a, z0, b, z1, key.indexOf('bw') === 0 ? '#9A968E' : '#B8B4AC'); });
+      { const [a, b, z0, z1] = rect('cargo'); rc(a + 2, z0 + 3, b - 2, z1 - 5, '#6A6A70'); const cols = ['#C8323A', '#2E5A8A', '#3A8A5A', '#E0A030', '#8A8A92', '#6A3A8A'];
+        for (let row = 0; row < 9; row++) for (let col = 0; col < 18; col++) { const x = a + 18 + col * 7.2, z = z0 + 22 + row * 2.9 + (row > 4 ? 4 : 0); if (x > b - 14) continue; rc(x - 3, z - 1.2, x + 3, z + 1.2, cols[(row * 7 + col * 3) % cols.length]); }
+        rc(a + 95 - 48, z0 - 16.5, a + 95 + 54, z0 - 1.5, '#2A2A30'); }
+      { const [a, , z0, z1] = rect('ferry'); rc(a + 5, (z0 + z1) / 2 - 8, a + 27, (z0 + z1) / 2 + 8, '#9AB8C8'); rc(a + 75 - 32, z0 - 12.5, a + 75 + 36, z0 - 1.5, '#F2F0EA'); }
+      { const [a, , z0, z1] = rect('mid'); [a + 22, a + 58].forEach(x => rc(x - 14, (z0 + z1) / 2 - 9, x + 14, (z0 + z1) / 2 + 9, '#9A4A36')); }
+      ext = { c, src: base };
+    }
+    tw.groundCanvas = ext.c; tw.mapK = k; tw.mapX1 = x1; tw.mapW = x1 + HALF; tw.mapCx = (x1 - HALF) / 2;
+  };
   const enter0 = R.enterTownNow;
-  R.enterTownNow = (from, at) => { enter0(from, at); H = null; const tw = W.town; if (tw && tw.group) build(tw); };
+  R.enterTownNow = (from, at) => { enter0(from, at); H = null; const tw = W.town; if (tw && tw.group) { build(tw); try { extendMap(tw); } catch (e) { console.warn('[harbor map]', e); } } };
   const step0 = R.townStep;
   R.townStep = dt => {
     step0(dt); if (!H || W.inside) return; const t = W.town ? W.town.t : 0;
