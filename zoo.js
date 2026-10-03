@@ -14,11 +14,18 @@
   const OK = id => { const d = R.ENEMIES[id]; return d && !d.boss && !d.human && !d.lord && !d.vbase && !/_s$|_pet$/.test(id) && d.ai !== 'core'; };
   const nameOf = id => (R.ENEMIES[id] ? R.ENEMIES[id].name : id);
   const critter = (id, parent, x, z, scale, pet) => { const vid = pet ? petArt(id) : id, m = R.makeBeast(vid); m.g.position.set(x, 0, z); if (scale) m.g.scale.setScalar(scale); parent.add(m.g); return { m, id, vid, x, z, tx: x, tz: z, t: rnd() * 5, wait: rnd() * 2 }; };
-  const hearts = (x, z) => { if (R.fx) for (let i = 0; i < 3; i++) setTimeout(() => R.fx('poof', x + (rnd() - 0.5) * 0.6, 1.2, z + (rnd() - 0.5) * 0.6, { color: '#FF7AA8', n: 4 }), i * 120); };
-  const PETLINES = ['牠瞇起眼睛，往你的手心蹭了蹭。', '牠翻過來，露出肚子。', '牠發出小小的、咕嚕咕嚕的聲音。', '牠用頭頂你的手，還要。', '牠打了一個呵欠，靠在你腳邊。'];
-  const petIt = (c, who) => { hearts(c.x, c.z); R.toast((who || nameOf(c.id)) + '：' + pick(PETLINES), '#FF7AA8'); R.sfx && R.sfx('pick'); };
+  // 摸頭（2026-10-04 作者：摸頭的效果要繼續優化）：愛心一顆一顆往上飄、小同伴停下來蹦一下；親密越高，反應越親；每天第一次摸會被療癒（homeup.js 的 R.S.petMood）
+  const hearts = (x, z) => { if (R.fx) for (let i = 0; i < 6; i++) setTimeout(() => R.fx('poof', x + (rnd() - 0.5) * 0.7, 0.9 + i * 0.18, z + (rnd() - 0.5) * 0.7, { color: i % 2 ? '#FF9AC0' : '#FF6A9A', n: 3 }), i * 110); };
+  const PETLINES = ['牠瞇起眼睛，往你的手心蹭了蹭。', '牠翻過來，露出肚子。', '牠發出小小的、咕嚕咕嚕的聲音。', '牠用頭頂你的手，還要。', '牠打了一個呵欠，靠在你腳邊。', '牠把下巴擱在你的手背上，不肯走。', '牠繞著你的腳轉了兩圈。'];
+  const LOVELINES = ['牠一看到你就小跑步過來。', '牠把最喜歡的小石頭叼來放在你腳邊。', '你一蹲下，牠就跳到你膝蓋上。', '牠閉著眼睛，整個身體都放鬆了。'];
+  const petIt = (c, who, love) => {
+    hearts(c.x, c.z); c.hop = 0.7; c.wait = 2.5; c.tx = c.x; c.tz = c.z;
+    R.toast((who || nameOf(c.id)) + '：' + pick((love || 0) >= 20 ? LOVELINES.concat(PETLINES) : PETLINES), '#FF7AA8'); R.sfx && R.sfx('pick');
+    const s = S(); if (s && s.petMood !== s.day) { s.petMood = s.day; R.save && R.save(); setTimeout(() => R.toast('被小同伴療癒了：今天下遺跡，每秒多回復 0.3 生命。', '#FF9AC0'), 1400); }
+  };
   const move = (c, dt, bounds, sp) => {
-    c.t += dt; const d = Math.hypot(c.tx - c.x, c.tz - c.z);
+    c.t += dt;
+    if (c.hop > 0) { c.hop -= dt; c.m.g.position.y = c.hop > 0 ? Math.abs(Math.sin(c.hop * 11)) * 0.28 : 0; }   // 被摸的時候蹦一下 const d = Math.hypot(c.tx - c.x, c.tz - c.z);
     if (d < 0.25) { c.wait -= dt; if (c.wait <= 0) { c.wait = 1 + rnd() * 3; c.tx = bounds[0] + rnd() * (bounds[1] - bounds[0]); c.tz = bounds[2] + rnd() * (bounds[3] - bounds[2]); } R.animBeast(c.m, c.vid, c.t, false); return; }
     const a = Math.atan2(c.tx - c.x, c.tz - c.z), s = sp || 1; c.x += Math.sin(a) * s * dt; c.z += Math.cos(a) * s * dt; c.m.g.position.set(c.x, 0, c.z); c.m.g.rotation.y = a; R.animBeast(c.m, c.vid, c.t, true);
   };
@@ -44,7 +51,7 @@
       bx(2.2, 0.45, 0.5, '#7A5A3A', -HW + 2.5, 0.23, HD - 1.4); [-2, 2].forEach(o => bx(0.08, 1.8, 0.08, '#8A8A92', o, 0.9, -1)); bx(4.1, 0.05, 0.05, '#8A8A92', 0, 1.78, -1);
       lamp(0, 2.2, 0, '#FFF4DC', 0.9, 14);
       const ids = Object.keys(s.pets).filter(OK), crit = [];
-      ids.forEach((id, i) => { const cr = critter(id, ins.group, -HW + 2 + (i % 5) * 2.2, -1 + Math.floor(i / 5) * 2, 0.6, true); crit.push(cr); inter(0, 0, 1.6, '摸摸小' + nameOf(id), () => { petIt(cr, '小' + nameOf(id)); s.pets[id].love = (s.pets[id].love || 0) + 1; R.save && R.save(); }); const it = ins.inter[ins.inter.length - 1]; Object.defineProperty(it, 'x', { get: () => cr.x }); Object.defineProperty(it, 'z', { get: () => cr.z }); });
+      ids.forEach((id, i) => { const cr = critter(id, ins.group, -HW + 2 + rnd() * (HW * 2 - 4), -HD + 3 + rnd() * (HD * 2 - 5), 0.6, true); crit.push(cr); inter(0, 0, 1.6, '摸摸小' + nameOf(id), () => { const L = s.pets[id].love = (s.pets[id].love || 0) + 1; petIt(cr, '小' + nameOf(id), L); if ([10, 30, 60, 100].includes(L)) setTimeout(() => R.banner && R.banner('小' + nameOf(id) + '更親近你了', '親密 ' + L), 900); R.save && R.save(); });   /* 散開在整個花園（擴建以後更大） */ const it = ins.inter[ins.inter.length - 1]; Object.defineProperty(it, 'x', { get: () => cr.x }); Object.defineProperty(it, 'z', { get: () => cr.z }); });
       ins.pets = { crit, bounds: [-HW + 1, HW - 1, -HD + 2.2, HD - 1.5] };
       inter(-HW + 1.2, 0, 1.6, ids.length ? '選一隻帶出門' : '看看花園的告示', () => petSheet());
       inter(HW - 1.4, HD - 1.4, 1.5, '回 302 室', () => (R.changeFloor ? R.changeFloor('home') : R.enterInterior('home')));
