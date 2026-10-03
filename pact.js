@@ -63,7 +63,7 @@
     const p = pact(), s = S(), sel = p.sel, party = (s.party || []).length, pts = ptsOf(party ? Object.assign({}, sel, { solo: 0 }) : sel), best = p.best[site.grade] || 0;   // 隊伍裡有人：「單獨」出發時會被拿掉，這裡就不算它
     return '<div id="pact-box"><h3>加注條款</h3><p class="note">自願接下更苛刻的條款，公會照條款加付報酬。加注每 1 點：報酬 +10%、經驗 +5%、寶箱多開一樣的機率 +3%。</p><div class="pact-list">'
       + TERMS.map(([id, name, lv, pt]) => { const v = sel[id] || 0, dis = id === 'solo' && party; return '<div class="pact-row' + (v ? ' on' : '') + '"><b>' + esc(name) + '</b><small>' + esc(v ? lv[v - 1] : lv.join('／')) + (dis ? (v ? '<b style="color:#FF9A7A">（隊伍裡有人：這一趟不算，點數也不算）</b>' : '（隊伍裡有人，不能選）') : '') + '</small><div class="pact-lv">' + ['不加'].concat(lv.map((_, i) => (lv.length > 1 ? (i ? '二級' : '一級') : '加') + ' ' + pt[i] + ' 點')).map((n, i) => '<button type="button" class="mini' + (v === i ? ' gold' : '') + '" data-pact="' + id + ':' + i + '"' + (dis && i ? ' disabled' : '') + '>' + n + '</button>').join('') + '</div></div>'; }).join('')
-      + '</div><p class="pact-sum">加注 <b>' + pts + '</b>／' + MAXPTS + ' 點' + (pts ? '・報酬 +' + pts * 10 + '%・經驗 +' + pts * 5 + '%' : '') + (best ? '・這個分級的最高紀錄：' + best + ' 點' : '') + (pts === MAXPTS ? '・<b>滿注</b>' : '') + '</p></div>';
+      + '</div><p class="pact-sum">加注 <b>' + pts + '</b>／' + MAXPTS + ' 點' + (pts ? '・報酬 +' + pts * 10 + '%・經驗 +' + pts * 5 + '%・寶箱多開一樣 +' + pts * 3 + '%' : '')   /* 2026-10-04 作者：寶箱多開一樣的機率在總計列沒顯示 */ + (best ? '・這個分級的最高紀錄：' + best + ' 點' : '') + (pts === MAXPTS ? '・<b>滿注</b>' : '') + '</p></div>';
   };
   if (R.taskExtras) R.taskExtras.push({
     html: (site, sp) => sheet(site, sp),
