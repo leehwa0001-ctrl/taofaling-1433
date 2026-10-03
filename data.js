@@ -148,7 +148,8 @@ window.R = window.R || {};
     { id: 'pierce', name: '貫穿', roll: [1, 1], ranged: 1, txt: () => '投射物多貫穿 1 個敵人' },
     { id: 'multi', name: '多重', roll: [1, 1], ranged: 1, txt: () => '每次多射出 1 發' },
     { id: 'heavy', name: '沉重', roll: [30, 80], txt: v => '擊退 +' + v + '%' },
-    { id: 'cursed', name: '詛咒', roll: [25, 40], curse: 1, txt: v => '傷害 +' + v + '%，最大生命 −15%' }
+    { id: 'cursed', name: '詛咒', roll: [25, 40], curse: 1, txt: v => '傷害 +' + v + '%，最大生命 −15%' },
+    { id: 'pen', name: '穿透', roll: [10, 35], txt: v => '無視敵人 ' + v + '% 的護甲' }   // 2026-10-04 作者：新增穿透
   ];
   R.A_AFFIX = [
     { id: 'tough', name: '堅固', roll: [2, 8], txt: v => '防禦 +' + v },
@@ -158,7 +159,8 @@ window.R = window.R || {};
     { id: 'regen', name: '回復', roll: [3, 12], txt: v => '每秒回復 ' + (v / 10) + ' 生命' },
     { id: 'focus', name: '專注', roll: [8, 25], txt: v => '技能冷卻 −' + v + '%' },
     { id: 'calm', name: '靜默', roll: [10, 35], txt: v => '佩特拉的注意上升 −' + v + '%' },
-    { id: 'greed', name: '貪婪', roll: [15, 50], txt: v => '委託報酬 +' + v + '%' }
+    { id: 'greed', name: '貪婪', roll: [15, 50], txt: v => '委託報酬 +' + v + '%' },
+    { id: 'mpregen', name: '回魔', roll: [3, 12], txt: v => '每秒回復 ' + (v / 10) + ' 魔力' }   // 2026-10-04 作者：新增回魔
   ];
   // 防具分四個部位；每個部位有輕、中、重三種（w）。斗笠和草鞋是昭旭的東西
   R.SLOTS = [{ id: 'head', name: '帽子' }, { id: 'body', name: '上衣' }, { id: 'legs', name: '褲子' }, { id: 'feet', name: '鞋子' }];

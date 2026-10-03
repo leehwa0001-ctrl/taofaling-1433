@@ -99,7 +99,8 @@
     if (e.hp <= 0) R.killEnemy(e, by);
   };
   // 扶起倒下的隊友：站在旁邊 1.5 秒
-  R.startRevive = a => { W.P.revive = { a, t: 0 }; R.toast('扶起' + a.name + '……'); };
+  // 2026-10-04 作者：救隊友要花一瓶回復藥（營火休息扶起來的不用）
+  R.startRevive = a => { const S = R.S; if (!S || !(S.potions && S.potions.hp > 0)) { R.toast('要用一瓶回復藥才能扶起' + a.name + '——身上沒有回復藥了。', '#FF9A6A'); return; } W.P.revive = { a, t: 0 }; R.toast('扶起' + a.name + '……（會用掉一瓶回復藥）'); };
 
   // ---------- 指揮 ----------
   const ORDERS = [['follow', '跟隨', '跟在身邊，打靠近你的'], ['focus', '集火', '一起打你瞄準的那隻'], ['hold', '待命', '守在現在的位置'], ['free', '自由', '自己去打看得到的'], ['retreat', '撤退', '不打了，全部回到你身邊']];
@@ -132,7 +133,7 @@
     if (ord.mode === 'focus' && (!ord.tg || ord.tg.dead)) { run.order = { mode: 'follow' }; R.toast('目標倒下了。隊友回到「跟隨」。'); }
     if (ord.mode === 'focus' && ord.tg && !ord.tg.dead) { ord.mt = (ord.mt || 0) - dt; if (ord.mt <= 0) { ord.mt = 1; R.fx('ring', ord.tg.x, 0.1, ord.tg.z, { r: 1.2 + ord.tg.def.size * 0.4, color: '#FF3A3A' }); } }
     // 扶人
-    if (P.revive) { const rv = P.revive; if (!rv.a.downed || Math.hypot(rv.a.x - P.x, rv.a.z - P.z) > 2.2 || P.dead) P.revive = null; else { rv.t += dt; if (rv.t >= 1.5) { rv.a.downed = false; rv.a.hp = rv.a.hpMax * 0.35; R.setDown(rv.a.h, false); R.toast(rv.a.name + '站起來了'); P.revive = null; } } }
+    if (P.revive) { const rv = P.revive; if (!rv.a.downed || Math.hypot(rv.a.x - P.x, rv.a.z - P.z) > 2.2 || P.dead) P.revive = null; else { rv.t += dt; if (rv.t >= 1.5) { const S = R.S; if (!S || !(S.potions && S.potions.hp > 0)) { R.toast('回復藥用完了，扶不起來。', '#FF9A6A'); P.revive = null; } else { S.potions.hp--; rv.a.downed = false; rv.a.hp = rv.a.hpMax * 0.35; R.setDown(rv.a.h, false); R.toast(rv.a.name + '站起來了（用掉一瓶回復藥）'); P.revive = null; } } } }
     W.allies.forEach((a, idx) => {
       a.iframe = Math.max(0, a.iframe - dt); a.cd -= dt; a.skillCd -= dt; a.taunt = Math.max(0, a.taunt - dt);
       if (a.downed) return;

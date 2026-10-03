@@ -216,7 +216,7 @@
     if (W.F.up) list.push({ x: W.F.up.x, z: W.F.up.z, r: 2.4, label: W.F.up.exit ? '從入口走出遺跡（回到地面）' : '走上樓層通道（回上一層：路已經變了樣）', act: R.ascend });
     if (W.F.coreView) list.push({ x: W.F.coreView.x, z: W.F.coreView.z + 3, r: 2.6, label: '看著佩特拉核心', act: R.coreSheet });
     W.F.ores.forEach(o => { if (o.left > 0) list.push({ x: o.x, z: o.z, r: 1.8, label: '掘礦', act: () => R.mine(o) }); });
-    (W.allies || []).forEach(a => { if (a.downed) list.push({ x: a.x, z: a.z, r: 1.9, label: '扶起' + a.name + '（站在旁邊一下）', act: () => R.startRevive(a) }); });
+    (W.allies || []).forEach(a => { if (a.downed) list.push({ x: a.x, z: a.z, r: 1.9, label: '扶起' + a.name + '（用一瓶回復藥，站在旁邊一下）', act: () => R.startRevive(a) }); });
     let best = null, bd = 1e9; for (const it of list) { const d = Math.hypot(it.x - P.x, it.z - P.z); if (d < it.r && d < bd) { bd = d; best = it; } }
     return best;
   };
@@ -359,7 +359,7 @@
     if (P.buff.shieldT <= 0) P.shield = 0;
     if (P.reloadT > 0) { P.reloadT -= dt; if (P.reloadT <= 0) { P.reloadT = 0; P.ammo = P.ws.mag; } }
     if (!P.dead) {
-      P.mp = Math.min(P.mpMax, P.mp + dt * (P.cls === 'mage' || P.cls === 'priest' ? 3.5 : 2));   // 魔力回得慢：技能要省著用
+      P.mp = Math.min(P.mpMax, P.mp + dt * ((P.cls === 'mage' || P.cls === 'priest' ? 3.5 : 2) + (P.mpRegen || 0)));   // 回魔詞綴   // 魔力回得慢：技能要省著用
       if (P.regen) R.healP(P.regen * dt, true);
       if (P.adv === 'druid' || P.buff.regen > 0) R.healP(P.hpMax * (P.buff.regen > 0 ? 0.03 : 0.01) * dt, true);
     }

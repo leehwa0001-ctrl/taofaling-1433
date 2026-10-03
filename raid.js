@@ -11,7 +11,10 @@
 // 這個檔案要放在 guildtask.js、ranks.js 後面。
 (function (R) {
   const W = () => R.W, S = () => R.S, $ = id => document.getElementById(id), esc = s => R.esc(s);
-  const STACK = 10;
+  // 一格疊幾個（2026-10-04 作者：比較高級的素材一組 10 個，例如魔力核心；碎片之類的 30、40 個）
+  const STACK_OF = { crystal: 40, branch: 40, herb: 40, washi: 40, seashell: 40 };
+  const ST = k => { if (STACK_OF[k]) return STACK_OF[k]; const v = (R.MATS[k] && R.MATS[k].value) || 10; return v >= 40 ? 10 : v >= 14 ? 20 : v >= 6 ? 30 : 40; };
+  R.stackOf = ST;
   const PACKS = {
     sack: { name: '布袋', w: 5, h: 4, price: 0, desc: '公會發的布袋。倒下了也會再發一個。' },
     leather: { name: '皮背包', w: 6, h: 5, price: 450, desc: '老岩推薦的皮背包，耐磨。' },
@@ -43,7 +46,7 @@
   };
   const dims = (it, r) => { const [w, h] = sizeOf(it); return r ? [h, w] : [w, h]; };
   const occ = (g, skip) => { const o = Array(g.w * g.h).fill(null); W().run.bag.forEach(it => { if (it === skip) return; const p = g.at.get(it); if (!p) return; const [w, h] = dims(it, p.r); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) o[(p.y + y) * g.w + p.x + x] = it; }); return o; };
-  const matCells = extra => { const m = Object.assign({}, W().run.mats); if (extra) m[extra.k] = (m[extra.k] || 0) + extra.n; return Object.values(m).reduce((a, n) => a + Math.ceil(Math.max(0, n) / STACK), 0); };
+  const matCells = extra => { const m = Object.assign({}, W().run.mats); if (extra) m[extra.k] = (m[extra.k] || 0) + extra.n; return Object.keys(m).reduce((a, k) => a + Math.ceil(Math.max(0, m[k]) / ST(k)), 0); };
   const freeRect = (g, o, x, y, w, h) => { if (x < 0 || y < 0 || x + w > g.w || y + h > g.h) return false; for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) if (o[(y + j) * g.w + x + i]) return false; return true; };
   const freeCount = o => o.reduce((a, c) => a + (c ? 0 : 1), 0);
   const fitsAt = (it, x, y, r, skip) => { const g = G(), o = occ(g, skip), [w, h] = dims(it, r); return freeRect(g, o, x, y, w, h) && freeCount(o) - w * h >= matCells(); };
@@ -136,7 +139,7 @@
     const slots = R.GEAR_KEYS.map(k => { const it = eq[k]; return '<div class="mc-slot' + (sel && sel.slot === k ? ' sel' : '') + '" data-slot="' + k + '" title="' + esc(SLOT_NAME[k] || k) + '">' + (it ? icon(it) : '<span class="mc-empty">' + esc(SLOT_NAME[k] || k) + '</span>') + '</div>'; }).join('');
     // 素材：照格子空的地方從後面排
     const o = occ(g), free = []; for (let i = o.length - 1; i >= 0; i--) if (!o[i]) free.push(i);
-    const stacks = []; Object.keys(run.mats).forEach(k => { let n = run.mats[k]; while (n > 0) { stacks.push({ k, n: Math.min(STACK, n) }); n -= STACK; } });
+    const stacks = []; Object.keys(run.mats).forEach(k => { let n = run.mats[k]; while (n > 0) { stacks.push({ k, n: Math.min(ST(k), n) }); n -= ST(k); } });
     const cells = Array.from({ length: g.w * g.h }, (_, i) => '<div class="tk-cell" style="grid-column:' + (i % g.w + 1) + ';grid-row:' + (Math.floor(i / g.w) + 1) + '"></div>').join('');
     const items = run.bag.map((it, i) => { const p = g.at.get(it); if (!p) return ''; const [w, h] = dims(it, p.r); return '<div class="tk-item' + (sel && sel.it === it ? ' sel' : '') + '" data-bi="' + i + '" style="grid-column:' + (p.x + 1) + '/span ' + w + ';grid-row:' + (p.y + 1) + '/span ' + h + ';--c:' + R.rarityColor(it) + '">' + icon(it) + '<small>' + esc(R.itemName(it)) + '</small></div>'; }).join('');
     const matsHtml = stacks.map((st, j) => { const i = free[j]; if (i == null) return ''; return '<div class="tk-mat' + (sel && sel.mat === st.k ? ' sel' : '') + '" data-mk="' + st.k + '" style="grid-column:' + (i % g.w + 1) + ';grid-row:' + (Math.floor(i / g.w) + 1) + ';--c:' + (R.MATS[st.k].color || '#C8B88A') + '" title="' + esc(R.MATS[st.k].name) + '"><i></i><b>' + st.n + '</b></div>'; }).join('');
@@ -144,8 +147,8 @@
     let info = '<p class="note">點一下看說明；拖曳搬動，拖的時候按 R 或右鍵轉向；拖到左邊的裝備欄就是穿上。</p>';
     if (sel && sel.mat && run.mats[sel.mat] > 0) {   // 選了素材（作者 2026-10-04：裝備可以丟出來，素材也要可以）
       const k = sel.mat, n = run.mats[k], M = R.MATS[k];
-      info = '<div class="tk-info"><b style="color:' + (M.color || '#C8B88A') + '">' + esc(M.name) + ' ×' + n + '</b><small>' + esc(M.desc || '') + (M.desc ? '・' : '') + '一格疊 ' + STACK + ' 個，現在佔 ' + Math.ceil(n / STACK) + ' 格</small><div class="row">'
-        + '<button type="button" class="btn" data-mdrop="1">丟在地上（' + Math.min(STACK, n) + ' 個）</button>' + (n > STACK ? '<button type="button" class="btn" data-mdrop="all">全部丟在地上（' + n + ' 個）</button>' : '') + '</div></div>';
+      info = '<div class="tk-info"><b style="color:' + (M.color || '#C8B88A') + '">' + esc(M.name) + ' ×' + n + '</b><small>' + esc(M.desc || '') + (M.desc ? '・' : '') + '一格疊 ' + ST(k) + ' 個，現在佔 ' + Math.ceil(n / ST(k)) + ' 格</small><div class="row">'
+        + '<button type="button" class="btn" data-mdrop="1">丟在地上（' + Math.min(ST(k), n) + ' 個）</button>' + (n > ST(k) ? '<button type="button" class="btn" data-mdrop="all">全部丟在地上（' + n + ' 個）</button>' : '') + '</div></div>';
     } else if (sel && (sel.it || sel.slot)) {
       const it = sel.it || eq[sel.slot];
       if (it) {
@@ -161,14 +164,14 @@
       + '<div class="tk-gridwrap"><div class="tk-grid" id="tk-grid" style="grid-template-columns:repeat(' + g.w + ',' + CELL + 'px);grid-template-rows:repeat(' + g.h + ',' + CELL + 'px)">' + cells + matsHtml + items + '</div></div></div>'
       + (loose.length ? '<p class="note" style="color:#FF9A6A">放不下的東西（整理出空間再放進去，不然出遺跡時一樣帶得走，但會一直佔著）：' + loose.map(it => '<button type="button" class="mini" data-loose="' + run.bag.indexOf(it) + '">' + esc(R.itemName(it)) + '</button>').join('') + '</p>' : '')
       + info
-      + '<p class="note">素材：' + (Object.keys(run.mats).filter(k => run.mats[k] > 0).map(k => R.MATS[k].name + ' ×' + run.mats[k] + ' <button type="button" class="mini" data-dm="' + k + '">丟掉一格</button>').join('、') || '沒有') + '（一格疊 ' + STACK + ' 個）。倒下的話，背包、身上的裝備都會留在遺跡裡。</p>',
+      + '<p class="note">素材：' + (Object.keys(run.mats).filter(k => run.mats[k] > 0).map(k => R.MATS[k].name + ' ×' + run.mats[k] + ' <button type="button" class="mini" data-dm="' + k + '">丟掉一格</button>').join('、') || '沒有') + '（一格疊幾個看素材：高級的 10 個、普通的 20～40 個）。倒下的話，背包、身上的裝備都會留在遺跡裡。</p>',
       '<div class="row"><button type="button" class="btn pri" id="bag-x">關上（I）</button></div>');
     $('bag-x').onclick = () => { sel = null; R.closeSheet(); };
     const box = $('r-sheet');
     box.querySelectorAll('[data-slot]').forEach(el => { el.onclick = () => { sel = { slot: el.dataset.slot }; R.bagSheet(); }; });
     box.querySelectorAll('[data-mk]').forEach(el => { el.onclick = () => { sel = { mat: el.dataset.mk }; R.bagSheet(); }; });
-    box.querySelectorAll('[data-mdrop]').forEach(el => { el.onclick = () => { const k = sel && sel.mat, n = Math.min(el.dataset.mdrop === 'all' ? 1e9 : STACK, (k && run.mats[k]) || 0); if (!n) return; run.mats[k] -= n; if (run.mats[k] <= 0) { delete run.mats[k]; sel = null; } const P = W().P; if (R.addDrop && P) { const d = R.addDrop({ type: 'mat', mat: k, n, x: P.x + 2.4, z: P.z }); if (d) d.noPick = true; } R.bagSheet(); }; });
-    box.querySelectorAll('[data-dm]').forEach(el => { el.onclick = () => { const k = el.dataset.dm, n = Math.min(STACK, run.mats[k] || 0); if (!n) return; run.mats[k] -= n; if (run.mats[k] <= 0) delete run.mats[k]; const P = W().P; if (R.addDrop && P) { const d = R.addDrop({ type: 'mat', mat: k, n, x: P.x + 2.4, z: P.z }); if (d) d.noPick = true; } R.bagSheet(); }; });
+    box.querySelectorAll('[data-mdrop]').forEach(el => { el.onclick = () => { const k = sel && sel.mat, n = Math.min(el.dataset.mdrop === 'all' ? 1e9 : (k ? ST(k) : 10), (k && run.mats[k]) || 0); if (!n) return; run.mats[k] -= n; if (run.mats[k] <= 0) { delete run.mats[k]; sel = null; } const P = W().P; if (R.addDrop && P) { const d = R.addDrop({ type: 'mat', mat: k, n, x: P.x + 2.4, z: P.z }); if (d) d.noPick = true; } R.bagSheet(); }; });
+    box.querySelectorAll('[data-dm]').forEach(el => { el.onclick = () => { const k = el.dataset.dm, n = Math.min(ST(k), run.mats[k] || 0); if (!n) return; run.mats[k] -= n; if (run.mats[k] <= 0) delete run.mats[k]; const P = W().P; if (R.addDrop && P) { const d = R.addDrop({ type: 'mat', mat: k, n, x: P.x + 2.4, z: P.z }); if (d) d.noPick = true; } R.bagSheet(); }; });
     box.querySelectorAll('[data-loose]').forEach(el => { el.onclick = () => { const it = run.bag[+el.dataset.loose], sp = it && findSpot(it); if (sp) { g.at.set(it, sp); R.bagSheet(); } else R.toast('還是放不下。'); }; });
     box.querySelectorAll('[data-act]').forEach(el => { el.onclick = () => {
       const a = el.dataset.act, it = sel && sel.it; let err = null;

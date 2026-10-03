@@ -53,7 +53,7 @@
     if (P.adv === 'yoto') dmg *= 1 + Math.min(0.6, (P.stacks || 0) / 100);
     if (P.adv === 'shadow' && o.fromBehind !== false) { const back = Math.abs(wrap(angTo(e, P) - e.yaw)) > 2.1; if (back) dmg *= 1.5; }
     if (e.st.curse > 0) dmg *= 1.3;
-    if (e.def.armor) dmg *= 1 - e.def.armor;
+    if (e.def.armor) dmg *= 1 - e.def.armor * (1 - (P.pen || 0));   // 穿透：無視一部分護甲
     let crit = o.crit || Math.random() < (o.critChance != null ? o.critChance : P.ws.crit) || (P.crits > 0 && o.primary);
     if (P.crits > 0 && o.primary) P.crits--;
     if (crit) dmg *= P.critMult;
