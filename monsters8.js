@@ -86,7 +86,7 @@
     if (A.splitter) for (let i = 0; i < 2; i++) { const [px, pz] = floorAt(x + rnd() * 2 - 1, z + rnd() * 2 - 1); const m = R.spawnEnemy(e.id.replace(/_v\d$/, ''), px, pz, e.room, { aggro: true, hpMul: 0.3, noAffix: true }); if (m && m.m && m.m.g) m.m.g.scale.multiplyScalar(0.7); }
     if (A.volatile) { R.fx('mark', x, 0, z, { r: 2.6, t: 0.9 }); later(() => { R.fx('boom', x, 0.4, z, { r: 2.6, color: '#FF9A3A' }); const P = W().P; if (P && !P.dead && Math.hypot(P.x - x, P.z - z) < 2.6 && !(P.iframe > 0)) R.hurtPlayer(e.dmg * 1.6, null); (W().allies || []).forEach(a => { if (!a.downed && Math.hypot(a.x - x, a.z - z) < 2.6) R.hurtAlly(a, e.dmg * 1.2, null); }); R.shake && R.shake(0.3); }, 900); }
     if (rnd() < 0.6) R.dropMat('crystal', 1 + (rnd() < 0.4 ? 1 : 0), x, z);
-    if (rnd() < 0.2 && R.rollChest && R.dropItem) { const l = R.rollChest(Math.max(0, (W().run.grade.lv || 1) - 1), W().run.floor, R.S.cls, 0).find(q => q.item); if (l) R.dropItem(l.item, x + 0.6, z); }
+    if (rnd() < 0.1 && R.rollChest && R.dropItem) { /* 2026-10-04 作者：掉落太多（兩成→一成） */ const l = R.rollChest(Math.max(0, (W().run.grade.lv || 1) - 1), W().run.floor, R.S.cls, 0).find(q => q.item); if (l) R.dropItem(l.item, x + 0.6, z); }
     return r;
   };
 })(window.R);

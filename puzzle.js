@@ -7,10 +7,17 @@
 //  - 石板：五塊（難：七塊）圍成一圈；踩上一塊，它和兩旁的石板一起翻轉明暗（關燈遊戲）。全部同時亮起來就解開。
 //    圈的塊數不是 3 的倍數，所以一定解得開。
 //  - 符文柱：三根（難：四根）；轉一根，順序上的下一根也跟著轉。照石碑上的符號排好就解開（一定解得開）。
+// 2026-10-04 作者：寶箱解謎蠻有趣，除了燭台；希望不用看規則說明就能直接解。
+//  - 燭台不再出現，換成「回音之室」：一進房間，幾塊彩色的石頭照順序一個一個亮、唱一個音，照著踩一遍就解開；
+//    踩錯會重唱一次（站著不動太久、摸石碑也會再唱）。
+//  - 石板：相鄰的石板之間有發光的連線；人靠近一塊石板，踩下去會翻的那三塊先亮給你看。
+//  - 符文柱：每根柱子前面的地上浮著它該轉成的符號；柱子之間有連桿（轉這根，右邊那根也會動）。
 (function (R) {
   const W = R.W, T = () => THREE, rnd = Math.random, pick = a => a[Math.floor(rnd() * a.length)];
-  const KINDS = ['candles', 'plates', 'dials'];
-  const NAMES = { candles: '燭台之室', plates: '石板之室', dials: '符文之室' };
+  const KINDS = ['echo', 'plates', 'dials'];   // 燭台（candles）的程式還在，不再挑
+  const NAMES = { candles: '燭台之室', plates: '石板之室', dials: '符文之室', echo: '回音之室' };
+  // 回音之室的音（R.AUDIO 的 AudioContext；靜音就不唱）
+  const tone = f => { try { const A = R.AUDIO, c = A && A.ctx; if (!c || (R.isMuted && R.isMuted())) return; const v = (A.VOL ? A.VOL.sfx : 0.8) * 0.22, t = c.currentTime + 0.01, o = c.createOscillator(), g = c.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + 0.02); g.gain.exponentialRampToValueAtTime(0.001, t + 0.5); o.connect(g); g.connect(A.out || c.destination); o.start(t); o.stop(t + 0.55); } catch (e) { } };
 
   // ---------- 選房間：主幹道以外的戰鬥房 ----------
   const gf = R.genFloor;
@@ -106,6 +113,17 @@
         return c;
       });
     }
+    if (pz.kind === 'echo') {
+      const n = run.grade.lv >= 3 ? 5 : 4, L = run.grade.lv >= 3 ? 5 : 4, COLS = ['#FF6A5A', '#5AC8FF', '#7AE07A', '#FFD24A', '#C88AFF'], NOTES = [262, 330, 392, 494, 587];
+      pz.hint = '「石頭會唱歌。記住牠們唱的順序，照著踩一遍。」（踩錯了會再唱一次；摸石碑也會再唱。）';
+      pz.stones = ring(n).map(([x, z], i) => {
+        const m = mat(COLS[i], COLS[i]), st = new (T().Mesh)(new (T().CylinderGeometry)(0.75, 0.85, 0.18, 8), m); m.emissiveIntensity = 0.15; st.position.set(x, 0.09, z); st.receiveShadow = true; scene.add(st);
+        const rg = floorRing(scene, x, z, 0.9, 1.05, COLS[i], 0.3); rg.position.y = 0.12;
+        return { x, z, m, rg, inside: false, lit: 0, f: NOTES[i] };
+      });
+      pz.seq = []; for (let i = 0; i < L; i++) { let k; do { k = Math.floor(rnd() * n); } while (pz.seq.length && k === pz.seq[pz.seq.length - 1]); pz.seq.push(k); }
+      pz.step = 0; pz.play = null; pz.started = false; pz.idle = 0;
+    }
     if (pz.kind === 'plates') {
       const n = run.grade.lv >= 3 ? 7 : 5;
       pz.hint = '「踩上一塊石板，它和兩旁的石板會一起翻轉明暗。讓所有的石板同時亮起來。」（同一塊踩兩次等於沒踩；先試著只踩暗的那幾塊旁邊。）';
@@ -115,6 +133,8 @@
         return { x, z, m, rg, on: true, inside: false };
       });
       { const mx = pz.plates.reduce((a, p) => a + p.x, 0) / n, mz = pz.plates.reduce((a, p) => a + p.z, 0) / n; pz.plates.sort((a, b) => Math.atan2(a.x - mx, a.z - mz) - Math.atan2(b.x - mx, b.z - mz)); }
+      // 相鄰的石板之間畫發光的連線（看得出哪幾塊是一組）
+      pz.plates.forEach((a, i) => { const b = pz.plates[(i + 1) % n], L = Math.hypot(b.x - a.x, b.z - a.z), ln = new (T().Mesh)(new (T().BoxGeometry)(0.14, 0.02, Math.max(0.1, L - 1.6)), new (T().MeshBasicMaterial)({ color: '#9AF0FF', transparent: true, opacity: 0.45, depthWrite: false })); ln.position.set((a.x + b.x) / 2, 0.07, (a.z + b.z) / 2); ln.rotation.y = Math.atan2(b.x - a.x, b.z - a.z); scene.add(ln); });
       // 從全亮的樣子隨便踩幾下打亂（所以一定解得開）；踩完剛好全亮就再踩一下
       pz.press = i => [i - 1, i, i + 1].forEach(j => { const p = pz.plates[(j + n) % n]; p.on = !p.on; });
       const k = run.grade.lv >= 3 ? 3 : 2, picks = Array.from({ length: n }, (_, i) => i).sort(() => rnd() - 0.5).slice(0, k); picks.forEach(pz.press);
@@ -140,9 +160,11 @@
         return d;
       });
       pz.dials.sort((a, b) => a.x - b.x);   // 由左到右（擺的時候可能被房間的形狀擠亂）
+      // 每根柱子前面的地上浮著它該轉成的符號；柱子之間的連桿（轉這根，右邊那根也會動）
+      pz.dials.forEach((d, j) => { const tg = sprite(scene, pz, pz.glyph[pz.target[j]], d.x, 0.55, d.z + 1.0, 0.6); tg.material.opacity = 0.55; const b = pz.dials[j + 1]; if (b) { const L = Math.hypot(b.x - d.x, b.z - d.z), rod = new (T().Mesh)(new (T().BoxGeometry)(0.12, 0.12, Math.max(0.1, L - 0.7)), new (T().MeshBasicMaterial)({ color: '#C8A0FF', transparent: true, opacity: 0.6 })); rod.position.set((d.x + b.x) / 2, 1.1, (d.z + b.z) / 2); rod.rotation.y = Math.atan2(b.x - d.x, b.z - d.z); scene.add(rod); } });
       if (pz.dials.every((o, j) => o.sym === pz.target[j])) { const d = pz.dials[0]; d.sym = (d.sym + 1) % 4; d.sp.material.map = pz.glyph[d.sym]; }   // 一開始剛好排好就打亂一格
     }
-    pz.inter.push({ x: tx0, z: tz0 + 0.3, r: 1.9, label: '看石碑', act: () => say(NAMES[pz.kind], pz.solved ? '石碑上的字已經暗下去了。' : pz.hint) });
+    pz.inter.push({ x: tx0, z: tz0 + 0.3, r: 1.9, label: pz.kind === 'echo' ? '摸石碑（再聽一次）' : '看石碑', act: () => { if (pz.kind === 'echo' && !pz.solved) { pz.step = 0; pz.play = { i: -1, t: 0.4 }; R.toast('石碑亮了一下——石頭又唱了一次。', '#B8E07A'); return; } say(NAMES[pz.kind], pz.solved ? '石碑上的字已經暗下去了。' : pz.hint); } });
     F.puzzles.push(pz);
   };
   const bf = R.buildFloor;
@@ -163,11 +185,31 @@
     const F = W.F, P = W.P, run = W.run; if (!run || !F || !F.puzzles || !P) return;
     F.puzzles.forEach(pz => {
       if (pz.seal && !pz.solved) pz.seal.material.opacity = 0.45 + Math.sin((run.t || 0) * 3) * 0.25;
+      if (pz.kind === 'echo' && !pz.solved) {
+        const inRoom = R.roomIndexAt && R.roomIndexAt(P.x, P.z) === pz.r.i;
+        if (!pz.started && inRoom) { pz.started = true; pz.play = { i: -1, t: 0.8 }; }
+        pz.stones.forEach(s => { s.lit = Math.max(0, s.lit - dt); const k = Math.min(1, s.lit * 2.5); s.m.emissiveIntensity = 0.15 + 1.3 * k; s.rg.material.opacity = 0.3 + 0.6 * k; });
+        if (pz.play) { pz.play.t -= dt; if (pz.play.t <= 0) { pz.play.i++; if (pz.play.i >= pz.seq.length) { pz.play = null; pz.idle = 0; } else { const s = pz.stones[pz.seq[pz.play.i]]; s.lit = 0.45; tone(s.f); pz.play.t = 0.7; } } return; }
+        let on = -1, bd = 1e9; pz.stones.forEach((s, i) => { const d = Math.max(Math.abs(P.x - s.x), Math.abs(P.z - s.z)); if (d < 0.85 && d < bd) { bd = d; on = i; } });
+        pz.stones.forEach((s, i) => {
+          const inside = i === on;
+          if (inside && !s.inside) {
+            s.lit = 0.4; tone(s.f);
+            if (pz.seq[pz.step] === i) { pz.step++; if (pz.step >= pz.seq.length) solve(pz); }
+            else { pz.step = 0; fail(pz, '石頭發出刺耳的聲音。……再聽一次。'); pz.play = { i: -1, t: 1.4 }; }
+          }
+          s.inside = inside;
+        });
+        pz.idle = on >= 0 || pz.step ? 0 : pz.idle + dt; if (pz.idle > 9 && inRoom) { pz.idle = 0; pz.play = { i: -1, t: 0.3 }; }
+        return;
+      }
       if (pz.kind !== 'plates' || pz.solved) return;
       // 踩上去的那一下才翻（站著不動不會一直翻）
       let on = -1, bd = 1e9; pz.plates.forEach((p, i) => { const d = Math.max(Math.abs(P.x - p.x), Math.abs(P.z - p.z)); if (d < 0.8 && d < bd) { bd = d; on = i; } });   // 一次只踩得到一塊
       pz.plates.forEach((p, i) => { const inside = i === on; if (inside && !p.inside) { pz.press(i); if (R.sfx) R.sfx('ui'); } p.inside = inside; });
-      pz.plates.forEach(p => { p.m.emissiveIntensity = p.on ? 1 : 0; p.rg.material.opacity = p.on ? 0.9 : 0.25; });
+      pz.plates.forEach(p => { p.m.emissiveIntensity = p.on ? 1 : 0; p.rg.material.opacity = p.on ? 0.9 : 0.25; p.rg.scale.setScalar(1); });
+      // 靠近（還沒踩上去）：踩下去會翻的那三塊先亮給你看
+      if (on < 0) { let near = -1, nd = 2.4; pz.plates.forEach((p, i) => { const d = Math.hypot(P.x - p.x, P.z - p.z); if (d < nd) { nd = d; near = i; } }); if (near >= 0) { const k = 1.12 + 0.1 * Math.sin((run.t || 0) * 8); [near - 1, near, near + 1].forEach(j => { const p = pz.plates[(j + pz.plates.length) % pz.plates.length]; p.rg.scale.setScalar(k); p.rg.material.opacity = 0.95; }); } }
       if (pz.plates.every(p => p.on)) solve(pz);
     });
   };

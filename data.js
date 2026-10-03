@@ -264,8 +264,8 @@ window.R = window.R || {};
       desc: '數量最多的分級，只有公會勇者能進入。有明顯的防衛機制（房間門口的膜），遺跡生物會主動攻擊，部分區域有陷阱。最深處看得到佩特拉核心，但保留區的核心受公會保護，不能攻擊。', unlock: 'hamilia' },
     { id: 'mors', name: '摩爾斯級', letter: 'C～A', zone: '保留區', floors: 5, lv: 3, loot: 2, floor0: 0, crystal: 'stairs', pool: ['kousaku', 'onibi', 'kamaitachi', 'nurikabe', 'okuriinu', 'chochin', 'kasa', 'hyakume', 'ittan', 'kappa', 'nozuchi', 'bakeneko', 'honemusha', 'karasu', 'ushioni'], boss: null, traps: 'rooms', nest: 1,
       desc: '沒有「第 0 層」：回歸水晶只在每層的樓層通道旁。生物有領地意識，會成群協作、組織狩獵（三連貂三隻一組、尾隨犬成群）。常有獨立的陷阱區；最深處是尾隨犬的巢。', unlock: 'amile' },
-    { id: 'kesent', name: '克森特級', letter: 'AA～SS', zone: '討伐區', floors: 5, lv: 4, loot: 3, floor0: 0, crystal: 'none', pool: ['kousaku', 'onibi', 'kamaitachi', 'nurikabe', 'okuriinu', 'chochin', 'hyakume', 'ittan', 'nozuchi', 'bakeneko', 'honemusha', 'karasu', 'ushioni'], boss: 'petra', lords: ['tsuchigumo', 'omukade', 'gashadokuro'], env: 1, traps: 'set',
-      desc: '入口會自我閉合，只能靠傳送水晶投送，打倒核心之前回不來。內部有深海、沙漠、火山、凍原等極端環境；生物會設陷阱；各區有「領主體」支配。最深處是佩特拉核心本體。', unlock: 'mors' },
+    { id: 'kesent', name: '克森特級', letter: 'AA～SS', zone: '討伐區', floors: 5, lv: 4, loot: 3, floor0: 0, crystal: 'stairs', sealed0: 1, pool: ['kousaku', 'onibi', 'kamaitachi', 'nurikabe', 'okuriinu', 'chochin', 'hyakume', 'ittan', 'nozuchi', 'bakeneko', 'honemusha', 'karasu', 'ushioni'], boss: 'petra', lords: ['tsuchigumo', 'omukade', 'gashadokuro'], env: 1, traps: 'set',
+      desc: '入口會自我閉合，只能靠傳送水晶投送進去；公會在每一層的樓層通道旁、第一層的落點投放了回歸水晶。內部有深海、沙漠、火山、凍原等極端環境；生物會設陷阱；各區有「領主體」支配。最深處是佩特拉核心本體。', unlock: 'mors' },
     { id: 'kaso', name: '卡索級', letter: 'SSS～G', zone: '討伐區', locked: '公會明文禁止任何個人單獨進入卡索級遺跡。約 1500 年間只出現過 7 次。' },
     { id: 'kansait', name: '坎賽特級', letter: '特別殲滅指定', zone: '討伐區', locked: '發現即通報、撤離。所有已確認的個體，都已由公會會長親自討伐。相關檔案列為最高機密。' }
   ];

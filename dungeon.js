@@ -533,7 +533,7 @@
     };
     // --- 往上的樓層通道：第一層的是遺跡入口（克森特級的入口已經閉合） ---
     const upstairs = r => {
-      if (F.f === 0 && run.grade.crystal === 'none') return;
+      if (F.f === 0 && (run.grade.crystal === 'none' || run.grade.sealed0)) return; /* sealed0：克森特級的入口閉合（2026-10-04 起改成有投放的回歸水晶） */
       const [x, z] = R.nearestFloorLocal(t, r.x, r.z + r.hz - 2.6), g2 = new TH.Group();
       for (let i = 0; i < 4; i++) bx(3 - i * 0.35, 0.28 + i * 0.28, 0.7, lam(th.top), 0, (0.28 + i * 0.28) / 2, -0.6 + i * 0.55, g2);
       if (F.f === 0) { const glow = new TH.Mesh(new TH.PlaneGeometry(3, 3.2), new TH.MeshBasicMaterial({ color: '#FFF1D0', transparent: true, opacity: 0.6, side: TH.DoubleSide, depthWrite: false })); glow.position.set(0, 1.9, 1.5); g2.add(glow); [-1.7, 1.7].forEach(o => bx(0.5, 3.6, 0.5, lam(th.wall), o, 1.8, 1.5, g2)); bx(4, 0.5, 0.6, lam(th.wall), 0, 3.75, 1.5, g2); }
@@ -552,7 +552,7 @@
       if (r.type === 'start') upstairs(r);
       if (r.type === 'deep' && run.grade.zone === '保留區') coreView(r);
       if (r.type === 'chest' || r.type === 'deep') { const [x, z] = near(r.x, r.z + (r.type === 'deep' ? 1 : 0)); R.addChest(group, F, x, z, run.grade.lv >= 2 && Math.random() < 0.35 ? 2 : run.grade.lv >= 1 ? 1 : 0, r.i); }
-      if (r.type === 'start' && run.grade.crystal === 'start') { const [x, z] = near(r.x, r.z - r.hz + 2.8); R.addCrystal(group, F, x, z, r.i); }
+      if (r.type === 'start' && (run.grade.crystal === 'start' || (run.grade.crystal === 'stairs' && F.f === (run.f0 ? 1 : 0)))) { /* 第一層的落點也有（作者 2026-10-04） */ const [x, z] = near(r.x, r.z - r.hz + 2.8); R.addCrystal(group, F, x, z, r.i); }
       if (r.type === 'stairs') { R.addStairs(group, F, r.x, r.z, r.i, th); if (run.grade.crystal === 'stairs') { const [x, z] = near(r.x - 5, r.z - r.hz + 3); R.addCrystal(group, F, x, z, r.i); } }
       if (r.type === 'deep') { const [x, z] = near(r.x, r.z + r.hz - 3); R.addCrystal(group, F, x, z, r.i); }
       if (r.type === 'ore') for (let k = 0; k < 6; k++) { const s = spot(r, { wall: true, rad: 0.4 }); if (!s) continue; const c = new TH.Mesh(new TH.OctahedronGeometry(0.5 + Math.random() * 0.4, 0), lam(Math.random() < 0.5 ? '#8A74FF' : '#A3ACB6', { emissive: '#1A1030' })); c.position.set(s[0], 0.6 + Math.random(), s[1]); c.rotation.set(Math.random(), Math.random(), Math.random()); group.add(c); }

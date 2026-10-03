@@ -201,7 +201,7 @@
     const r = R.roomOf(e), run = W.run, isCore = e.id === run.grade.boss;
     if (isCore) run.bossDown = true;
     R.banner(isCore ? '佩特拉核心停止了搏動' : e.def.name + '倒下了', isCore ? '遺跡開始崩塌：40 秒內回到回歸水晶' : '牠體內的魔力核心掉了出來');
-    // 克森特級：核心倒下之前不會有回歸水晶
+    // 打倒核心、領主：那一區放金寶箱和回歸水晶（克森特級 2026-10-04 起每一層本來就有投放的水晶）
     setTimeout(() => { if (!W.run || W.run !== run) return; const cp = R.nearestFloor(r.x, r.z + 2); R.addChest(W.F.group, W.F, cp[0], cp[1], 2, r.i); if ((isCore || run.grade.crystal !== 'none') && !W.F.crystals.some(c => c.room === r.i)) { const xp = R.nearestFloor(r.x, r.z - r.hz + 3); R.addCrystal(W.F.group, W.F, xp[0], xp[1], r.i); } }, 800);
     if (e.id === 'petra') { run.collapseT = 40; }
   };

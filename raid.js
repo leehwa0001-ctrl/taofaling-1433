@@ -225,7 +225,8 @@
     R.dropMat && pool.length && R.dropMat(pool[Math.floor(Math.random() * pool.length)], 1 + Math.floor(Math.random() * 3), o.x, o.z + 0.8);
     if (Math.random() < 0.25 && R.MATS.core) R.dropMat('core', 1, o.x + 0.6, o.z + 0.6);
     { const g = Math.round((15 + Math.random() * 30) * lv); S().gold += g; R.toast('背包裡有 ' + g + ' 費拉。', '#E8C04A'); }
-    if (Math.random() < 0.45 && R.rollChest) { const l = R.rollChest(lv - 1, run.floor, S().cls, 0).find(x => x.item); if (l && R.dropItem) R.dropItem(l.item, o.x, o.z + 1.2); }
+    if (Math.random() < 0.25 && R.rollChest) { const l = R.rollChest(lv - 1, run.floor, S().cls, 0).find(x => x.item);   // 2026-10-04 作者：掉落太多（四成五→兩成五）
+      if (l && R.dropItem) R.dropItem(l.item, o.x, o.z + 1.2); }
   };
   const lf0 = R.loadFloor;
   R.loadFloor = (f, o) => {
