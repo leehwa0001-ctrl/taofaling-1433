@@ -122,7 +122,7 @@
         return { x, z, m, rg, inside: false, lit: 0, f: NOTES[i] };
       });
       pz.seq = []; for (let i = 0; i < L; i++) { let k; do { k = Math.floor(rnd() * n); } while (pz.seq.length && k === pz.seq[pz.seq.length - 1]); pz.seq.push(k); }
-      pz.step = 0; pz.play = null; pz.started = false; pz.idle = 0;
+      pz.step = 0; pz.last = -1; pz.play = null; pz.started = false; pz.idle = 0;
     }
     if (pz.kind === 'plates') {
       const n = run.grade.lv >= 3 ? 7 : 5;
@@ -164,7 +164,7 @@
       pz.dials.forEach((d, j) => { const tg = sprite(scene, pz, pz.glyph[pz.target[j]], d.x, 0.55, d.z + 1.0, 0.6); tg.material.opacity = 0.55; const b = pz.dials[j + 1]; if (b) { const L = Math.hypot(b.x - d.x, b.z - d.z), rod = new (T().Mesh)(new (T().BoxGeometry)(0.12, 0.12, Math.max(0.1, L - 0.7)), new (T().MeshBasicMaterial)({ color: '#C8A0FF', transparent: true, opacity: 0.6 })); rod.position.set((d.x + b.x) / 2, 1.1, (d.z + b.z) / 2); rod.rotation.y = Math.atan2(b.x - d.x, b.z - d.z); scene.add(rod); } });
       if (pz.dials.every((o, j) => o.sym === pz.target[j])) { const d = pz.dials[0]; d.sym = (d.sym + 1) % 4; d.sp.material.map = pz.glyph[d.sym]; }   // 一開始剛好排好就打亂一格
     }
-    pz.inter.push({ x: tx0, z: tz0 + 0.3, r: 1.9, label: pz.kind === 'echo' ? '摸石碑（再聽一次）' : '看石碑', act: () => { if (pz.kind === 'echo' && !pz.solved) { pz.step = 0; pz.play = { i: -1, t: 0.4 }; R.toast('石碑亮了一下——石頭又唱了一次。', '#B8E07A'); return; } say(NAMES[pz.kind], pz.solved ? '石碑上的字已經暗下去了。' : pz.hint); } });
+    pz.inter.push({ x: tx0, z: tz0 + 0.3, r: 1.9, label: pz.kind === 'echo' ? '摸石碑（再聽一次）' : '看石碑', act: () => { if (pz.kind === 'echo' && !pz.solved) { pz.step = 0; pz.last = -1; pz.play = { i: -1, t: 0.4 }; R.toast('石碑亮了一下——石頭又唱了一次。', '#B8E07A'); return; } say(NAMES[pz.kind], pz.solved ? '石碑上的字已經暗下去了。' : pz.hint); } });
     F.puzzles.push(pz);
   };
   const bf = R.buildFloor;
@@ -189,14 +189,16 @@
         const inRoom = R.roomIndexAt && R.roomIndexAt(P.x, P.z) === pz.r.i;
         if (!pz.started && inRoom) { pz.started = true; pz.play = { i: -1, t: 0.8 }; }
         pz.stones.forEach(s => { s.lit = Math.max(0, s.lit - dt); const k = Math.min(1, s.lit * 2.5); s.m.emissiveIntensity = 0.15 + 1.3 * k; s.rg.material.opacity = 0.3 + 0.6 * k; });
-        if (pz.play) { pz.play.t -= dt; if (pz.play.t <= 0) { pz.play.i++; if (pz.play.i >= pz.seq.length) { pz.play = null; pz.idle = 0; } else { const s = pz.stones[pz.seq[pz.play.i]]; s.lit = 0.45; tone(s.f); pz.play.t = 0.7; } } return; }
-        let on = -1, bd = 1e9; pz.stones.forEach((s, i) => { const d = Math.max(Math.abs(P.x - s.x), Math.abs(P.z - s.z)); if (d < 0.85 && d < bd) { bd = d; on = i; } });
+        // 2026-10-04 作者：走過去會被當成連續按兩下——踩上去要進到 0.8 以內、要走到 1.1 以外才算離開（邊緣不會抖）；唱的時候也記住站在哪一顆
+        let on = -1, bd = 1e9; pz.stones.forEach((s, i) => { const d = Math.max(Math.abs(P.x - s.x), Math.abs(P.z - s.z)); if (d < (s.inside ? 1.1 : 0.8) && d < bd) { bd = d; on = i; } });
+        if (pz.play) { pz.stones.forEach((s, i) => { s.inside = i === on; }); pz.play.t -= dt; if (pz.play.t <= 0) { pz.play.i++; if (pz.play.i >= pz.seq.length) { pz.play = null; pz.idle = 0; } else { const s = pz.stones[pz.seq[pz.play.i]]; s.lit = 0.45; tone(s.f); pz.play.t = 0.7; } } return; }
         pz.stones.forEach((s, i) => {
           const inside = i === on;
           if (inside && !s.inside) {
             s.lit = 0.4; tone(s.f);
-            if (pz.seq[pz.step] === i) { pz.step++; if (pz.step >= pz.seq.length) solve(pz); }
-            else { pz.step = 0; fail(pz, '石頭發出刺耳的聲音。……再聽一次。'); pz.play = { i: -1, t: 1.4 }; }
+            if (i === pz.last) { /* 同一顆連踩不算（順序裡不會有同一顆連續兩次），也不算錯 */ }
+            else if (pz.seq[pz.step] === i) { pz.last = i; pz.step++; if (pz.step >= pz.seq.length) solve(pz); }
+            else { pz.step = 0; pz.last = -1; fail(pz, '石頭發出刺耳的聲音。……再聽一次。'); pz.play = { i: -1, t: 1.4 }; }
           }
           s.inside = inside;
         });
@@ -205,7 +207,7 @@
       }
       if (pz.kind !== 'plates' || pz.solved) return;
       // 踩上去的那一下才翻（站著不動不會一直翻）
-      let on = -1, bd = 1e9; pz.plates.forEach((p, i) => { const d = Math.max(Math.abs(P.x - p.x), Math.abs(P.z - p.z)); if (d < 0.8 && d < bd) { bd = d; on = i; } });   // 一次只踩得到一塊
+      let on = -1, bd = 1e9; pz.plates.forEach((p, i) => { const d = Math.max(Math.abs(P.x - p.x), Math.abs(P.z - p.z)); if (d < (p.inside ? 1.05 : 0.8) && d < bd) { bd = d; on = i; } });   // 一次只踩得到一塊；要走到 1.05 以外才算離開（邊緣不會抖成踩兩下）
       pz.plates.forEach((p, i) => { const inside = i === on; if (inside && !p.inside) { pz.press(i); if (R.sfx) R.sfx('ui'); } p.inside = inside; });
       pz.plates.forEach(p => { p.m.emissiveIntensity = p.on ? 1 : 0; p.rg.material.opacity = p.on ? 0.9 : 0.25; p.rg.scale.setScalar(1); });
       // 靠近（還沒踩上去）：踩下去會翻的那三塊先亮給你看
