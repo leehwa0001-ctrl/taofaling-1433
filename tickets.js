@@ -34,21 +34,21 @@
     const rates = '<div class="rates">' + TIER_I().map(t => '<div class="rate" style="--c:' + R.TIERS[t].color + '"><b>' + R.TIERS[t].name + '</b><span>' + R.TIERS[t].w + '%</span></div>').join('') + '</div>';
     const render = () => {
       const n = S.raceTickets || 0;
-      host.innerHTML = '<h2>種族抽選券</h2><p class="note">登記處的館員收下抽選券：「有抽選券就不用付這次的驗測費。給我一張就好。」抽一次用一張，十連抽用十張。抽到喜歡的就按「登記」；不喜歡就再抽，或收起來下次再用。</p>'
+      host.innerHTML = '<h2>種族抽選券</h2><p class="note">登記處的館員收下抽選券：「有抽選券就不用付這次的驗測費。給我一張就好。」抽一次用一張，十連抽用十張，五十連抽用五十張（最稀有的排在最前面）。抽到喜歡的就按「登記」；不喜歡就再抽，或收起來下次再用。</p>'
         + '<p class="note">現在的種族：<b>' + (S.race && R.RACES[S.race] ? esc(R.RACES[S.race].name) : '未登記') + '</b>・抽選券還有 <b>' + n + '</b> 張</p>' + rates
         + '<div class="race-cards ten">' + (got.length ? got.map(card).join('') : '<p class="note">還沒抽。</p>') + '</div>'
         + (pick != null ? detail(got[pick]) : '')
-        + '<div class="row"><button type="button" class="btn pri" id="tk-1"' + (n < 1 ? ' disabled' : '') + '>抽一次（1 張）</button><button type="button" class="btn pri" id="tk-10"' + (n < 10 ? ' disabled' : '') + '>十連抽（10 張）</button>'
+        + '<div class="row"><button type="button" class="btn pri" id="tk-1"' + (n < 1 ? ' disabled' : '') + '>抽一次（1 張）</button><button type="button" class="btn pri" id="tk-10"' + (n < 10 ? ' disabled' : '') + '>十連抽（10 張）</button><button type="button" class="btn pri" id="tk-50"' + (n < 50 ? ' disabled' : '') + '>五十連抽（50 張）</button>'
         + (pick != null ? '<button type="button" class="btn gold" id="tk-ok">登記為「' + esc(R.RACES[got[pick]].name) + '」</button>' : '') + '<button type="button" class="btn" id="tk-x">收起來</button></div>';
       const draw = k => {
         if ((S.raceTickets || 0) < k) return;
         S.raceTickets -= k; got = []; for (let i = 0; i < k; i++) got.push(R.drawRace());
-        // 先選中最稀有的那一張
-        pick = 0; got.forEach((id, i) => { if (TIER_I().indexOf(R.RACES[id].tier) > TIER_I().indexOf(R.RACES[got[pick]].tier)) pick = i; });
+        // 照稀有度排（最稀有的在前面），先選中第一張
+        got.sort((a, b) => TIER_I().indexOf(R.RACES[b].tier) - TIER_I().indexOf(R.RACES[a].tier)); pick = 0;
         R.save(); render();
-        got.forEach((id, i) => { const c = host.querySelector('[data-pick="' + i + '"]'), t = R.RACES[id].tier, rare = t === 'SSR' || t === 'UR', d = i * 0.09; if (!c) return; c.style.animationDelay = rare ? d + 's, ' + (d + 0.5) + 's' : d + 's'; c.style.animationFillMode = 'backwards'; c.classList.add('flip'); if (rare) c.classList.add('shine'); });
+        got.forEach((id, i) => { const c = host.querySelector('[data-pick="' + i + '"]'), t = R.RACES[id].tier, rare = t === 'SSR' || t === 'UR', d = i * (k > 10 ? 0.03 : 0.09); if (!c) return; c.style.animationDelay = rare ? d + 's, ' + (d + 0.5) + 's' : d + 's'; c.style.animationFillMode = 'backwards'; c.classList.add('flip'); if (rare) c.classList.add('shine'); });
       };
-      $('tk-1').onclick = () => draw(1); $('tk-10').onclick = () => draw(10);
+      $('tk-1').onclick = () => draw(1); $('tk-10').onclick = () => draw(10); $('tk-50').onclick = () => draw(50);
       host.querySelectorAll('[data-pick]').forEach(b => { b.onclick = () => { pick = +b.dataset.pick; render(); }; });
       if ($('tk-ok')) $('tk-ok').onclick = () => {
         const id = got[pick]; el.hidden = true;
@@ -70,7 +70,7 @@
       const box = document.createElement('div');
       box.innerHTML = '<h3>背包：經驗書、抽選券</h3><div class="recipes">'
         + (S.xpBooks > 0 ? '<div class="recipe"><b>升 ' + BOOK_LV + ' 等經驗書 ×' + S.xpBooks + '</b><small>讀了以後，現在登記的武器（' + esc(R.clsName(S.cls)) + ' Lv ' + S.classes[S.cls].lv + '）直接升 ' + BOOK_LV + ' 級。想給別的武器用，先到公會改登記。</small><button type="button" class="btn pri" data-xpbook="1">讀</button></div>' : '')
-        + (S.raceTickets > 0 ? '<div class="recipe"><b>種族抽選券 ×' + S.raceTickets + '</b><small>到公會的登記處用：抽一次一張，十連抽十張，抽到喜歡的才登記，不收手續費。</small></div>' : '') + '</div>';
+        + (S.raceTickets > 0 ? '<div class="recipe"><b>種族抽選券 ×' + S.raceTickets + '</b><small>到公會的登記處用：抽一次一張，十連抽十張，五十連抽五十張，抽到喜歡的才登記，不收手續費。</small></div>' : '') + '</div>';
       const note = body.querySelector('.panel-doc > .note'); (note || h2).after(box);
       const b = box.querySelector('[data-xpbook]'); if (b) b.onclick = readBook;
     }
