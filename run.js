@@ -555,7 +555,7 @@
     const st = R.S.classes[R.S.cls]; st.xp += v;
     while (st.xp >= R.xpNeed(st.lv)) {
       st.xp -= R.xpNeed(st.lv); st.lv++;
-      R.banner('升級：' + R.clsName(R.S.cls) + ' Lv ' + st.lv, st.lv === R.PROMOTE_LV ? '可以回公會轉職了（需要一顆魔力核心）' : '');
+      R.banner('升級：' + R.clsName(R.S.cls) + ' Lv ' + st.lv, st.lv === R.PROMOTE_LV ? '轉職的等級到了：到公會看轉職條件（段位、轉職試煉、魔力核心）' : '');
       if (W.P) { const ratio = W.P.hp / W.P.hpMax, fresh = R.calcPlayer(R.S.cls); ['hpMax', 'mpMax', 'dmgMult', 'lv'].forEach(k => { W.P[k] = fresh[k]; }); W.P.hp = W.P.hpMax * ratio; }
     }
   };

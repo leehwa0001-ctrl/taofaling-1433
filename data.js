@@ -54,7 +54,7 @@ window.R = window.R || {};
       { id: 'paladin', name: '聖騎士', path: '變化', skill: 'holycharge', desc: '技能「聖光衝鋒」：衝鋒並放出聖光震波，回復自己。被動：擋下攻擊時回復生命。' },
       { id: 'dragoon', name: '龍騎士', path: '昭旭・遺跡', skill: 'jump', desc: '技能「龍躍」：高高跳起，落在準心處震飛周圍敵人，跳在空中時不會受傷。被動：長槍的攻擊距離 +25%。' }]
   };
-  R.PROMOTE_LV = 8;   // 轉職：職業等級 8，並交出一顆魔力核心作為證明
+  R.PROMOTE_LV = 15;   // 轉職：職業等級 15（2026-10-04 作者：調高、還要條件；原本 8），段位、轉職試煉、一顆魔力核心見 promote.js
   R.xpNeed = lv => 60 + lv * 55;   // 硬核：升級要的經驗值多
 
   R.SKILLS = {

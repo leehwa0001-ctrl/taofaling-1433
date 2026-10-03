@@ -120,13 +120,14 @@
   R.CLASS_IDS.forEach(cls => {
     OLD[R.CLASSES[cls].skill] = { cls, lv: 1 };
     (R.SKILL_SLOTS[cls] || []).forEach((id, i) => { OLD[id] = { cls, lv: R.SKILL_UNLOCK[i + 1] }; });
-    (R.ADV[cls] || []).forEach(a => { OLD[a.skill] = { cls, lv: R.PROMOTE_LV, adv: a.id }; });
+    (R.ADV[cls] || []).forEach(a => { OLD[a.skill] = { cls, lv: 8, adv: a.id }; });   // 8＝原本的轉職等級；實際要幾級看 R.skillNeedLv（promote.js）
   });
   const info = id => LIB[id] || OLD[id];
   R.SKILL_LIB = LIB;
 
   // ---------- 學會了沒、裝了什麼 ----------
-  const known = (cls, st, id) => { const s = info(id); return !!s && s.cls === cls && st.lv >= s.lv && (!s.adv || s.adv === st.adv); };
+  const need = (s, st) => (R.skillNeedLv ? R.skillNeedLv(s, st) : s.lv);   // 轉職路線的技能：轉職等級調高以後往後挪（promote.js）
+  const known = (cls, st, id) => { const s = info(id); return !!s && s.cls === cls && st.lv >= need(s, st) && (!s.adv || s.adv === st.adv); };
   const allOf = cls => Object.keys(OLD).filter(id => OLD[id].cls === cls).concat(Object.keys(LIB).filter(id => LIB[id].cls === cls));
   const NSLOT = () => R.SKILL_UNLOCK.length;   // 技能格的數目（skills.js；2026-10-04 起五格）
   const defaults = (cls, st) => [st.adv ? R.ADV[cls].find(a => a.id === st.adv).skill : R.CLASSES[cls].skill, (R.SKILL_SLOTS[cls] || [])[0], (R.SKILL_SLOTS[cls] || [])[1]].concat(Array(Math.max(0, NSLOT() - 3)).fill(null));
@@ -318,7 +319,7 @@
   R.gainXp = v => {
     const S = R.S, cls = S.cls, st = S.classes[cls], lv0 = st.lv; gx0(v);
     if (st.lv === lv0) return;
-    const got = Object.keys(LIB).filter(id => { const s = LIB[id]; return s.cls === cls && s.lv > lv0 && s.lv <= st.lv && (!s.adv || s.adv === st.adv); });
+    const got = Object.keys(LIB).filter(id => { const s = LIB[id]; const L = need(s, st); return s.cls === cls && L > lv0 && L <= st.lv && (!s.adv || s.adv === st.adv); });
     if (got.length) setTimeout(() => R.banner('學會新技能：' + got.map(id => LIB[id].name).join('、'), '回到城裡，在暫停選單或公會的「技能書」把它換上去'), 3600);
   };
 
@@ -328,7 +329,7 @@
   const book = (host, close) => {
     const S = R.S, cls = S.cls, st = S.classes[cls], lo = R.loadoutOf(cls), keys = KEYS();
     const ids = allOf(cls), learned = ids.filter(id => known(cls, st, id)), locked = ids.filter(id => !known(cls, st, id));
-    const req = id => { const s = info(id); if (s.adv && s.adv !== st.adv) return '轉職：' + R.ADV[cls].find(a => a.id === s.adv).name + (s.lv > R.PROMOTE_LV ? '・Lv ' + s.lv : ''); return '職業等級 ' + s.lv; };
+    const req = id => { const s = info(id); if (s.adv && s.adv !== st.adv) return '轉職：' + R.ADV[cls].find(a => a.id === s.adv).name + (need(s, st) > R.PROMOTE_LV ? '・Lv ' + need(s, st) : ''); return '職業等級 ' + need(s, st); };
     // 照轉職路線分段：基本技能、你走的那條路線、其他路線（收起來）
     const groups = ids => {
       const advs = (R.ADV[cls] || []).map(a => a.id).sort((a, b) => (b === st.adv) - (a === st.adv));

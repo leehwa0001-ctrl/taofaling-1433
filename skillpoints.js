@@ -34,7 +34,7 @@
     const st = stOf(cls), out = [R.CLASSES[cls].skill];
     (R.SKILL_SLOTS[cls] || []).forEach((id, i) => { if (st.lv >= R.SKILL_UNLOCK[i + 1]) out.push(id); });
     if (st.adv) { const a = R.ADV[cls].find(x => x.id === st.adv); if (a) out.push(a.skill); }
-    Object.values(R.SKILL_LIB || {}).forEach(s => { if (s.cls === cls && st.lv >= s.lv && (!s.adv || s.adv === st.adv)) out.push(s.id); });
+    Object.values(R.SKILL_LIB || {}).forEach(s => { if (s.cls === cls && st.lv >= (R.skillNeedLv ? R.skillNeedLv(s, st) : s.lv) && (!s.adv || s.adv === st.adv)) out.push(s.id); });
     return Array.from(new Set(out)).filter(id => R.SKILLS[id]);
   };
 

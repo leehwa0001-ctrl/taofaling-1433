@@ -11,7 +11,7 @@
   const readBook = () => {
     const S = R.S; if (!(S.xpBooks > 0)) return;
     const st = S.classes[S.cls], lv0 = st.lv; S.xpBooks--; st.lv += BOOK_LV;
-    R.save(); R.hub(); R.say(R.clsName(S.cls) + ' Lv ' + lv0 + ' → ' + st.lv + (lv0 < R.PROMOTE_LV && st.lv >= R.PROMOTE_LV ? '。可以轉職了（要一顆魔力核心）' : ''));
+    R.save(); R.hub(); R.say(R.clsName(S.cls) + ' Lv ' + lv0 + ' → ' + st.lv + (lv0 < R.PROMOTE_LV && st.lv >= R.PROMOTE_LV ? '。轉職的等級到了（到公會看轉職條件）' : ''));
   };
 
   // 用抽選券改種族：抽一次一張、十連抽十張；選了才登記，不收手續費，也不受一天一次的限制
