@@ -9,7 +9,10 @@
   const W = () => R.W, S = () => R.S, $ = id => document.getElementById(id), esc = s => R.esc(s);
   const PROD = '';   // 伺服器架好之後填 wss://…
   const LS = 'tf-net-server';
-  const serverUrl = () => {
+  // https://… 也收（Render 給的網址是 https）：換成 wss://
+  const wsOf = u => String(u || '').trim().replace(/^http(s?):\/\//, 'ws$1://').replace(/\/+$/, '');
+  const serverUrl = () => wsOf(serverUrl0());
+  const serverUrl0 = () => {
     try { const q = new URLSearchParams(location.search).get('server'); if (q) localStorage.setItem(LS, q); const v = localStorage.getItem(LS); if (v) return v; } catch (e) { }
     return /^(localhost|127\.0\.0\.1)$/.test(location.hostname) ? 'ws://localhost:8787' : PROD;
   };
@@ -36,9 +39,12 @@
     const url = serverUrl(); if (!url) { no(new Error('還沒有連線伺服器的網址（伺服器還沒架好）。')); return; }
     let ws; try { ws = new WebSocket(url); } catch (e) { no(new Error('伺服器網址不對：' + url)); return; }
     N.ws = ws; N.busy = '連線中……'; refresh();
+    // Render 免費的伺服器閒置會睡著，第一次連要等它醒（最多一分鐘左右）
+    const wake = setTimeout(() => { if (!opened) { N.busy = '伺服器醒來中（閒置太久會睡著，最多等一分鐘）……'; refresh(); } }, 3000);
+    const giveUp = setTimeout(() => { if (!opened) { try { ws.close(); } catch (e) { } N.busy = ''; no(new Error('伺服器一直沒有回應（' + url + '）。')); } }, 75000);
     let opened = false;
-    ws.onopen = () => { opened = true; N.busy = ''; ok(); };
-    ws.onerror = () => { if (!opened) { N.busy = ''; no(new Error('連不上伺服器（' + url + '）。')); } };
+    ws.onopen = () => { opened = true; clearTimeout(wake); clearTimeout(giveUp); N.busy = ''; ok(); };
+    ws.onerror = () => { if (!opened) { clearTimeout(wake); clearTimeout(giveUp); N.busy = ''; no(new Error('連不上伺服器（' + url + '）。')); } };
     ws.onclose = () => { if (N.ws === ws) N.ws = null; drop(opened && N.room ? '和伺服器斷線了。' : ''); };
     ws.onmessage = ev => { let o; try { o = JSON.parse(ev.data); } catch (e) { return; } onServer(o); };
   });
@@ -58,6 +64,8 @@
   };
 
   const onServer = o => {
+    // 別的遊戲的伺服器（例如 TOD 格鬥遊戲的房間伺服器會先送 { type: 'connected' }）：講清楚、斷線
+    if (o && o.type && !o.t) { N.busy = ''; R.toast('這個網址是別的遊戲的伺服器，不是討伐令 1433 的（' + serverUrl() + '）。', '#FF9A6A'); try { N.ws.close(); } catch (e) { } return; }
     if (o.t === 'room') {
       N.room = o.code; N.me = o.you; N.host = o.host; N.members = o.members || []; N.busy = '';
       R.toast(isHost() ? '開好房間了：房號 ' + o.code + '。把房號告訴朋友。' : '加入了 ' + nameOf(N.host) + ' 的房間。', '#7FE0FF');

@@ -1,0 +1,11 @@
+# Render 的部署設定（多人連線的伺服器，server/ 資料夾）
+# 用法：Render → New → Blueprint → 選這個 repo → Apply。部署好之後把網址（https://….onrender.com）告訴 Claude，填進 net.js 的 PROD。
+services:
+  - type: web
+    name: taofaling-1433-server
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    healthCheckPath: /
