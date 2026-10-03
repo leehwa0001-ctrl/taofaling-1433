@@ -66,7 +66,7 @@
     });
     { const c = $('r-dodge-cd'), b = c && c.parentNode; if (c) { const p = P.dodgeCdMax ? Math.max(0, Math.min(1, P.dodgeCd / P.dodgeCdMax)) : 0; c.style.setProperty('--p', p); const s = b.querySelector('.bh-sec'); if (s) s.textContent = P.dodgeCd > 0.05 ? P.dodgeCd.toFixed(1) : ''; } }
     // 魔王
-    const boss = W.enemies && W.enemies.find(e => e.def.boss && !e.dead);
+    const boss = W.enemies && (R.bossForBar ? R.bossForBar() : W.enemies.find(e => e.def.boss && !e.dead));
     if (boss) {
       const f = Math.max(0, boss.hp / boss.hpMax); if (boss !== bossId) { bossId = boss; bossTrail = f; }
       if (f < bossTrail) { bossHold -= dt; if (bossHold <= 0) bossTrail = Math.max(f, bossTrail - dt * 0.35); } else { bossTrail = f; bossHold = 0.6; }

@@ -21,6 +21,9 @@
     R.drawMinimap(true);
   };
   let slow = 0;
+  // 上方的大血條顯示哪一隻（2026-10-04 作者回報：霜冠鹿的血條一直在上方、擋住別的首領）：
+  // 離你最近、正在打的那一隻；30 公尺外、8 秒內沒被打到的不顯示
+  R.bossForBar = () => { const P = W.P, t = W.run ? W.run.t : 0; let best = null, bd = 1e9; (W.enemies || []).forEach(e => { if (!e.def.boss || e.dead) return; const d = P ? Math.hypot(e.x - P.x, e.z - P.z) : 0, hit = e.hitAt != null && t - e.hitAt < 8; if (d > 30 && !hit) return; const k = d - (hit ? 20 : 0) - (e.aggro ? 8 : 0); if (k < bd) { bd = k; best = e; } }); return best; };
   R.hudTick = dt => {
     const P = W.P, run = W.run; if (!P) return;
     $('r-hp').style.width = Math.max(0, P.hp / P.hpMax * 100) + '%';
@@ -45,7 +48,7 @@
     $('r-aware-t').textContent = '佩特拉的注意 ' + Math.floor(run.aware) + (run.reactionKnown ? '・' + R.REACTIONS[run.reaction].name : '');
     const it = R.nearestInteract();
     $('r-prompt').hidden = !it; if (it) $('r-prompt').innerHTML = '<kbd>' + (R.touch ? '互動' : '空白') + '</kbd>' + R.esc(it.label);
-    const boss = W.enemies.find(e => e.def.boss && !e.dead);
+    const boss = R.bossForBar();
     $('r-boss').hidden = !boss; if (boss) { $('r-boss-n').textContent = boss.def.name; $('r-boss-hp').style.width = (boss.hp / boss.hpMax * 100) + '%'; }
     // 異常狀態力場：靠近佩特拉核心時，看不清楚
     const core = W.enemies.find(e => e.id === 'petra' && !e.dead) || (W.F && W.F.coreView);
