@@ -1,23 +1,11 @@
-// 限時補償（2026-10-02 上線）：5000 費拉、升 10 等經驗書一本、種族抽選券 200 張、魔力核心一顆，寄到每個存檔的背包。
-// （魔力核心是後來加的：已經領過的存檔會另外補發一顆，用 comp20261002b 記）
-// ※ 作者：「下一版完就刪掉」。下一個版本做完的時候，刪掉這個檔案和 index.html 裡的 <script src="compensation.js">，其他檔案都不用改。
-//   存檔裡留下的 comp20261002、xpBooks、raceTickets 欄位沒有別的程式會讀，不用清。
+// 經驗書、種族抽選券（原本是 compensation.js 的限時補償，2026-10-02 上線）
+// - 作者 2026-10-04：「限時補償和序號能獲得的東西如果重複，就能刪掉了」——補償的內容（5000 費拉、升 10 等經驗書、種族抽選券 200 張、魔力核心）
+//   改成序號「補償禮包」（redeem.js），自動寄送的部分拿掉了；這個檔案只留下「用」的部分：
+//   倉庫（背包）讀經驗書、公會登記處用抽選券。已經領過補償、手上還有的照樣可以用。
+//   存檔裡的 comp20261002、comp20261002b 欄位不再有程式讀，不用清。
 (function (R) {
   const $ = id => document.getElementById(id), esc = s => R.esc(s);
-  const KEY = 'comp20261002', KEY2 = 'comp20261002b', GOLD = 5000, BOOK_LV = 10, TICKETS = 200;
-  const MSG = ['公會寄來了補償', GOLD + ' 費拉、升 ' + BOOK_LV + ' 等經驗書、種族抽選券 ' + TICKETS + ' 張、魔力核心一顆，放進背包了。抽選券在公會的登記處用。'];
-  const MSG2 = ['公會補寄了一件補償', '魔力核心一顆，放進背包了（轉職用得到）。'];
-
-  // 寄到背包：每個存檔只寄一次（已經領過的，只補寄魔力核心）
-  const deliver = () => {
-    const S = R.S; if (!S || (S[KEY] && S[KEY2])) return null;
-    S.mats = S.mats || {}; S.mats.core = (S.mats.core || 0) + 1;
-    if (S[KEY]) { S[KEY2] = 1; R.save(); return MSG2; }
-    S[KEY] = 1; S[KEY2] = 1; S.gold += GOLD; S.xpBooks = (S.xpBooks || 0) + 1; S.raceTickets = (S.raceTickets || 0) + TICKETS;
-    R.save(); return MSG;
-  };
-  const etn = R.enterTownNow;
-  R.enterTownNow = (from, at) => { etn(from, at); const m = deliver(); if (m) setTimeout(() => R.banner(m[0], m[1]), 3600); };
+  const BOOK_LV = 10;
 
   // 升 10 等經驗書：現在登記的武器（職業）直接升 10 級
   const readBook = () => {
@@ -46,7 +34,7 @@
     const rates = '<div class="rates">' + TIER_I().map(t => '<div class="rate" style="--c:' + R.TIERS[t].color + '"><b>' + R.TIERS[t].name + '</b><span>' + R.TIERS[t].w + '%</span></div>').join('') + '</div>';
     const render = () => {
       const n = S.raceTickets || 0;
-      host.innerHTML = '<h2>種族抽選券</h2><p class="note">登記處的館員收下抽選券：「補償用的，這次驗魔力波不收錢。」抽一次用一張，十連抽用十張。抽到喜歡的就按「登記」；不喜歡就再抽，或收起來下次再用。</p>'
+      host.innerHTML = '<h2>種族抽選券</h2><p class="note">登記處的館員收下抽選券：「抽選券用的，這次驗魔力波不收錢。」抽一次用一張，十連抽用十張。抽到喜歡的就按「登記」；不喜歡就再抽，或收起來下次再用。</p>'
         + '<p class="note">現在的種族：<b>' + (S.race && R.RACES[S.race] ? esc(R.RACES[S.race].name) : '未登記') + '</b>・抽選券還有 <b>' + n + '</b> 張</p>' + rates
         + '<div class="race-cards ten">' + (got.length ? got.map(card).join('') : '<p class="note">還沒抽。</p>') + '</div>'
         + (pick != null ? detail(got[pick]) : '')
@@ -72,16 +60,15 @@
     render();
   };
 
-  // 接到店面的畫面上：倉庫（背包）多一欄補償的東西；公會登記處的勇者證旁邊多一個按鈕
+  // 接到店面的畫面上：倉庫（背包）多一欄經驗書、抽選券；公會登記處的勇者證旁邊多一個按鈕
   const hub0 = R.hub;
   R.hub = (t, f) => {
-    const sent = deliver();
     hub0(t, f);
     const S = R.S, body = $('hub-body'); if (!body) return;
     const h2 = body.querySelector('h2');
     if (h2 && h2.textContent === '倉庫' && (S.xpBooks > 0 || S.raceTickets > 0)) {
       const box = document.createElement('div');
-      box.innerHTML = '<h3>背包：公會寄來的補償（限時）</h3><div class="recipes">'
+      box.innerHTML = '<h3>背包：經驗書、抽選券</h3><div class="recipes">'
         + (S.xpBooks > 0 ? '<div class="recipe"><b>升 ' + BOOK_LV + ' 等經驗書 ×' + S.xpBooks + '</b><small>讀了以後，現在登記的武器（' + esc(R.clsName(S.cls)) + ' Lv ' + S.classes[S.cls].lv + '）直接升 ' + BOOK_LV + ' 級。想給別的武器用，先到公會改登記。</small><button type="button" class="btn pri" data-xpbook="1">讀</button></div>' : '')
         + (S.raceTickets > 0 ? '<div class="recipe"><b>種族抽選券 ×' + S.raceTickets + '</b><small>到公會的登記處用：抽一次一張，十連抽十張，抽到喜歡的才登記，不收手續費。</small></div>' : '') + '</div>';
       const note = body.querySelector('.panel-doc > .note'); (note || h2).after(box);
@@ -92,6 +79,5 @@
       const b = document.createElement('button'); b.type = 'button'; b.className = 'btn gold'; b.textContent = '用種族抽選券（還有 ' + S.raceTickets + ' 張）';
       b.onclick = ticketGacha; anchor.after(b);
     }
-    if (sent) R.say(sent[0] + '：' + sent[1]);
   };
 })(window.R);
