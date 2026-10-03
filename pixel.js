@@ -1,7 +1,9 @@
 // 討伐令 1433：像素風
 // 像素風開著的時候：
 //  - 人物、遺跡生物、地板、牆是點陣圖和點陣材質（sprites.js），一個點陣像素是 1/12 公尺；
-//  - 鏡頭換成正交鏡頭：近的遠的東西，像素都一樣大；
+//  - 鏡頭是「有一點透視」的窄角鏡頭（2026-10-04 作者：像《潛水員戴夫》那樣，鏡頭有一點透視、牆壁的角度會隨畫面改變一點點）：
+//    鏡頭往後退、視角收窄，角色那個距離的像素還是剛好一格；畫面邊邊的牆會看到一點側面，越高的東西越靠近鏡頭、移動時有一點視差。
+//    設定裡可以換回原本的正交鏡頭（近的遠的東西像素都一樣大）；
 //  - 先畫在一張小畫布上（一格＝一個點陣像素），再用「整數倍」放大到螢幕，每個像素在螢幕上一樣大；
 //  - 鏡頭的位置對齊像素格，走路時牆和地板的像素不會閃。
 // 哪一種畫法跟著「場景是用哪一種做的」：在遺跡裡切換，會從下一層開始。
@@ -45,11 +47,13 @@
     P.rt.depthTexture.minFilter = P.rt.depthTexture.magFilter = TH.NearestFilter;
     // 放大的時候順便描邊：旁邊的像素比自己遠很多（牆頂、屋頂、柱子的輪廓）就暗一點
     P.mat = new TH.ShaderMaterial({
-      uniforms: { tColor: { value: P.rt.texture }, tDepth: { value: P.rt.depthTexture }, res: { value: new TH.Vector2(4, 4) }, scale: { value: 1 }, off: { value: new TH.Vector2(0, 0) }, dRange: { value: 1 }, edge: { value: 0.9 } },
+      uniforms: { tColor: { value: P.rt.texture }, tDepth: { value: P.rt.depthTexture }, res: { value: new TH.Vector2(4, 4) }, scale: { value: 1 }, off: { value: new TH.Vector2(0, 0) }, dRange: { value: 1 }, edge: { value: 0.9 }, persp: { value: 0 }, cNear: { value: 1 }, cFar: { value: 100 } },
       vertexShader: 'void main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }',
       fragmentShader: [
         'uniform sampler2D tColor; uniform sampler2D tDepth; uniform vec2 res; uniform float scale; uniform vec2 off; uniform float dRange; uniform float edge;',
-        'float dep(vec2 p){ return texture2D(tDepth, (p + 0.5) / res).x * dRange; }',
+        'uniform float persp; uniform float cNear; uniform float cFar;',
+        // 透視鏡頭的深度不是線性的，換回「離鏡頭幾公尺」再比
+        'float dep(vec2 p){ float z = texture2D(tDepth, (p + 0.5) / res).x; return persp > 0.5 ? cNear * cFar / (cFar - z * (cFar - cNear)) : z * dRange; }',
         'void main(){',
         '  vec2 p = floor((gl_FragCoord.xy + off) / scale);',
         '  vec3 c = texture2D(tColor, (p + 0.5) / res).rgb;',
@@ -66,11 +70,15 @@
     const quad = new TH.Mesh(new TH.PlaneGeometry(2, 2), P.mat); quad.frustumCulled = false; P.scene.add(quad);
   };
 
-  // 換鏡頭：像素風用正交鏡頭（位置、方向照舊，鏡頭的程式不用改）
+  // 透視的程度：鏡頭的視角（度）。0 ＝ 原本的正交鏡頭。一般鏡頭是 44 度，這裡收窄成 26 度，看起來只有「一點」透視
+  R.PIX_FOV = () => { const o = R.S && R.S.opts; return o && o.fov != null ? o.fov : 26; };
+  // 換鏡頭：像素風用透視（窄角）或正交鏡頭（位置、方向照舊，鏡頭的程式不用改）
   const useCam = (W, pix, w, h) => {
     if (!W.pcam) W.pcam = W.camera;
-    if (pix && !W.ocam) W.ocam = new (T().OrthographicCamera)(-1, 1, 1, -1, 0.5, 240);
-    const want = pix ? W.ocam : W.pcam;
+    const per = R.PIX_FOV() > 0;
+    if (pix && !per && !W.ocam) W.ocam = new (T().OrthographicCamera)(-1, 1, 1, -1, 0.5, 240);
+    if (pix && per && !W.vcam) W.vcam = new (T().PerspectiveCamera)(26, w / h, 1, 260);
+    const want = pix ? (per ? W.vcam : W.ocam) : W.pcam;
     if (W.camera !== want) {
       want.position.copy(W.camera.position); want.quaternion.copy(W.camera.quaternion);
       if (!pix) { W.pcam.aspect = w / h; W.pcam.updateProjectionMatrix(); }
@@ -81,6 +89,29 @@
     const dpr = window.devicePixelRatio || 1, pr = pix ? dpr : Math.min(dpr, R.touch ? 1.3 : 1.75);
     if (W.renderer.getPixelRatio() !== pr) W.renderer.setPixelRatio(pr);
   };
+  // 小畫布多大、放大幾倍；畫面高度的一半是幾公尺（在角色那個距離）
+  const sizeOf = W => {
+    const cv = W.renderer.domElement, bw = cv.width, bh = cv.height, PX = R.PIX.PX;
+    // 一般鏡頭在人物那個距離看得到多高，換算成點陣像素；螢幕高度除以它，四捨五入成整數倍
+    const a = bw / bh, tall = a < 1 ? 1 + (1 - a) * 0.7 : 1, dist = Math.hypot(R.CAM.h, R.CAM.back) * (W.cam ? W.cam.zoom : 1) * tall;
+    const want = 2 * dist * Math.tan(22 * Math.PI / 180) / PX;
+    const s = Math.max(1, Math.round(bh / want)), rw = 2 * Math.ceil(bw / s / 2), rh = 2 * Math.ceil(bh / s / 2);
+    return { bw, bh, s, rw, rh, hw: rw / 2 * PX, hh: rh / 2 * PX };
+  };
+  // 透視鏡頭：placeCam 擺好之後，沿著同一個方向往後退，退到「角色那個距離，畫面一格剛好是一個點陣像素」
+  // （放在 placeCam 裡做：霧、名牌、滑鼠瞄準都用同一個鏡頭位置）
+  const pc0 = R.placeCam;
+  R.placeCam = (...a) => {
+    const r = pc0(...a), W = R.W, P0 = W.P;
+    if (!W.scene || !W.scene.userData.pix || !P0 || !W.renderer) return r;
+    const z = sizeOf(W); useCam(W, true, z.bw, z.bh);
+    const cam = W.camera; if (!cam.isPerspectiveCamera) return r;
+    const f = R.PIX_FOV(), D = z.hh / Math.tan(f / 2 * Math.PI / 180), p = cam.position;
+    const tx = P0.x, ty = R.PIX.LOOKY, tz = P0.z, dx = p.x - tx, dy = p.y - ty, dz = p.z - tz, d0 = Math.hypot(dx, dy, dz) || 1;
+    p.set(tx + dx / d0 * D, ty + dy / d0 * D, tz + dz / d0 * D);
+    cam.fov = f; cam.aspect = z.rw / z.rh; cam.near = Math.max(1, D - 34); cam.far = D + 220; cam.updateProjectionMatrix(); cam.updateMatrixWorld();
+    return r;
+  };
 
   // 目前放大幾倍、小畫布多大（測試用）
   R.pixelInfo = () => ({ s: P.s, w: P.w, h: P.h });
@@ -89,16 +120,12 @@
     useCam(W, pix, w, h);
     if (!pix) { W.renderer.render(W.scene, W.camera); return; }
     if (!P.rt) init();
-    const cam = W.camera, cv = W.renderer.domElement, bw = cv.width, bh = cv.height, PX = R.PIX.PX;
-    // 一般鏡頭在人物那個距離看得到多高，換算成點陣像素；螢幕高度除以它，四捨五入成整數倍
-    const a = w / h, tall = a < 1 ? 1 + (1 - a) * 0.7 : 1, dist = Math.hypot(R.CAM.h, R.CAM.back) * (W.cam ? W.cam.zoom : 1) * tall;
-    const want = 2 * dist * Math.tan(22 * Math.PI / 180) / PX;
-    const s = Math.max(1, Math.round(bh / want)), rw = 2 * Math.ceil(bw / s / 2), rh = 2 * Math.ceil(bh / s / 2);
+    const cam = W.camera, PX = R.PIX.PX, z = sizeOf(W), { bw, bh, s, rw, rh, hw, hh } = z;
     if (P.w !== rw || P.h !== rh) { P.w = rw; P.h = rh; P.rt.setSize(rw, rh); P.mat.uniforms.res.value.set(rw, rh); }
     P.s = s; P.mat.uniforms.scale.value = s; P.mat.uniforms.off.value.set(Math.floor((rw * s - bw) / 2), Math.floor((rh * s - bh) / 2));
     P.mat.uniforms.dRange.value = cam.far - cam.near;
-    const hw = rw / 2 * PX, hh = rh / 2 * PX;
-    if (cam.right !== hw || cam.top !== hh) { cam.left = -hw; cam.right = hw; cam.top = hh; cam.bottom = -hh; cam.updateProjectionMatrix(); }
+    P.mat.uniforms.persp.value = cam.isPerspectiveCamera ? 1 : 0; P.mat.uniforms.cNear.value = cam.near; P.mat.uniforms.cFar.value = cam.far;
+    if (cam.isOrthographicCamera && (cam.right !== hw || cam.top !== hh)) { cam.left = -hw; cam.right = hw; cam.top = hh; cam.bottom = -hh; cam.updateProjectionMatrix(); }
     // 鏡頭對齊像素格：畫面的橫、直方向都挪到整數格（不動的東西每一幀都落在同樣的像素上）
     cam.updateMatrixWorld();
     const e = cam.matrixWorld.elements, p = cam.position;
