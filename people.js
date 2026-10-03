@@ -169,6 +169,7 @@
     const s = S(); if (!s) return;
     R.ensureWorld();
     Object.keys(P).forEach(id => {
+      if ((s.party || []).some(m => m.story === id)) return;   // 已經在隊伍裡跟著你：不要再照行程放一個（作者 2026-10-04 回報：怎麼變兩個了）
       const at = todayAt(id); if (!at) return;
       const [where, idx] = at.split(':');
       if (kind === 'town' && where === 'town') {

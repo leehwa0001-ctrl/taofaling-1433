@@ -278,7 +278,7 @@
       ? '<li>左搖桿移動；右搖桿瞄準，推到底就會攻擊</li><li>「式神」「翻滾」等按鈕在右搖桿上面；靠近寶箱時點畫面上的提示就能互動</li><li>右上角的箭頭轉動視角，「遠近」拉近拉遠</li>'
       : '<li>WASD 移動・滑鼠瞄準・按住左鍵攻擊（或按住 F：自動打最近的敵人）</li><li>空白鍵：互動（開寶箱、掘礦、走樓層通道）・Q／E：轉視角・滾輪：拉近拉遠</li><li>R 或右鍵：第一個技能・3、4：第二、三個技能（職業等級 3、6 學會）・點一下 Shift：翻滾（滾的時候不會受傷）・按住 Shift：跑步（跑的時候不能攻擊）・X：換彈</li><li>1：回復藥・2：魔力藥・I：背包・Tab：地圖・Esc：暫停</li><li>C：指揮隊友（跟隨、集火、待命、自由、撤退；選單打開時按 1～5）・H：戴上／拿下兜帽（有的話）</li>';
     R.sheet('<p class="kicker">第一次下遺跡</p><h2>公會的新人須知</h2><ul class="loot">' + keys + '</ul>'
-      + '<h3>三件要記住的事</h3><ul class="loot"><li>寶箱開出來的武器，大多是<b>未鑑定</b>的：數值只有基礎的一部分。帶回東鶴，給老岩鑑定。</li><li>打破東西、爆炸、待太久，會讓<b>佩特拉的注意</b>上升。滿了，遺跡會有反應。</li><li>只有碰到<b>回歸水晶</b>才能帶著東西回去。倒在遺跡裡，背包裡的東西全部留下。</li></ul>',
+      + '<h3>三件要記住的事</h3><ul class="loot"><li>寶箱開出來的武器，大多是<b>未鑑定</b>的：數值只有基礎的一部分。帶回東鶴，給老岩鑑定。</li><li>打破東西、爆炸、喚群燈大叫，會讓<b>佩特拉的注意</b>上升（什麼都不做會慢慢降下來；點左上角那一格看說明）。滿了，遺跡會有反應。</li><li>只有碰到<b>回歸水晶</b>才能帶著東西回去。倒在遺跡裡，背包裡的東西全部留下。</li></ul>',
       '<div class="row"><button type="button" class="btn pri" id="help-x">知道了</button></div>');
     $('help-x').onclick = R.closeSheet;
   };
@@ -304,7 +304,7 @@
     const run = W.run; if (!run) return;
     R.sheet('<h2>暫停</h2><p>' + R.esc(run.site.name) + '・第 ' + (run.floor + 1) + ' 層</p>'
       + '<p class="note">' + (R.touch ? '左搖桿移動・右搖桿瞄準並攻擊・按鈕：技能、翻滾、互動、回復藥、背包・右上角的箭頭轉動視角、「遠近」拉近拉遠' : 'WASD 移動・滑鼠瞄準、左鍵或 F 攻擊・R 或右鍵、3、4 技能・點 Shift 翻滾、按住 Shift 跑步・空白鍵互動・Q／E 轉視角・滾輪拉近拉遠・1 回復藥・2 魔力藥・X 換彈・I 背包・Tab 地圖') + '</p>'
-      + '<p class="note">佩特拉的注意：打破東西、爆炸、喚群燈大叫、待太久都會讓它上升。滿了會觸發遺跡的反應。牆上張開的眼睛越多，代表它越注意你。</p>',
+      + '<p class="note">佩特拉的注意：打破東西、爆炸、喚群燈大叫、被群瞳盯著都會讓它上升；什麼都不做會慢慢降，換一層剩四成。滿了會觸發遺跡的反應。牆上張開的眼睛越多，代表它越注意你。</p>',
       '<div class="row"><button type="button" class="btn pri" id="ps-x">繼續</button><button type="button" class="btn" id="ps-mute">' + (R.isMuted() ? '打開音效' : '關掉音效') + '</button>' + (R.S && R.S.hood ? '<button type="button" class="btn" id="ps-hood">' + (R.S.hoodOn ? '拿下兜帽' : '戴上兜帽') + '</button>' : '') + '<button type="button" class="btn" id="ps-quit">放棄這一趟（當作倒下）</button></div>');
     $('ps-x').onclick = R.closeSheet;
     $('ps-mute').onclick = () => { R.toggleMute(); R.pauseSheet(); };

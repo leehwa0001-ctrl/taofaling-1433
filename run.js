@@ -350,7 +350,8 @@
     if (!run || !P) return;
     run.t += dt;
     // 計時：待越久，佩特拉越注意你
-    run.awareT = (run.awareT || 0) + dt; if (run.awareT > 5) { run.awareT = 0; R.addAware(1, 'time'); }
+    // 佩特拉的注意隨時間慢慢降（作者 2026-10-04；原本是每 5 秒升 1）：每 4 秒 −1，反應進行中不降
+    run.awareT = (run.awareT || 0) + dt; if (run.awareT > 4) { run.awareT = 0; if (!run.reacting && run.aware > 0) run.aware = Math.max(0, run.aware - 1); }
     if (run.collapseT != null) { run.collapseT -= dt; if (run.collapseT <= 0 && !run.done) { run.collapseT = null; R.hurtPlayer(9999, null); } }
     // 冷卻
     ['atkCd', 'skillCd', 'dodgeCd', 'iframe', 'stumble', 'slowT', 'blindT', 'knockT', 'stance', 'atkHold', 'invis', 'hurtT'].forEach(k => { if (P[k] > 0) P[k] = Math.max(0, P[k] - dt); });
