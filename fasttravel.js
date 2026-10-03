@@ -24,6 +24,7 @@
       R.banner && R.banner(sp.n, '搭公會的接駁馬車過來了');
     });
   };
+  R.ftSpots = spots; R.ftGo = go;   // guide.js（新手指引的「前往」）用
   R.fastTravel = () => {
     if (!W.town || W.run) return;
     if (W.town.hosu) { R.toast('奉主沒有公會的接駁馬車。回東鶴要到奉主站搭電車。'); return; }
