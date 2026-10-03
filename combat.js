@@ -60,7 +60,7 @@
     R.lastCrit = !!crit;
     if (R.enemyDefend) dmg = R.enemyDefend(e, dmg, o, crit);
     dmg = Math.max(1, Math.round(dmg));
-    e.hp -= dmg; e.flash = 0.12; e.aggro = true;
+    e.hp -= dmg; e.flash = 0.12; e.aggro = true; e.provoked = true;
     if (e.dormant && R.wakeRoom) R.wakeRoom(e.room, e);   // 從外面打到房間裡還沒醒的生物：整間都醒過來
     R.num(e.x, 1.8 * e.def.size + 0.6, e.z, dmg, crit ? 'crit' : '');
     // 附加效果
@@ -431,7 +431,9 @@
       const d = dist(e, P), a = angTo(e, P), sp = e.speed * (st.slow > 0 ? 0.55 : 1) * (P.buff.kekkai > 0 && d < 4.5 ? 0.6 : 1);
       const can = st.stun <= 0 && !P.dead, walk = can && st.root <= 0;
       const target = !P.invis || P.invis <= 0;
-      if (!e.aggro && !e.dormant && d < (w.run.grade.passive ? 3 : 13)) e.aggro = true;
+      // 哈米莉亞級（passive）：遺跡生物不會主動攻擊人——走近也不會，被打了才還手（e.provoked）
+      if (w.run.grade.passive) { if (!e.provoked) e.aggro = false; }
+      else if (!e.aggro && !e.dormant && d < 13) e.aggro = true;
       let moving = false;
       if (can && e.aggro && target) {
         const ai = e.def.ai;

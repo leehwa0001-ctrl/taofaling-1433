@@ -93,7 +93,7 @@
   R.allyHit = (e, dmg, by) => {
     if (!e || e.dead || e.invuln || e.under) return;
     let d = dmg * (e.def.armor ? 1 - e.def.armor : 1); const crit = Math.random() < 0.08; if (crit) d *= 1.6;
-    d = Math.max(1, Math.round(d)); e.hp -= d; e.flash = 0.12; e.aggro = true;
+    d = Math.max(1, Math.round(d)); e.hp -= d; e.flash = 0.12; e.aggro = true; e.provoked = true;
     if (e.dormant && R.wakeRoom) R.wakeRoom(e.room, e);
     R.num(e.x, 1.8 * e.def.size + 0.6, e.z, d, crit ? 'crit ally' : 'ally');
     if (e.hp <= 0) R.killEnemy(e, by);
