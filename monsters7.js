@@ -324,12 +324,25 @@
     if (d < 2.5 && e.cd <= 0) { const [x, z] = floorAt(P.x, P.z); R.fx('mark', x, 0, z, { r: 4, t: 0.8 }); e.cd = 99; later(() => { if (!e.dead) { e.pit = { x, z, t: 4 }; zone(x, z, 4, 4, 0, 'web', '#D8B880'); } }, 800); }
     e.yaw = a; return mv;
   };
-  // 井底骸：自己不出來，從地下伸出一隻一隻的白骨手抓你的腳（一排追著你，被抓到就動不了一下）；抓到了才爬出來砍
+  // 井底骸：自己不出來，從地下伸出一隻一隻的白骨手抓你的腳（一輪三隻，地上先亮圈）。
+  // - 被抓到：它從你旁邊爬出來砍你 2.2 秒（這時打得到）。
+  // - 三隻都躲掉（作者 2026-10-04：井底骸到底要怎麼打）：它在最後一隻手那裡爬出來喘氣 2.5 秒，不會還手，可以白打。
+  // - 在地下時打不到；高度用 e.liftY（monsters6.js 每一格套上，不然會被重設回地面，看得到卻打不到）。
   setAi('kyokotsu', 'wellhand');
   AI.wellhand = (e, P, d, a, sp, dt, walk, H) => {
-    if (e.out > 0) { e.out -= dt; e.invuln = false; e.m.g.position.y = 0; melee(e, P, d, H, 2.2, 0.8, 1.2); e.yaw = a; if (e.out <= 0) e.cd = 1.5; return false; }
-    e.invuln = true; e.m.g.position.y = -1.4; let mv = false; if (walk && d > 4) { H.move(e, a, sp, dt); mv = true; }
-    if (e.cd <= 0 && d < 9) { e.cd = 3.5; for (let i = 0; i < 3; i++) later(() => { if (e.dead) return; const Q = W().P, [x, z] = floorAt(Q.x, Q.z); boom(e, x, z, 1.0, 0.5, 0.5, '#E8E0CC', t => { slowP(t, 1.3); if (!e.out) { e.out = 2.2; e.x = x + 1; e.z = z; R.fx('boom', e.x, 0.3, e.z, { r: 1.2, color: '#5A4A3A' }); } }); }, i * 600); }
+    if (e.out > 0) {
+      e.out -= dt; e.invuln = false; e.under = false; e.liftY = null; e.m.g.position.y = 0;
+      if (!e.tired) { melee(e, P, d, H, 2.2, 0.8, 1.2); e.yaw = a; }
+      if (e.out <= 0) { e.cd = 1.5; e.tired = false; }
+      return false;
+    }
+    e.invuln = true; e.under = true; e.liftY = -1.4; let mv = false; if (walk && d > 4) { H.move(e, a, sp, dt); mv = true; }
+    if (e.cd <= 0 && d < 9) {
+      e.cd = 3.5; const vol = e.vol = { hit: false, x: e.x, z: e.z };
+      const surface = (x, z, tired) => { e.out = tired ? 2.5 : 2.2; e.tired = tired; e.x = x; e.z = z; e.invuln = false; e.under = false; e.liftY = null; if (e.m && e.m.g) e.m.g.position.set(x, 0, z); R.fx('boom', e.x, 0.3, e.z, { r: 1.2, color: '#5A4A3A' }); R.fx('ring', e.x, 0.5, e.z, { r: 1.4, color: '#7FD8FF' }); R.num && R.num(e.x, 2.6, e.z, tired ? '喘氣中——快打' : '爬出來了', ''); };
+      for (let i = 0; i < 3; i++) later(() => { if (e.dead) return; const Q = W().P, [x, z] = floorAt(Q.x, Q.z); vol.x = x; vol.z = z; boom(e, x, z, 1.0, 0.5, 0.5, '#E8E0CC', t => { slowP(t, 1.3); vol.hit = true; if (!(e.out > 0)) surface(x + 1, z, false); }); }, i * 600);
+      later(() => { if (e.dead || vol.hit || e.out > 0 || e.vol !== vol) return; surface(vol.x, vol.z, true); }, 2 * 600 + 650);   // 三隻都躲掉
+    }
     e.yaw = a; return mv;
   };
   // 砂蠕蟲：從沙裡整條躍出、劃過你上方（一條長線），落進另一邊的沙裡；身後留下隆起的沙堆（變慢）
