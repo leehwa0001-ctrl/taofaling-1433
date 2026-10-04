@@ -474,8 +474,10 @@
           if (e.dashT > 0) { e.dashT -= dt; const ox = e.x, oz = e.z; move(e, e.dashA, 12, dt); moving = true; if (d < 1.2 && !e.bit) { e.bit = true; hurtT(P, e.dmg, e, { knock: 0.3 }); } if (R.pointBlocked(e.x, e.z)) { e.x = ox; e.z = oz; e.dashT = 0; st.stun = 1; R.shake(0.2); } }
           else if (e.cd <= 0) { e.cd = 2.5; e.dashT = 1.2; e.dashA = a; e.bit = false; } else e.yaw = a;
         } else if (ai === 'ambush') {
-          if (!e.up) { if (walk) { move(e, a, sp * 1.2, dt); moving = true; } e.m.g.position.y = -0.6; if (d < 2.2) { e.up = 1.2; hurtT(P, e.dmg, e); const k = 1.6; P.x += Math.sin(a + Math.PI) * k; P.z += Math.cos(a + Math.PI) * k; } }
-          else { e.up -= dt; e.m.g.position.y = 0; if (e.up <= 0) { e.up = 0; e.cd = 1.5; } }
+          // 2026-10-05 作者：黑泥巨口會黏在玩家身上出不去——以前藏著的時候追得比人快、咬完沒有冷卻、還把人往嘴裡拉 1.6 公尺不管牆。
+          // 改成：藏著的時候只在 8 公尺內慢慢挪過來，咬一口把人吐開（會被牆擋住），咬完 3.5 秒內不追也不咬。
+          if (!e.up) { if (walk && e.cd <= 0 && d > 1.4 && d < 8) { move(e, a, sp * 0.7, dt); moving = true; } e.m.g.position.y = -0.6; if (d < 2.2 && e.cd <= 0) { e.up = 1.2; e.cd = 3.5; hurtT(P, e.dmg, e); const k = 1.4; P.x += Math.sin(a) * k; P.z += Math.cos(a) * k; R.collide(P, 0.42); } }
+          else { e.up -= dt; e.m.g.position.y = 0; if (e.up <= 0) { e.up = 0; e.cd = Math.max(e.cd, 1.5); } }
           e.yaw = a;
         } else if (ai === 'skitter') {
           // 木魂：被打就四散逃開，過一下又圍回來吐種子

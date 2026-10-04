@@ -6,7 +6,7 @@
 //   玩遊戲（卡拉 OK、夾娃娃機）每 5 秒 +1、賭博（雀莊、柏青哥、拉霸機）每 4 秒 +1——看那個遊戲的畫面開著沒有。
 //   電玩店的格鬥電玩玩一台 +3（interiors2.js 呼叫 R.sanAdd）。
 // - 殺人會掉（2026-10-04 作者）：自己親手打倒人（遺跡裡的勇者、惡質的勇者、賞金獵人……）——老實的勇者 −15、對你動手的壞人 −6；
-//   隊友、別的隊伍打倒的不算。
+//   隊友、別的隊伍、召喚師的召喚物打倒的不算。
 // - 低的時候（只在遺跡裡）：
 //   40～69 不安：畫面四周暗一點，偶爾聽到奇怪的聲音；
 //   20～39 動搖：再暗一點，打出去的傷害 −10%；
@@ -26,7 +26,8 @@
   R.killEnemy = (e, by) => {
     const was = e && !e.dead, r = ke0(e, by);
     try {
-      if (was && e.dead && e.def && e.def.human && !by && !e.fake && W().run) {
+      // 召喚物（classes2b.js 的 pet）咬死的不算親手（2026-10-05 作者：召喚師的召喚物會掉玩家的理智）
+      if (was && e.dead && e.def && e.def.human && !by && !e.fake && !e.petHit && W().run) {
         const d = e.innocent ? 15 : 6; set(get() - d);
         R.toast && R.toast(KILL_LINE[Math.floor(rnd() * KILL_LINE.length)] + '理智 −' + d, '#B8A0D8');
       }
