@@ -94,7 +94,7 @@
   R.gainXp = v => gx0(W().F && W().F.mod === 'nest' && W().run ? v * 1.3 : v);
   // 魔力潮：技能冷卻
   const cp0 = R.calcPlayer;
-  R.calcPlayer = cls => { const P = cp0(cls); if (W().run && W().F && W().F.mod === 'mana') P.skillCdMult *= 0.7; return P; };
+  R.calcPlayer = cls => { const P = cp0(cls); if (W().run && W().F && W().F.mod === 'mana') R.cdMul(P, 0.7); return P; };   // 場地效果：照舊乘，不算技能急速（haste.js）
   // 試煉之間：清完一波再來一波
   const lr0 = R.lockRoom;
   R.lockRoom = (r, on) => {

@@ -197,7 +197,7 @@
   R.cafeSheet = () => {
     const p = price(12, 'dex'); if (p == null) { refuse('咖啡館的店員'); return; }
     R.sheet('<p class="kicker">德克斯凡咖啡館</p><h2>熱飲</h2><p class="note">德克斯凡的機器煮的。喝了下一趟遺跡有加成（當天有效）。</p><div class="recipes">'
-      + [['coffee', '黑咖啡', '技能冷卻 −10%', { skillCd: 0.1 }], ['cocoa', '熱可可', '生命 +6%', { hp: 0.06 }], ['tea', '紅茶', '魔力 +12%', { mp: 0.12 }]].map(([k, n, d, b]) => '<div class="recipe"><b>' + n + '</b><small>' + d + '</small><button type="button" class="btn pri" data-cafe="' + k + '"' + (S().gold < p ? ' disabled' : '') + '>點一杯（' + p + ' 費拉）</button></div>').join('') + '</div>',
+      + [['coffee', '黑咖啡', '技能急速 +25', { skillCd: 0.1 }], ['cocoa', '熱可可', '生命 +6%', { hp: 0.06 }], ['tea', '紅茶', '魔力 +12%', { mp: 0.12 }]].map(([k, n, d, b]) => '<div class="recipe"><b>' + n + '</b><small>' + d + '</small><button type="button" class="btn pri" data-cafe="' + k + '"' + (S().gold < p ? ' disabled' : '') + '>點一杯（' + p + ' 費拉）</button></div>').join('') + '</div>',
       '<div class="row"><button type="button" class="btn" id="cf-x">走了</button></div>');
     $('cf-x').onclick = R.closeSheet;
     const B = { coffee: { skillCd: 0.1 }, cocoa: { hp: 0.06 }, tea: { mp: 0.12 } };

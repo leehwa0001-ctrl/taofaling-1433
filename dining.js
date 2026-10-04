@@ -39,8 +39,8 @@
     });
   }
   // ---------- 菜單 ----------
-  const BN = { hp: '生命', mp: '魔力', dmg: '傷害', skillCd: '技能冷卻', regen: '生命', aware: '佩特拉的注意' };   // regen：「生命慢慢回復」
-  const buffTxt = b => Object.keys(b).map(k => BN[k] + (k === 'aware' ? '上升變慢' : k === 'skillCd' ? ' −' + Math.round(b[k] * 100) + '%' : k === 'regen' ? '慢慢回復' : ' +' + Math.round(b[k] * 100) + '%')).join('、');
+  const BN = { hp: '生命', mp: '魔力', dmg: '傷害', skillCd: '技能急速', regen: '生命', aware: '佩特拉的注意' };   // regen：「生命慢慢回復」
+  const buffTxt = b => Object.keys(b).map(k => BN[k] + (k === 'aware' ? '上升變慢' : k === 'skillCd' ? ' +' + Math.round(b[k] * 100 * (R.HASTE_K || 1)) : k === 'regen' ? '慢慢回復' : ' +' + Math.round(b[k] * 100) + '%')).join('、');
   const hasMats = m => !m[4] || Object.keys(m[4]).every(k => ((R.S.mats || {})[k] || 0) >= m[4][k]);   // 帶自己的食材（像土鎧豬的肉）
   const menuSheet = k => {
     const s = SHOPS[k], S = R.S;
