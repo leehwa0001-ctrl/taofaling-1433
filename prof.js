@@ -105,7 +105,7 @@
     const p = pf(), cls = S().cls, mine = R.weaponsFor ? R.weaponsFor(cls) : [];
     const ws = Object.keys(R.WEAPONS).filter(k => mine.includes(k) || p.w[k]);
     const row = (name, xp, line) => { const lv = lvOf(xp); return '<li><b>' + esc(name) + '</b>　' + lv + ' 級' + bar(xp, lv) + '<br><small class="note">' + esc(line(lv)) + '</small></li>'; };
-    return '<h3>熟練度</h3><p class="note">拿哪種武器打，那種武器就越順手：基本傷害、攻擊速度慢慢加上去，重的武器也越拿越輕（走路不再被拖慢）。魔法看釋放的次數；敏捷靠穿輕裝打倒遺跡生物；體力靠翻滾、跑步、防禦。效果從下一趟遺跡開始算。</p><ul class="loot">'
+    return '<h3>熟練度</h3><p class="note">拿哪種武器打，那種武器就越順手：基本傷害、攻擊速度慢慢加上去，重的武器也越拿越輕（走路不再被拖慢）。魔法看釋放的次數；敏捷靠穿輕裝打倒遺跡生物；體力靠翻滾、跑步、防禦、受傷（城裡跑步也算）。效果從下一趟遺跡開始算。</p><ul class="loot">'
       + ws.map(k => row(R.WEAPONS[k].name + (WEIGHT[k] ? '（重量 ' + WEIGHT[k] + '）' : ''), p.w[k], lv => lineOf('w', k, lv) + (WEIGHT[k] ? '；現在走路慢 ' + (WEIGHT[k] * 2.5 * (1 - lv / MAX)).toFixed(1) + '%' : ''))).join('')
       + row('魔法', p.magic, lv => lineOf('magic', null, lv)) + row('敏捷', p.agi, lv => lineOf('agi', null, lv)) + row('力量的鍛鍊', p.str, lv => lineOf('str', null, lv)) + row('體力的鍛鍊', p.stam, lv => lineOf('stam', null, lv)) + '</ul>';
   };

@@ -7,6 +7,7 @@
 //   每擋一下扣體力：8＋這一下佔生命的比例×60。剛舉起的 0.25 秒內擋到＝完美防禦：完全不受傷、不扣體力，打你的那隻愣 0.8 秒。
 //   體力扣光＝防禦被打破：這一下只擋一半、人愣 0.8 秒，1.5 秒內不能再舉。陷阱、地形、看不出從哪裡來的傷害擋不了。
 // - 鍛鍊（2026-10-04 作者：加可以鍛鍊體力，在熟練那邊）：用掉的體力每 15 點，熟練度的「體力的鍛鍊」+1（prof.js）；每級體力上限 +5、回復 +4%（下一趟遺跡開始算）。
+//   作者：跑久了或經常受傷都會增加體力——城裡跑步（不扣體力）每跑 4 秒 +1；受傷：掉的生命每一管（滿血那麼多）+40。
 // - 體力條在技能列的上緣（手機在畫面最下面）；快沒了變黃、扣光變紅。
 // 放在 run.js、combat.js、keybinds.js、hud2.js、hud3.js、adv2more.js 後面（包 R.dodge、R.running、R.hurtPlayer、R.attack、R.step、R.tact）。
 (function (R) {
@@ -62,8 +63,16 @@
         }
       }
     }
-    return hp0(raw, src, o);
+    const h0 = P ? P.hp : 0, out = hp0(raw, src, o);
+    if (P && live() && P.hp < h0 && R.profGain) { hurtAcc += (h0 - Math.max(0, P.hp)) / Math.max(1, P.hpMax) * 40; if (hurtAcc >= 1) { const n = Math.floor(hurtAcc); hurtAcc -= n; R.profGain('stam', null, n); } }   // 常受傷也是鍛鍊
+    return out;
   };
+  let hurtAcc = 0;
+  // 城裡跑步（不扣體力）：跑 4 秒 +1
+  let townRun = 0;
+  // 等所有檔案都載完再包（奉主 hosu.js 會整個換掉 R.townStep）；有沒有在跑看真的有沒有移動
+  const hookTown = () => { const ts0 = R.townStep; if (!ts0 || ts0.stamHooked) return; const f = dt => { const w = W(), P = w.P, x0 = P ? P.x : 0, z0 = P ? P.z : 0, r = ts0(dt); try { if (w.town && !w.run && !w.paused && P && R.running && R.running() && Math.hypot(P.x - x0, P.z - z0) > dt * 1.5) { townRun += dt; if (townRun >= 4 && R.profGain) { townRun -= 4; R.profGain('stam', null, 1); } } } catch (e) { } return r; }; f.stamHooked = true; R.townStep = f; };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hookTown); else setTimeout(hookTown, 0);
   // ---------- 盾的樣子：面前一片半透明的弧 ----------
   let shield = null, glow = 0;
   const flash = v => { glow = Math.max(glow, v); };
