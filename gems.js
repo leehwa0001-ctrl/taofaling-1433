@@ -10,7 +10,7 @@
     gem_ruby: { name: '紅玉', color: '#E8404A', txt: '傷害 +4%', fx: { dmg: 0.04 } },
     gem_sapph: { name: '藍玉', color: '#4A7AE8', txt: '魔力 +10%', fx: { mp: 0.1 } },
     gem_emer: { name: '綠玉', color: '#3AC86A', txt: '生命 +5%', fx: { hp: 0.05 } },
-    gem_topaz: { name: '黃玉', color: '#E8C03A', txt: '暴擊率 +2%', fx: { crit: 0.02 } },
+    gem_topaz: { name: '黃玉', color: '#E8C03A', txt: '暴擊率 +6%', fx: { crit: 0.06 } },   // 2026-10-04 作者：黃色寶石效益太低（原本 +2%＝平均傷害只多 1.6%，紅玉是 +4%）
     gem_ameth: { name: '紫晶', color: '#A86AE8', txt: '暴擊傷害 +10%', fx: { critMult: 0.1 } },
     gem_dia: { name: '白晶', color: '#E8F2FF', txt: '防禦 +2', fx: { def: 2 } },
     gem_obsid: { name: '黑曜', color: '#3A2E44', txt: '無視護甲 +3%', fx: { pen: 0.03 } }
