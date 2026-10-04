@@ -26,10 +26,10 @@
   R.affixAdd = it => { if (!it || it.rarity < 3 || it.affixes.length >= maxOf(it) || !can(addPrice(it))) return false; const a = newAffix(it); if (!a) return false; pay(addPrice(it)); it.affixes.push(a); R.save(); return a; };
   const rollSheet = it => {
     const c = rollPrice(it);
-    R.sheet('<p class="kicker">鐵匠鋪</p><h2>洗一條：' + esc(R.itemName(it)) + '</h2><p class="note">挑一條換掉（換成這件還沒有的另一條，數值重骰）。每次 ' + c.gold + ' 費拉・' + matsTxt(c.mats) + '。</p><div class="recipes">'
+    R.hubSheet('<p class="kicker">鐵匠鋪</p><h2>洗一條：' + esc(R.itemName(it)) + '</h2><p class="note">挑一條換掉（換成這件還沒有的另一條，數值重骰）。每次 ' + c.gold + ' 費拉・' + matsTxt(c.mats) + '。</p><div class="recipes">'
       + it.affixes.map((a, i) => { const d = R.affixDef(it, a.id); return '<div class="recipe"><b>' + esc(d ? d.txt(a.v) : a.id) + '</b>' + (locked(it, i) ? '<small>傳說的招牌、附魔不能洗</small>' : '<button type="button" class="btn" data-afr="' + i + '"' + (can(c) ? '' : ' disabled') + '>洗這條</button>') + '</div>'; }).join('') + '</div>',
       '<div class="row"><button type="button" class="btn" id="afr-x">好了</button></div>');
-    $('afr-x').onclick = () => { R.closeSheet(); R.hub(); };
+    $('afr-x').onclick = () => R.hubSheetClose();
     document.querySelectorAll('[data-afr]').forEach(b => { b.onclick = () => { const a = R.affixRoll(it, +b.dataset.afr); if (a) { const d = R.affixDef(it, a.id); R.toast && R.toast('換成了：' + (d ? d.txt(a.v) : a.id), '#E8C04A'); R.sfx && R.sfx('magic'); } rollSheet(it); }; });
   };
   const hub0 = R.hub;

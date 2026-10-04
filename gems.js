@@ -49,11 +49,11 @@
   const drillPrice = it => 500 + 400 * (it.sockets ? it.sockets.length : 0) + 150 * it.rarity;
   const sheet = it => {
     const s = S(), socks = it.sockets || [], have = IDS.filter(g => (s.mats[g] || 0) > 0), dp = drillPrice(it), canDrill = socks.length < maxSock(it);
-    R.sheet('<p class="kicker">鐵匠鋪</p><h2>鑲嵌：' + esc(R.itemName(it)) + '</h2><p class="note">老岩：「孔開了就補不回去。寶石鑲進去，再換的話舊的會碎掉——想清楚。」這件最多 ' + maxSock(it) + ' 個孔。</p>'
+    R.hubSheet('<p class="kicker">鐵匠鋪</p><h2>鑲嵌：' + esc(R.itemName(it)) + '</h2><p class="note">老岩：「孔開了就補不回去。寶石鑲進去，再換的話舊的會碎掉——想清楚。」這件最多 ' + maxSock(it) + ' 個孔。</p>'
       + (socks.length ? '<div class="recipes">' + socks.map((g, i) => '<div class="recipe"><b>孔 ' + (i + 1) + '：' + (g && GEMS[g] ? '<span style="color:' + GEMS[g].color + '">' + GEMS[g].name + '</span>（' + GEMS[g].txt + '）' : '空') + '</b><div class="row">' + (have.length ? have.map(h => '<button type="button" class="mini" data-gem="' + i + ':' + h + '" style="color:' + GEMS[h].color + '">鑲' + GEMS[h].name + '（' + s.mats[h] + '）</button>').join('') : '<small>身上沒有寶石（打遺跡生物很少會掉）</small>') + '</div></div>').join('') + '</div>' : '<p class="note">還沒有孔。</p>')
       + (canDrill ? '<div class="row"><button type="button" class="btn pri" id="gm-drill"' + (s.gold < dp ? ' disabled' : '') + '>開一個孔（' + dp + ' 費拉）</button></div>' : ''),
       '<div class="row"><button type="button" class="btn" id="gm-x">好了</button></div>');
-    $('gm-x').onclick = () => { R.closeSheet(); R.hub(); };
+    $('gm-x').onclick = () => R.hubSheetClose();
     const dr = $('gm-drill'); if (dr) dr.onclick = () => { if (s.gold < dp || (it.sockets || []).length >= maxSock(it)) return; s.gold -= dp; it.sockets = (it.sockets || []).concat([null]); R.save(); R.sfx && R.sfx('chest'); sheet(it); };
     document.querySelectorAll('[data-gem]').forEach(b => { b.onclick = () => { const [i, g] = b.dataset.gem.split(':'); if (!(s.mats[g] > 0)) return; const old = it.sockets[+i]; if (old && !confirm('換上' + GEMS[g].name + '，原本的' + GEMS[old].name + '會碎掉？')) return; s.mats[g]--; it.sockets[+i] = g; R.save(); R.sfx && R.sfx('magic'); sheet(it); }; });
   };
