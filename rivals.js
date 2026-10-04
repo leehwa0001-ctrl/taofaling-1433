@@ -13,9 +13,13 @@
   const TOPS = ['#5A4A3A', '#3E5A6E', '#6A3A2E', '#4A5A3A', '#3A3A44', '#5A3A5A', '#7A6A4A'], HS = ['short', 'crop', 'spiky', 'long', 'ponytail', 'bob'];
   const RANGED = { gunner: 1, archer: 1, mage: 1, priest: 1 };
 
+  // 段位照遺跡的分級（2026-10-04 回報：克森特級跑出新人段的勇者，而且證件是真的）——公會照段位發委託，能進這一級的才會在這裡
+  const BAND = { 0: [[0, 1], [0, 2], [1, 0]], 1: [[0, 2], [1, 0], [1, 1], [1, 2]], 2: [[1, 2], [1, 3], [1, 4], [2, 0], [2, 1]], 3: [[2, 1], [2, 2], [2, 3], [2, 4], [2, 5], [3, 0], [3, 1]], 4: [[3, 0], [3, 1], [3, 2], [3, 3], [4, 0]] };
+  const rankFor = () => { const D = R.RANK_DANS, lv = W.run && W.run.grade ? W.run.grade.lv : 1, b = BAND[Math.max(0, Math.min(4, lv - 1))];   /* 分級的 lv：哈米莉亞 1 … 卡索 5 */ if (!D || !b) return pick(RANKS); const [d, t] = pick(b); return D[d].name + '・' + D[d].tiers[t]; };
+  const claimFor = () => { const D = R.RANK_DANS, lv = W.run && W.run.grade ? W.run.grade.lv : 1; if (!D) return '討伐段・紅獅階'; const d = Math.min(4, Math.max(2, lv - 1)); return D[d].name + '・' + D[d].tiers[D[d].tiers.length - 1]; };   // 冒用的人自稱的段位：比這一級還高一點
   const member = (lv0, traitor) => {
-    const race = R.randomRace(), rc = R.RACES[race], cls = pick(R.CLASS_IDS), revoked = traitor && Math.random() < 0.55, rank = pick(RANKS);
-    return { name: R.randomName(race), race, cls, lv: Math.max(1, lv0 + Math.floor(Math.random() * 4) - 1), rank, claim: traitor && !revoked && Math.random() < 0.5 ? '討伐段・紅獅階' : rank,
+    const race = R.randomRace(), rc = R.RACES[race], cls = pick(R.CLASS_IDS), revoked = traitor && Math.random() < 0.55, rank = rankFor();
+    return { name: R.randomName(race), race, cls, lv: Math.max(1, lv0 + Math.floor(Math.random() * 4) - 1), rank, claim: traitor && !revoked && Math.random() < 0.5 ? claimFor() : rank,
       card: revoked ? pick(REVOKED) : 'HR-' + (2826 + Math.floor(Math.random() * 10)) + '-' + String(1000 + Math.floor(Math.random() * 8999)), revoked,
       look: { top: pick(TOPS), hair: rc.hairs ? pick(rc.hairs) : pick(['#2A2420', '#6A4A2E', '#1A1714', '#8A5A2E']), cloak: pick(TOPS), race, skin: pick(rc.skins), hs: pick(HS) } };
   };
