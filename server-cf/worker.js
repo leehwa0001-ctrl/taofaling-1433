@@ -5,8 +5,11 @@
 // - 用「WebSocket 休眠」（acceptWebSocket）：大家都在城裡沒傳訊息的時候，物件可以睡著不計時間；
 //   醒來時從每條連線身上的附件（serializeAttachment：id、名字、外觀、房號、房主）把房間重建回來。
 // - 每條連線每秒最多 40 則訊息（遊戲每秒送 10 則位置），超過的丟掉——免得有人亂送吃光免費額度。
+// - 2026-10-05（第二階段，和 server/server.js 一樣）：房主離開或斷線換下一個人當房主（{ t: 'host', id }），所有人都走了才關房；
+//   斷線保留座位 30 秒（{ t: 'away', id }，用 rejoin: { id, token } 連回來 → { t: 'back', id }）；'room' 多帶 token、caps: 1。
+//   保留的座位記在記憶體（this.away）：物件睡著就沒了（大家都斷線的時候才會睡），到期用 alarm 清掉。
 // 部署：見 server-cf/README.md（npx wrangler login、npx wrangler deploy）。
-const MAX = 4, MAX_BYTES = 64 * 1024, PROTOCOL = '1433-net-2', RATE = 40;
+const MAX = 4, MAX_BYTES = 64 * 1024, PROTOCOL = '1433-net-2', RATE = 40, HOLD = 30000;
 const LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const clean = (v, n) => String(v == null ? '' : v).slice(0, n);
 
@@ -19,7 +22,7 @@ export default {
 
 export class Lobby {
   constructor(state) {
-    this.state = state; this.rooms = null; this.nextId = 1; this.rate = new Map();
+    this.state = state; this.rooms = null; this.nextId = 1; this.rate = new Map(); this.away = new Map();   // '房號:id' → { id, token, name, look, until }
     // 用戶端送 'ping' 由 Cloudflare 自己回 'pong'，不用叫醒物件
     try { state.setWebSocketAutoResponse(new WebSocketRequestResponsePair('ping', 'pong')); } catch (e) { }
   }
@@ -36,15 +39,37 @@ export class Lobby {
   setAtt(ws, a) { let look = a.look; try { if (look && JSON.stringify(look).length > 1500) look = null; } catch (e) { look = null; } ws.serializeAttachment(Object.assign({}, a, { look })); }
   send(ws, o) { try { ws.send(JSON.stringify(o)); } catch (e) { } }
   pub(ws) { const a = this.att(ws); return { id: a.id, name: a.name, look: a.look }; }
-  roomInfo(r, ws) { return { t: 'room', v: PROTOCOL, code: r.code, you: this.att(ws).id, host: r.host, members: [...r.members.values()].map(m => this.pub(m)) }; }
+  roomInfo(r, ws) { const a = this.att(ws), aw = [...this.away.values()].filter(x => x.code === r.code).map(x => ({ id: x.id, name: x.name, look: x.look })); return { t: 'room', v: PROTOCOL, code: r.code, you: a.id, host: r.host, members: [...r.members.values()].map(m => this.pub(m)).concat(aw), token: a.token, caps: 1 }; }
+  // 換房主：下一個還連著的人（每條連線的附件也要改，醒來重建時才對）
+  migrate(r) {
+    const next = [...r.members.keys()].find(id => id !== r.host); if (next == null) return false;
+    r.host = next; r.members.forEach(m => { const b = this.att(m); this.setAtt(m, Object.assign(b, { host: next })); this.send(m, { t: 'host', id: next }); });
+    return true;
+  }
+  // 保留的座位到期：當成離開
+  purge() {
+    const now = Date.now();
+    for (const [k, x] of this.away) {
+      if (x.until > now) continue; this.away.delete(k);
+      const r = this.rooms.get(x.code); if (r) r.members.forEach(m => this.send(m, { t: 'leave', id: x.id }));
+    }
+  }
+  async alarm() { this.load(); this.purge(); if (this.away.size) try { await this.state.storage.setAlarm(Date.now() + 5000); } catch (e) { } }
   newCode() { for (;;) { let s = ''; for (let i = 0; i < 4; i++) s += LETTERS[Math.floor(Math.random() * LETTERS.length)]; if (!this.rooms.has(s)) return s; } }
   roomOf(ws) { const a = this.att(ws); return a.code ? this.rooms.get(a.code) || null : null; }
-  leave(ws, why) {
+  // keep：斷線（不是按離開）——保留座位 30 秒
+  leave(ws, why, keep) {
     const a = this.att(ws), r = this.roomOf(ws); if (!r) return;
     r.members.delete(a.id); this.setAtt(ws, Object.assign(a, { code: null, host: null }));
-    if (r.host === a.id || !r.members.size) {
-      this.rooms.delete(r.code);
-      r.members.forEach(m => { const b = this.att(m); this.setAtt(m, Object.assign(b, { code: null, host: null })); this.send(m, { t: 'closed', why: why || '房主離開了，房間關了。' }); });
+    if (!r.members.size) {   // 沒有人還連著：關房
+      this.rooms.delete(r.code); for (const [k, x] of this.away) if (x.code === r.code) this.away.delete(k);
+      return;
+    }
+    if (r.host === a.id) this.migrate(r);
+    if (keep) {
+      this.away.set(r.code + ':' + a.id, { code: r.code, id: a.id, token: a.token, name: a.name, look: a.look, until: Date.now() + HOLD });
+      r.members.forEach(m => this.send(m, { t: 'away', id: a.id }));
+      try { this.state.storage.setAlarm(Date.now() + HOLD + 500); } catch (e) { }
     } else r.members.forEach(m => this.send(m, { t: 'leave', id: a.id }));
   }
 
@@ -52,7 +77,7 @@ export class Lobby {
     this.load();
     const pair = new WebSocketPair(), [client, server] = Object.values(pair);
     this.state.acceptWebSocket(server);
-    this.setAtt(server, { id: this.nextId++, name: '', look: null, code: null, host: null });
+    this.setAtt(server, { id: this.nextId++, name: '', look: null, code: null, host: null, token: null });
     return new Response(null, { status: 101, webSocket: client });
   }
   async webSocketMessage(ws, raw) {
@@ -62,18 +87,28 @@ export class Lobby {
     const now = Date.now(), rt = this.rate.get(ws) || { t: now, n: 0 }; if (now - rt.t > 1000) { rt.t = now; rt.n = 0; } rt.n++; this.rate.set(ws, rt); if (rt.n > RATE) return;
     let o; try { o = JSON.parse(raw); } catch (e) { return; }
     if (!o || typeof o.t !== 'string') return;
-    const a = this.att(ws);
+    const a = this.att(ws); if (this.away.size) this.purge();
     if (o.t === 'create' || o.t === 'join') {
       if (o.v !== PROTOCOL) return this.send(ws, { t: 'err', msg: '連線版本不同，請重新整理遊戲並更新伺服器。' });
       let target = null; const cur = this.roomOf(ws);
       if (o.t === 'join') {
         target = this.rooms.get(clean(o.code, 8).toUpperCase());
         if (!target) return this.send(ws, { t: 'err', msg: '找不到這個房號。' });
+        // 重新連線：接回保留的座位（同一個 id）
+        const rj = o.rejoin, seat = rj && this.away.get(target.code + ':' + (+rj.id));
+        if (rj && seat && seat.token === rj.token) {
+          this.leave(ws); this.away.delete(target.code + ':' + seat.id);
+          this.setAtt(ws, { id: seat.id, name: seat.name, look: seat.look, code: target.code, host: target.host, token: seat.token });
+          target.members.forEach(m => this.send(m, { t: 'back', id: seat.id }));
+          target.members.set(seat.id, ws);
+          return this.send(ws, this.roomInfo(target, ws));
+        }
+        if (rj) return this.send(ws, { t: 'err', msg: '座位已經不在了' });
         if (target === cur) return this.send(ws, this.roomInfo(target, ws));
-        if (target.members.size >= MAX) return this.send(ws, { t: 'err', msg: '房間滿了（最多 ' + MAX + ' 個人）。' });
+        if (target.members.size + [...this.away.values()].filter(x => x.code === target.code).length >= MAX) return this.send(ws, { t: 'err', msg: '房間滿了（最多 ' + MAX + ' 個人）。' });
       } else if (cur && cur.host === a.id) return this.send(ws, this.roomInfo(cur, ws));
       this.leave(ws);
-      const b = this.att(ws); b.name = clean(o.name, 24) || '無名的勇者'; b.look = o.look && typeof o.look === 'object' ? o.look : null;
+      const b = this.att(ws); b.name = clean(o.name, 24) || '無名的勇者'; b.look = o.look && typeof o.look === 'object' ? o.look : null; b.token = Math.random().toString(36).slice(2, 12);
       let r;
       if (o.t === 'create') { r = { code: this.newCode(), host: b.id, members: new Map() }; this.rooms.set(r.code, r); }
       else r = target;
@@ -83,7 +118,7 @@ export class Lobby {
       this.send(ws, this.roomInfo(r, ws));
       return;
     }
-    if (o.t === 'leave') { this.leave(ws, '房主離開了，房間關了。'); return; }
+    if (o.t === 'leave') { this.leave(ws, ''); return; }
     const r = this.roomOf(ws);
     if (o.t === 'msg' && r) {
       if (!o.d || typeof o.d !== 'object' || Array.isArray(o.d) || typeof o.d.k !== 'string') return;
@@ -93,6 +128,6 @@ export class Lobby {
       else r.members.forEach(m => { if (m !== ws) try { m.send(out); } catch (e) { } });
     }
   }
-  async webSocketClose(ws) { this.load(); this.leave(ws, '房主斷線了，房間關了。'); this.rate.delete(ws); try { ws.close(); } catch (e) { } }
-  async webSocketError(ws) { this.load(); this.leave(ws, '房主斷線了，房間關了。'); this.rate.delete(ws); }
+  async webSocketClose(ws) { this.load(); this.leave(ws, '', true); this.rate.delete(ws); try { ws.close(); } catch (e) { } }
+  async webSocketError(ws) { this.load(); this.leave(ws, '', true); this.rate.delete(ws); }
 }

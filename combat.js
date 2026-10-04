@@ -424,7 +424,7 @@
     const w = W();
     for (const e of w.enemies) {
       if (e.dead) continue;
-      if (e.dormant && Math.abs(e.x - w.P.x) + Math.abs(e.z - w.P.z) > 46) continue;
+      if (e.dormant && (R.farFromAll ? R.farFromAll(e, 46) : Math.abs(e.x - w.P.x) + Math.abs(e.z - w.P.z) > 46)) continue;   // 多人連線（net2.js）：離每一個人都遠才不動
       // 目標：玩家或隊友之中最近的（騎士挑釁時先打騎士）
       e.tgtT = (e.tgtT || 0) - dt; if (e.tgtT <= 0 || !e.tgt || e.tgt.downed || e.tgt.dead) { e.tgtT = 0.8; e.tgt = R.pickTarget ? R.pickTarget(e) : w.P; }
       const P = e.tgt || w.P;
