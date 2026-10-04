@@ -243,7 +243,7 @@
       const onIt = o => Math.abs(o.x - s.x) < s.h && Math.abs(o.z - s.z) < s.h;
       if (s.st === 'idle') { if (B.some(onIt)) { s.st = 'arm'; s.t = 0.5; s.mat.emissiveIntensity = 0.8; R.sfx && R.sfx('lock'); if (onIt(P)) say('spike', '地刺！踩到有孔的鐵板會「喀」一聲變紅，半秒後尖刺冒出來——快離開那塊板子。遺跡生物踩到也會中。'); } }
       else if (s.st === 'arm') { s.t -= dt; s.mat.emissiveIntensity = 0.5 + 0.4 * Math.sin(s.t * 40); if (s.t <= 0) { s.st = 'up'; s.t = 1.0; s.done.clear(); R.sfx && R.sfx('hit'); R.fx('spark', s.x, 0.4, s.z, { color: '#D8DCE4' }); } }
-      else if (s.st === 'up') { s.t -= dt; s.sp.position.y = Math.min(0, s.sp.position.y + dt * 12); s.mat.emissiveIntensity = 0.3; B.forEach(o => { if (!s.done.has(o) && onIt(o)) { s.done.add(o); hit(o, 0.13 * k, 30 * k, '地刺'); } }); if (s.t <= 0) { s.st = 'cool'; s.t = 1.4; } }
+      else if (s.st === 'up') { s.t -= dt; s.sp.position.y = Math.min(0, s.sp.position.y + dt * 12); s.mat.emissiveIntensity = 0.3; B.forEach(o => { if (!s.done.has(o) && onIt(o)) { s.done.add(o); hit(o, 0.22 * k, 30 * k, '地刺'); } }); if (s.t <= 0) { s.st = 'cool'; s.t = 1.4; } }
       else { s.t -= dt; s.sp.position.y = Math.max(-0.75, s.sp.position.y - dt * 3); s.mat.emissiveIntensity = 0; if (s.t <= 0) s.st = 'idle'; }
     });
     // 絞肉機：轉 5～6 秒、停 3 秒（要轉之前一秒冒火星）
@@ -257,7 +257,7 @@
       B.forEach(o => {
         const dx = gr.x - o.x, dz = gr.z - o.z, d = Math.hypot(dx, dz); if (d > gr.r + 1.4) return;
         if (!(!o.ally && o !== P && o.def.boss) && d > 0.05) { const pull = (d < gr.r ? 1.6 : 1.0) * (o === P ? 1 : 1.2) * dt; push(o, dx / d * Math.min(pull, d), dz / d * Math.min(pull, d)); }
-        if (d < gr.r && bite) { hit(o, 0.045 * k, 14 * k, '絞肉機'); if (Math.random() < 0.6) R.fx('spark', o.x, 0.5, o.z, { color: '#FFB04A' }); }
+        if (d < gr.r && bite) { hit(o, 0.07 * k, 14 * k, '絞肉機'); if (Math.random() < 0.6) R.fx('spark', o.x, 0.5, o.z, { color: '#FFB04A' }); }
         if (o === P && d < gr.r + 1.4) say('grinder', '絞肉機！圓形鐵柵底下的刀在轉的時候會把人吸過去、站在上面一直受傷——轉一陣會停一陣，停下來才走過去。');
       });
     });

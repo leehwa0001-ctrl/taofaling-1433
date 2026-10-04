@@ -424,8 +424,8 @@
       tp.plate.material.emissive.setHex(warn ? 0x6A1A10 : up ? 0x3A0A08 : 0x000000);
       if (up && tp.sp.position.y > -0.25) {
         tp.hitT -= dt;
-        if (Math.abs(P.x - tp.x) < 1 && Math.abs(P.z - tp.z) < 1 && tp.hitT <= 0 && !P.air) { tp.hitT = 0.7; R.hurtPlayer(10 + run.grade.lv * 6, null); }
-        W.enemies.forEach(e => { if (!e.dead && !e.def.fly && Math.abs(e.x - tp.x) < 1 && Math.abs(e.z - tp.z) < 1 && (e.trapT || 0) <= run.t) { e.trapT = run.t + 0.7; R.hurtEnemy(e, 10, {}); } });
+        if (Math.abs(P.x - tp.x) < 1 && Math.abs(P.z - tp.z) < 1 && tp.hitT <= 0 && !P.air) { tp.hitT = 0.7; if (R.trapHit) R.trapHit('spike', P, tp); else R.hurtPlayer(10 + run.grade.lv * 6, null); }   // trapplus.js：照生命的比例、附帶重傷
+        W.enemies.forEach(e => { if (!e.dead && !e.def.fly && Math.abs(e.x - tp.x) < 1 && Math.abs(e.z - tp.z) < 1 && (e.trapT || 0) <= run.t) { e.trapT = run.t + 0.7; if (R.trapHit) R.trapHit('spike', e, tp); else R.hurtEnemy(e, 10, {}); } });
       } else tp.hitT = 0;
     });
     // 克森特級的生物會設陷阱：在路上撒撒菱
