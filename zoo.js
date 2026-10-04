@@ -15,7 +15,19 @@
   const nameOf = id => (R.ENEMIES[id] ? R.ENEMIES[id].name : id);
   const critter = (id, parent, x, z, scale, pet) => { const vid = pet ? petArt(id) : id, m = R.makeBeast(vid); m.g.position.set(x, 0, z); if (scale) m.g.scale.setScalar(scale); parent.add(m.g); return { m, id, vid, x, z, tx: x, tz: z, t: rnd() * 5, wait: rnd() * 2 }; };
   // 摸頭（2026-10-04 作者：摸頭的效果要繼續優化）：愛心一顆一顆往上飄、小同伴停下來蹦一下；親密越高，反應越親；每天第一次摸會被療癒（homeup.js 的 R.S.petMood）
-  const hearts = (x, z) => { if (R.fx) for (let i = 0; i < 6; i++) setTimeout(() => R.fx('poof', x + (rnd() - 0.5) * 0.7, 0.9 + i * 0.18, z + (rnd() - 0.5) * 0.7, { color: i % 2 ? '#FF9AC0' : '#FF6A9A', n: 3 }), i * 110); };
+  // 愛心（2026-10-04 回報：原本借遺跡的煙霧特效，城裡不更新，粒子一直留在地上、不像愛心）：畫成像素愛心，自己往上飄、淡掉、刪掉
+  let heartTex = null;
+  const heartTexOf = () => { if (heartTex) return heartTex; const c = document.createElement('canvas'); c.width = 9; c.height = 8; const x = c.getContext('2d'), rows = ['.XX...XX.', 'XooX.XooX', 'XoooXoooX', 'XoooooooX', '.XoooooX.', '..XoooX..', '...XoX...', '....X....']; rows.forEach((r, y) => [...r].forEach((ch, i) => { if (ch === '.') return; x.fillStyle = ch === 'X' ? '#C8325A' : '#FF7AA8'; x.fillRect(i, y, 1, 1); })); x.fillStyle = '#FFD0E0'; x.fillRect(2, 2, 1, 1); heartTex = new THREE.CanvasTexture(c); heartTex.magFilter = heartTex.minFilter = THREE.NearestFilter; return heartTex; };
+  const hearts = (x, z) => {
+    const sc = W.scene; if (!sc || !window.THREE) return;
+    for (let i = 0; i < 5; i++) setTimeout(() => {
+      if (W.scene !== sc) return;
+      const m = new THREE.SpriteMaterial({ map: heartTexOf(), transparent: true, depthWrite: false }), sp = new THREE.Sprite(m), s0 = 0.45 + rnd() * 0.25, dx = (rnd() - 0.5) * 0.9, dz = (rnd() - 0.5) * 0.9, t0 = performance.now();
+      sp.scale.set(s0, s0 * 8 / 9, 1); sp.position.set(x + dx, 1.1, z + dz); sc.add(sp);
+      const tick = () => { const k = (performance.now() - t0) / 1300; if (k >= 1 || W.scene !== sc) { sc.remove(sp); m.dispose(); return; } sp.position.y = 1.1 + k * 1.3; sp.position.x = x + dx + Math.sin(k * 6 + i) * 0.12; m.opacity = k < 0.6 ? 1 : 1 - (k - 0.6) / 0.4; requestAnimationFrame(tick); };
+      requestAnimationFrame(tick); setTimeout(() => { if (sp.parent) { sp.parent.remove(sp); m.dispose(); } }, 1400);   // 畫面在背景時 requestAnimationFrame 不跑，一樣要消掉
+    }, i * 140);
+  };
   const PETLINES = ['牠瞇起眼睛，往你的手心蹭了蹭。', '牠翻過來，露出肚子。', '牠發出小小的、咕嚕咕嚕的聲音。', '牠用頭頂你的手，還要。', '牠打了一個呵欠，靠在你腳邊。', '牠把下巴擱在你的手背上，不肯走。', '牠繞著你的腳轉了兩圈。'];
   const LOVELINES = ['牠一看到你就小跑步過來。', '牠把最喜歡的小石頭叼來放在你腳邊。', '你一蹲下，牠就跳到你膝蓋上。', '牠閉著眼睛，整個身體都放鬆了。'];
   const petIt = (c, who, love) => {
@@ -151,5 +163,5 @@
   R.loadFloor = (f, o) => { const r = lf0(f, o); try { buildRun(); } catch (e) { console.warn('[zoo]', e); } follow.m = null; return r; };
   const st0 = R.step;
   R.step = dt => { st0(dt); const F = W.F, P = W.P; if (!F || !W.run) return; (F.critters || []).forEach(c => move(c, dt, c.bounds, c.tame ? 0.9 : 0.7)); if (P && !P.dead) { try { stepFollow(dt, P, F.group, true); } catch (e) { } } };
-  R.zooDebug = { checkPets, petArt, follow, petSheet };
+  R.zooDebug = { checkPets, petArt, follow, petSheet, hearts };
 })(window.R);
