@@ -66,13 +66,19 @@
     const spots = T.n === 1 ? [[0, 0]] : [[0, 0], [1.6, 0.4], [-1.6, 0.4], [0.9, -1.4], [-0.9, -1.4]];
     // 2026-10-05 作者回報（截圖）：木樁卡在牆裡——原本固定放在前方 4.5 公尺、沒看那裡是不是牆。
     // 現在：前方、斜前方、兩旁、後面、近一點遠一點輪流試，挑一個每根木樁都站在空地上、跟你之間沒隔著牆的地方。
-    const open = (x, z) => R.isFloor(x, z) && !R.pointBlocked(x, z) && ![[0.6, 0], [-0.6, 0], [0, 0.6], [0, -0.6]].some(([u, v]) => R.pointBlocked(x + u, z + v));
+    const loose = (x, z) => R.isFloor(x, z) && !R.pointBlocked(x, z) && ![[0.6, 0], [-0.6, 0], [0, 0.6], [0, -0.6]].some(([u, v]) => R.pointBlocked(x + u, z + v));
+    // 2026-10-05 作者又一張截圖：木樁站在桌子後面（鏡頭那一側被桌子擋住），只看得到名牌。
+    //   現在再要：木樁周圍 1 公尺內沒有任何擺設（矮的桌子、箱子也算），往鏡頭那一側 3 公尺內也沒有東西擋著；找不到才退回只看腳下。
+    const cam = W().camera, cdx = cam ? cam.position.x - P.x : 0, cdz = cam ? cam.position.z - P.z : 1, cl = Math.hypot(cdx, cdz) || 1, cx0 = cdx / cl, cz0 = cdz / cl;
+    const boxAt = (x, z, r) => [...R.boxesNear(x, z)].some(c => c.on && c.tag !== 'pit' && x + r > c.x0 && x - r < c.x1 && z + r > c.z0 && z - r < c.z1);
+    const strict = (x, z) => loose(x, z) && !boxAt(x, z, 1) && ![0.9, 1.7, 2.5, 3.2].some(d => boxAt(x + cx0 * d, z + cz0 * d, 0.55));
+    let open = strict;
     const seen = (x, z) => { const n = Math.ceil(Math.hypot(x - P.x, z - P.z) / 0.3); for (let i = 1; i < n; i++) { const k = i / n, px = P.x + (x - P.x) * k, pz = P.z + (z - P.z) * k; if (!R.isFloor(px, pz) || R.pointBlocked(px, pz)) return false; } return true; };
     let a = Math.PI, cx = P.x, cz = P.z - 4.5, fz = -1;
-    find: for (const dd of [4.5, 3.5, 5.5, 2.8]) for (const da of [0, 0.5, -0.5, 1.2, -1.2, Math.PI / 2, -Math.PI / 2, 2.2, -2.2, Math.PI]) {
+    find: for (const mode of [strict, loose]) { open = mode; for (const dd of [4.5, 3.5, 5.5, 2.8, 6.5]) for (const da of [0, 0.5, -0.5, 1.2, -1.2, Math.PI / 2, -Math.PI / 2, 2.2, -2.2, Math.PI]) {
       const aa = Math.PI + da, x0 = P.x + Math.sin(aa) * dd, z0 = P.z + Math.cos(aa) * dd, f = Math.cos(aa) < 0 ? -1 : 1;
       if (spots.every(([dx, dz]) => open(x0 + dx, z0 + dz * f) && seen(x0 + dx, z0 + dz * f))) { a = aa; cx = x0; cz = z0; fz = f; break find; }
-    }
+    } }
     dummies = spots.map(([dx, dz]) => {
       const x = cx + dx, z = cz + dz * fz, e = R.spawnEnemy('tdummy', x, z, -1, { quiet: true });
       e.tdummy = 1; e.home = [x, z]; e.hp = e.hpMax = 1e9; e.dmg = 0; e.speed = 0; e.dormant = true; e.aggro = false; e.yaw = 0; return e;
@@ -93,6 +99,7 @@
   const leave = () => {
     const w = W(), run = w.run; if (!isTrain(run)) return;
     run.done = true; if (panel) panel.hidden = true;
+    if (R.clearMonTags) R.clearMonTags(); if (R.clearNums) R.clearNums();   // 2026-10-05 作者：木樁的血條會跑到主世界——直接切回城裡沒經過收尾，名牌留在畫面上
     w.allies = []; R.ensureRoster && R.ensureRoster(true);
     if (w.scene && w.P) w.scene.remove(w.P.h.g); if (w.scene && R.disposeScene) R.disposeScene(w.scene);
     w.run = null; w.P = null; w.scene = null; dummies = [];
