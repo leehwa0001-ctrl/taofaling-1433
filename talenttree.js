@@ -123,11 +123,13 @@
     let n = h3; while (n && n !== row) { const nx = n.nextElementSibling; n.remove(); n = nx; }
     const box = document.createElement('div'); box.innerHTML = treeHtml(stOf()); (row ? row.parentNode.insertBefore(box, row) : host.appendChild(box));
     const st = stOf(), t = tt(st);
-    box.querySelectorAll('[data-ttp]').forEach(b => { b.onclick = () => { const id = b.dataset.ttp; if (R.spFree(st) < 1 || why(t, id)) return; t[id] = (t[id] || 0) + 1; R.save && R.save(); R.skillPoints(where); }; });
-    const rs = host.querySelector('[data-sprs]'); if (rs) { const f0 = rs.onclick; rs.onclick = () => { f0 && f0(); R.skillPoints(where); }; }
+    box.querySelectorAll('[data-ttp]').forEach(b => { b.onclick = () => { const id = b.dataset.ttp; if (R.spFree(st) < 1 || why(t, id)) return; t[id] = (t[id] || 0) + 1; R.save && R.save(); R.skillPoints(where, true); }; });
+    const rs = host.querySelector('[data-sprs]'); if (rs) { const f0 = rs.onclick; rs.onclick = () => { f0 && f0(); R.skillPoints(where, true); }; }
   };
   const sp0 = R.skillPoints;
-  R.skillPoints = where => { const r = sp0(where); try { mount(where === 'hub' ? 'hub' : 'town'); } catch (e) { console.warn('[talenttree]', e); } return r; };
+  // keep：點了 +1 重畫的時候留在原本捲到的地方（2026-10-04 作者：每按一次都會回到頁面最上面，有點煩）；從選單打開的時候照舊從最上面開始
+  const scrolls = () => [$('hub-sheet'), $('hub-modal'), $('r-sheet'), $('r-modal'), document.scrollingElement].filter(Boolean).map(el => [el, el.scrollTop]);
+  R.skillPoints = (where, keep) => { const sc = keep && scrolls(), r = sp0(where); try { mount(where === 'hub' ? 'hub' : 'town'); } catch (e) { console.warn('[talenttree]', e); } if (sc) sc.forEach(([el, y]) => { el.scrollTop = y; }); return r; };
 
   const css = document.createElement('style');
   css.textContent = [
