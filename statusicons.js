@@ -73,7 +73,7 @@
     if (b.crit) L.push('暴擊率 +' + PCT(b.crit));
     if (b.def) L.push('受到的傷害 ' + (b.def > 0 ? '−' : '+') + PCT(b.def));
     if (b.speed && b.speed !== 1) L.push('移動 ' + (b.speed > 1 ? '+' : '−') + PCT(b.speed - 1));
-    if (b.vamp) L.push('打出去的傷害有 ' + PCT(b.vamp) + ' 變成生命');
+    if (b.vamp) L.push('吸血 +' + (Math.round(b.vamp * 1000) / 10) + '%（每次攻擊回復的機率 +' + Math.round(b.vamp * 500) + '%）');
     if (b.regen) L.push('每秒回復 ' + (Math.round(b.regen * 1000) / 10) + '% 生命');
     if (b.pen) L.push('穿透 +' + PCT(b.pen));
     if (b.echo) L.push('普攻有 ' + PCT(b.echo) + ' 的機率多打一下');

@@ -252,9 +252,9 @@
     arc(s, P, w, pw) {
       const n = s.hits || 1; P.stance = Math.max(P.stance || 0, Math.min(0.6, n * (s.gap || 120) / 1000));
       for (let i = 0; i < n; i++) later(() => {
-        const a = P.aimA + (s.back && i % 2 ? Math.PI : 0), hp0 = s.vamp ? w.enemies.reduce((t, e) => t + (e.dead ? 0 : e.hp), 0) : 0;
+        R.vampSkill = s.vamp || 0; const a = P.aimA + (s.back && i % 2 ? Math.PI : 0), hp0 = s.vamp ? w.enemies.reduce((t, e) => t + (e.dead ? 0 : e.hp), 0) : 0;
         R.swingAnim(P.h, 0.02, 0.12); R.melee(a, s.range, s.arc, pw * s.k, 0, 0, 0, { kb: s.kb, stun: s.stun, curse: s.curse, dir: i % 2 ? -1 : 1, hs: 1, primary: false });
-        if (s.vamp) { const hp1 = w.enemies.reduce((t, e) => t + (e.dead ? 0 : e.hp), 0); if (hp0 > hp1) R.healP((hp0 - hp1) * s.vamp); }
+        if (s.vamp && !R.vampProc) { const hp1 = w.enemies.reduce((t, e) => t + (e.dead ? 0 : e.hp), 0); if (hp0 > hp1) R.healP((hp0 - hp1) * s.vamp); } R.vampSkill = 0;
         R.sfx && R.sfx('swing');
       }, i * (s.gap || 120));
     },
@@ -332,7 +332,7 @@
     o = Object.assign({}, o); if (crit && Math.random() < crit) o.crit = true;
     const h0 = e.hp, r = he0(e, raw * m, o);
     if (burn && o.primary && !e.dead) e.st.burn = 3;
-    if (vamp && h0 > e.hp) R.healP((h0 - Math.max(0, e.hp)) * vamp, true);
+    if (vamp && h0 > e.hp && !R.vampProc) R.healP((h0 - Math.max(0, e.hp)) * vamp, true);
     return r;
   };
   const hp0 = R.hurtPlayer;

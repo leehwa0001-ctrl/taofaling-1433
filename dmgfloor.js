@@ -7,14 +7,25 @@
 //   你的坦度＝生命上限，扣掉物防（魔法攻擊看魔防）、天賦的減傷、套裝、飾品的守護、天賦點的堅韌之後的「等效生命」——
 //   堆得越硬，牠們打得越重；本來就打得比這個痛的不變（保底只往上拉）。暫時的增益（要塞、結界、技能書）不算。
 //   同一種類裡照原本的強弱分：原本傷害高的生物保底也高（0.6～1.6 倍）；召喚出來的小隻（生命倍率不到 1）照比例少一點。
+// 2026-10-05 作者：「把怪物打人的傷害回調一點吧，不然真的離譜，或是用其他方式，不要用%傷來算」
+//   → 保底不再照「你自己的」生命、防禦算（原本堆得越硬打得越重，等於永遠打掉固定幾 %），改照「這個等級的標準身板」：
+//   職業的基本生命 ×(1＋3.5%×(等級−1))、標準物防 6＋(等級−1)（魔法攻擊看一半）。保底是一個照等級長的數字，
+//   打到你身上照樣扣你的防禦、減傷——穿得越硬、生命越多，被打掉的比例越少。比例也調低：
+//   一般 4%→9%、精英 7%→14%、領主體 12%→22%、佩特拉核心 9%→16%（照標準身板算），同類的強弱 0.7～1.3 倍。
 // 放在 deepbonus.js 後面、lordvariant.js 和 kasoplus.js 前面（異變、卡索級的倍率乘在保底上面）。
 (function (R) {
   const W = () => R.W, isLord = d => !!(d && /^領主體/.test(d.name || ''));
   const GK = { 3: 0.7, 4: 1, 5: 1.1 };
   const REF = { n: 11, elite: 20, boss: 32 };
   const kindOf = e => (e.id === 'petra' ? 'petra' : e.def.boss || isLord(e.def) ? 'boss' : e.def.elite ? 'elite' : 'n');
-  const FRAC = { n: [0.06, 0.08], elite: [0.10, 0.12], boss: [0.18, 0.17], petra: [0.12, 0.13] };
-  // 你的等效生命（這種攻擊要打多少「原始傷害」才扣得完）
+  const FRAC = { n: [0.04, 0.05], elite: [0.07, 0.07], boss: [0.12, 0.10], petra: [0.09, 0.07] };
+  // 這個等級的標準身板：要打多少「原始傷害」才扣得完（不看你身上實際的生命、防禦）
+  const refEff = (P, mag) => {
+    const st = R.S && R.S.classes && R.S.classes[P.cls], lv = Math.max(1, (st && st.lv) || 1), c = R.CLASSES[P.cls] || { hp: 110 };
+    const hp = c.hp * (1 + 0.035 * (lv - 1)), a = (mag ? 0.5 : 1) * (6 + (lv - 1));
+    return hp * (a + 30) / 30;
+  };
+  // （舊的）你的等效生命：留著給其他檔案參考，保底不再用
   const effHp = (P, mag) => {
     const a = Math.max(0, (mag ? P.mdef : P.def) || 0);
     let k = 1 - a / (a + 30);
@@ -31,10 +42,10 @@
     if (e.def.human || e.def.wild || e.fake || e.mirror || (run.site && (run.site.outdoor || run.site.kind === 'train'))) return 0;
     const t = Math.max(0, Math.min(1, (run.floor || 0) / Math.max(1, (run.floors || 1) - 1)));
     const kd = kindOf(e), f = FRAC[kd], ref = REF[kd] || REF.boss;
-    const sp = Math.max(0.6, Math.min(1.6, e.def.dmg / ref));
+    const sp = Math.max(0.7, Math.min(1.3, e.def.dmg / ref));
     const small = o && o.hpMul && o.hpMul < 1 ? Math.sqrt(o.hpMul) : 1;
     const mag = !!(R.enemyDmgInfo && R.enemyDmgInfo(e.def).mag);
-    return (f[0] + f[1] * t) * gk * sp * small * effHp(P, mag);
+    return (f[0] + f[1] * t) * gk * sp * small * refEff(P, mag);
   };
   const se0 = R.spawnEnemy;
   R.spawnEnemy = (id, x, z, room, o) => {

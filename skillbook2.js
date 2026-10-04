@@ -194,7 +194,7 @@
         if (W().run !== run || P.dead) return false; left -= dt; tick -= dt;
         if (tick <= 0) {
           tick = s.gap || 0.5;
-          if (s.r) { R.fx('ring', P.x, 0.1, P.z, { r: s.r, color: s.color || '#FFFFFF' }); let got = 0; w.enemies.forEach(e => { if (e.dead || e.under || dist(e, P) > s.r + e.def.size * 0.5) return; if (s.k) { const h0 = e.hp; R.hurtEnemy(e, pw * s.k, { primary: false }); got += Math.max(0, h0 - Math.max(0, e.hp)); } status(e, s); }); if (s.vamp && got) R.healP(got * s.vamp, true); }
+          if (s.r) { R.fx('ring', P.x, 0.1, P.z, { r: s.r, color: s.color || '#FFFFFF' }); let got = 0; R.vampSkill = s.vamp || 0; w.enemies.forEach(e => { if (e.dead || e.under || dist(e, P) > s.r + e.def.size * 0.5) return; if (s.k) { const h0 = e.hp; R.hurtEnemy(e, pw * s.k, { primary: false }); got += Math.max(0, h0 - Math.max(0, e.hp)); } status(e, s); }); R.vampSkill = 0; if (s.vamp && got && !R.vampProc) R.healP(got * s.vamp, true); }
           if (s.heal) R.healP(P.hpMax * s.heal, true);
           if (s.mp) P.mp = Math.min(P.mpMax, P.mp + P.mpMax * s.mp);
         }

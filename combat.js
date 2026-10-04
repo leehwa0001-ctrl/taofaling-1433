@@ -80,8 +80,8 @@
     if (o.primary && ws.stun && Math.random() < ws.stun) e.st.stun = 0.8;
     const kb = (o.kb != null ? o.kb : o.primary ? ws.kb : 0) * (e.def.boss ? 0.15 : 1);
     if (kb) { const a = angTo(P, e); e.kx += Math.sin(a) * kb * 6; e.kz += Math.cos(a) * kb * 6; }
-    if (ws.vamp && o.primary) R.healP(dmg * ws.vamp, true);
-    if (P.buff.rage > 0) R.healP(dmg * 0.025, true);
+    if (ws.vamp && o.primary && !R.vampProc) R.healP(dmg * ws.vamp, true);   // vampproc.js 接手：改成每次攻擊有機率回
+    if (P.buff.rage > 0 && !R.vampProc) R.healP(dmg * 0.025, true);
     if (e.hp <= 0) R.killEnemy(e);
     return dmg;
   };

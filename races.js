@@ -152,7 +152,7 @@
     // 暗影族：從背後打（站在遺跡生物面向的反方向）
     if (b0 && b0.back && e && !e.dead && e.yaw != null) { const a = Math.atan2(P0.x - e.x, P0.z - e.z) - e.yaw; if (Math.abs(Math.atan2(Math.sin(a), Math.cos(a))) > 2.1) raw *= 1 + b0.back; }
     const d = he(e, raw, o), P = R.W.P, b = P && P.raceB;
-    if (b && d > 0) { if (b.vamp) R.healP(d * b.vamp, true); if (b.ignite && o && o.primary && Math.random() < b.ignite && !e.dead) e.st.burn = 3; }
+    if (b && d > 0) { if (b.vamp && !R.vampProc) R.healP(d * b.vamp, true); if (b.ignite && o && o.primary && Math.random() < b.ignite && !e.dead) e.st.burn = 3; }
     return d;
   };
   const hp = R.hurtPlayer;
