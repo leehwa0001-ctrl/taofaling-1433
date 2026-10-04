@@ -7,7 +7,9 @@
   const W = () => R.W, $ = id => document.getElementById(id), esc = s => R.esc(s);
   const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
   const later = (f, ms) => { const run = W().run, sc = W().scene; setTimeout(() => { const w = W(); if (w.run === run && w.scene === sc && w.P && !w.P.dead && run && !run.done) f(); }, ms); };
-  const power = ws => (ws.dmg * (ws.pellets > 1 ? ws.pellets : 1) * (ws.hits || 1) * ws.rate) / 2;
+  // 2026-10-04 作者：技能傷害才普攻的 1.5～2 倍，提升到 3～5 倍。原本＝一下普攻×攻速÷2（大劍這種慢的武器，技能比一刀還輕）；
+  // 現在＝一下普攻×攻速（攻速算 2～2.5 之間：技能威力 1 大約是 2～2.5 下普攻，一般的技能 3～5 下），而且不比原本低（步槍那種很快的照舊）。skills.js、skillbook.js 兩個一樣。
+  const power = ws => { const na = ws.dmg * (ws.pellets > 1 ? ws.pellets : 1) * (ws.hits || 1), r = ws.rate || 1; return Math.max(na * r / 2, na * Math.min(2.5, Math.max(2, r))); };
   const KIND = { gunner: 'bullet', archer: 'arrow', mage: 'orb', priest: 'holy', blade: 'eorb', warrior: 'eorb', knight: 'eorb', monk: 'eorb' };
 
   // ---------- 新技能：[id, 名字, 職業, 等級, 冷卻, 魔力, 型, 參數, 說明, 轉職路線] ----------

@@ -34,7 +34,9 @@
   const cdOf = (P, i) => (i === 0 ? P.skillCd : (P.skCd && P.skCd[i]) || 0);
 
   // 技能的力道：用武器每秒的傷害換算（不然連射快、單發低的武器，技能會弱得很不公平）
-  const power = ws => (ws.dmg * (ws.pellets > 1 ? ws.pellets : 1) * (ws.hits || 1) * ws.rate) / 2;
+  // 2026-10-04 作者：技能傷害才普攻的 1.5～2 倍，提升到 3～5 倍。原本＝一下普攻×攻速÷2（大劍這種慢的武器，技能比一刀還輕）；
+  // 現在＝一下普攻×攻速（攻速算 2～2.5 之間：技能威力 1 大約是 2～2.5 下普攻，一般的技能 3～5 下），而且不比原本低（步槍那種很快的照舊）。skills.js、skillbook.js 兩個一樣。
+  const power = ws => { const na = ws.dmg * (ws.pellets > 1 ? ws.pellets : 1) * (ws.hits || 1), r = ws.rate || 1; return Math.max(na * r / 2, na * Math.min(2.5, Math.max(2, r))); };
 
   // ---------- 用技能 ----------
   R.castSlot = i => {
