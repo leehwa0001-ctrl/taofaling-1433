@@ -83,7 +83,7 @@
     ['ra_field', '陷阱陣', 'archer', 14, 14, 18, 'zone', { zone: 'trap', range: 8, r: 1.2, life: 25, k: 2, count: 3 }, '在準心附近一次布下三個捕獸夾。', 'ranger'],
     ['hm_seal', '破魔結印', 'archer', 8, 12, 18, 'nova', { r: 4.5, k: 2, stun: 1, color: '#FFFFFF' }, '結印：以自己為中心放出破魔之光，周圍的遺跡生物暈眩。', 'hama'],
     ['hm_volley', '破魔連矢', 'archer', 14, 10, 20, 'shots', { n: 3, spread: 0.3, k: 2, pierce: 99, kind: 'hama', sp: 34 }, '三支破魔矢一起射出，射穿直線上的一切。', 'hama'],
-    ['bs_thirst', '嗜血', 'warrior', 8, 12, 10, 'buff', { t: 6, dmg: 1.2, vamp: 0.08, color: '#B8322A' }, '6 秒內傷害 +20%，打出去的傷害有 8% 變成生命。', 'berserker'],
+    ['bs_thirst', '嗜血', 'warrior', 8, 12, 10, 'buff', { t: 6, dmg: 1.2, vamp: 0.04, color: '#B8322A' }, '6 秒內傷害 +20%，打出去的傷害有 4% 變成生命。', 'berserker'],
     ['bs_rampage', '暴走', 'warrior', 14, 14, 16, 'arc', { range: 3.4, arc: 6.28, k: 1.3, hits: 4, gap: 160, kb: 1.5 }, '失去理智地亂砍四圈。', 'berserker'],
     ['gl_counter', '反擊架勢', 'warrior', 8, 8, 8, 'parry', { t: 0.8 }, '擺出架勢 0.8 秒：被遺跡生物打到會擋下，並反擊必定暴擊的一刀。', 'gladiator'],
     ['gl_finale', '終幕', 'warrior', 14, 14, 18, 'arc', { range: 3, arc: 2.4, k: 1.1, hits: 5, gap: 140, kb: 1 }, '鬥技場上的終幕連斬：五連擊。', 'gladiator'],
@@ -109,7 +109,7 @@
     ['ks_still', '明鏡止水', 'blade', 14, 18, 12, 'parry', { t: 1.2, buff: { t: 5, crit: 0.3 } }, '架勢 1.2 秒：擋下攻擊並反擊；之後 5 秒暴擊率 +30%。', 'kensei'],
     ['sd_backstab', '背刺', 'blade', 8, 8, 12, 'blink', { behind: 1, range: 12, hit: 3.5, crit: 1 }, '閃到最近的敵人背後，刺出必定暴擊的一刀。', 'shadow'],
     ['sd_stitch', '影縫', 'blade', 14, 12, 16, 'at', { range: 9, r: 3, k: 0.8, root: 2, invis: 2, fx: 'ring', color: '#3A2A4A' }, '以影子束縛敵人：範圍內的敵人定身 2 秒，你隱身 2 秒。', 'shadow'],
-    ['yt_drink', '啜血', 'blade', 8, 10, 10, 'arc', { range: 3, arc: 6.28, k: 1.2, vamp: 0.3 }, '妖刀轉一圈啜飲：傷害的 30% 變成你的生命。', 'yoto'],
+    ['yt_drink', '啜血', 'blade', 8, 10, 10, 'arc', { range: 3, arc: 6.28, k: 1.2, vamp: 0.15 }, '妖刀轉一圈啜飲：傷害的 15% 變成你的生命。', 'yoto'],
     ['yt_mad', '妖氣', 'blade', 14, 16, 14, 'buff', { t: 6, dmg: 1.35, def: -0.15, color: '#B83AE8' }, '釋放妖刀吸收的魔力質：6 秒內傷害 +35%，但受到的傷害 +15%。', 'yoto'],
     ['tp_aegis', '神盾', 'knight', 8, 16, 16, 'heal', { shield: 0.4, color: '#C9A13A' }, '獲得可吸收相當於最大生命 40% 傷害的神盾。', 'templar'],
     ['tp_crusade', '聖戰', 'knight', 14, 14, 18, 'nova', { r: 4, k: 2, stun: 1, taunt: 4, color: '#C9A13A' }, '高舉長劍：周圍的敵人暈眩，接下來 4 秒改打你。', 'templar'],
@@ -362,7 +362,8 @@
   const book = (host, close) => {
     const S = R.S, cls = S.cls, st = S.classes[cls], lo = R.loadoutOf(cls), keys = KEYS();
     const ids = allOf(cls), learned = ids.filter(id => known(cls, st, id)), locked = ids.filter(id => !known(cls, st, id));
-    const req = id => { const s = info(id); if (s.taught) return '望月瀧教的：成為戀人之後向她學'; if (s.adv2) return R.adv2Req ? R.adv2Req(s, st) : '二次轉職'; if (s.adv && s.adv !== st.adv) return '轉職：' + R.ADV[cls].find(a => a.id === s.adv).name + (need(s, st) > R.PROMOTE_LV ? '・Lv ' + need(s, st) : ''); return '職業等級 ' + need(s, st); };
+    const who = t => (R.TEACHER && R.TEACHER[t]) || '望月瀧';   // 教的人（storyally.js：雷諾、楚璐也會教）
+    const req = id => { const s = info(id); if (s.taught) return who(s.taught) + '教的：成為戀人之後請' + who(s.taught) + '教'; if (s.adv2) return R.adv2Req ? R.adv2Req(s, st) : '二次轉職'; if (s.adv && s.adv !== st.adv) return '轉職：' + R.ADV[cls].find(a => a.id === s.adv).name + (need(s, st) > R.PROMOTE_LV ? '・Lv ' + need(s, st) : ''); return '職業等級 ' + need(s, st); };
     // 照轉職路線分段：基本技能、你走的那條路線、其他路線（收起來）
     const groups = ids => {
       const advs = (R.ADV[cls] || []).filter(a => !a.legacy || a.id === st.adv).map(a => a.id).sort((a, b) => (b === st.adv) - (a === st.adv));
@@ -370,7 +371,7 @@
       return [null].concat(advs, ['adv2', 'taught']).map(r => {
         const list = ids.filter(id => gk(id) === r && !(r === 'adv2' && info(id).adv && info(id).adv !== st.adv)); if (!list.length) return '';   // 二轉的覺醒技能只列你走的那條路線的（adv2plus.js：每條路線各有兩招）
         const a = r && r !== 'taught' && r !== 'adv2' && R.ADV[cls].find(x => x.id === r), got = list.filter(id => known(cls, st, id)), mine = r === 'taught' || r === 'adv2' ? got.length > 0 : (!r || r === st.adv || !st.adv);
-        const title = r === 'taught' ? '望月瀧教的' : r === 'adv2' ? (R.adv2Title ? R.adv2Title(cls, st) : '二次轉職') : r ? '轉職・' + a.name + (r === st.adv ? '（你的路線）' : st.adv ? '（別的路線）' : '（職業等級 ' + R.PROMOTE_LV + ' 轉職以後）') : '基本・' + R.CLASSES[cls].name;
+        const title = r === 'taught' ? who(info(list[0]).taught) + '教的' : r === 'adv2' ? (R.adv2Title ? R.adv2Title(cls, st) : '二次轉職') : r ? '轉職・' + a.name + (r === st.adv ? '（你的路線）' : st.adv ? '（別的路線）' : '（職業等級 ' + R.PROMOTE_LV + ' 轉職以後）') : '基本・' + R.CLASSES[cls].name;
         return '<details class="sb-group"' + (mine ? ' open' : '') + '><summary><b>' + esc(title) + '</b> <small>學會 ' + got.length + '／' + list.length + '</small></summary><div class="recipes sb-list">'
           + got.map(id => card(id, true)).join('') + list.filter(id => !known(cls, st, id)).map(id => card(id, false)).join('') + '</div></details>';
       }).join('');

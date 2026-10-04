@@ -855,6 +855,7 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <script src="prof.js"></script>
 <script src="classbal.js"></script>
 <script src="gearplus.js"></script>
+<script src="headgear.js"></script><!-- 帽子各有各的樣子、圖示、效果（gearplus.js、gearmore.js 後面） -->
 <script src="affixplus.js"></script>
 <script src="gems.js"></script>
 <script src="sets.js"></script>
@@ -866,6 +867,7 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <script src="monk.js"></script>
 <script src="classes2b.js"></script>
 <script src="skills3.js"></script>
+<script src="entianplus.js"></script><!-- 恩特安的傳人多五招附魔強化（classes2b.js、skills3.js 後面） -->
 <script src="hud3.js"></script>
 <script src="cape.js"></script>
 <script src="news.js"></script>
@@ -925,6 +927,7 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <script src="racelist.js"></script>
 <script src="raceselect.js"></script>
 <script src="racebal.js"></script>
+<script src="vamphalf.js"></script><!-- 吸血削一半：舊存檔的嗜血、飲血詞綴減半（包 R.migrate、R.freshSave） -->
 <script src="racial.js"></script>
 <script src="streetlife.js"></script>
 <script src="dining.js"></script>
@@ -947,6 +950,7 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <script src="adv2more.js"></script>
 <script src="unyield.js"></script><!-- 不屈／神佑：倒下時攔下來，要在 adv2more.js 後面 -->
 <script src="adv2plus.js"></script><!-- 二轉：覺醒照路線給特殊效果、兩招新技能、新被動；職業的二轉、諧鳴各加新被動。要在 adv2more.js、passives.js 後面 -->
+<script src="awakenbal.js"></script><!-- 覺醒技能的威力：照實測放大（promote2.js、adv2plus.js 後面） -->
 <script src="reach.js"></script><!-- 攻擊範圍：武器詞綴「延伸」、武器原本的攻擊距離（戰士大招用）。要在 crafting.js、dmgtype.js 後面 -->
 <script src="ultbal.js"></script><!-- 大招的補償：要在 ult.js、monk.js、classes2b.js 後面 -->
 <script src="stamina.js"></script><!-- 體力：翻滾、跑步、防禦（新）。要在 run.js、combat.js、keybinds.js、hud2.js、hud3.js 後面 -->
@@ -956,11 +960,13 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <script src="lordfloor.js"></script>
 <script src="skillrange.js"></script>
 <script src="takiteach.js"></script>
+<script src="storyally.js"></script><!-- 瀧、雷諾、楚璐跟著你的實力變強；雷諾、楚璐的招式和教技能（放在 taki.js、takiteach.js 後面） -->
 <script src="hosu.js"></script>
 <script src="hosubranch.js"></script>
 <script src="kansait.js"></script>
 <script src="enchinfuse.js"></script>
 <script src="kesentfx.js"></script>
+<script src="envplus.js"></script><!-- 沙漠的魔力乾枯、凍原的凍傷（積雪）：kesentfx.js 後面 -->
 <script src="forge.js"></script><!-- 兵工廠的環境「熔爐」：要在 region.js 前面（先有 R.ENVS.forge） -->
 <script src="region.js"></script>
 <script src="wallguard.js"></script><!-- 遺跡生物不穿牆：包 R.updateEnemies 最外面 -->
@@ -972,5 +978,16 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <script src="fogwalls.js"></script>
 <script src="menutidy.js"></script>
 <!-- 連線包裝必須在所有生成樓層的擴充之後。 -->
+<script src="training.js"></script><!-- 公會的訓練場：打木樁試技能（包 R.hurtEnemy、R.loadFloor、R.startRun、R.onPlayerDown 外面） -->
 <script src="net.js"></script>
+<script src="lordvariant.js"></script><!-- 領主體的異變：三個形態、各自的新招、異變核心做紅武（領主體的檔案後面、net2.js 前面） -->
+<script src="net2.js"></script><!-- 多人連線第二階段：房主決定遺跡生物、打怪同步、寶箱、倒下扶起、換房主（要在 net.js 後面、所有包遺跡生物函式的檔案後面） -->
+<script src="pvp.js"></script><!-- 多人連線的友傷：隊友打得到彼此、掉落物用搶的（net.js、net2.js、raid.js 後面） -->
+<script src="kasoplus.js"></script><!-- 卡索級加強、出得去：專屬生物、樓層全亂、空間裂隙、回歸水晶（net2.js 後面：跳的樓層要包在 net.js 外面） -->
+<script src="debuff.js"></script><!-- 遺跡生物的破防、虛弱、重傷；克森特級以上治療變少（包 healP、hurtPlayer、hurtEnemy 的檔案後面） -->
+<script src="trapplus.js"></script><!-- 遺跡的機關變狠：釘板照生命比例、附帶重傷（run.js、debuff.js 後面） -->
+<script src="hubside.js"></script><!-- 鐵匠鋪左邊的角色總數值、倉庫的「身上的東西」：要在所有包 R.hub 的檔案後面 -->
+<script src="acc2.js"></script><!-- 第二個飾品欄、新的飾品（crafting.js、raid.js、hub.js 後面） -->
+<script src="unstuck.js"></script><!-- 暫停選單的「消除隔間牆」：bug 離不開房間的時候用 -->
+<script src="adminpanel.js"></script><!-- 管理員面板：只有管理員號看得到（測試用） -->
 <script src="main.js"></script>

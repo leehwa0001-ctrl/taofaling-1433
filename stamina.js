@@ -1,9 +1,11 @@
 // 體力（2026-10-04 作者：玩家新增體力條，讓他們用在翻滾、跑步、防禦（新增））
-// - 體力 100（P.stam／P.stamMax），只在遺跡裡用（城裡跑步不扣）。停下不用 1 秒以後，每秒回 25。
+// - 體力 100（P.stam／P.stamMax），只在遺跡裡用（城裡跑步不扣）。每秒回 25。
+//   2026-10-05 作者：體力條改成邊消耗邊回復——用掉以後不用再等 1 秒才回；跑步、舉盾的時候也在回（回一半）。
+//   跑步的消耗跟著從每秒 12 改成 22（一邊回 12.5，實際每秒少 9.5，滿的大約跑 10 秒，跟原本差不多）。
 // - 翻滾：扣 30，不夠就滾不出去（翻滾冷卻照舊）。
-// - 跑步（按住 Shift／手機的「跑步」）：每秒扣 12；扣光就跑不動，要回到 30 才能再跑。
+// - 跑步（按住 Shift／手機的「跑步」）：每秒扣 22（同時回一半）；扣光就跑不動，要回到 30 才能再跑。
 // - 防禦（新的動作：按住 Z，按鍵設定可以改；手機多一個「防禦」鈕，點一下舉起、再點一下放下）：
-//   舉著的時候走路變慢一半、不能普攻、體力不回；面向的左右各 75 度內打過來的攻擊，傷害 −70%（騎士拿盾 −85%），
+//   舉著的時候走路變慢一半、不能普攻、體力回一半；面向的左右各 75 度內打過來的攻擊，傷害 −70%（騎士拿盾 −85%），
 //   每擋一下扣體力：8＋這一下佔生命的比例×60。剛舉起的 0.25 秒內擋到＝完美防禦：完全不受傷、不扣體力，打你的那隻愣 0.8 秒。
 //   體力扣光＝防禦被打破：這一下只擋一半、人愣 0.8 秒，1.5 秒內不能再舉。陷阱、地形、看不出從哪裡來的傷害擋不了。
 // - 鍛鍊（2026-10-04 作者：加可以鍛鍊體力，在熟練那邊）：用掉的體力每 15 點，熟練度的「體力的鍛鍊」+1（prof.js）；每級體力上限 +5、回復 +4%（下一趟遺跡開始算）。
@@ -12,7 +14,7 @@
 // 放在 run.js、combat.js、keybinds.js、hud2.js、hud3.js、adv2more.js 後面（包 R.dodge、R.running、R.hurtPlayer、R.attack、R.step、R.tact）。
 (function (R) {
   const W = () => R.W, $ = id => document.getElementById(id), TH = () => window.THREE;
-  const MAX = 100, REGEN = 25, DELAY = 1, DODGE = 30, RUN = 12, RESUME = 30, ARC = 1.3;
+  const MAX = 100, REGEN = 25, DELAY = 0, DODGE = 30, RUN = 22, RESUME = 30, ARC = 1.3;
   const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
   const live = () => { const w = W(); return !!(w && w.run && !w.town && w.P && !w.run.done); };
   const trained = () => (R.profLv && R.profLv.stam ? R.profLv.stam() : 0), maxOf = () => MAX + 5 * trained();
@@ -112,11 +114,11 @@
       if (want && !P.guard) { if (P.stam > 0) { P.guard = true; P.guardT0 = w.run.t; P.charging = false; } else warn(); }
       if (!want) P.guard = false;
       // 跑步扣體力
-      if (!w.paused && R.running() && P.moveA != null && !P.dead) use(P, RUN * dt);
+      const runNow = !w.paused && R.running() && P.moveA != null && !P.dead; if (runNow) use(P, RUN * dt);
       // 回復
       if (!w.paused) {
         if (P.stamT > 0) P.stamT -= dt;
-        else if (!P.guard && P.stam < P.stamMax) P.stam = Math.min(P.stamMax, P.stam + (P.stamRegen || REGEN) * dt);
+        else if (P.stam < P.stamMax) P.stam = Math.min(P.stamMax, P.stam + (P.stamRegen || REGEN) * (P.guard || runNow ? 0.5 : 1) * dt);   // 邊用邊回
         if (P.stamOut && P.stam >= RESUME) P.stamOut = false;
       }
       // 盾

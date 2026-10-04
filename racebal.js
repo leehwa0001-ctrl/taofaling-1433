@@ -14,9 +14,9 @@
     妖精族種: { mp: 0.25, skillCd: 0.12, mpRegen: 1 }, 獸妖族種: { magic: 0.15, calm: 0.15 }, 妖人族種: { mp: 0.25, calm: 0.2, mpRegen: 1 },
     蟲型族種: { rate: 0.15, dodge: 0.1 }, 節肢人族種: { crit: 0.08, critMult: 0.3, rate: 0.1, pen: 0.12 }, 節鱗族種: { def: 4, hp: 0.12 },
     巨人族種: { hp: 0.3, range: 0.25, kb: 1.5 }, 繁肢族種: { rate: 0.2, arc: 0.3, range: 0.15 }, 兩棲族種: { regen: 0.5, immune: { slow: 1 } },
-    岩礦族種: { def: 6 }, 晶體族種: { mp: 0.25, crystal: 0.4, mpRegen: 0.8 }, 血族種: { vamp: 0.06 }, 植根族種: { hp: 0.2, regen: 0.8 },
+    岩礦族種: { def: 6 }, 晶體族種: { mp: 0.25, crystal: 0.4, mpRegen: 0.8 }, 血族種: { vamp: 0.03 }, 植根族種: { hp: 0.2, regen: 0.8 },
     流體族種: { dodge: 0.25 }, 氣流族種: { speed: 0.15, dodge: 0.15 }, 聚合族種: { dmg: 0.1, mp: 0.2 }, 真菌族種: { regen: 0.8, hp: 0.1 },
-    擬態族種: { calm: 0.3, mp: 0.15 }, 光影族種: { dodge: 0.25, back: 0.3 }, 寰星族種: { magic: 0.2, luck: 3 }, 吸血族種: { vamp: 0.07, night: 0.15 },
+    擬態族種: { calm: 0.3, mp: 0.15 }, 光影族種: { dodge: 0.25, back: 0.3 }, 寰星族種: { magic: 0.2, luck: 3 }, 吸血族種: { vamp: 0.035, night: 0.15 },
     巨像族種: { hp: 0.3, def: 5, range: 0.15 }, 穴甲族種: { def: 6, ore: 0.5 }, 泳熔族種: { thorns: 0.3, immune: { burn: 1 } }, 植精族種: { regen: 0.6, mp: 0.2 },
     元素精族種: { magic: 0.2, mp: 0.15 }, 聚種族種: { hp: 0.08, mp: 0.08, dmg: 0.08 }, 化形族種: { dodge: 0.2, calm: 0.2 }, 雲翼族種: { speed: 0.15, dodge: 0.25 }, 岩龍族種: { def: 6, hp: 0.15 }
   };
@@ -26,7 +26,7 @@
     狐人族: { magic: 0.2, calm: 0.15 }, 雪狐族: { magic: 0.15, mp: 0.2, immune: { slow: 1 } }, 狼人族: { hp: 0.12, melee: 0.18, pen: 0.1 }, 沙人族: { def: 5, immune: { blind: 1 } },
     鰭人族: { regen: 0.8, immune: { slow: 1 } }, 樹人族: { hp: 0.25, regen: 0.8 }, 黑石族: { def: 10 }, 翼人族: { speed: 0.15, dodge: 0.3 },
     巨人族: { hp: 0.3, range: 0.25, kb: 1.5 }, 焰人族: { dmg: 0.12, ignite: 0.25 }, 熔岩人族: { def: 5, thorns: 0.35 }, 幻魔族: { mp: 0.3, calm: 0.3 },
-    節肢蛛人族: { crit: 0.12, critMult: 0.4, pen: 0.15 }, 黑水晶族: { mp: 0.35, skillCd: 0.2, crystal: 0.6 }, 吸血人族: { vamp: 0.08, critMult: 0.25, night: 0.15 },
+    節肢蛛人族: { crit: 0.12, critMult: 0.4, pen: 0.15 }, 黑水晶族: { mp: 0.35, skillCd: 0.2, crystal: 0.6 }, 吸血人族: { vamp: 0.04, critMult: 0.25, night: 0.15 },
     暗影族: { dodge: 0.35, back: 0.35, calm: 0.2 }, 金龍人族: { def: 7, hp: 0.25, ore: 0.6 },
     雙頭人族: { range: 0.3, arc: 0.35, mp: 0.1 }, 多臂人族: { rate: 0.3, arc: 0.4 }, 四臂人族: { rate: 0.22, arc: 0.3 }, 獨臂人族: { melee: 0.3 }, 三足人族: { speed: 0.2 },
     獨眼巨人族: { crit: 0.1, range: 0.2 }, 巨臂巨人族: { range: 0.35, melee: 0.2 }, 九尾狐族: { magic: 0.3, mp: 0.3 }, 貓又族: { dodge: 0.3, crit: 0.08 },
@@ -34,7 +34,7 @@
   };
   // 強度分數（每一點的價值）
   const V = { hp: 100, mp: 40, def: 4, speed: 150, dmg: 150, melee: 90, magic: 90, crit: 150, critMult: 50, dodge: 45, skillCd: 130, regen: 25, calm: 35, xp: 40, vamp: 350, ignite: 50, thorns: 60, guard: 60, crystal: 15, night: 40, back: 50, ore: 15, luck: 4, range: 70, arc: 35, rate: 130, pierce: 15, mpRegen: 12, kb: 6, pen: 120 };
-  const CAP = { hp: 0.6, mp: 0.7, def: 16, speed: 0.3, dmg: 0.35, melee: 0.5, magic: 0.5, crit: 0.25, critMult: 0.8, dodge: 0.55, skillCd: 0.35, regen: 2.5, calm: 0.6, xp: 0.5, vamp: 0.12, ignite: 0.4, thorns: 0.6, guard: 0.4, crystal: 1, night: 0.4, back: 0.6, ore: 1, luck: 8, range: 0.5, arc: 0.7, rate: 0.5, pierce: 2, mpRegen: 3, kb: 4, pen: 0.3 };
+  const CAP = { hp: 0.6, mp: 0.7, def: 16, speed: 0.3, dmg: 0.35, melee: 0.5, magic: 0.5, crit: 0.25, critMult: 0.8, dodge: 0.55, skillCd: 0.35, regen: 2.5, calm: 0.6, xp: 0.5, vamp: 0.06, ignite: 0.4, thorns: 0.6, guard: 0.4, crystal: 1, night: 0.4, back: 0.6, ore: 1, luck: 8, range: 0.5, arc: 0.7, rate: 0.5, pierce: 2, mpRegen: 3, kb: 4, pen: 0.3 };
   const TARGET = { N: 50, R: 58, SR: 66, SSR: 74, UR: 86 };
   const score = b => Object.keys(b).reduce((s, k) => s + (k === 'immune' ? Object.keys(b.immune || {}).length * 8 : V[k] && b[k] > 0 ? V[k] * b[k] : 0), 0);
   const round = (k, v) => (k === 'def' || k === 'luck' ? Math.round(v) : k === 'regen' || k === 'mpRegen' || k === 'kb' ? Math.round(v * 10) / 10 : Math.round(v * 1000) / 1000);

@@ -25,7 +25,7 @@
         const goal = tg || { x: P.x - Math.sin(P.aimA || 0) * 1.6, z: P.z - Math.cos(P.aimA || 0) * 1.6 }, dx = goal.x - pet.x, dz = goal.z - pet.z, d = Math.hypot(dx, dz), reach = tg ? 0.9 + tg.def.size * 0.45 : 1.2;
         let moving = false;
         if (d > reach) { const sp = Math.min((s.speed || 6.5) * dt, d - reach); pet.x += dx / d * sp; pet.z += dz / d * sp; if (R.collide) R.collide(pet, 0.35); moving = true; }
-        else if (tg && pet.cd <= 0) { pet.cd = s.rate || 0.8; R.hurtEnemy(tg, pw * (s.k || 0.6) * mul, { primary: false, kb: s.kb || 0.4 }); R.fx('spark', tg.x, 0.8, tg.z, { a: Math.atan2(dx, dz) }); }
+        else if (tg && pet.cd <= 0) { pet.cd = s.rate || 0.8; tg.petHit = 1; R.hurtEnemy(tg, pw * (s.k || 0.6) * mul, { primary: false, kb: s.kb || 0.4 }); tg.petHit = 0; R.fx('spark', tg.x, 0.8, tg.z, { a: Math.atan2(dx, dz) }); }
         g.position.set(pet.x, 0, pet.z); if (R.animBeast) R.animBeast(m, id, pet.t, moving);
         return true;
       });

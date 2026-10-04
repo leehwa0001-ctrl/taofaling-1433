@@ -246,7 +246,7 @@
     ['w_bull', '蠻牛衝撞', 'warrior', 9, 9, 10, 'dash', { len: 7, dur: 0.35, k: 1.4, kb: 3, stun: 0.6 }, '低頭往前衝 7 公尺，撞開路上的敵人。'],
     ['w_fissure', '地裂斬', 'warrior', 11, 9, 12, 'wave', { n: 6, step: 1.6, r: 1.4, k: 1.0, stun: 0.3, gap: 60, color: C.earth }, '一刀劈進地面，裂縫往前竄出 10 公尺，裂縫上的敵人暈眩一下。'],
     ['w_menace', '威嚇', 'warrior', 14, 14, 10, 'nova', { r: 5, k: 0.3, curse: 4, slow: 4, color: '#E8603A' }, '朝四周怒吼：周圍的敵人 4 秒內變慢、受到的傷害 +30%。'],
-    ['w_bloodfight', '血戰', 'warrior', 17, 18, 12, 'buff', { t: 8, dmg: 1.15, vamp: 0.05, def: 0.1, color: '#B8322A' }, '殺紅了眼：8 秒內傷害 +15%、受到的傷害 −10%，打出去的傷害有 5% 變成生命。'],
+    ['w_bloodfight', '血戰', 'warrior', 17, 18, 12, 'buff', { t: 8, dmg: 1.15, vamp: 0.025, def: 0.1, color: '#B8322A' }, '殺紅了眼：8 秒內傷害 +15%、受到的傷害 −10%，打出去的傷害有 2.5% 變成生命。'],
     ['w_meteor', '隕擊', 'warrior', 20, 12, 16, 'jumpx', { range: 10, dur: 0.7, end: { r: 3.6, k: 2.2, stun: 1, color: C.earth } }, '高高躍起，連人帶武器砸進準心處，周圍的敵人暈眩。'],
     ['w_bladestorm', '劍刃風暴', 'warrior', 24, 18, 20, 'combo', { parts: [['aura', { t: 4, r: 3.2, gap: 0.25, k: 0.5, color: '#FF8A6A' }], ['buff', { t: 4, speed: 1.15 }]] }, '武器捲起一陣風暴，跟著你轉 4 秒：靠近的敵人都被砍到，移動 +15%。'],
     // 術士
@@ -305,8 +305,8 @@
     ['hm_rain', '破魔矢雨', 'archer', 18, 14, 22, 'at', { range: 12, r: 3, k: 1.2, waves: 4, gap: 200, fx: 'pillar', color: C.white }, '破魔矢從天而降，在準心處落下四波。', 'hama'],
     ['hm_thousand', '破魔・千本', 'archer', 24, 20, 30, 'shotx', { n: 9, spread: 1.2, k: 1.6, pierce: 99, kind: 'hama', sp: 36, life: 0.7 }, '九支破魔矢扇形齊射，射穿直線上的一切。', 'hama'],
     ['bs_leap', '狂躍', 'warrior', 11, 10, 10, 'jumpx', { range: 9, dur: 0.55, end: { r: 3, k: 2, kb: 2, color: '#B8322A' } }, '咆哮著跳過去，砸在準心處。', 'berserker'],
-    ['bs_frenzy', '狂亂', 'warrior', 18, 12, 14, 'arc', { range: 3, arc: 6.28, k: 0.8, hits: 8, gap: 90, vamp: 0.1 }, '不管三七二十一地亂砍八刀，傷害的 10% 變成生命。', 'berserker'],
-    ['bs_undying', '不死狂怒', 'warrior', 24, 30, 16, 'combo', { parts: [['guard', { t: 2, color: '#B8322A' }], ['nova', { r: 4, k: 2.4, stun: 0.5, kb: 1.5, color: '#B8322A' }], ['buff', { t: 8, dmg: 1.5, vamp: 0.15, speed: 1.1, color: '#B8322A' }, 60], ['nova', { r: 5, k: 4, kb: 2.5, color: '#FF3A2A' }, 8000]] }, '一聲怒吼震開周圍的敵人（傷害、暈眩），2 秒內不會受傷；之後 8 秒傷害 +50%、移動 +10%，打出去的傷害有 15% 變成生命；8 秒結束時狂怒爆發，周圍 5 公尺大爆炸。', 'berserker'],   // 2026-10-04 作者：不死狂怒沒傷害，要有威力
+    ['bs_frenzy', '狂亂', 'warrior', 18, 12, 14, 'arc', { range: 3, arc: 6.28, k: 0.8, hits: 8, gap: 90, vamp: 0.05 }, '不管三七二十一地亂砍八刀，傷害的 5% 變成生命。', 'berserker'],
+    ['bs_undying', '不死狂怒', 'warrior', 24, 30, 16, 'combo', { parts: [['guard', { t: 2, color: '#B8322A' }], ['nova', { r: 4, k: 2.4, stun: 0.5, kb: 1.5, color: '#B8322A' }], ['buff', { t: 8, dmg: 1.5, vamp: 0.075, speed: 1.1, color: '#B8322A' }, 60], ['nova', { r: 5, k: 4, kb: 2.5, color: '#FF3A2A' }, 8000]] }, '一聲怒吼震開周圍的敵人（傷害、暈眩），2 秒內不會受傷；之後 8 秒傷害 +50%、移動 +10%，打出去的傷害有 7.5% 變成生命；8 秒結束時狂怒爆發，周圍 5 公尺大爆炸。', 'berserker'],   // 2026-10-04 作者：不死狂怒沒傷害，要有威力
     ['gl_cheer', '喝采', 'warrior', 11, 16, 10, 'buff', { t: 8, dmg: 1.2, taunt: 3, color: '#E8C04A' }, '發出戰吼：8 秒內傷害 +20%，周圍的敵人改打你。', 'gladiator'],
     ['gl_trident', '三叉刺', 'warrior', 18, 9, 12, 'xslash', { n: 3, spread: 0.6, len: 4.5, width: 0.5, k: 1.6, color: '#D8DEE6' }, '三道突刺同時往前刺出去。', 'gladiator'],
     ['gl_duel', '決鬥場', 'warrior', 24, 24, 18, 'combo', { parts: [['aura', { t: 8, r: 4.5, gap: 0.6, k: 0.4, curse: 1, color: '#E8C04A' }], ['buff', { t: 8, def: 0.2, color: '#E8C04A' }]] }, '把身邊 4.5 公尺圍成決鬥場 8 秒：裡面的敵人持續受傷、受到的傷害 +30%；你受到的傷害 −20%。', 'gladiator'],
@@ -337,9 +337,9 @@
     ['sd_smoke', '煙玉', 'blade', 11, 12, 10, 'at', { range: 6, r: 3.5, k: 0.2, slow: 3, invis: 3, fx: 'poof', color: '#5A4A6A' }, '丟出煙玉：範圍內的敵人變慢，你隱身 3 秒。', 'shadow'],
     ['sd_knives', '飛刀扇', 'blade', 18, 8, 12, 'shotx', { n: 7, spread: 0.9, k: 0.9, pierce: 1, kind: 'feather', sp: 30, look: 'blade' }, '一揮手扇形擲出七把飛刀。', 'shadow'],
     ['sd_assassinate', '暗殺', 'blade', 24, 20, 20, 'dance', { n: 3, range: 12, k: 2.6, crit: 1, gap: 200 }, '從影子裡出現在三隻敵人身邊，一刀一隻，必定暴擊。', 'shadow'],
-    ['yt_hunger', '飢渴', 'blade', 11, 14, 12, 'aura', { t: 5, r: 3, gap: 0.5, k: 0.5, vamp: 0.3, color: '#B83AE8' }, '妖刀持續吸取生命 5 秒：身邊的敵人持續受傷，傷害的 30% 變成你的生命。', 'yoto'],
+    ['yt_hunger', '飢渴', 'blade', 11, 14, 12, 'aura', { t: 5, r: 3, gap: 0.5, k: 0.5, vamp: 0.15, color: '#B83AE8' }, '妖刀持續吸取生命 5 秒：身邊的敵人持續受傷，傷害的 15% 變成你的生命。', 'yoto'],
     ['yt_four', '妖斬・四方', 'blade', 18, 10, 14, 'xslash', { n: 4, around: 1, len: 4, width: 0.7, k: 1.5, color: '#B83AE8' }, '妖刀往前後左右同時斬出四刀。', 'yoto'],
-    ['yt_eclipse', '蝕月', 'blade', 24, 24, 20, 'combo', { parts: [['buff', { t: 6, dmg: 1.3, vamp: 0.1, color: '#B83AE8' }], ['nova', { r: 4.5, k: 2.4, curse: 4, color: '#B83AE8' }]] }, '妖刀的魔力質吞掉四周的光：周圍的敵人重傷並被詛咒；6 秒內傷害 +30%、吸血。', 'yoto'],
+    ['yt_eclipse', '蝕月', 'blade', 24, 24, 20, 'combo', { parts: [['buff', { t: 6, dmg: 1.3, vamp: 0.05, color: '#B83AE8' }], ['nova', { r: 4.5, k: 2.4, curse: 4, color: '#B83AE8' }]] }, '妖刀的魔力質吞掉四周的光：周圍的敵人重傷並被詛咒；6 秒內傷害 +30%、吸血 5%。', 'yoto'],
     ['tp_shieldwall', '聖盾陣', 'knight', 11, 16, 14, 'buff', { t: 5, def: 0.4, kekkai: 1, color: C.gold }, '架起聖盾陣 5 秒：受到的傷害 −40%，擋下飛過來的投射物。', 'templar'],
     ['tp_verdict', '審判之刃', 'knight', 18, 10, 16, 'line', { len: 6, width: 1.4, k: 3, stun: 1, color: C.holy }, '一劍斬下審判，前方一直線的敵人暈眩。', 'templar'],
     ['tp_unfallen', '不落', 'knight', 24, 28, 22, 'combo', { parts: [['guard', { t: 2.5, color: C.gold }], ['nova', { r: 4, k: 1.6, kb: 2, taunt: 6, color: C.gold }], ['buff', { t: 6, def: 0.4, color: C.gold }]] }, '2.5 秒內不會受傷，震開周圍的敵人並讓牠們改打你；6 秒內受到的傷害 −40%。', 'templar'],

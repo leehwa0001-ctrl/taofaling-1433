@@ -58,7 +58,7 @@
 
   // ---------- 樓層效果、領主層 ----------
   const MOD_MORE = {
-    fog: ['霧很濃：只看得到面前的半圈（準心那一邊 8 公尺），背後 2.5 公尺外就看不見——轉準心才看得到後面的遺跡生物。'], treasure: ['這一層多兩個寶箱。'], crystal: ['牆邊長滿可以掘的魔晶礦，帶十字鎬來。'],
+    fog: ['霧很濃：只看得到身邊 5 公尺，和準心那一邊 45 度的扇形（一路看得到底）——轉準心才看得到旁邊、後面的遺跡生物。'], treasure: ['這一層多兩個寶箱。'], crystal: ['牆邊長滿可以掘的魔晶礦，帶十字鎬來。'],
     nest: ['遺跡生物多五成（上鎖的房間會再多叫幾隻）；打倒的經驗 +30%。'], silent: ['遺跡生物少一半，但剩下的每一隻都帶著特性（〔迅捷〕〔堅甲〕……）。'],
     rockfall: ['每 3.5～6 秒，你身邊會出現兩個圈，1.1 秒後天花板的石頭掉下來：砸到扣生命上限的 10%。'], mana: ['技能冷卻 −30%，但遺跡生物的傷害 +15%。'], lost: ['小地圖看不到，只能靠自己記路。']
   };
@@ -90,7 +90,8 @@
       const el = $(id); if (!el) return;
       if (!el.dataset.hi) { el.dataset.hi = 1; el.onclick = null; el.addEventListener('click', e => { e.stopPropagation(); if (W().run && !(R.sheetOpen && R.sheetOpen())) fn(); }); }
       el.title = tip; el.classList.add('hi-click');
-      if (!el.querySelector(':scope > .hi-q')) { const q = document.createElement('i'); q.className = 'hi-q'; q.textContent = '?'; el.appendChild(q); }   // kesentfx.js 每 0.4 秒重寫內容，問號不見了就再掛回去
+      // 問號用 CSS 的 ::after 畫在框上（2026-10-05 作者：場地的問號一直閃——原本是塞一個 <i> 進去，kesentfx.js、hudframe.js 重寫內容就洗掉，0.25 秒後才補回來）
+      const old = el.querySelector(':scope > .hi-q'); if (old) old.remove();
     });
   };
   let t = 0;
@@ -100,7 +101,7 @@
   const css = document.createElement('style');
   css.textContent = '.hi-click{pointer-events:auto!important;cursor:pointer;position:relative;padding-right:24px!important;transition:filter .15s}'
     + '.hi-click:hover{filter:brightness(1.25)}'
-    + '.hi-q{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:15px;height:15px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:10.5px;font-weight:800;color:#140E0A;background:rgba(255,236,190,.9);box-shadow:0 0 0 1px rgba(0,0,0,.5);z-index:2;pointer-events:none}'
+    + '.hi-click::after{content:"?";position:absolute;right:5px;top:50%;transform:translateY(-50%);width:15px;height:15px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:10.5px;font-weight:800;color:#140E0A;background:rgba(255,236,190,.9);box-shadow:0 0 0 1px rgba(0,0,0,.5);z-index:2;pointer-events:none}'
     + '.hi-list li{margin:3px 0;line-height:1.55}';
   document.head.appendChild(css);
 })(window.R);

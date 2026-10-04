@@ -5,6 +5,8 @@
 //   上下樓跟著房主走；房主回到地面之後，其他人自己碰回歸水晶回去。
 // - 看得到彼此：位置、方向、出手、翻滾、倒下（每秒 10 次）；頭上有名字。
 // - 第一階段還沒做：遺跡生物、寶箱、掉落各算各的（第二階段改成房主決定遺跡生物）。
+// - 第二階段（net2.js）：遺跡生物、寶箱、倒下都同步；這個檔多了：別人的位置表 N.remotes、不認得的訊息交給 N.onMsg2／N.onServer2、
+//   斷線 30 秒內自動重新連線回原本的座位（伺服器有 caps 才會）、房主換人（伺服器送 { t: 'host', id }）。
 (function (R) {
   const W = () => R.W, S = () => R.S, $ = id => document.getElementById(id), esc = s => R.esc(s);
   const PROD = 'wss://taofaling-1433.1433.workers.dev';   // Cloudflare（server-cf/，2026-10-05 上線）
@@ -36,7 +38,7 @@
 
   // ---------- 連線 ----------
   // 一次只允許一個開房／加入請求；舊 socket 的事件不能動到新連線。
-  let connecting = null, cancelConnect = null, request = null, requestTimer = null;
+  let connecting = null, cancelConnect = null, request = null, requestTimer = null, rejoining = false;
   const finishRequest = () => { request = null; clearTimeout(requestTimer); requestTimer = null; };
   const disconnect = why => {
     const ws = N.ws; N.ws = null;
@@ -64,10 +66,12 @@
     const wake = setTimeout(() => { if (N.ws === ws && !opened) { N.busy = '伺服器仍在連線中，請稍候……'; refresh(); } }, 3000);
     const giveUp = setTimeout(() => { if (N.ws === ws && !opened) disconnect('伺服器一直沒有回應（' + url + '）。'); }, 75000);
     ws.onopen = () => { if (N.ws !== ws) { ws.close(); return; } opened = true; settle(); };
-    ws.onerror = () => { if (N.ws === ws && !opened) disconnect('連不上伺服器（' + url + '）。'); };
+    ws.onerror = () => { if (N.ws === ws && !opened) { if (rejoining) { N.ws = null; settle(new Error('rejoin')); return; } disconnect('連不上伺服器（' + url + '）。'); } };
     ws.onclose = () => {
       if (N.ws !== ws) return;
       N.ws = null; settle(new Error('伺服器在連線完成前關閉了連線。')); finishRequest();
+      if (rejoining) return;   // 重新連線中：rejoin() 自己再試
+      if (opened && N.room && N.token && N.caps) { rejoin(); return; }   // 伺服器會保留座位 30 秒：重新連回去
       drop(opened && N.room ? '和伺服器斷線了。' : '');
     };
     ws.onmessage = ev => {
@@ -91,6 +95,18 @@
   N.create = () => act({ t: 'create' });
   N.join = code => { code = String(code || '').trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(code)) { R.toast('房號是 4 個英文字母。'); return; } return act({ t: 'join', code }); };
   N.leave = () => disconnect('離開了房間。');
+  // 斷線：30 秒內一直試著連回原本的房間、原本的座位（伺服器認 id＋token）
+  const rejoin = () => {
+    const code = N.room, me = N.me, token = N.token, t0 = Date.now(); rejoining = true; N.busy = '重新連線中……'; refresh();
+    R.toast('和伺服器斷線了：重新連線中（30 秒內）……', '#FFB45A'); if (N.onAway) N.onAway(true);
+    const once = () => {
+      if (!rejoining || N.room !== code) return;
+      if (Date.now() - t0 > 30000) { rejoining = false; drop('重新連線失敗，這一趟變回一個人。'); return; }
+      connect().then(ws => { if (!rejoining || N.ws !== ws || ws.readyState !== 1) return; ws.send(JSON.stringify(Object.assign({ t: 'join', code, rejoin: { id: me, token } }, myCard(), { v: PROTOCOL }))); setTimeout(() => { if (rejoining && N.ws === ws) { try { ws.close(); } catch (e) { } N.ws = null; setTimeout(once, 1500); } }, 6000); },
+        () => setTimeout(once, 2500));
+    };
+    setTimeout(once, 600);
+  };
   N.setServer = value => {
     const url = wsOf(value);
     if (url) { try { const u = new URL(url); if (!['ws:', 'wss:'].includes(u.protocol) || u.username || u.password || u.hash || (location.protocol === 'https:' && u.protocol !== 'wss:')) throw Error(); } catch (e) { R.toast('請填有效的連線網址；線上版需要 wss:// 或 https://。'); return false; } }
@@ -104,7 +120,7 @@
 
   // 離開房間（自己離開、房主走了、斷線）：遺跡裡的人變回一個人，樓層不再跟著別人
   const drop = why => {
-    const had = !!N.room; finishRequest();
+    const had = !!N.room; finishRequest(); rejoining = false; N.token = null; if (N.onDrop) try { N.onDrop(why); } catch (e) { }
     N.room = null; N.me = null; N.host = null; N.members = []; N.busy = '';
     clearRemotes(); const run = W().run; if (run && run.coop) run.coop.solo = true;
     pending = null; lastFloor = null; guestGo = false; cks.mine = {}; cks.host = {};
@@ -118,16 +134,21 @@
     if (o.t === 'room') {
       if (o.v !== PROTOCOL) { disconnect('伺服器版本不相容。'); R.toast('伺服器版本不相容，請更新伺服器和遊戲。', '#FF9A6A'); return; }
       finishRequest();
-      N.room = o.code; N.me = o.you; N.host = o.host; N.members = o.members || []; N.busy = '';
-      R.toast(isHost() ? '開好房間了：房號 ' + o.code + '。把房號告訴朋友。' : '加入了 ' + nameOf(N.host) + ' 的房間。', '#7FE0FF');
+      const back = rejoining; rejoining = false;
+      N.room = o.code; N.me = o.you; N.host = o.host; N.members = o.members || []; N.busy = ''; N.token = o.token || null; N.caps = o.caps || 0;
+      R.toast(back ? '重新連上了。' : isHost() ? '開好房間了：房號 ' + o.code + '。把房號告訴朋友。' : '加入了 ' + nameOf(N.host) + ' 的房間。', '#7FE0FF');
+      if (N.onRoom) try { N.onRoom(o, back); } catch (e) { console.warn('[net]', e); }
     } else if (o.t === 'join') {
       N.members.push(o.member); R.toast(o.member.name + ' 加入了房間。', '#7FE0FF');
       if (isHost() && coop()) N.send({ k: 'busy' }, o.member.id);   // 房主已經在遺跡裡：下一趟再一起
     } else if (o.t === 'leave') {
       R.toast(nameOf(o.id) + ' 離開了房間。', '#FFB45A'); N.members = N.members.filter(m => m.id !== o.id); dropRemote(o.id);
     } else if (o.t === 'closed') drop(o.why);
-    else if (o.t === 'err') { finishRequest(); N.busy = ''; R.toast(o.msg, '#FF9A6A'); }
+    else if (o.t === 'err') { finishRequest(); N.busy = ''; if (rejoining) { rejoining = false; drop('重新連線失敗（' + o.msg + '），這一趟變回一個人。'); } else R.toast(o.msg, '#FF9A6A'); }
     else if (o.t === 'msg') onMsg(o.from, o.d || {});
+    else if (o.t === 'host') { N.host = o.id; R.toast(o.id === N.me ? '房主離開了：現在你是房主。' : nameOf(o.id) + ' 成為房主。', '#7FE0FF'); if (N.onServer2) N.onServer2(o); }
+    else if (o.t === 'away') { R.toast(nameOf(o.id) + ' 斷線了：30 秒內連回來就能接著玩……', '#FFB45A'); dropRemote(o.id); if (N.onServer2) N.onServer2(o); }
+    else if (o.t === 'back') { R.toast(nameOf(o.id) + ' 重新連上了。', '#7FE0FF'); if (N.onServer2) N.onServer2(o); }
     refresh();
   };
 
@@ -225,10 +246,12 @@
     else if (d.k === 'end' && from === N.host) { const run = coop(); if (run && !run.coop.host && run.coop.seed === d.rid) { run.coop.solo = true; clearRemotes(); R.banner(nameOf(N.host) + ' 回到地面了', '剩下的路自己走：碰回歸水晶就能回去'); } }
     else if (d.k === 'bye' && coop() && d.rid === coop().coop.seed) dropRemote(from);
     else if (d.k === 'p') presence(from, d);
+    else if (N.onMsg2) N.onMsg2(from, d);   // 第二階段（net2.js）
   };
 
   // ---------- 看得到彼此 ----------
   const remotes = new Map();   // id → { h, x, z, tx, tz, yaw, sp, t, seq }
+  N.remotes = remotes;   // net2.js：房主的遺跡生物也要打別人
   // 頭上的名字：用 HTML 疊在畫面上（像素畫面縮小之後，畫在 3D 裡的字看不清楚）；樣式借 monlabel.js 的 .mtag
   const tagEl = name => {
     let layer = $('r-ptags'); if (!layer) { layer = document.createElement('div'); layer.id = 'r-ptags'; layer.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2'; const nums = $('r-nums'); nums.parentNode.insertBefore(layer, nums); }

@@ -81,7 +81,7 @@
     const kb = (o.kb != null ? o.kb : o.primary ? ws.kb : 0) * (e.def.boss ? 0.15 : 1);
     if (kb) { const a = angTo(P, e); e.kx += Math.sin(a) * kb * 6; e.kz += Math.cos(a) * kb * 6; }
     if (ws.vamp && o.primary) R.healP(dmg * ws.vamp, true);
-    if (P.buff.rage > 0) R.healP(dmg * 0.05, true);
+    if (P.buff.rage > 0) R.healP(dmg * 0.025, true);
     if (e.hp <= 0) R.killEnemy(e);
     return dmg;
   };
@@ -176,7 +176,7 @@
 
   // ---------- 投射物 ----------
   const SHOT_LOOK = {
-    bullet: { c: '#FFE08A', s: [0.12, 0.12, 0.5] }, arrow: { c: '#E8D8B8', s: [0.06, 0.06, 0.9] }, orb: { c: '#B89AFF', r: 0.26, glow: 1 }, holy: { c: '#FFE8A0', r: 0.24, glow: 1 },
+    bullet: { c: '#FFE08A', s: [0.12, 0.12, 0.5] }, arrow: { c: '#E8D8B8', s: [0.11, 0.11, 0.9] }, orb: { c: '#B89AFF', r: 0.26, glow: 1 }, holy: { c: '#FFE8A0', r: 0.24, glow: 1 },
     fire: { c: '#FF8A3A', r: 0.5, glow: 1 }, eorb: { c: '#7FD8FF', r: 0.24, glow: 1 }, ering: { c: '#FF5A6A', r: 0.22, glow: 1 }, sand: { c: '#D8B880', r: 0.3 }, cold: { c: '#BFE6FF', r: 0.28, glow: 1 },
     web: { c: '#EDEDED', r: 0.3 }, seed: { c: '#9ACF6A', r: 0.16 }, feather: { c: '#1E1E26', s: [0.08, 0.04, 0.7] }, kasa: { c: '#FFB0A0', r: 0.2, glow: 1 }, grenade: { c: '#6A6A70', r: 0.3 }, hama: { c: '#FFFFFF', s: [0.1, 0.1, 1.4], glow: 1 }, spirit: { c: '#E8E0FF', r: 0.18, glow: 1 }
   };
@@ -424,7 +424,7 @@
     const w = W();
     for (const e of w.enemies) {
       if (e.dead) continue;
-      if (e.dormant && Math.abs(e.x - w.P.x) + Math.abs(e.z - w.P.z) > 46) continue;
+      if (e.dormant && (R.farFromAll ? R.farFromAll(e, 46) : Math.abs(e.x - w.P.x) + Math.abs(e.z - w.P.z) > 46)) continue;   // 多人連線（net2.js）：離每一個人都遠才不動
       // 目標：玩家或隊友之中最近的（騎士挑釁時先打騎士）
       e.tgtT = (e.tgtT || 0) - dt; if (e.tgtT <= 0 || !e.tgt || e.tgt.downed || e.tgt.dead) { e.tgtT = 0.8; e.tgt = R.pickTarget ? R.pickTarget(e) : w.P; }
       const P = e.tgt || w.P;
@@ -474,8 +474,10 @@
           if (e.dashT > 0) { e.dashT -= dt; const ox = e.x, oz = e.z; move(e, e.dashA, 12, dt); moving = true; if (d < 1.2 && !e.bit) { e.bit = true; hurtT(P, e.dmg, e, { knock: 0.3 }); } if (R.pointBlocked(e.x, e.z)) { e.x = ox; e.z = oz; e.dashT = 0; st.stun = 1; R.shake(0.2); } }
           else if (e.cd <= 0) { e.cd = 2.5; e.dashT = 1.2; e.dashA = a; e.bit = false; } else e.yaw = a;
         } else if (ai === 'ambush') {
-          if (!e.up) { if (walk) { move(e, a, sp * 1.2, dt); moving = true; } e.m.g.position.y = -0.6; if (d < 2.2) { e.up = 1.2; hurtT(P, e.dmg, e); const k = 1.6; P.x += Math.sin(a + Math.PI) * k; P.z += Math.cos(a + Math.PI) * k; } }
-          else { e.up -= dt; e.m.g.position.y = 0; if (e.up <= 0) { e.up = 0; e.cd = 1.5; } }
+          // 2026-10-05 作者：黑泥巨口會黏在玩家身上出不去——以前藏著的時候追得比人快、咬完沒有冷卻、還把人往嘴裡拉 1.6 公尺不管牆。
+          // 改成：藏著的時候只在 8 公尺內慢慢挪過來，咬一口把人吐開（會被牆擋住），咬完 3.5 秒內不追也不咬。
+          if (!e.up) { if (walk && e.cd <= 0 && d > 1.4 && d < 8) { move(e, a, sp * 0.7, dt); moving = true; } e.m.g.position.y = -0.6; if (d < 2.2 && e.cd <= 0) { e.up = 1.2; e.cd = 3.5; hurtT(P, e.dmg, e); const k = 1.4; P.x += Math.sin(a) * k; P.z += Math.cos(a) * k; R.collide(P, 0.42); } }
+          else { e.up -= dt; e.m.g.position.y = 0; if (e.up <= 0) { e.up = 0; e.cd = Math.max(e.cd, 1.5); } }
           e.yaw = a;
         } else if (ai === 'skitter') {
           // 木魂：被打就四散逃開，過一下又圍回來吐種子

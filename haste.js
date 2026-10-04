@@ -7,6 +7,8 @@
 //   寫 *= 1 + v（代價，例如天賦「狂速」）照舊是乘的。算完（最外面）換回普通的數字：讀 P.skillCdMult 就是最後的倍率，P.haste 是急速。
 // - 不算急速、照舊乘的：魔力潮（場地效果，冷卻 −30%，ruinvar.js 用 R.cdMul）、祭壇的「靈之祝福」（遺跡裡當場乘）、技能熟練的星（每星 −5%）。
 // - 說明文字：開頁的時候把資料裡的「技能冷卻 −X%」換成「技能急速 +N」（R.hasteTxt）。
+// - 2026-10-05 作者：裝備的技能急速堆了快 300，角色總數值只有 75——combat.js 把詞綴「專注」算成「冷卻 × (1 − 合計％)」，
+//   合計超過 100％（急速超過 250）的時候變成 0 或負數，這裡原本就整個不算了。現在直接照合計％換算成急速，多少都算。
 // 放在 combat.js 後面（包 R.calcPlayer 最裡面）。
 (function (R) {
   const K = R.HASTE_K = 2.5;
@@ -25,7 +27,11 @@
   const cp0 = R.calcPlayer;
   R.calcPlayer = cls => {
     const P = cp0(cls);
-    try { const m0 = P.skillCdMult || 1, wx = P.adv === 'waixiu' ? 0.85 : 1, add = arm(P); add(m0 / wx); add(wx); } catch (e) { console.warn('[haste]', e); }
+    try {
+      const m0 = typeof P.skillCdMult === 'number' ? P.skillCdMult : 1, wx = P.adv === 'waixiu' ? 0.85 : 1, add = arm(P), base = m0 / wx;
+      if (base < 1) P.haste += (1 - base) * 100 * K; else add(base);   // 1 − 專注合計％（超過 100％ 也照算）
+      add(wx);
+    } catch (e) { console.warn('[haste]', e); }
     return P;
   };
 

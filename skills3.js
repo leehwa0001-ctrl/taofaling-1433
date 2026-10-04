@@ -30,7 +30,7 @@
     // 附魔師
     ['en_gale', '附魔・風', 'enchanter', 17, 14, 10, 'buff', { t: 8, speed: 1.2, crit: 0.1, color: '#BFF0D0' }, '把風的咒文刻進鞋底和刀身：8 秒內移動 +20%、暴擊率 +10%。'],
     ['en_cross', '十字刻印', 'enchanter', 19, 8, 12, 'xslash', { n: 2, spread: 1.57, len: 4, width: 0.7, k: 1.6, color: '#FFB86A' }, '刻出一個發光的十字，兩刀交錯斬出。'],
-    ['en_drainblade', '吸魔刃', 'enchanter', 21, 14, 12, 'buff', { t: 8, vamp: 0.08, dmg: 1.1, color: '#C86AA8' }, '在刀刃刻上吸魔的咒文：8 秒內造成傷害的 8% 回復成生命。'],
+    ['en_drainblade', '吸魔刃', 'enchanter', 21, 14, 12, 'buff', { t: 8, vamp: 0.04, dmg: 1.1, color: '#C86AA8' }, '在刀刃刻上吸魔的咒文：8 秒內造成傷害的 4% 回復成生命。'],
     ['en_quake', '地裂斬', 'enchanter', 23, 10, 16, 'wave', { n: 6, step: 1.8, r: 1.6, k: 1.2, kb: 1, gap: 70, fx: 'ring', color: '#C8A878' }, '刀插進地面，咒文沿著地面一路裂過去。'],
     ['en_masterwork', '傑作', 'enchanter', 25, 24, 22, 'buff', { t: 8, dmg: 1.35, burn: 1, frost: 1, shock: 1, color: '#FFFFFF' }, '一生一次的刻印：8 秒內焰、霜、雷一起附上，傷害 +35%。'],
     // 符卷師
@@ -65,7 +65,7 @@
     // 萬獸師
     ['bl_alpha', '頭狼', 'summoner', 11, 16, 20, 'pet', { beast: 'okuriinu', t: 16, k: 1.4, color: '#C8A878' }, '捏出一隻特別大的頭狼，16 秒。', 'beastlord'],
     ['bl_stampede', '奔騰', 'summoner', 18, 12, 18, 'wave', { n: 6, step: 1.8, r: 1.8, k: 1.2, kb: 2.5, gap: 70, fx: 'ring', color: '#C8A878' }, '一群泥做的野獸往前狂奔，撞翻一路的敵人。', 'beastlord'],
-    ['bl_feral', '野性', 'summoner', 21, 18, 14, 'buff', { t: 10, dmg: 1.2, speed: 1.15, vamp: 0.04, color: '#C8A878' }, '和獸群一起野起來：10 秒內傷害 +20%、移動 +15%、吸血 4%。', 'beastlord'],
+    ['bl_feral', '野性', 'summoner', 21, 18, 14, 'buff', { t: 10, dmg: 1.2, speed: 1.15, vamp: 0.02, color: '#C8A878' }, '和獸群一起野起來：10 秒內傷害 +20%、移動 +15%、吸血 2%。', 'beastlord'],
     ['bl_zoo', '百獸夜行', 'summoner', 24, 26, 34, 'pet', { beast: 'okuriinu', n: 6, t: 12, k: 0.6, color: '#C8A878' }, '六隻土狼一次放出去。', 'beastlord'],
     // 靈媒師
     ['md_wail', '哀嚎', 'summoner', 11, 12, 14, 'nova', { r: 4, k: 1, stun: 1, color: '#B8A8E8' }, '怨靈一起哀嚎：周圍的敵人嚇得愣住。', 'medium'],
@@ -140,7 +140,7 @@
     ['in_iron', '鐵骨功', 'monk', 21, 18, 12, 'buff', { t: 10, def: 0.35, dmg: 1.1, color: '#FFD27A' }, '把魔力質注進骨頭：10 秒內受到的傷害 −35%、傷害 +10%。', 'inner'],
     ['in_burst', '內勁爆發', 'monk', 24, 16, 22, 'nova', { r: 4, k: 3, kb: 4, color: '#FFD27A' }, '把積在體內的魔力一口氣爆開。', 'inner'],
     // 鬼武者（戰士）
-    ['on_blood', '鬼血', 'warrior', 18, 16, 12, 'buff', { t: 8, dmg: 1.3, vamp: 0.06, color: '#C83A3A' }, '鬼面的惡意吸著血：8 秒內傷害 +30%、吸血 6%。', 'onimusha'],
+    ['on_blood', '鬼血', 'warrior', 18, 16, 12, 'buff', { t: 8, dmg: 1.3, vamp: 0.03, color: '#C83A3A' }, '鬼面的惡意吸著血：8 秒內傷害 +30%、吸血 3%。', 'onimusha'],
     ['on_cleave', '鬼哭斬', 'warrior', 21, 10, 16, 'arc', { range: 3.8, arc: 3.6, k: 2.8, kb: 2, stun: 0.6 }, '戴著鬼面橫掃一刀，周圍的敵人嚇得愣住。', 'onimusha'],
     ['on_rage', '百鬼夜行', 'warrior', 24, 24, 24, 'combo', { parts: [['buff', { t: 8, dmg: 1.4, def: -0.15, color: '#C83A3A' }], ['nova', { r: 4.5, k: 2.4, stun: 1, color: '#8A2A2A' }, 150]] }, '讓鬼面完全上身：周圍的敵人重傷暈眩，8 秒內傷害 +40%（受到的傷害 +15%）。', 'onimusha'],
     // 外修者（術士）

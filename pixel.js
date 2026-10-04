@@ -52,9 +52,9 @@
       fragmentShader: [
         'uniform sampler2D tColor; uniform sampler2D tDepth; uniform vec2 res; uniform float scale; uniform vec2 off; uniform float dRange; uniform float edge;',
         'uniform float persp; uniform float cNear; uniform float cFar; uniform float fogOn; uniform mat4 projInv; uniform mat4 camWorld; uniform vec4 fogArc; uniform vec4 fogArc2;',
-        // 濃霧（fogarc.js）：用深度換回世界座標，算這個像素在半圓的霧裡多濃（跟材質裡的霧同一個算法）
+        // 濃霧（fogarc.js）：用深度換回世界座標，算這個像素在扇形外的霧裡多濃（跟材質裡的霧同一個算法）
         'float fogAt(vec2 p){ vec4 v = projInv * vec4((p + 0.5) / res * 2.0 - 1.0, texture2D(tDepth, (p + 0.5) / res).x * 2.0 - 1.0, 1.0); vec3 w = (camWorld * vec4(v.xyz / v.w, 1.0)).xyz;',
-        '  vec2 fd = w.xz - fogArc.xy; float fl = length(fd), fc = fl > 0.001 ? dot(fd / fl, fogArc.zw) : 1.0, fr = mix(fogArc2.y, fogArc2.x, smoothstep(-0.1, 0.1, fc)), fs = min(fogArc2.z, fr * 0.6); return smoothstep(fr - fs, fr, fl); }',
+        '  vec2 fd = w.xz - fogArc.xy; float fl = length(fd), fc = fl > 0.001 ? dot(fd / fl, fogArc.zw) : 1.0, fs = min(fogArc2.z, fogArc2.y * 0.6); return min(smoothstep(fogArc2.y - fs, fogArc2.y, fl), 1.0 - smoothstep(fogArc2.x - 0.03, fogArc2.x + 0.03, fc)); }',
         // 透視鏡頭的深度不是線性的，換回「離鏡頭幾公尺」再比
         'float dep(vec2 p){ float z = texture2D(tDepth, (p + 0.5) / res).x; return persp > 0.5 ? cNear * cFar / (cFar - z * (cFar - cNear)) : z * dRange; }',
         'void main(){',
