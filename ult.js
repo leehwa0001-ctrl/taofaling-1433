@@ -7,7 +7,15 @@
   const W = () => R.W, $ = id => document.getElementById(id), rnd = Math.random;
   const later = (f, ms) => { const run = W().run; setTimeout(() => { if (W().run === run && run && !run.done) f(); }, ms); };
   const near = (x, z, r) => (W().enemies || []).filter(e => !e.dead && !e.dormant && Math.hypot(e.x - x, e.z - z) < r);
-  const base = P => (P.ws ? P.ws.dmg : 10) * (P.dmgMult || 1);
+  // 大招的傷害基準（2026-10-04 作者：大招傷害大約是普攻的 20～30 倍，調低一半到 10～15 倍）：
+  // 原本＝武器一下的傷害×傷害倍率，打到的時候 R.hurtEnemy 又乘一次傷害倍率——等級越高大招越誇張（30 級就是兩倍）。
+  // 現在＝一下普攻（武器一下的傷害×彈數×段數，不乘傷害倍率）×ULT_K[職業]：照實測調，每個職業的大招打在中間的敵人身上大約是普攻的 10～15 倍。
+  // 補償（傷害削了，每個大招各多一樣好處）在 ultbal.js。monk.js、classes2b.js 的大招也用 R.ultBase。
+  // 實測（K＝1、身邊 2.5 公尺的敵人）：槍手 7、弓 20、戰士 14、術士 13、牧師 13、刀客 20、騎士 12、武術家 10、吟遊 12、召喚 2、術陣 9、附魔 6、符卷 5 倍
+  const ULT_K = R.ULT_K = { gunner: 1.7, archer: 0.6, warrior: 0.85, mage: 0.95, priest: 0.9, blade: 0.6, knight: 1, monk: 1.2, bard: 1, summoner: 1.7, arraymage: 1.3, enchanter: 1.6, scroll: 1.2 };
+  // 調完（30 級實測，身邊 2.5 公尺）：槍手 11、弓 14、戰士 11、術士 12、牧師 11、刀客 10、騎士 11、武術家 14、吟遊 12、術陣 12、附魔 8（＋18 秒附魔）、符卷 8、召喚 5（召喚物各咬各的）；原本 30 級是 13～39 倍
+  R.ultBase = P => { const ws = P.ws || {}; return (ws.dmg || 10) * (ws.pellets > 1 ? ws.pellets : 1) * (ws.hits || 1) * (ULT_K[P.cls] || 1); };
+  const base = P => R.ultBase(P), meter = P => (P.ws ? P.ws.dmg : 10) * (P.dmgMult || 1);   // 量表照舊
   // 職業的光（data.js 的職業顏色有幾個太暗，HUD 和大招用亮一點的）
   const GLOW = R.CLASS_GLOW = { gunner: '#7AB8FF', archer: '#8AE07A', warrior: '#FF8A5A', mage: '#B88AFF', priest: '#FFE08A', blade: '#9AD8FF', knight: '#FFC85A' };
   const col = cls => GLOW[cls] || (R.CLASSES[cls] && R.CLASSES[cls].color) || '#E8C04A';
@@ -32,7 +40,7 @@
   // ---------- 大招量表 ----------
   const gain = v => { const P = W().P, run = W().run; if (!P || !run || P.dead || P.ulting) return; const was = P.ult || 0; P.ult = Math.min(100, was + v); if (was < 100 && P.ult >= 100) { R.toast && R.toast('大招準備好了（V）', col(P.cls)); R.sfx && R.sfx('chest'); } };
   const he0 = R.hurtEnemy;
-  R.hurtEnemy = (e, raw, o) => { const h0 = e && e.hp, r = he0(e, raw, o), P = W().P; if (e && P && h0 > e.hp) gain(Math.min(3, 1.4 * (h0 - Math.max(0, e.hp)) / Math.max(1, base(P)))); return r; };
+  R.hurtEnemy = (e, raw, o) => { const h0 = e && e.hp, r = he0(e, raw, o), P = W().P; if (e && P && h0 > e.hp) gain(Math.min(3, 1.4 * (h0 - Math.max(0, e.hp)) / Math.max(1, meter(P)))); return r; };
   const ke0 = R.killEnemy;
   if (ke0) R.killEnemy = (e, by) => { const was = e && !e.dead, r = ke0(e, by); if (was && e && !e.fake) gain(e.def && e.def.boss ? 25 : 6); return r; };
   const hp0 = R.hurtPlayer;
@@ -51,9 +59,12 @@
       later(() => { R.fx('pillar', x, 0, z, { r: 1.6, color: '#BFE8FF' }); R.fx('boom', x, 0.4, z, { r: 6, color: '#BFE8FF' }); R.aoe(x, z, 6.5, b * 7, { stun: 1.2 }); R.shake && R.shake(0.6); }, 2400);
     } },
     warrior: { name: '天崩斬', sub: '戰士的大招：跳起來劈下，整片地裂開', go: P => {
-      const b = base(P), [x, z] = aimPt(P, 9); P.jump = { t: 0, dur: 0.7, x0: P.x, z0: P.z, x1: x, z1: z }; P.air = 0.7; P.iframe = Math.max(P.iframe || 0, 1);
-      later(() => { R.fx('boom', x, 0.4, z, { r: 6, color: '#FF8A4A' }); R.fx('ring', x, 0.1, z, { r: 9, color: '#FFFFFF' }); R.aoe(x, z, 6, b * 12, { stun: 2, kb: 6 }); R.shake && R.shake(1);
-        for (let k = 0; k < 8; k++) { const an = k / 8 * Math.PI * 2; for (let i = 2; i <= 6; i++) { const [px, pz] = floor(x + Math.sin(an) * i * 1.5, z + Math.cos(an) * i * 1.5); later(() => { R.fx('boom', px, 0.2, pz, { r: 1, color: '#C86A3A' }); R.aoe(px, pz, 1, b * 1.2, { primary: false }); }, i * 70); } } }, 700);
+      // 2026-10-04 作者：戰士的大招傷害太離譜——削弱傷害，但攻擊距離的加成算進大招：攻擊距離比武器原本長多少（ultbal.js 的 range0），
+      // 跳的距離、劈下去的範圍、裂地的長度就大多少（最多 2 倍）
+      const ws = P.ws || {}, rk = Math.max(1, Math.min(2, ws.range0 ? ws.range / ws.range0 : 1));
+      const b = base(P), [x, z] = aimPt(P, 9 * rk); P.jump = { t: 0, dur: 0.7, x0: P.x, z0: P.z, x1: x, z1: z }; P.air = 0.7; P.iframe = Math.max(P.iframe || 0, 1);
+      later(() => { R.fx('boom', x, 0.4, z, { r: 6 * rk, color: '#FF8A4A' }); R.fx('ring', x, 0.1, z, { r: 9 * rk, color: '#FFFFFF' }); R.aoe(x, z, 6 * rk, b * 12, { stun: 2, kb: 6 }); R.shake && R.shake(1);
+        for (let k = 0; k < 8; k++) { const an = k / 8 * Math.PI * 2; for (let i = 2; i <= 6; i++) { const [px, pz] = floor(x + Math.sin(an) * i * 1.5 * rk, z + Math.cos(an) * i * 1.5 * rk); later(() => { R.fx('boom', px, 0.2, pz, { r: rk, color: '#C86A3A' }); R.aoe(px, pz, rk, b * 1.2, { primary: false }); }, i * 70); } } }, 700);
     } },
     mage: { name: '七曜隕星', sub: '術士的大招：七顆隕星砸下來', go: P => {
       const b = base(P), [x, z] = aimPt(P, 13);

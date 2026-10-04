@@ -137,7 +137,7 @@
   // ---------- 奉主的兩座遺跡 ----------
   const SITES = [
     { id: 'hs-barracks', map: 'nation', x: 35.27, z: -21.66, kind: 'ruin', grade: 'mors', type: 'maze', name: '奉主・舊兵營遺跡', src: '遊戲', desc: '奉主還是軍事城市的時候的兵營，地底下整片被遺跡吃掉。營房、射擊場、馬廄一層一層往下長，空的甲冑還在操練。', status: 'lock', lx: -70, ly: 6 },
-    { id: 'hs-arsenal', map: 'nation', x: 35.55, z: -21.38, kind: 'ruin', grade: 'kesent', type: 'city', env: 'volcano', envSkin: 'forge', envName: '熔爐', name: '奉主・兵工廠遺跡', src: '遊戲', desc: '臨海工業區底下的舊兵工廠。入口會自己閉合，只能用傳送水晶投送；熔爐到現在還燒著，地底會噴出熔掉的鐵，最深處有一套沒有主人的大鎧在等。', status: 'lock', lx: 26, ly: 6 }
+    { id: 'hs-arsenal', map: 'nation', x: 35.55, z: -21.38, kind: 'ruin', grade: 'kesent', type: 'city', env: 'forge', name: '奉主・兵工廠遺跡', src: '遊戲', desc: '臨海工業區底下的舊兵工廠。入口會自己閉合，只能用傳送水晶投送；熔爐到現在還燒著，造兵器的機關也還在動——地刺、絞肉機、輸送帶。最深處有一套沒有主人的大鎧在等。', status: 'lock', lx: 26, ly: 6 }
   ];
   SITES.forEach(s => { if (!R.SITES.find(x => x.id === s.id)) R.SITES.push(s); });
   if (R.syncStatus) try { R.syncStatus(); } catch (e) { }
@@ -202,26 +202,11 @@
     const rg = regionOf(run.site); if (!rg || run.site.id === 'kanko' || run.grade.id === 'hunt' || run.grade.id === 'kaso') return;
     const pool = R.sitePool(run.site), main = R.siteMain(run.site).filter(id => pool.includes(id));
     run.grade = Object.assign({}, run.grade, { pool: pool.concat(main, main), _loc: rg.id });   // 主要的再放兩份＝三倍
-    run.region = rg.id; if (run.site.envSkin) run.envSkin = run.site.envSkin;
+    run.region = rg.id;
   };
-  // ---------- 熔爐（作者 2026-10-04：兵工廠的環境叫熔爐）----------
-  // 機制照火山（kesentfx.js 的噴發、鐵水攤、火星；火山的環境生物），名字、說明、顏色換成熔爐的：鐵灰的地板和牆、橘紅的爐火光。
-  const SKIN = { forge: { name: '熔爐', hazard: '噴濺的熔鐵', tip: '場地效果・熔爐：地上冒出紅圈、開始冒火星就快躲開，一秒半後熔鐵會從地底噴出來（噴中非常痛），留下的鐵水會燙人。', from: '火山', pal: { floor: '#2E2A28', wall: '#3E3A38', light: '#FF9A4A', fog: '#1A120E', desc: '熔掉的鐵會從地底噴出來。' } } };
-  R.ENV_SKIN = SKIN;
-  const skinOf = () => { const run = W().run; return run && run.envSkin && SKIN[run.envSkin]; };
+  // 熔爐（兵工廠的環境）：原本是火山換顏色，2026-10-04 改成自己的環境（forge.js 的 R.ENVS.forge：鋼板的廠房、地刺、絞肉機、輸送帶）。
   const lf0 = R.loadFloor;
-  R.loadFloor = (f, o) => {
-    try { localize(W().run); } catch (e) { console.warn('[region]', e); }
-    const sk = skinOf(), env = W().run && W().run.env, keep = sk && R.ENVS[env];
-    if (keep) R.ENVS[env] = Object.assign({}, keep, sk.pal, { name: sk.name });   // 蓋這一層的時候用熔爐的顏色，蓋完放回去
-    try { return lf0(f, o); } finally { if (keep) R.ENVS[env] = keep; }
-  };
-  const hf0 = R.hudFloor;
-  if (hf0) R.hudFloor = (...a) => { const r = hf0(...a); const sk = skinOf(), sm = document.querySelector('#r-where small'); if (sk && sm) sm.textContent = sm.textContent.replace('・' + sk.from, '・' + sk.name); return r; };
-  const to0 = R.toast;
-  if (to0) R.toast = (txt, col) => { const sk = skinOf(); if (sk && typeof txt === 'string' && txt.indexOf('場地效果・' + sk.from) === 0) txt = sk.tip; return to0(txt, col); };
-  const st0 = R.step;
-  R.step = dt => { const r = st0(dt); const sk = skinOf(), el = sk && document.getElementById('kfx-box'); if (el && el.innerHTML.indexOf(sk.from) >= 0) el.innerHTML = el.innerHTML.replace(sk.from, sk.name).replace('噴發的熔岩', sk.hazard); return r; };
+  R.loadFloor = (f, o) => { try { localize(W().run); } catch (e) { console.warn('[region]', e); } return lf0(f, o); };
   // lords.js 每一層會重排領主名單：排完以後換成這座遺跡自己的
   const gf0 = R.genFloor;
   R.genFloor = (run, f) => { const F = gf0(run, f); try { const rg = regionOf(run.site); if (rg && rg.lords && rg.lords[run.site.id] && run.grade.lords) run.grade.lords = rg.lords[run.site.id].slice(); } catch (e) { } return F; };

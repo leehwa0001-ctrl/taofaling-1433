@@ -385,7 +385,7 @@
     P.moveA = ml > 0.1 ? Math.atan2(mx, mz) : null;
     const sprint = R.running() && ml > 0.1 && !P.charging && P.stance <= 0;
     // 跑步：不能攻擊、放技能、翻滾，所以要夠快（2026-10-04 回饋：跑步跟走路沒什麼差；1.42→2）
-    let sp = P.speed * (sprint ? 2 : 1) * (P.slowT > 0 ? 0.6 : 1) * (P.buff.whirl > 0 ? 0.7 : 1) * (P.charging ? 0.55 : 1) * (P.buff.fortress > 0 ? 0.4 : 1) * (run.env === 'desert' || run.env === 'deep' ? 0.88 : 1);
+    let sp = P.speed * (sprint ? 2 : 1) * (P.slowT > 0 ? 0.6 : 1) * (P.buff.whirl > 0 ? 0.7 : 1) * (P.charging ? 0.55 : 1) * (P.guard ? 0.5 : 1) * (P.buff.fortress > 0 ? 0.4 : 1) * (run.env === 'desert' || run.env === 'deep' ? 0.88 : 1);
     if (P.dashT > 0) {
       const ease = P.dashEase ? 0.45 + 1.1 * Math.max(0, P.dashT / P.dashEase) : 1; P.dashT -= dt; const ox = P.x, oz = P.z; P.x += Math.sin(P.dashA) * P.dashSp * ease * dt; P.z += Math.cos(P.dashA) * P.dashSp * ease * dt;
       if (P.dashHit) W.enemies.forEach(e => { if (!e.dead && !P.dashHit.done.has(e) && Math.hypot(e.x - P.x, e.z - P.z) < 1.2 + e.def.size * 0.5) { P.dashHit.done.add(e); R.hurtEnemy(e, P.dashHit.dmg, { stun: P.dashHit.stun, kb: P.dashHit.kb }); } });

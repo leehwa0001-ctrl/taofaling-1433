@@ -170,7 +170,7 @@
 
   // ---------- 大招、光的顏色 ----------
   Object.assign(R.CLASS_GLOW || {}, { bard: '#FFB8E0', summoner: '#A8C88A', arraymage: '#7AC8E8', enchanter: '#FF8A4A', scroll: '#F2D88A' });
-  const pw = P => { const ws = P.ws || {}; return (ws.dmg || 10) * (ws.pellets > 1 ? ws.pellets : 1) * (ws.hits || 1) * (ws.rate || 1) / 2 * (P.dmgMult || 1); };
+  const pw = P => R.ultBase(P);   // 大招的基準：一下普攻×ULT_K（ult.js；原本照攻速算、又多乘一次傷害倍率）
   const cast = (type, s, P) => { try { T[type](Object.assign({ _id: 'ult:' + type + rnd() }, s), P, W(), pw(P)); } catch (e) { console.warn('[classes2b]', e); } };
   if (R.ULTS) Object.assign(R.ULTS, {
     bard: { name: '狂想曲', sub: '吟遊詩人的大招：一首曲子讓你和隊友回滿一大口、周圍的敵人連續被震', go: P => { cast('heal', { pct: 0.5, allies: 0.5, shield: 0.2 }, P); cast('nova', { r: 5, k: 1.6, stun: 1, waves: 5, gap: 300, color: '#FFB8E0' }, P); cast('buff', { t: 10, dmg: 1.3, color: '#FFB8E0' }, P); } },

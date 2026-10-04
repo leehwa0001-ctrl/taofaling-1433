@@ -82,7 +82,7 @@
       // 丟下去的東西一落地就被自動撿回來，背包又滿了，地上那件就一直撿不起來）
       const dist = Math.hypot(d.x - P.x, d.z - P.z);
       if (d.noPick) { if (dist > (d.type === 'mat' ? 4.5 : 2.4)) d.noPick = false; else { held.push(d); return; } }   // 素材在 3.5 公尺內會被吸過來，要走更遠
-      if (dist >= 1.1) return;
+      if (dist >= 1.1) { if (dist > 2.5 && d.warned && !d.noPick) d.warned = false; return; }   // 走開再回來：放不下的話再說一次（原本只說一次，整理完回來還是放不下就什麼都沒說，看起來像撿不起來）
       if (d.type === 'item') {
         const sp = findSpot(d.item);
         if (!sp) { if (!d.warned) { d.warned = true; const mc = matCells(); R.toast('背包放不下：' + R.itemName(d.item) + '（佔 ' + sizeOf(d.item).join('×') + ' 格）。按 I 整理背包' + (mc ? '（素材佔了 ' + mc + ' 格）' : '') + '；整理好再走過來就會撿。', '#FF9A6A'); } held.push(d); return; }
@@ -95,9 +95,8 @@
       d.gone = true; w.scene.remove(d.mesh); R.disposeObj && R.disposeObj(d.mesh);
     });
     if (held.length) w.drops = w.drops.filter(d => !held.includes(d));
-    const r = ud0(dt);
-    if (held.length) held.forEach(d => { if (!d.gone) w.drops.push(d); });
-    return r;
+    try { return ud0(dt); }
+    finally { if (held.length) held.forEach(d => { if (!d.gone && !w.drops.includes(d)) w.drops.push(d); }); }   // 中間出錯也要放回去，不然地上那件就再也撿不起來
   };
   const ht0 = R.hudTick;
   if (ht0) R.hudTick = (...a) => { const r = ht0(...a); const run = W().run, el = $('r-bag'); if (run && run.packId && el) { const u = usage(); el.textContent = u.used + '／' + u.total; } return r; };
@@ -147,6 +146,8 @@
       head.onpointerup = head.onpointercancel = () => { head.onpointermove = null; }; };
   };
   const icon = it => (R.itemIconTag ? R.itemIconTag(it, 'sm') : '');
+  // 丟在地上的位置：離人 2.4 公尺、直線走得到的地方（原本固定丟在右邊 2.4 公尺，靠牆的時候會丟進牆裡，再也撿不回來）
+  const dropAt = P => { for (let i = 0; i < 16; i++) { const a = Math.PI / 2 + i * Math.PI / 8, x = P.x + Math.sin(a) * 2.4, z = P.z + Math.cos(a) * 2.4; if (!R.lineOpen || R.lineOpen(P.x, P.z, x, z)) return [x, z]; } return [P.x, P.z]; };
   R.bagSheet = () => {
     const run = W().run; if (!run) return;
     const g = G(), s = S(), eq = R.equipped(s.cls), pk = PACKS[run.packId] || PACKS.sack, u = usage();
@@ -155,7 +156,7 @@
     const o = occ(g), free = []; for (let i = o.length - 1; i >= 0; i--) if (!o[i]) free.push(i);
     const stacks = []; Object.keys(run.mats).forEach(k => { let n = run.mats[k]; while (n > 0) { stacks.push({ k, n: Math.min(ST(k), n) }); n -= ST(k); } });
     const cells = Array.from({ length: g.w * g.h }, (_, i) => '<div class="tk-cell" style="grid-column:' + (i % g.w + 1) + ';grid-row:' + (Math.floor(i / g.w) + 1) + '"></div>').join('');
-    const items = run.bag.map((it, i) => { const p = g.at.get(it); if (!p) return ''; const [w, h] = dims(it, p.r); return '<div class="tk-item' + (sel && sel.it === it ? ' sel' : '') + '" data-bi="' + i + '" style="grid-column:' + (p.x + 1) + '/span ' + w + ';grid-row:' + (p.y + 1) + '/span ' + h + ';--c:' + R.rarityColor(it) + '">' + icon(it) + '<small>' + esc(R.itemName(it)) + '</small></div>'; }).join('');
+    const items = run.bag.map((it, i) => { const p = g.at.get(it); if (!p) return ''; const [w, h] = dims(it, p.r); return '<div class="tk-item' + (sel && sel.it === it ? ' sel' : '') + '" data-bi="' + i + '" style="grid-column:' + (p.x + 1) + '/span ' + w + ';grid-row:' + (p.y + 1) + '/span ' + h + ';--c:' + R.rarityColor(it) + '">' + icon(it) + '<i class="tk-lv">' + it.ilvl + '</i><small>' + esc(R.itemName(it)) + '</small></div>'; }).join('');
     const matsHtml = stacks.map((st, j) => { const i = free[j]; if (i == null) return ''; return '<div class="tk-mat' + (sel && sel.mat === st.k ? ' sel' : '') + '" data-mk="' + st.k + '" style="grid-column:' + (i % g.w + 1) + ';grid-row:' + (Math.floor(i / g.w) + 1) + ';--c:' + (R.MATS[st.k].color || '#C8B88A') + '" title="' + esc(R.MATS[st.k].name) + '"><i></i><b>' + st.n + '</b></div>'; }).join('');
     const loose = run.bag.filter(it => !g.at.get(it));
     let info = '<p class="note">點一下看說明；拖曳搬動，拖的時候按 R 或右鍵轉向；拖到左邊的裝備欄就是穿上。</p>';
@@ -167,7 +168,7 @@
       const it = sel.it || eq[sel.slot];
       if (it) {
         const k = slotOf(it), can = k && R.GEAR_KEYS.includes(k) && (!R.canUse || R.canUse(it, s.cls));
-        info = '<div class="tk-info"><b style="color:' + R.rarityColor(it) + '">' + esc(R.itemName(it)) + '</b><small>' + esc(R.itemLines(it).join('・')) + '・佔 ' + sizeOf(it).join('×') + ' 格</small><div class="row">'
+        info = '<div class="tk-info"><b style="color:' + R.rarityColor(it) + '">' + esc(R.itemName(it)) + '</b>' + (R.itemInfo ? R.itemInfo(it, '佔 ' + sizeOf(it).join('×') + ' 格') : '<small>' + esc(R.itemLines(it).join('・')) + '・佔 ' + sizeOf(it).join('×') + ' 格</small>') + '<div class="row">'
           + (sel.it ? (can ? '<button type="button" class="btn pri" data-act="eq">' + (eq[k] ? '換上' : '穿上') + '</button>' : '') + '<button type="button" class="btn" data-act="rot">轉向</button><button type="button" class="btn" data-act="drop">丟在地上</button>'
             : (sel.slot !== 'weapon' ? '<button type="button" class="btn" data-act="uneq">脫下（放進背包）</button>' : '<span class="note">武器只能換，不能空手。</span>'))
           + '</div></div>';
@@ -185,15 +186,15 @@
     const box = $('r-sheet');
     box.querySelectorAll('[data-slot]').forEach(el => { el.onclick = () => { sel = { slot: el.dataset.slot }; R.bagSheet(); }; });
     box.querySelectorAll('[data-mk]').forEach(el => { el.onclick = () => { sel = { mat: el.dataset.mk }; R.bagSheet(); }; });
-    box.querySelectorAll('[data-mdrop]').forEach(el => { el.onclick = () => { const k = sel && sel.mat, n = Math.min(el.dataset.mdrop === 'all' ? 1e9 : (k ? ST(k) : 10), (k && run.mats[k]) || 0); if (!n) return; run.mats[k] -= n; if (run.mats[k] <= 0) { delete run.mats[k]; sel = null; } const P = W().P; if (R.addDrop && P) { const d = R.addDrop({ type: 'mat', mat: k, n, x: P.x + 2.4, z: P.z }); if (d) d.noPick = true; } R.bagSheet(); }; });
-    box.querySelectorAll('[data-dm]').forEach(el => { el.onclick = () => { const k = el.dataset.dm, n = Math.min(ST(k), run.mats[k] || 0); if (!n) return; run.mats[k] -= n; if (run.mats[k] <= 0) delete run.mats[k]; const P = W().P; if (R.addDrop && P) { const d = R.addDrop({ type: 'mat', mat: k, n, x: P.x + 2.4, z: P.z }); if (d) d.noPick = true; } R.bagSheet(); }; });
+    box.querySelectorAll('[data-mdrop]').forEach(el => { el.onclick = () => { const k = sel && sel.mat, n = Math.min(el.dataset.mdrop === 'all' ? 1e9 : (k ? ST(k) : 10), (k && run.mats[k]) || 0); if (!n) return; run.mats[k] -= n; if (run.mats[k] <= 0) { delete run.mats[k]; sel = null; } const P = W().P; if (R.addDrop && P) { const [x, z] = dropAt(P), d = R.addDrop({ type: 'mat', mat: k, n, x, z, from: [P.x, P.z] }); if (d) d.noPick = true; } R.bagSheet(); }; });
+    box.querySelectorAll('[data-dm]').forEach(el => { el.onclick = () => { const k = el.dataset.dm, n = Math.min(ST(k), run.mats[k] || 0); if (!n) return; run.mats[k] -= n; if (run.mats[k] <= 0) delete run.mats[k]; const P = W().P; if (R.addDrop && P) { const [x, z] = dropAt(P), d = R.addDrop({ type: 'mat', mat: k, n, x, z, from: [P.x, P.z] }); if (d) d.noPick = true; } R.bagSheet(); }; });
     box.querySelectorAll('[data-loose]').forEach(el => { el.onclick = () => { const it = run.bag[+el.dataset.loose], sp = it && findSpot(it); if (sp) { g.at.set(it, sp); R.bagSheet(); } else R.toast('還是放不下。'); }; });
     box.querySelectorAll('[data-act]').forEach(el => { el.onclick = () => {
       const a = el.dataset.act, it = sel && sel.it; let err = null;
       if (a === 'eq' && it) { err = equip(it); if (!err) sel = { slot: slotOf(it) }; }
       else if (a === 'uneq' && sel.slot) { const was = R.equipped(s.cls)[sel.slot]; err = unequip(sel.slot); if (!err) sel = { it: was }; }
       else if (a === 'rot' && it) { const p = g.at.get(it); if (p && fitsAt(it, p.x, p.y, 1 - p.r, it)) p.r = 1 - p.r; else { const sp = findSpot(it, it); if (sp && sp.r !== (p && p.r)) g.at.set(it, sp); else err = '轉不過來（旁邊沒有空間）。'; } }
-      else if (a === 'drop' && it) { run.bag = run.bag.filter(x => x !== it); g.at.delete(it); const P = W().P; if (R.dropItem && P) { const d = R.dropItem(it, P.x + 2.4, P.z); if (d) { d.warned = true; d.noPick = true; } } sel = null; }
+      else if (a === 'drop' && it) { run.bag = run.bag.filter(x => x !== it); g.at.delete(it); const P = W().P; if (R.addDrop && P) { const [x, z] = dropAt(P), d = R.addDrop({ type: 'item', item: it, x, z, from: [P.x, P.z] }); if (d) { d.warned = true; d.noPick = true; } } sel = null; }
       if (err) R.toast(err, '#FF9A6A'); R.bagSheet();
     }; });
     // 拖曳

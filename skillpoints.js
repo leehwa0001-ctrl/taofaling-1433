@@ -38,6 +38,7 @@
     Object.values(R.SKILL_LIB || {}).forEach(s => { if (s.cls === cls && st.lv >= (R.skillNeedLv ? R.skillNeedLv(s, st) : s.lv) && (!s.adv || s.adv === st.adv)) out.push(s.id); });
     return Array.from(new Set(out)).filter(id => R.SKILLS[id]);
   };
+  R.skillsLearned = learnedOf; R.SKILL_PROF = PROF;   // talentui.js 用
 
   // ---------- 效果：技能的傷害（技能書的「型」）、冷卻 ----------
   const T = R.SKILL_TYPES; let depth = 0;

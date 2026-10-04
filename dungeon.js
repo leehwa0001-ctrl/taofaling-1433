@@ -242,6 +242,15 @@
     }
     return [x, z];
   };
+  // 走得到的地板（掉落物用）：是地板、不在牆、柱子、矮擺設、深淵裡（人都走不進去）；from＝要從這個點直線走得過去（不隔著牆）
+  const openAt = (x, z) => { if (!R.isFloor(x, z)) return false; for (const c of R.boxesNear(x, z)) if (x > c.x0 - 0.2 && x < c.x1 + 0.2 && z > c.z0 - 0.2 && z < c.z1 + 0.2) return false; return true; };
+  R.lineOpen = (x0, z0, x1, z1) => { const n = Math.ceil(Math.hypot(x1 - x0, z1 - z0) / 0.3); for (let i = 1; i <= n; i++) { const k = i / n; if (!openAt(x0 + (x1 - x0) * k, z0 + (z1 - z0) * k)) return false; } return true; };
+  R.openFloorNear = (x, z, from) => {
+    const ok = (px, pz) => openAt(px, pz) && (!from || R.lineOpen(from[0], from[1], px, pz));
+    if (ok(x, z)) return [x, z];
+    for (let rad = 0.5; rad <= 6; rad += 0.5) for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, px = x + Math.sin(a) * rad, pz = z + Math.cos(a) * rad; if (ok(px, pz)) return [px, pz]; }
+    const q = R.nearestFloor(x, z); return from && !ok(q[0], q[1]) ? [from[0], from[1]] : q;
+  };
   // 房間裡隨機的一個點：edge＝靠牆；away＋min＝離某個東西遠一點
   R.roomPoint = (r, o) => {
     o = o || {}; const t = TL();
@@ -338,7 +347,7 @@
     // --- 深淵（高塔的井、橋下、浮島外面的海；火山是熔岩） ---
     const pitCol = env === 'volcano' ? '#FF5A1A' : env === 'deep' ? '#0E2A3A' : form.pit;
     const abyss = new TH.Mesh(new TH.PlaneGeometry(nx * TS + 60, nz * TS + 60), new TH.MeshBasicMaterial({ color: pitCol }));
-    abyss.rotation.x = -Math.PI / 2; abyss.position.set(t.X0 + nx * TS / 2, -9, t.Z0 + nz * TS / 2); group.add(abyss);
+    abyss.rotation.x = -Math.PI / 2; abyss.position.set(t.X0 + nx * TS / 2, -9, t.Z0 + nz * TS / 2); group.add(abyss); F.abyss = abyss;   // dread.js 深層調暗用
     if (run.type === 'island' || run.type === 'tower' || env === 'volcano') {
       // 深淵底下的光：浮島是海面的反光，高塔是佩特拉的光，火山是熔岩
       const glow = new TH.Mesh(new TH.PlaneGeometry(nx * TS + 60, nz * TS + 60), new TH.MeshBasicMaterial({ color: env === 'volcano' ? '#FFB050' : run.type === 'island' ? '#5FC8E0' : th.accent, transparent: true, opacity: run.type === 'tower' ? 0.3 : 0.14, depthWrite: false }));

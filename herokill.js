@@ -11,7 +11,7 @@
 (function (R) {
   const W = () => R.W, S = () => R.S, $ = id => document.getElementById(id), esc = s => R.esc(s), rnd = Math.random;
   const RANGED = { gunner: 1, archer: 1, mage: 1, priest: 1 };
-  const HIDE = env => /snow/.test(env || '') ? ['雪堆', '#E8EEF2', '#C8D8E0', 0] : /volcano|lava|desert|sand/.test(env || '') ? ['碎石堆', '#8A7A6A', '#6A5A4A', 1] : /deep/.test(env || '') ? ['岩縫', '#4A4A58', '#34343E', 1] : ['草叢', '#4A7A3A', '#5E9A48', 0];
+  const HIDE = env => /snow/.test(env || '') ? ['雪堆', '#E8EEF2', '#C8D8E0', 0] : /volcano|lava|desert|sand|forge/.test(env || '') ? ['碎石堆', '#8A7A6A', '#6A5A4A', 1] : /deep/.test(env || '') ? ['岩縫', '#4A4A58', '#34343E', 1] : ['草叢', '#4A7A3A', '#5E9A48', 0];
   const hk = () => { const F = W().F; if (!F) return null; return F.hk || (F.hk = { bushes: [], bodies: [], prev: new Map(), byP: new Set(), done: false }); };
   // ---------- 草叢 ----------
   const bushMesh = (x, z, h) => {

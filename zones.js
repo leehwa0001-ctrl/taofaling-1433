@@ -59,7 +59,7 @@
       let near = false; for (let dz = -1; dz <= 1 && !near; dz++) for (let dx = -1; dx <= 1; dx++) { const x = tx + dx, z = tz + dz; if (x < 0 || z < 0 || x >= nx || z >= nz) continue; if (T[id(x, z)] === FLOOR) { near = true; break; } }
       if (near) T[k] = WALL;
     }
-    B.rs.forEach(r => { r.cleared = true; r.open = 1; r.traps = 0; r.doors = []; if (r.type === 'trap') r.type = 'fight'; });
+    B.rs.forEach(r => { r.cleared = true; r.open = 1; r.traps = 0; r.doors = []; r.zone = 1; if (r.type === 'trap') r.type = 'fight'; });   // r.zone：lords.js、lordfloor.js 不會把領主體放進來（打通的房間算清空過，進去也不會生領主）
     F.zone = { x0, x1, z0, z1, tiles: inZone.filter(k => T[k] === FLOOR), cap: 7 + 2 * run.grade.lv, left: 30 + 10 * run.grade.lv, t: 2, entered: false };
   };
   // 一開始先放一半的量在裡面走動

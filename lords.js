@@ -180,7 +180,7 @@
     if (g.lords) { const envL = ENV_LORD[run.env]; g.lords = envL ? [envL, envL, envL].concat(BASE, ['faceforest', 'bonewyvern', 'thunderape']) : BASE.concat(['faceforest', 'bonewyvern', 'thunderape']); }
     const F = gf(run, f);
     if (g.lords && !F.last) {
-      const have = F.rooms.filter(r => r.type === 'lord').length, cand = F.rooms.filter(r => r.type === 'fight' && r.dist >= 2 && !r.big);
+      const have = F.rooms.filter(r => r.type === 'lord').length, cand = F.rooms.filter(r => r.type === 'fight' && r.dist >= 2 && !r.big && !r.zone);   // 大空洞打通的房間不行（zones.js；算清空過，領主不會出現）
       const want = F.rooms.length >= 10 && rnd() < 0.4 ? 2 : 1;
       for (let i = have; i < want && cand.length; i++) { const r = cand.splice(Math.floor(rnd() * cand.length), 1)[0]; r.type = 'lord'; }
     }

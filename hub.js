@@ -48,6 +48,11 @@
   let tab = 'guild', sub = 'id', focus = null;
   // f：在公會裡站在哪裡（告示板、登記處、收購窗口）；鐵匠鋪是哪一個分頁
   let craftPick = null, stashCat = 'all', stashSort = 'rar';   // 鐵匠鋪選了哪一件；倉庫的分類、排序（畫面重畫也記住）   // 鐵匠鋪：選了要做哪一件（畫面重畫也記住）
+  // 公會頁面（倉庫、鐵匠鋪）上叫出來的小視窗：開在公會自己的 #hub-modal（2026-10-04 作者回報：洗詞條的視窗要關掉整個頁面才看得到——
+  //   原本用 R.sheet 開在遊戲畫面的 #r-modal，被公會的頁面蓋在底下）。不在公會頁面的時候照舊用 R.sheet。洗一條、鑲嵌、刻套裝紋用這個。
+  const onHub = () => { const h = $('hub'); return !!(h && !h.hidden); };
+  R.hubSheet = (html, foot) => { if (!onHub()) return R.sheet(html, foot); const host = $('hub-sheet'), m = $('hub-modal'); host.innerHTML = html + (foot || ''); m.hidden = false; host.scrollTop = 0; };
+  R.hubSheetClose = () => { const m = $('hub-modal'); if (onHub() && m && !m.hidden) m.hidden = true; else R.closeSheet(); R.hub(); };
   R.hub = (t, f) => {
     if (t) { tab = t; focus = null; if (f) { if (t === 'smith') sub = f; else focus = f; } }
     const S = R.S; R.ensureKit(S.cls);
@@ -60,7 +65,7 @@
     R.save();
   };
   const matsLine = () => Object.keys(R.MATS).filter(k => R.S.mats[k]).map(k => '<span class="mat" style="--c:' + R.MATS[k].color + '">' + esc(R.MATS[k].name) + ' ' + R.S.mats[k] + '</span>').join('') || '<span class="note">還沒有素材。</span>';
-  const itemCard = (it, btns) => '<div class="item-card" style="--c:' + R.rarityColor(it) + '">' + (R.itemIconTag ? R.itemIconTag(it, 'card') : '') + '<b>' + esc(R.itemName(it)) + '</b>' + (it.identified ? '<small class="rar">' + R.RARITY[it.rarity].name + '</small>' : '<small class="rar">？？？</small>') + (it.locked ? '<span class="tag lock-tag">🔒 上鎖</span>' : '') + '<ul>' + R.itemLines(it).map(l => '<li>' + esc(l) + '</li>').join('') + '</ul><div class="row">' + btns + '</div></div>';
+  const itemCard = (it, btns) => '<div class="item-card" style="--c:' + R.rarityColor(it) + '">' + (R.itemIconTag ? R.itemIconTag(it, 'card') : '') + '<b>' + esc(R.itemName(it)) + '</b>' + (R.itemInfo ? '' : (it.identified ? '<small class="rar">' + R.RARITY[it.rarity].name + '</small>' : '<small class="rar">？？？</small>')) + (it.locked ? '<span class="tag lock-tag">🔒 上鎖</span>' : '') + (R.itemInfo ? R.itemInfo(it) : '<ul>' + R.itemLines(it).map(l => '<li>' + esc(l) + '</li>').join('') + '</ul>') + '<div class="row">' + btns + '</div></div>';
 
   // 同行的勇者：最多兩個人；每個人分走一成五的委託報酬
   const partyBox = () => {

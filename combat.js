@@ -342,7 +342,7 @@
     if (P.skillCd > 0 || P.dead || P.knockT > 0) return;
     if (P.mp < sk.mp) { R.toast('魔力不夠'); return; }
     P.mp -= sk.mp; P.skillCd = sk.cd * P.skillCdMult;
-    const a = P.aimA, ax = P.aimX, az = P.aimZ, ws = P.ws, base = ws.dmg;
+    const a = P.aimA, ax = P.aimX, az = P.aimZ, ws = P.ws, base = ws.dmg * (ws.pellets > 1 ? ws.pellets : 1) * (ws.hits || 1) * 1.5;   // 2026-10-04 作者：技能提升到普攻的 3～5 倍——原本＝武器一下（霰彈只算一顆、雙刀只算一刀），現在＝一下普攻×1.5
     const aimIn = max => { const d = Math.hypot(ax - P.x, az - P.z); const k = d > max ? max / d : 1; return [P.x + (ax - P.x) * k, P.z + (az - P.z) * k]; };
     R.sfx && R.sfx('skill');
     switch (P.skill) {
@@ -410,7 +410,7 @@
     o = o || {};
     const m = o.human ? R.humanModel(o.human) : R.makeBeast(id, o.role);
     // 硬核：遺跡生物更硬、更痛，越深越強
-    const tide = w.run.tide || 1, hpMul = (1 + 0.7 * (g - 1) + 0.16 * f) * 1.2 * (o.hpMul || 1) * tide, dmgMul = (1 + 0.45 * (g - 1) + 0.1 * f) * 1.45 * tide;
+    const tide = w.run.tide || 1, hpMul = (1 + 0.7 * (g - 1)) * 1.2 * (o.hpMul || 1) * tide, dmgMul = (1 + 0.45 * (g - 1)) * 1.45 * tide;   // 2026-10-04：照層數加的那一段（每層 +16% 生命、+10% 傷害）改到 deepbonus.js（照畫面上的層數，左上角看得到）
     const e = { id, def: d, m, x, z, yaw: 0, hp: d.hp * hpMul, hpMax: d.hp * hpMul, dmg: d.dmg * dmgMul, speed: d.speed, t: Math.random() * 5, cd: 1 + Math.random(), room, st: { burn: 0, slow: 0, stun: 0, root: 0, curse: 0 }, kx: 0, kz: 0, role: o.role, aggro: !!o.aggro, flash: 0, phase: 0 };
     m.g.position.set(x, 0, z); w.scene.add(m.g); w.enemies.push(e);
     if (!o.quiet) R.fx('spawn', x, 0.1, z, { color: d.color });
@@ -721,7 +721,9 @@
       const beam = new TH.Mesh(new TH.CylinderGeometry(0.25, 0.25, 5, 8, 1, true), new TH.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.25, depthWrite: false })); beam.position.y = 2.5; g.add(beam); }
     const a = Math.random() * Math.PI * 2, r = d.type === 'item' ? rnd(0.6, 1.6) : rnd(0.2, 1);
     d.x += Math.sin(a) * r; d.z += Math.cos(a) * r;
-    const blk = R.pointBlocked(d.x, d.z); if (blk || !R.isFloor(d.x, d.z)) { d.x -= Math.sin(a) * r; d.z -= Math.cos(a) * r; }
+    const blk = R.pointBlocked(d.x, d.z); if (blk || !R.isFloor(d.x, d.z) || (R.lineOpen && W().F && W().F.tile && !R.lineOpen(d.x - Math.sin(a) * r, d.z - Math.cos(a) * r, d.x, d.z))) { d.x -= Math.sin(a) * r; d.z -= Math.cos(a) * r; }
+    // 掉在牆裡、柱子裡、牆的另一邊就永遠撿不到（遺跡生物死在牆邊、背包丟東西靠牆的時候）：挪到最近一塊走得到的地板
+    if (R.openFloorNear && W().F && W().F.tile) { const [ox, oz] = R.openFloorNear(d.x, d.z, d.from); d.x = ox; d.z = oz; }
     g.position.set(d.x, 0.5, d.z); W().scene.add(g); d.mesh = g; d.t = Math.random() * 3; W().drops.push(d);
     return d;
   };

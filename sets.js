@@ -51,10 +51,10 @@
   const price = it => ({ gold: 1500 + 500 * it.rarity, crystal: 5 });
   const sheet = it => {
     const s = S(), c = price(it), ok = s.gold >= c.gold && (s.mats.crystal || 0) >= c.crystal, n = countOf(s.cls);
-    R.sheet('<p class="kicker">鐵匠鋪</p><h2>刻套裝紋：' + esc(R.itemName(it)) + '</h2><p class="note">刻上哪一套，就算那一套的一件（頭、身體、腿、腳各一件，湊 2 件、4 件有加成；可以兩套各 2 件）。' + (it.set ? '現在是「' + SETS[it.set].name + '」，改刻會換掉。' : '') + '每次 ' + c.gold + ' 費拉・魔力水晶 ' + c.crystal + '。</p><div class="recipes">'
+    R.hubSheet('<p class="kicker">鐵匠鋪</p><h2>刻套裝紋：' + esc(R.itemName(it)) + '</h2><p class="note">刻上哪一套，就算那一套的一件（頭、身體、腿、腳各一件，湊 2 件、4 件有加成；可以兩套各 2 件）。' + (it.set ? '現在是「' + SETS[it.set].name + '」，改刻會換掉。' : '') + '每次 ' + c.gold + ' 費拉・魔力水晶 ' + c.crystal + '。</p><div class="recipes">'
       + IDS.map(id => { const st = SETS[id]; return '<div class="recipe"><b style="color:' + st.color + '">' + esc(st.name) + (n[id] ? '（穿著 ' + n[id] + ' 件）' : '') + '</b><small>2 件：' + esc(st.t2) + '</small><small>4 件：' + esc(st.t4) + '</small><button type="button" class="btn' + (it.set === id ? '' : ' pri') + '" data-setpick="' + id + '"' + (!ok || it.set === id ? ' disabled' : '') + '>' + (it.set === id ? '現在就是這套' : '刻這一套') + '</button></div>'; }).join('') + '</div>',
       '<div class="row"><button type="button" class="btn" id="st-x">好了</button></div>');
-    $('st-x').onclick = () => { R.closeSheet(); R.hub(); };
+    $('st-x').onclick = () => R.hubSheetClose();
     document.querySelectorAll('[data-setpick]').forEach(b => { b.onclick = () => { if (s.gold < c.gold || (s.mats.crystal || 0) < c.crystal) return; s.gold -= c.gold; s.mats.crystal -= c.crystal; it.set = b.dataset.setpick; R.save(); R.sfx && R.sfx('magic'); R.toast && R.toast('刻好了：' + R.itemName(it), SETS[it.set].color); sheet(it); }; });
   };
   const hub0 = R.hub;

@@ -26,6 +26,7 @@
   css.textContent = [
     // ===== 面板 =====
     D + '#h2-dock{gap:0!important;align-items:flex-end}',
+    '#run.town #h2-dock .h2-mid{display:none!important}',   // 城裡（主世界）技能格、經驗條都藏起來了，面板本身也要藏（2026-10-04 作者：從遺跡回來，畫面下面多一個空的黑框）
     D + '.h2-mid{position:relative;display:flex!important;flex-direction:column;align-items:center;gap:7px;padding:16px 30px 9px;margin-bottom:6px;'
       + 'background:radial-gradient(120% 140% at 50% 0%,#3A302A 0%,#211A16 55%,#120E0C 100%);border:2px solid #070504;border-radius:14px 14px 6px 6px;'
       + 'box-shadow:inset 0 1px 0 rgba(255,225,170,.20),inset 0 0 0 1px #5E4A30,inset 0 0 0 3px #1A130E,inset 0 -14px 26px rgba(0,0,0,.55),0 0 0 1px #000,0 10px 26px rgba(0,0,0,.65)}',
