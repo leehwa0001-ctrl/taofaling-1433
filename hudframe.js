@@ -91,6 +91,21 @@
     return r;
   };
 
+  // ---------- 城裡、室內：自己的外框（2026-10-04 作者：離開遺跡後，公會、東鶴會繼承遺跡那個框框，他們應該要有自己的版本） ----------
+  // 原本 #r-where 的 hf-g-分級 只在遺跡裡換，回到城裡還掛著最後那座遺跡的顏色和字母牌。
+  // 東鶴的街上＝暖色的燈籠金、牌子「東鶴」；公會（東鶴分館、奉主分館）＝金色雙線框、紅底金字的「公會」印；奉主＝鋼灰、一排鉚釘、「奉主」；其他室內＝素色、沒有牌子。
+  const PLACE = { town: '東鶴', guild: '公會', hosu: '奉主', inside: '' };
+  const placeOf = w => { if (w.inside) { const n = (w.inside.pl && w.inside.pl.name) || ''; return /公會/.test(n) ? 'guild' : w.town && w.town.hosu ? 'hosu' : 'inside'; } if (w.town) return w.town.hosu ? 'hosu' : 'town'; return null; };
+  setInterval(() => {
+    try {
+      const w = W(); if (!w || w.run) return; const el = $('r-where'), p = el && placeOf(w); if (!p) return;
+      el.classList.add('hf-where'); [...el.classList].forEach(c => { if (/^hf-g-/.test(c) && c !== 'hf-g-' + p) el.classList.remove(c); }); el.classList.add('hf-g-' + p);
+      let b = el.querySelector('.hf-badge'); const t = PLACE[p];
+      if (!t) { if (b) b.remove(); return; }
+      if (!b) { b = document.createElement('i'); b.className = 'hf-badge'; el.appendChild(b); } if (b.textContent !== t) b.textContent = t;
+    } catch (e) { }
+  }, 400);
+
   // ---------- 樣式 ----------
   const ICE = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='46' height='12' viewBox='0 0 46 12'><path d='M0 0h46L44 3 42 9 40 3 36 6 33 2 30 11 27 2 23 5 20 1 17 8 14 2 10 6 7 1 4 10 2 2z' fill='%23E6F4FF'/><path d='M30 11l-1-6M17 8l-1-4M4 10l-1-5' stroke='%23FFFFFF' stroke-width='.6'/></svg>\")";
   const css = document.createElement('style');
@@ -108,6 +123,11 @@
     '#r-where.hf-g-kansait{--gc:#FF2A2A;border-radius:0;background:repeating-linear-gradient(0deg,rgba(255,40,40,.08) 0 2px,transparent 2px 4px),#0A0406;animation:hfPulse 1.2s ease-in-out infinite}',
     '#r-where.hf-g-hunt{--gc:#C8A060;border-style:dashed;border-radius:8px}#r-where.hf-g-hunt::after{--k:0px}',
     '#r-where.hf-g-zoo{--gc:#5AD8B0;border-radius:14px}#r-where.hf-g-zoo::after{--k:0px}',
+    // 城裡、室內（離開遺跡以後）
+    '#r-where.hf-g-town{--gc:#E0A050;border-radius:10px}#r-where.hf-g-town::after{--k:6px}#r-where.hf-g-town .hf-badge{background:linear-gradient(#F0B860,#C8823A);border-radius:9px}',
+    '#r-where.hf-g-guild{--gc:#E0B848;border-radius:3px;border-style:double;border-width:3px}#r-where.hf-g-guild::after{--k:12px}#r-where.hf-g-guild .hf-badge{background:#8A2228;color:#F6E2A8;box-shadow:0 0 0 1px #E0B848,0 0 8px -2px #E0B848;border-radius:3px;letter-spacing:1px}',
+    '#r-where.hf-g-hosu{--gc:#A8AEBA;border-radius:2px;background-image:radial-gradient(circle,#D8DCE4 1.2px,transparent 1.8px),linear-gradient(90deg,color-mix(in srgb,#A8AEBA 22%,transparent),rgba(10,8,14,.78) 45%);background-size:16px 100%,auto;background-position:8px -4px,0 0;background-repeat:repeat-x,no-repeat}#r-where.hf-g-hosu::after{--k:8px}',
+    '#r-where.hf-g-inside{--gc:#B8AE98;border-radius:10px;padding-right:14px}#r-where.hf-g-inside::after{--k:0px}',
     '@keyframes hfPulse{0%,100%{box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),inset 0 0 18px -6px var(--gc),0 0 6px -4px var(--gc)}50%{box-shadow:inset 0 0 0 1px rgba(0,0,0,.6),inset 0 0 22px -4px var(--gc),0 0 16px -2px var(--gc)}}',
     '@keyframes hfShine{0%{background-position:100% 0}100%{background-position:-200% 0}}',
     // 場地、樓層的小格子：共通
