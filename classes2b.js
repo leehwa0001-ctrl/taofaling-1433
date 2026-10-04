@@ -107,7 +107,7 @@
     ['en_shock', '附魔・雷', 'enchanter', 6, 12, 10, 'buff', { t: 8, shock: 1, crit: 0.08, color: '#E8E07A' }, '把雷的咒文刻進武器：8 秒內打中的時候常常電到旁邊的敵人、暴擊率 +8%。'],
     ['en_aegis', '附魔護甲', 'enchanter', 8, 14, 12, 'heal', { shield: 0.3, color: '#C8B898' }, '在護甲上刻一層咒文：得到吸收 30% 生命的護盾。'],
     ['en_burst', '魔力爆發', 'enchanter', 10, 9, 14, 'nova', { r: 3.2, k: 1.8, kb: 2, color: '#FFB86A' }, '武器裡的咒文一口氣爆開，震飛周圍的敵人。'],
-    ['en_pierce', '穿甲刺', 'enchanter', 12, 8, 12, 'line', { len: 6, width: 0.8, k: 3, crit: 0.6, color: '#FFFFFF' }, '一刺穿過一整排，六成機率暴擊。'],
+    ['en_pierce', '穿甲刺', 'enchanter', 12, 8, 12, 'line', { len: 6, width: 0.8, k: 3, crit: 0.6, color: '#FFFFFF' }, '一刺穿過一整排，60% 機率暴擊。'],
     ['en_overload', '過載', 'enchanter', 15, 18, 16, 'buff', { t: 6, dmg: 1.4, burn: 1, shock: 1, def: -0.15, color: '#FF5A3A' }, '把武器的咒文灌到過載：6 秒內傷害 +40%、又燒又電，但受到的傷害 +15%。'],
     ['rs_triple', '三重附魔', 'enchanter', 8, 16, 18, 'buff', { t: 10, burn: 1, frost: 1, shock: 1, dmg: 1.1, color: '#FFFFFF' }, '焰、霜、雷一次刻上去 10 秒。', 'runesmith'],
     ['rs_engrave', '深刻', 'enchanter', 14, 12, 12, 'buff', { t: 12, crit: 0.12, dmg: 1.12, color: '#FFE8A0' }, '把咒文刻得更深：12 秒內暴擊率 +12%、傷害 +12%。', 'runesmith'],

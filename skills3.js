@@ -14,7 +14,7 @@
     ['bd_canon', '卡農', 'bard', 19, 8, 14, 'shots', { burst: 4, gap: 150, n: 2, spread: 0.3, k: 0.9, kind: 'holy', sp: 21, pierce: 1 }, '同一段旋律追著彈四次，一層疊一層。'],
     ['bd_silence', '休止符', 'bard', 21, 14, 16, 'mark', { range: 11, r: 3.4, t: 6, stun: 1.6, k: 0.5 }, '一個長長的休止符：準心附近的敵人停住 1.6 秒，6 秒內受到的傷害 +30%。'],
     ['bd_crescendo', '漸強', 'bard', 23, 10, 16, 'wave', { n: 7, step: 1.8, r: 1.8, k: 1, kb: 1.5, gap: 70, fx: 'ring', color: '#FFD0F0' }, '音量一路往前漸強，一圈比一圈遠。'],
-    ['bd_encore', '安可', 'bard', 25, 22, 10, 'heal', { pct: 0.3, allies: 0.3, mp: 0.3, color: '#FFE8A0' }, '觀眾喊安可：你和隊友回復三成生命，你再回復三成魔力。'],
+    ['bd_encore', '安可', 'bard', 25, 22, 10, 'heal', { pct: 0.3, allies: 0.3, mp: 0.3, color: '#FFE8A0' }, '觀眾喊安可：你和隊友回復 30% 生命，你再回復 30% 魔力。'],
     // 召喚師
     ['sn_hound', '召喚・獵犬', 'summoner', 17, 14, 16, 'pet', { beast: 'okuriinu', n: 2, t: 14, k: 0.8, color: '#A88A5A' }, '捏出兩隻追得很緊的獵犬，14 秒。'],
     ['sn_swarm', '召喚・蟲群', 'summoner', 19, 12, 16, 'storm', { t: 6, gap: 0.4, r: 8, hitR: 1.3, k: 0.7, fx: 'spark', color: '#8AC88A' }, '用執念捏出一群小蟲，6 秒內一直咬附近的敵人。'],
@@ -71,7 +71,7 @@
     ['md_wail', '哀嚎', 'summoner', 11, 12, 14, 'nova', { r: 4, k: 1, stun: 1, color: '#B8A8E8' }, '怨靈一起哀嚎：周圍的敵人嚇得愣住。', 'medium'],
     ['md_possess', '憑依', 'summoner', 18, 14, 16, 'mark', { range: 10, r: 3, t: 8, slow: 3, k: 0.6 }, '讓怨靈附在準心附近的敵人身上：8 秒內變慢、受到的傷害 +30%。', 'medium'],
     ['md_soulfire', '魂火', 'summoner', 21, 9, 14, 'shots', { n: 5, spread: 0.8, k: 1.1, homing: 6, kind: 'spirit', sp: 15, life: 2 }, '五團魂火追著敵人燒過去。', 'medium'],
-    ['md_requiem', '鎮魂', 'summoner', 24, 18, 24, 'drain', { range: 11, r: 4, k: 2.4, heal: 0.6 }, '把附近的魂一口氣收回來：重傷敵人，傷害的六成變成你的生命。', 'medium'],
+    ['md_requiem', '鎮魂', 'summoner', 24, 18, 24, 'drain', { range: 11, r: 4, k: 2.4, heal: 0.6 }, '把附近的魂一口氣收回來：重傷敵人，傷害的 60% 變成你的生命。', 'medium'],
     // 遺跡馴獸師
     ['tm_sentry', '泥偶哨兵', 'summoner', 11, 14, 16, 'turret', { t: 10, rate: 0.8, reach: 9, k: 0.6, look: 'tree', color: '#8AC88A' }, '在準心處捏一尊遺跡生物模樣的泥偶，10 秒內對靠近的敵人吐泥彈。', 'tamer'],
     ['tm_mimic', '擬態', 'summoner', 18, 18, 22, 'pet', { beast: 'floor', n: 3, t: 12, k: 0.7, color: '#8AC88A' }, '捏出三隻這一層遺跡生物的樣子，12 秒。', 'tamer'],
@@ -136,7 +136,7 @@
     ['sm_mountain', '劈山棍', 'monk', 24, 16, 22, 'jumpx', { range: 9, dur: 0.6, end: { r: 3.8, k: 3, stun: 1.2, color: '#C8A878' } }, '躍起，長棍從天上劈下來。', 'staffmonk'],
     // 內修者（武術家）
     ['in_wave', '氣浪', 'monk', 11, 10, 14, 'wave', { n: 5, step: 1.8, r: 1.6, k: 1.1, kb: 2, gap: 70, fx: 'ring', color: '#FFD27A' }, '把內勁打進地面，氣浪一路推出去。', 'inner'],
-    ['in_breath', '龜息', 'monk', 18, 20, 0, 'heal', { pct: 0.3, mp: 0.3 }, '閉氣調息：回復三成生命、三成魔力。', 'inner'],
+    ['in_breath', '龜息', 'monk', 18, 20, 0, 'heal', { pct: 0.3, mp: 0.3 }, '閉氣調息：回復 30% 生命、30% 魔力。', 'inner'],
     ['in_iron', '鐵骨功', 'monk', 21, 18, 12, 'buff', { t: 10, def: 0.35, dmg: 1.1, color: '#FFD27A' }, '把魔力質注進骨頭：10 秒內受到的傷害 −35%、傷害 +10%。', 'inner'],
     ['in_burst', '內勁爆發', 'monk', 24, 16, 22, 'nova', { r: 4, k: 3, kb: 4, color: '#FFD27A' }, '把積在體內的魔力一口氣爆開。', 'inner'],
     // 鬼武者（戰士）
@@ -144,7 +144,7 @@
     ['on_cleave', '鬼哭斬', 'warrior', 21, 10, 16, 'arc', { range: 3.8, arc: 3.6, k: 2.8, kb: 2, stun: 0.6 }, '戴著鬼面橫掃一刀，周圍的敵人嚇得愣住。', 'onimusha'],
     ['on_rage', '百鬼夜行', 'warrior', 24, 24, 24, 'combo', { parts: [['buff', { t: 8, dmg: 1.4, def: -0.15, color: '#C83A3A' }], ['nova', { r: 4.5, k: 2.4, stun: 1, color: '#8A2A2A' }, 150]] }, '讓鬼面完全上身：周圍的敵人重傷暈眩，8 秒內傷害 +40%（受到的傷害 +15%）。', 'onimusha'],
     // 外修者（術士）
-    ['wx_pulse', '氣脈', 'mage', 18, 18, 0, 'heal', { shield: 0.25, mp: 0.2, color: '#9AE8FF' }, '把魔力罩重新撐起來：護盾 25%、回復兩成魔力。', 'waixiu'],
+    ['wx_pulse', '氣脈', 'mage', 18, 18, 0, 'heal', { shield: 0.25, mp: 0.2, color: '#9AE8FF' }, '把魔力罩重新撐起來：護盾 25%、回復 20% 魔力。', 'waixiu'],
     ['wx_rain', '氣彈雨', 'mage', 21, 10, 16, 'shots', { burst: 4, gap: 80, n: 3, spread: 0.5, k: 0.9, kind: 'eorb', sp: 26 }, '魔力罩化成十幾顆氣彈連發。', 'waixiu'],
     ['wx_storm', '氣旋', 'mage', 24, 16, 22, 'aura', { t: 5, r: 3.6, gap: 0.2, k: 0.7, color: '#9AE8FF' }, '魔力罩轉成氣旋，5 秒內不停打周圍。', 'waixiu']
   ];

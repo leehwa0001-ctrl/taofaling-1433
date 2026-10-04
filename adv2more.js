@@ -28,7 +28,7 @@
   R.step = dt => { st0(dt); const P = W().P; if (P && P.reviveCharge > 0 && W().run) P.reviveCharge -= dt; };
   // 主教：復活（一轉路線的技能，等級照 promote.js 往後挪：11＋7＝18 級）
   const add = (id, o) => { LIB[id] = Object.assign({ id }, o); R.SKILLS[id] = { name: o.name, cd: o.cd, mp: o.mp, desc: o.desc }; };
-  add('bi_revive', { name: '復活', cls: 'priest', lv: 11, cd: 45, mp: 35, type: 'revive', p: { pct: 0.5, range: 30, heal: 0.15, shield: 0.15, self: 20 }, desc: '倒下的隊友立刻站起來（五成生命、一層護盾），大家再回一點血。自己一個人的時候：20 秒內倒下會原地站起來一次。', adv: 'bishop' });
+  add('bi_revive', { name: '復活', cls: 'priest', lv: 11, cd: 45, mp: 35, type: 'revive', p: { pct: 0.5, range: 30, heal: 0.15, shield: 0.15, self: 20 }, desc: '倒下的隊友立刻站起來（50% 生命、一層護盾），大家再回一點血。自己一個人的時候：20 秒內倒下會原地站起來一次。', adv: 'bishop' });
   // ---------- 每個職業自己的二轉 ----------
   // [名字, 常駐加成, 加成說明, 三招：[名字, 型, 參數, 冷卻, 魔力, 說明]]
   const SP = {
@@ -45,8 +45,8 @@
       ['不滅', 'guard', { t: 2.5, color: '#FFD27A' }, 40, 20, '2.5 秒內不受傷。'],
       ['戰神降臨', 'buff', { t: 10, dmg: 1.35, speed: 1.15, color: '#FF5A3A' }, 45, 30, '10 秒內傷害 +35%、移動 +15%。']]],
     priest: ['聖者', { hp: 0.1, regen: 1.5 }, '生命 +10%、每秒回復 1.5 生命', [
-      ['群體復活', 'revive', { pct: 0.8, range: 40, heal: 0.4, shield: 0.25, self: 30 }, 60, 45, '所有倒下的隊友立刻站起來（八成生命、一層護盾），大家回四成生命。自己一個人：30 秒內倒下會站起來一次。'],
-      ['神蹟', 'heal', { pct: 0.5, allies: 0.5, shield: 0.3, allyShield: 0.3, color: '#FFE8A0' }, 30, 35, '你和隊友回五成生命，再多一層厚護盾。'],
+      ['群體復活', 'revive', { pct: 0.8, range: 40, heal: 0.4, shield: 0.25, self: 30 }, 60, 45, '所有倒下的隊友立刻站起來（80% 生命、一層護盾），大家回 40% 生命。自己一個人：30 秒內倒下會站起來一次。'],
+      ['神蹟', 'heal', { pct: 0.5, allies: 0.5, shield: 0.3, allyShield: 0.3, color: '#FFE8A0' }, 30, 35, '你和隊友回 50% 生命，再多一層厚護盾。'],
       ['天罰', 'at', { range: 12, r: 4, k: 3.2, stun: 1, delay: 300, fx: 'boom', color: '#FFE8A0' }, 16, 28, '準心處落下一道天光：重傷、暈眩。']]],
     blade: ['劍聖', { crit: 0.06, critMult: 0.25 }, '暴擊率 +6%、暴擊傷害 +25%', [
       ['一閃・極', 'dash', { len: 9, dur: 0.18, k: 4 }, 12, 20, '一步踏出九公尺，路上的敵人全部被斬。'],
@@ -62,7 +62,7 @@
       ['金剛不壞', 'guard', { t: 3, color: '#FFD27A' }, 40, 20, '3 秒內不受傷。']]],
     bard: ['樂聖', { skillCd: 0.1, mp: 0.15 }, '技能冷卻 −10%、魔力 +15%', [
       ['交響', 'aura', { t: 8, r: 4.5, gap: 0.25, k: 0.8, color: '#FFB8E0' }, 20, 28, '8 秒內身邊一直響著交響，附近的敵人一直受傷。'],
-      ['安魂曲', 'revive', { pct: 0.5, range: 30, heal: 0.25, self: 15 }, 55, 40, '倒下的隊友站起來，大家回兩成五的生命。自己一個人：15 秒內倒下會站起來一次。'],
+      ['安魂曲', 'revive', { pct: 0.5, range: 30, heal: 0.25, self: 15 }, 55, 40, '倒下的隊友站起來，大家回 25% 的生命。自己一個人：15 秒內倒下會站起來一次。'],
       ['狂想曲', 'buff', { t: 10, dmg: 1.25, speed: 1.2, crit: 0.1, color: '#FFB8E0' }, 35, 26, '10 秒內傷害 +25%、移動 +20%、暴擊率 +10%。']]],
     summoner: ['萬靈主', { dmg: 0.1, mp: 0.1 }, '傷害 +10%、魔力 +10%', [
       ['群靈', 'pet', { beast: 'okuriinu', n: 6, t: 16, k: 0.9, color: '#C8A878' }, 30, 40, '六隻土狼一起放出去，16 秒。'],
@@ -86,7 +86,7 @@
   const copy = (src, id, name, lv, adv2, desc, over) => { const s = LIB[src]; if (!s) return; add(id, { name: name || s.name, cls: 'mage', lv, cd: s.cd, mp: s.mp, type: s.type, p: Object.assign(JSON.parse(JSON.stringify(s.p)), over || {}), desc: desc || s.desc, adv2 }); };
   const HF = [
     ['hm_zhen', '鎮頻派', '壓制：改寫奏域裡對手法術的「m」頻。常駐：身邊 4.5 公尺內敵人的投射物會被取消、敵人變慢。', 'hm_suppress', [['頻率崩解', 'nova', { r: 4.5, k: 1.6, stun: 1.5, color: '#9AD8FF' }, 18, 26, '奏域裡的頻率全部打亂：周圍的敵人暈眩。'], ['靜默領域', 'zone', { zone: 'trap', self: 1, r: 5, life: 8, k: 0.5 }, 24, 28, '腳下 8 秒的靜默領域，踩進來的敵人一直受傷。']]],
-    ['hm_gong', '共振派', '增幅：改寫自己法術的「k」「f」頻，施法前花得少、施法後放得大。常駐：技能傷害 +30%、放技能退回三成魔力。', 'hm_amp', [['共振爆發', 'at', { range: 11, r: 4, k: 3.4, delay: 250, fx: 'boom', color: '#FFB8E0' }, 16, 30, '把小小的魔力在準心處放成巨量：大爆炸。'], ['增幅連鎖', 'chainx', { n: 7, jump: 6, k: 1.5, falloff: 0.9, range: 12 }, 14, 24, '共振沿著敵人一路傳下去，七次。']]],
+    ['hm_gong', '共振派', '增幅：改寫自己法術的「k」「f」頻，施法前花得少、施法後放得大。常駐：技能傷害 +30%、放技能退回 30% 魔力。', 'hm_amp', [['共振爆發', 'at', { range: 11, r: 4, k: 3.4, delay: 250, fx: 'boom', color: '#FFB8E0' }, 16, 30, '把小小的魔力在準心處放成巨量：大爆炸。'], ['增幅連鎖', 'chainx', { n: 7, jump: 6, k: 1.5, falloff: 0.9, range: 12 }, 14, 24, '共振沿著敵人一路傳下去，七次。']]],
     ['hm_zhuan', '轉調派', '轉換：改寫法術的「a」「o」頻，換掉元素。常駐：普攻輪流帶火、冰、雷，打有護甲的敵人 +15%。', 'hm_shift', [['光學射線', 'beam', { t: 1.6, tick: 0.12, len: 11, width: 0.8, k: 0.5, slow: 2 }, 16, 28, '把火焰轉成激光：一道會燒穿一排敵人的射線。'], ['元素轉換', 'buff', { t: 10, dmg: 1.25, color: '#FF9A6A' }, 30, 22, '10 秒內傷害 +25%。']]],
     ['hm_ding', '定頻派', '必中：改寫法術的「r」「e」「l」「y」頻，無視方向、距離。常駐：你的投射物全部會追蹤、飛得更遠。', 'hm_lock', [['千道定頻', 'shots', { n: 14, spread: 6.28, k: 1.1, homing: 10, kind: 'holy', sp: 18, life: 3 }, 16, 28, '十四道音波，必定追著目標。'], ['鎖定', 'mark', { range: 14, r: 3, t: 8, slow: 3, k: 0.4 }, 14, 18, '鎖定準心附近的敵人：8 秒內變慢、受到的傷害 +30%。']]]
   ];

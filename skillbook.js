@@ -35,7 +35,7 @@
     ['w_rend', '撕裂', 'warrior', 8, 7, 10, 'arc', { range: 3, arc: 1.8, k: 1.2, curse: 5 }, '砍出撕裂的傷口：被砍到的敵人 5 秒內受到的傷害 +30%。'],
     ['w_cyclone', '大迴旋', 'warrior', 10, 10, 14, 'nova', { r: 3.4, k: 1.0, kb: 2, waves: 3, gap: 250, color: '#FF8A6A' }, '連轉三圈，砍到身邊所有的敵人並擊退。'],
     ['w_taunt', '挑釁', 'warrior', 12, 12, 8, 'buff', { t: 4, def: 0.25, taunt: 4, color: '#E8603A' }, '大吼一聲：吸引周圍敵人攻擊你，4 秒內你受到的傷害 −25%。'],
-    ['w_execute', '斬首', 'warrior', 15, 9, 14, 'line', { len: 4, width: 1.2, k: 2.2, execute: 1, color: '#FF5A4A' }, '往前重重一斬；生命剩三成以下的敵人吃兩倍傷害。'],
+    ['w_execute', '斬首', 'warrior', 15, 9, 14, 'line', { len: 4, width: 1.2, k: 2.2, execute: 1, color: '#FF5A4A' }, '往前重重一斬；生命剩 30% 以下的敵人吃兩倍傷害。'],
     // 術士
     ['m_bolt', '魔力飛彈', 'mage', 2, 3, 8, 'shots', { n: 3, spread: 0.2, k: 0.8, homing: 4, sp: 18, life: 1.4 }, '念一句短咒，射出三發會追蹤的魔力飛彈。'],
     ['m_lance', '冰槍', 'mage', 4, 6, 14, 'shots', { k: 2.2, pierce: 3, root: 0.8, kind: 'cold', sp: 26 }, '凝出一支冰槍：穿過三隻敵人，命中的敵人會短暫凍結。'],
@@ -53,7 +53,7 @@
     ['p_halo', '光環', 'priest', 12, 16, 18, 'zone', { zone: 'sanct', self: 1, r: 3.5, life: 5, k: 0.3 }, '在腳下展開光環 5 秒：站在裡面回復生命，灼傷進來的敵人。'],
     ['p_seal', '聖印', 'priest', 15, 12, 16, 'mark', { range: 10, r: 3, t: 6, stun: 0.5 }, '在準心處烙下聖印：敵人暈眩一下，6 秒內受到的傷害 +30%。'],
     // 刀客
-    ['b_draw', '拔刀', 'blade', 2, 4, 6, 'line', { len: 3.5, width: 0.8, k: 1.8, crit: 0.5, color: '#FFFFFF' }, '拔刀斬出一直線，五成機率暴擊。'],
+    ['b_draw', '拔刀', 'blade', 2, 4, 6, 'line', { len: 3.5, width: 0.8, k: 1.8, crit: 0.5, color: '#FFFFFF' }, '拔刀斬出一直線，50% 機率暴擊。'],
     ['b_crescent', '月牙斬', 'blade', 4, 7, 10, 'shots', { k: 1.4, pierce: 3, kind: 'hama', sp: 24, life: 0.5 }, '把刀氣斬出去：飛行的斬擊穿過三隻敵人。'],
     ['b_swallow', '燕返', 'blade', 5, 8, 10, 'arc', { range: 2.8, arc: 2.4, k: 1.3, hits: 2, gap: 140, back: 1 }, '往前斬一刀，馬上反手往後再斬一刀。'],
     ['b_after', '殘影', 'blade', 8, 10, 10, 'blink', { back: 1, range: 4, invis: 1.5 }, '往後撤，只留下殘影：隱身 1.5 秒。'],
@@ -107,7 +107,7 @@
     ['ks_still', '明鏡止水', 'blade', 14, 18, 12, 'parry', { t: 1.2, buff: { t: 5, crit: 0.3 } }, '架勢 1.2 秒：擋下攻擊並反擊；之後 5 秒暴擊率 +30%。', 'kensei'],
     ['sd_backstab', '背刺', 'blade', 8, 8, 12, 'blink', { behind: 1, range: 12, hit: 3.5, crit: 1 }, '閃到最近的敵人背後，刺出必定暴擊的一刀。', 'shadow'],
     ['sd_stitch', '影縫', 'blade', 14, 12, 16, 'at', { range: 9, r: 3, k: 0.8, root: 2, invis: 2, fx: 'ring', color: '#3A2A4A' }, '以影子束縛敵人：範圍內的敵人定身 2 秒，你隱身 2 秒。', 'shadow'],
-    ['yt_drink', '啜血', 'blade', 8, 10, 10, 'arc', { range: 3, arc: 6.28, k: 1.2, vamp: 0.3 }, '妖刀轉一圈啜飲：傷害的三成變成你的生命。', 'yoto'],
+    ['yt_drink', '啜血', 'blade', 8, 10, 10, 'arc', { range: 3, arc: 6.28, k: 1.2, vamp: 0.3 }, '妖刀轉一圈啜飲：傷害的 30% 變成你的生命。', 'yoto'],
     ['yt_mad', '妖氣', 'blade', 14, 16, 14, 'buff', { t: 6, dmg: 1.35, def: -0.15, color: '#B83AE8' }, '釋放妖刀吸收的魔力質：6 秒內傷害 +35%，但受到的傷害 +15%。', 'yoto'],
     ['tp_aegis', '神盾', 'knight', 8, 16, 16, 'heal', { shield: 0.4, color: '#C9A13A' }, '得到吸收 40% 生命的神盾。', 'templar'],
     ['tp_crusade', '聖戰', 'knight', 14, 14, 18, 'nova', { r: 4, k: 2, stun: 1, taunt: 4, color: '#C9A13A' }, '高舉長劍：周圍的敵人暈眩，接下來 4 秒改打你。', 'templar'],
