@@ -20,7 +20,7 @@
   const reenter = k => (R.changeFloor ? R.changeFloor(k) : R.enterInterior(k));
   const sheet = k => {
     const s = S(), c = K[k], lv = c.lv(), [w, d] = size(k, lv), next = lv < c.cost.length ? c.cost[lv] : null, [w2, d2] = size(k, lv + 1);
-    R.sheet('<p class="kicker">擴建</p><h2>' + esc(c.name) + '</h2><p>' + esc(c.who) + '翻著帳本：「' + (next ? '要打掉隔間、往旁邊那戶延伸的話……' + next.toLocaleString() + ' 費拉。' : '再擴就要蓋到隔壁棟去了，這樣已經是最大了。') + '」</p>'
+    R.sheet('<p class="kicker">擴建</p><h2>' + esc(c.name) + '</h2><p>' + esc(c.who) + '翻開估價單：「' + (next ? '還能再擴大一點，工錢和材料合計是 ' + next.toLocaleString() + ' 費拉。' : '能用的地方都算進去了，再大我也沒辦法。') + '」</p>'
       + '<p class="note">現在：' + w + '×' + d + ' 公尺（擴建 ' + lv + '／' + c.cost.length + ' 次）' + (next ? '・擴建以後：' + w2 + '×' + d2 + ' 公尺' : '') + '・身上有 ' + s.gold.toLocaleString() + ' 費拉</p>',
       '<div class="row">' + (next ? '<button type="button" class="btn gold" id="hu-go"' + (s.gold < next ? ' disabled' : '') + '>擴建（' + next.toLocaleString() + ' 費拉）</button>' : '') + '<button type="button" class="btn" id="hu-x">先不要</button></div>');
     document.getElementById('hu-x').onclick = R.closeSheet;

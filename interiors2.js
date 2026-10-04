@@ -71,8 +71,8 @@
     counter(c, 0, -HD + 3, 14, { col: '#5A4A3A', top: '#3A3A42' });
     for (let i = 0; i < 4; i++) { const x = -5.25 + i * 3.5; const g = bx(2.8, 1.2, 0.04, K().lam('#BFE0F0', { em: '#4A7A9A', ei: 0.2 }), x, 1.75, -HD + 3); g.material.transparent = true; g.material.opacity = 0.35; }
     clerk(c, -1.75, -HD + 2, 0, '櫃員', { top: '#2E3A4A', acc: 'glasses' }, '櫃台：存提、兌換、問事情', run('bank'));
-    guest(c, 1.75, -HD + 2, 0, '隔壁窗口的櫃員', ['「赤金請到兌換所驗。我們這裡只收費拉。」', '「費拉是世界央行發行的，哪一國都通用。」'], { top: '#2E3A4A' });
-    mesh(new TH.CylinderGeometry(1.4, 1.4, 0.3, 20), '#8A8C92', HW - 2.2, 1.6, -HD + 0.5).rotation.x = Math.PI / 2; c.inter(HW - 2.2, -HD + 2.2, 1.8, '看金庫的門', () => talk('金庫', ['圓形的鋼門，比人還高。旁邊的衛兵瞪了你一眼。']));
+    guest(c, 1.75, -HD + 2, 0, '隔壁窗口的櫃員', ['「赤金請到兌換所驗。我們這裡只收費拉。」', '「換了還有剩，回國也能用，不用再換回去。」'], { top: '#2E3A4A' });
+    mesh(new TH.CylinderGeometry(1.4, 1.4, 0.3, 20), '#8A8C92', HW - 2.2, 1.6, -HD + 0.5).rotation.x = Math.PI / 2; c.inter(HW - 2.2, -HD + 2.2, 1.8, '看金庫的門', () => talk('金庫', ['鋼門旁的衛兵伸手攔住你。「窗口在外面，這邊不能進。」']));
     guest(c, HW - 3.6, -HD + 2.6, 0, '金庫前的警衛', ['「別靠太近。」'], { top: '#3E4A5A' });
     for (let r = 0; r < 2; r++) for (let i = 0; i < 4; i++) chair(c, -4 + i * 1.1, 2 + r * 1.6, Math.PI);
     plant(c, -HW + 0.8, -HD + 0.8); plant(c, HW - 0.8, HD - 0.8); rug(c, 0, HD - 2, 3, 2.5, '#7A2A2A');
@@ -124,7 +124,7 @@
     for (let r = 0; r < 6; r++) [-1, 1].forEach(sd => { const z = -HD + 7 + r * 1.4, cx = sd * 4.75; bx(7.5, 0.45, 0.6, '#8A2A3A', cx, 0.45, z); bx(7.5, 0.6, 0.12, '#6A1A2A', cx, 0.9, z + 0.3); for (let k = 0; k <= 5; k++) bx(0.08, 0.3, 0.6, '#4A2A1A', cx - 3.75 + k * 1.5, 0.75, z); block(cx - 3.75, cx + 3.75, z - 0.3, z + 0.36, 'chair'); });
     for (let k = 0; k < 6; k++) { const x = -8 + Math.floor(rnd() * 9) * 2, z = -HD + 7 + Math.floor(rnd() * 6) * 1.4; if (Math.abs(x) < 1) continue; c.npc(x, z, Math.PI, { name: '觀眾', look: look() }); }
     clerk(c, -HW + 2.5, HD - 2, Math.PI / 2, '帶位的人', { top: '#5A2A2A' }, '問今天的戲碼', run('theater'));
-    c.inter(0, -HD + 6, 2.4, '看舞台', () => talk('東鶴座', [pick(['布幕後面傳來三味線調音的聲音。', '今天的戲是《雪夜的渡口》。聽說最後一幕會讓人哭。', '舞台的木板被踩得發亮，有幾十年的歷史了。'])]));
+    c.inter(0, -HD + 6, 2.4, '看舞台', () => talk('東鶴座', [pick(['布幕後面傳來三味線調音的聲音。', '今天演《雪夜的渡口》。旁邊有人正講到結尾，被同伴打斷：「我還沒看過，你不要講。」', '舞台前緣有幾塊木板換過，顏色比周圍淺。'])]));
     lamp(0, 5, -HD + 3, '#FFE0A0', 1.4, 16); lamp(0, 5, 2, '#FFD8A0', 0.4, 14);
   });
   // ---------- 百貨公司 ----------
@@ -212,7 +212,7 @@
     [[2, -1], [5, -1], [2, 2], [5, 2]].forEach(([x, z]) => { table(c, x, z, 1.2, 1.2); chair(c, x - 0.9, z, Math.PI / 2); chair(c, x + 0.9, z, -Math.PI / 2); });
     mesh(new TH.CylinderGeometry(0.5, 0.5, 0.1, 16), '#1A1418', -HW + 1.2, 1.15, HD - 1.5); bx(0.9, 1.0, 0.9, '#5A3E28', -HW + 1.2, 0.5, HD - 1.5);
     c.inter(-HW + 1.6, HD - 2.4, 1.4, '聽唱片', () => talk('咖啡館', ['唱針沙沙地響。是德克斯凡那邊的舊曲子，女歌手的聲音很低。']));
-    guest(c, 2, -0.2, Math.PI / 2 + Math.PI, '看書的學生', ['「這裡的熱可可，喝了下遺跡比較不會手抖。」'], { acc: 'glasses' }); plant(c, HW - 0.8, HD - 0.8); } });
+    guest(c, 2, -0.2, Math.PI / 2 + Math.PI, '看書的學生', ['「我每次出發前都喝這個。喔，杯子很燙，拿把手。」'], { acc: 'glasses' }); plant(c, HW - 0.8, HD - 0.8); } });
   shop('trade', '德克斯凡商行', '店面', { hint: '機油和新鐵的味道', wall: '#B8B4AC', cap: '#3A4A5A', floor: ['#6A6A70', 'floor'], clerk: '商行的店員', clerkLook: { top: '#2E3A4A' }, label: '櫃台', furnish: c => {
     const { HW, HD, bx, block } = c; shelf(c, 2, -HD + 0.4, 8, { h: 2.4, col: '#4A4A52', goods: ['#8A8A92', '#C8A060', '#5A6A7A', '#C8C8D0'] });
     for (let i = 0; i < 3; i++) bx(1.2, 1.0, 1.0, '#8A6A44', HW - 1.5, 0.5 + i * 0.01, 1 + i * 1.3); block(HW - 2.2, HW, 0.4, 4.6, 'deco');
@@ -229,7 +229,7 @@
   shop('books', '東鶴書房', '店內', { hint: '舊紙的味道', wall: '#C8B898', cap: '#4A3424', clerk: '書房的老闆', clerkLook: { top: '#4A4A3A', hair: '#C8C0B0', acc: 'glasses' }, label: '櫃台', furnish: c => {
     const { HW, HD } = c; for (let i = 0; i < 3; i++) shelf(c, 0 + i * 2.6, -0.5, 4.5, { alongZ: true, h: 2.4, face: i % 2 ? 1 : -1, col: '#5A3E28', goods: ['#8A2A2A', '#2A4A6A', '#4A6A3A', '#C8B888', '#3A2A1C'] });
     shelf(c, 2.6, -HD + 0.4, 7, { h: 2.6, col: '#5A3E28', goods: ['#8A2A2A', '#2A4A6A', '#4A6A3A', '#C8B888'] });
-    c.inter(1.3, 2.5, 1.8, '翻一本書', () => talk('東鶴書房', [pick(['《遺跡生物圖說》（公會監修，舊版）：裡面的「礦殼」畫得像一隻螃蟹。', '《天星十二宮曆的由來》：一週十天，四天休息的由來寫了三十頁。', '《德克斯凡魔導入門》：前面的咒文看得懂，後面全是算式。', '《東鶴百年》：舊城的城牆，原本有四座城門。'])])); } });
+    c.inter(1.3, 2.5, 1.8, '翻一本書', () => talk('東鶴書房', [pick(['《遺跡生物圖說》（公會監修，舊版）：裡面的「礦殼」畫得像一隻螃蟹。', '《天星十二宮曆的由來》：一週十天，四天休息的由來寫了三十頁。', '《德克斯凡魔導入門》：前面列著咒文和圖解，再往後翻，算式一頁比一頁多。', '《東鶴百年》：舊城的城牆，原本有四座城門。'])])); } });
   shop('diner', '定食屋・小町', '店內', { hint: '「歡迎！今天的定食是烤鯖魚。」', wall: '#D8C8A8', cap: '#5A3A24', clerk: '小町的老闆', clerkLook: { top: '#F0ECE2', hair: '#2A2420' }, label: '櫃台：點定食', cx: 0, furnish: c => {
     const { HW, HD, bx, flame } = c; for (let i = 0; i < 5; i++) chair(c, -3 + i * 1.5, -HD + 3.1, Math.PI); bx(1.2, 0.9, 0.8, '#3A3230', 3.5, 0.45, -HD + 0.6); flame(3.5, 1.0, -HD + 0.9, 0.5);
     for (let i = 0; i < 4; i++) c.bx(0.6, 0.9, 0.04, '#F0E8D0', -HW + 1 + i * 0.8, 2.4, -HD + 0.33, c.NW.g);
@@ -252,7 +252,7 @@
     for (let i = 0; i < 3; i++) bx(0.8, 1.6, 0.7, '#E8E8EC', HW - 0.6, 0.8, 0.5 + i * 1.0); c.block(HW - 1, HW, 0, 3.2, 'shelf'); } });
   shop('clinic', '內科診所', '候診室・診療室', { hint: '「請在這裡寫上名字。」', wall: '#EEF2F2', cap: '#7A9AA8', floor: ['#C8D0D0', 'floor'], counter: '#E0E4E4', clerk: '診所的護理師', clerkLook: { top: '#F0F4F4' }, label: '掛號（看病）', light: '#F0FAFF', furnish: c => {
     const { HW, HD, part } = c; for (let i = 0; i < 2; i++) bench(c, -3, 1 + i * 1.6, 3, true); part(false, 2, -HD, HD - 2.5, [[-1.5, 0]]); bed(c, HW - 1.4, -HD + 1.5, true); table(c, 4, 1, 1.2, 0.8);
-    guest(c, 4, 0.1, Math.PI, '老醫生', ['「喉嚨痛幾天了？還有沒有發燒？」', '「最近感冒的人很多。」'], { top: '#F4F4F0', hair: '#C8C0B0', acc: 'glasses' }); } });
+    guest(c, 4, 0.1, Math.PI, '老醫生', ['「哪裡不舒服？先跟我說，我幫你登記。」', '「最近感冒的人很多。」'], { top: '#F4F4F0', hair: '#C8C0B0', acc: 'glasses' }); } });
   shop('super', '河西超市', '店內', { hint: '「今日特價：白蘿蔔一根 1 費拉！」', w: 20, d: 14, wall: '#F0EEE8', cap: '#C83A3A', floor: ['#D8D4CC', 'floor'], counter: '#E8E8EC', clerk: '收銀員', clerkLook: { top: '#C83A3A' }, label: '收銀台', cx: -6, light: '#F8FAFF', furnish: c => {
     const { HW, HD, bx } = c; for (let i = 0; i < 4; i++) shelf(c, -2 + i * 2.8, 0, 6, { alongZ: true, h: 1.6, face: i % 2 ? 1 : -1, col: '#C8C8D0' });
     for (let i = 0; i < 4; i++) { bx(1.6, 0.8, 1.0, '#8A6A44', -HW + 1.2, 0.4, 0 + i * 1.3); for (let k = 0; k < 4; k++) bx(0.3, 0.3, 0.3, pick(['#F0F0E8', '#C83A3A', '#5AA85A', '#E8823A']), -HW + 0.7 + k * 0.35, 0.95, i * 1.3); } c.block(-HW + 0.3, -HW + 2.1, -0.6, 4.6, 'deco');

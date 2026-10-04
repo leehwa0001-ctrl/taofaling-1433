@@ -23,7 +23,7 @@
     const w = W(), run = w.run, s = S(); if (!run) return;
     const bag = run.bag || [], mats = Object.keys(run.mats || {}).filter(k => run.mats[k] > 0 && R.MATS[k]);
     const itemP = it => Math.max(1, Math.round(R.sellPrice(it) * K)), matP = k => Math.max(1, Math.round((R.MATS[k].value || 1) * K));
-    R.sheet('<p class="kicker">安全區</p><h2>流浪商人</h2><p>記錄碑旁邊，一個背著大木箱的商人坐在石頭上：「深處的東西我也收，只是得打點折——我還要揹出去嘛。」</p>'
+    R.sheet('<p class="kicker">安全區</p><h2>流浪商人</h2><p>商人把腳邊的木箱挪開，空出一塊地方。「要賣的放這裡，我看看。先說，比地面少兩成，我還得搬出去。」</p>'
       + '<h3>賣裝備（賣價八成）</h3>' + (bag.length ? '<div class="recipes">' + bag.map((it, i) => '<div class="recipe"><b style="color:' + R.rarityColor(it) + '">' + esc(R.itemName(it)) + '</b><small>' + esc((R.itemLines ? R.itemLines(it) : []).slice(0, 3).join('・')) + '</small><button type="button" class="btn" data-tri="' + i + '"' + (it.locked ? ' disabled title="上鎖的不能賣"' : '') + '>賣（' + itemP(it) + ' 費拉）</button></div>').join('') + '</div>' : '<p class="note">背包裡沒有裝備。</p>')
       + '<h3>賣素材（每個賣價八成）</h3>' + (mats.length ? '<div class="sellmats">' + mats.map(k => '<div class="sellmat"><span>' + esc(R.MATS[k].name) + ' ×' + run.mats[k] + '（每個 ' + matP(k) + ' 費拉）</span><button type="button" class="mini" data-trm="' + k + ':1">賣 1</button><button type="button" class="mini" data-trm="' + k + ':all">全賣</button></div>').join('') + '</div>' : '<p class="note">沒有素材。</p>')
       + '<h3>買</h3><div class="row"><button type="button" class="btn pri" data-trb="hp"' + (s.gold < HP ? ' disabled' : '') + '>回復藥（' + HP + ' 費拉）</button><button type="button" class="btn pri" data-trb="mp"' + (s.gold < MP ? ' disabled' : '') + '>魔力藥（' + MP + ' 費拉）</button><span class="note">身上有 ' + s.gold + ' 費拉</span></div>',

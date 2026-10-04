@@ -213,7 +213,7 @@
     if (!items.length) { R.townTalk(who, lines); return; }
     giftShop(who, 'stall', items, lines);
   };
-  R.sugaSheet = () => giftShop('菅婆婆', 'suga', ['dango'], ['「糰子一串兩費拉。今天冷，吃熱的。」', R.isDemon && R.isDemon() ? '「角？孩子就是孩子。吃吧。」' : '「下遺跡的孩子，回來記得來露個臉。」']);
+  R.sugaSheet = () => giftShop('菅婆婆', 'suga', ['dango'], ['「糰子一串兩費拉。今天冷，吃熱的。」', R.isDemon && R.isDemon() ? '「角別碰到傘，會勾住。往這邊坐，要吃幾串？」' : '「下遺跡的孩子，回來記得來露個臉。」']);
   const giftShop = (who, shop, items, lines) => {
     const s = S(), mul = price(100, shop);
     if (mul == null) { refuse(who); return; }
@@ -244,7 +244,7 @@
     $('fs-pull').onclick = () => { if (done2) { R.closeSheet(); return; } done2 = true; clearInterval(iv); if (t > bite && tm <= 0.7) { s.fishN = (s.fishN || 0) + 1; addGift('fish', 1); R.save(); $('fs-t').textContent = '釣到一條霜背鮒！'; } else $('fs-t').textContent = '收得太早了。'; $('fs-pull').textContent = '好'; };
     $('fs-x').onclick = () => { done2 = true; clearInterval(iv); R.closeSheet(); };
   };
-  R.onsen = () => { const s = S(); if (s.onsenDay === s.day) { R.townTalk('湯山村', ['今天已經泡過了。']); return; } s.onsenDay = s.day; s.buff = { kind: 'onsen', b: { hp: 0.05, regen: 0.3 }, until: s.day }; R.save(); R.townTalk('湯山村', ['你在池邊坐了一會兒，等水沒那麼燙了才下去。', '（今天下遺跡：生命 +5%，慢慢回復）']); };
+  R.onsen = () => { const s = S(); if (s.onsenDay === s.day) { R.townTalk('湯山村', ['今天已經泡過了。']); return; } s.onsenDay = s.day; s.buff = { kind: 'onsen', b: { hp: 0.05, regen: 0.3 }, until: s.day }; R.save(); R.townTalk('湯山村', ['你先把腳泡進去，等習慣了水溫才慢慢坐下。', '（今天下遺跡：生命 +5%，慢慢回復）']); };
   // 手上的加成（籤、熱飲、溫泉）套進遺跡裡的數值；只有當天有效
   const cp = R.calcPlayer;
   R.calcPlayer = cls => {

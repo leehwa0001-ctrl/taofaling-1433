@@ -35,7 +35,7 @@
   const trophies = () => {
     const s = S(), g = s.gifts || {}, st = s.stats || {}, lines = [];
     const pl = Object.keys(PLUSH).filter(k => g[k] > 0).map(k => (R.GIFTS && R.GIFTS[k] ? R.GIFTS[k].name : k) + '×' + g[k]);
-    lines.push(pl.length ? '架上的娃娃：' + pl.join('、') : '架上還空空的。（遊樂場的夾娃娃機夾得到娃娃）');
+    lines.push(pl.length ? '架上的娃娃：' + pl.join('、') : '架上還沒有擺東西。');
     if (s.mj && s.mj.games) lines.push('麻將：' + s.mj.games + ' 場、第一名 ' + s.mj.first + ' 次' + (s.mj.best ? '、最大 ' + s.mj.best + ' 翻' : '') + '。');
     if (s.karaoke) { const k = Object.keys(s.karaoke); if (k.length) lines.push('卡拉 OK 的最高分：' + k.map(id => ({ snow: '〈雪夜的渡口〉', neon: '〈站前的霓虹〉', hero: '〈勇者證明〉' })[id] + ' ' + s.karaoke[id]).join('、') + '。'); }
     const dex = s.dexKills ? Object.keys(s.dexKills).length : 0; if (dex) lines.push('圖鑑上打倒過的遺跡生物：' + dex + ' 種。');
@@ -82,7 +82,7 @@
       block(SX - 0.7, SX + 0.7, SZ - 0.2, SZ + 0.25, 'shelf'); inter(SX, -HD + 1.4, 1.4, '看戰利品架', trophies);
       // 書桌：寫日記（存檔）
       bx(1.2, 0.75, 0.6, '#7A5A3A', HW - 0.7, 0.375, HD - 2.4); bx(0.5, 0.04, 0.35, '#F2ECD8', HW - 0.7, 0.77, HD - 2.4); block(HW - 1.3, HW - 0.1, HD - 2.7, HD - 2.1, 'table');
-      inter(HW - 1.6, HD - 2.4, 1.3, '寫日記（存檔）', () => { R.save && R.save(); R.townTalk('日記', ['第 ' + (S().day || 0) + ' 天。', pick(['今天也活著回來了。', '有幾件事忘了記，現在又想不起來。', '明天要去哪一座遺跡呢。', '存了一點錢。……一點點。']), '（存檔了）']); });
+      inter(HW - 1.6, HD - 2.4, 1.3, '寫日記（存檔）', () => { R.save && R.save(); R.townTalk('日記', ['第 ' + (S().day || 0) + ' 天。', pick(['今天也活著回來了。', '有幾件事忘了記，現在又想不起來。', '明天要去哪一座遺跡呢。', '今天花的錢也該記一下，不然過兩天又忘了。']), '（存檔了）']); });
       lamp(0, 2.5, 0, '#FFF0D0', 0.8, 10); lamp(-HW + 2.6, 1.2, 1.2, '#FF9A5A', 0.35, 3);
       if (K && K.plantAt) K.plantAt(c, HW - 0.6, HD - 0.6);
     };

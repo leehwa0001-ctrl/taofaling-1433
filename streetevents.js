@@ -192,7 +192,7 @@
           const m = ev.mom, dm = dist(m, Pl); showArrow(m); showHud('<b>帶小孩去找媽媽</b><span>' + Math.round(dm) + ' 公尺</span><small>地圖上標出來了</small>');
           m.h.g.rotation.y = Math.atan2(Pl.x - m.x, Pl.z - m.z); R.animHero(m.h, 0, dt, false);
           if (dm < 3) { const r = 15 + Math.floor(rnd() * 16); gold(r); rep(1); if (R.addGift && rnd() < 0.5) R.addGift('rose', 1); R.sfx && R.sfx('chest'); say('小孩的媽媽', ['「小翼！你跑去哪裡了——」', '「謝謝，剛剛一轉頭人就不見了。這點錢請你收下。」', '（拿到 ' + r + ' 費拉。名聲 +1）']); if (R.clearWaypoint && S().waypoint && S().waypoint.name === '小孩的媽媽') R.clearWaypoint(); end(); }
-          else if (ev.t > 300) end('小孩說他想起路了，自己跑走了。');
+          else if (ev.t > 300) end('小孩忽然朝街口揮手，喊著「媽媽」跑了過去。');
         }
       }
     },
@@ -275,8 +275,8 @@
     R.sheet('<p class="kicker">深夜的街上</p><h2>兩個醉漢在吵架</h2><p>「你再說一次看看！」「說就說！你們公會的都是——」</p>',
       '<div class="row"><button type="button" class="btn pri" id="bw-calm">「兩位，冷靜一點。」</button><button type="button" class="btn" id="bw-firm">「再鬧我就叫衛兵了。」</button><button type="button" class="btn" id="bw-x">不管他們</button></div>');
     const done = (ok, lines) => { R.closeSheet(); ev.st = 'leave'; ev.t2 = 0; if (ok) rep(1); say('醉漢', lines); };
-    document.getElementById('bw-calm').onclick = () => rnd() < 0.65 ? done(true, ['「……算了算了，今天就放過你。」', '兩個人各自搖搖晃晃地走了。（名聲 +1）']) : done(false, ['「關你什麼事！」', '其中一個推了你一把，然後兩個人一起罵著你走掉了。……至少不打了。']);
-    document.getElementById('bw-firm').onclick = () => rnd() < 0.8 ? done(true, ['「衛、衛兵？……喂，走了走了。」', '兩人往街口看了一眼，互相罵了幾句，各自走了。（名聲 +1）']) : done(false, ['「叫啊！叫啊！」', '……然後兩個人還是走了。']);
+    document.getElementById('bw-calm').onclick = () => rnd() < 0.65 ? done(true, ['「……算了算了，今天就放過你。」', '兩個人各自搖搖晃晃地走了。（名聲 +1）']) : done(false, ['「關你什麼事！」', '「關你什麼事？」其中一人推了你一下。兩人改罵起你，罵著罵著，一起走遠了。']);
+    document.getElementById('bw-firm').onclick = () => rnd() < 0.8 ? done(true, ['「衛、衛兵？……喂，走了走了。」', '兩人往街口看了一眼，互相罵了幾句，各自走了。（名聲 +1）']) : done(false, ['「叫啊！叫啊！」', '兩人嘴上還在罵，卻都往街口走，沒有再動手。']);
     document.getElementById('bw-x').onclick = R.closeSheet;
   };
   const lostSheet = () => {

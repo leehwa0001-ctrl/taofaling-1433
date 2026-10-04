@@ -101,7 +101,7 @@
     const lead = pa.members[0], P = W.P;
     R.sheet('<p class="kicker">遇到了別的勇者</p><h2>' + esc(lead.name) + '的隊伍（' + pa.members.length + ' 人）</h2>'
       + '<p>帶頭的是' + esc(R.RACES[lead.race].name + '的' + R.CLASSES[lead.cls].name) + '，自稱「' + esc(lead.claim) + '」。</p>'
-      + '<p>「你也是來開寶箱的？這一層一起走吧。東西照比例分——我們拿三成就好。」</p>'
+      + '<p>「前面要不要一起走？先說好，這層帶走的素材，我們分三成。你要自己走也行。」</p>'
       + '<p class="note">一起行動：他們會跟著你、聽你的指揮；這一層結束時分走這一層三成的素材，他們打倒的遺跡生物，經驗也歸他們。<br>各走各的：他們會去開別的寶箱。</p>'
       + '<div id="rv-card"></div>',
       '<div class="row"><button type="button" class="btn pri" id="rv-co">一起行動</button><button type="button" class="btn" id="rv-no">各走各的</button><button type="button" class="btn" id="rv-card-b">看他們的勇者證</button></div>');

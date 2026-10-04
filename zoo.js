@@ -28,8 +28,8 @@
       requestAnimationFrame(tick); setTimeout(() => { if (sp.parent) { sp.parent.remove(sp); m.dispose(); } }, 1400);   // 畫面在背景時 requestAnimationFrame 不跑，一樣要消掉
     }, i * 140);
   };
-  const PETLINES = ['牠瞇起眼睛，往你的手心蹭了蹭。', '牠翻過來，露出肚子。', '牠發出小小的、咕嚕咕嚕的聲音。', '牠用頭頂你的手，還要。', '牠打了一個呵欠，靠在你腳邊。', '牠把下巴擱在你的手背上，不肯走。', '牠繞著你的腳轉了兩圈。'];
-  const LOVELINES = ['牠一看到你就小跑步過來。', '牠把最喜歡的小石頭叼來放在你腳邊。', '你一蹲下，牠就跳到你膝蓋上。', '牠閉著眼睛，整個身體都放鬆了。'];
+  const PETLINES = ['牠瞇起眼睛，往你的手心蹭了蹭。', '牠翻過來，露出肚子。', '牠發出小小的、咕嚕咕嚕的聲音。', '你的手才停下，牠又把頭湊了過來。', '牠打了一個呵欠，靠在你腳邊。', '牠把下巴擱在你的手背上，不肯走。', '牠繞著你的腳轉了兩圈。'];
+  const LOVELINES = ['牠一看到你就小跑步過來。', '牠叼來一顆小石頭，放在你腳邊。', '你一蹲下，牠就跳到你膝蓋上。', '牠閉著眼睛，整個身體都放鬆了。'];
   const petIt = (c, who, love) => {
     hearts(c.x, c.z); c.hop = 0.7; c.wait = 2.5; c.tx = c.x; c.tz = c.z;
     R.toast((who || nameOf(c.id)) + '：' + pick((love || 0) >= 20 ? LOVELINES.concat(PETLINES) : PETLINES), '#FF7AA8'); R.sfx && R.sfx('pick');

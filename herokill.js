@@ -52,14 +52,14 @@
     let n = 0;
     tiers.forEach(t => (R.rollChest(run.grade.lv - 1, run.floor, S().cls, t) || []).forEach(l => { n++; setTimeout(() => { if (W().run !== run) return; if (l.item) R.dropItem(l.item, x + rnd() - 0.5, z + rnd() * 0.6); else R.dropMat(l.mat, l.n, x, z); }, 150 * n); }));
     R.sfx && R.sfx('chest');
-    R.toast('搜了' + m.name + '的身上：' + got.join('、') + (n ? '，還有 ' + n + ' 樣' + (pa && tiers.length && pa.stolenTiers ? '從寶箱拿走的東西' : '東西') : '') + '。' + (b.innocent ? '勇者證……拿回公會等於自首，塞回去了。' : ''), '#E8C04A');
+    R.toast('搜了' + m.name + '的身上：' + got.join('、') + (n ? '，還有 ' + n + ' 樣' + (pa && tiers.length && pa.stolenTiers ? '從寶箱拿走的東西' : '東西') : '') + '。' + (b.innocent ? '你翻到一張勇者證。照片和名字都還清楚，沒有拿走。' : ''), '#E8C04A');
   };
   // ---------- 拖著走、藏起來 ----------
   const carried = () => { const H = hk(); return H ? H.bodies.find(b => b.carried) : null; };
   const nearBush = P => { const H = hk(); if (!H) return null; let best = null, bd = 2.4; H.bushes.forEach(u => { const d = Math.hypot(u.x - P.x, u.z - P.z); if (d < bd) { bd = d; best = u; } }); return best; };
   const hide = (b, u) => {
     b.carried = false; b.hidden = true; if (b.h.g.parent) b.h.g.parent.remove(b.h.g); u.wig = 0.8;
-    R.sfx && R.sfx('pick'); R.toast(b.m.name + '的屍體藏進' + u.name + '裡了。' + (b.innocent ? '……應該不會有人發現。' : ''), '#9AC88A');
+    R.sfx && R.sfx('pick'); R.toast(b.m.name + '的屍體藏進' + u.name + '裡了。' + (b.innocent ? '從通道這邊已經看不見屍體了。' : ''), '#9AC88A');
   };
   // ---------- 對勇者動手 ----------
   const askAttack = (pa, who) => {
@@ -120,7 +120,7 @@
     const H = W().F && W().F.hk; if (!H || H.done) return; H.done = true;
     const left = H.bodies.filter(b => b.innocent && !b.hidden); if (!left.length) return;
     const s = S(); s.bodyPending = (s.bodyPending || []).concat(left.map(b => b.m.name));
-    R.toast('（沒藏好的屍體……下一隊經過的勇者遲早會發現。）', '#F06A6A');
+    R.toast('（屍體還留在原處，沒有遮掩。）', '#F06A6A');
   };
   const lf0 = R.loadFloor;
   R.loadFloor = (f, o) => { try { if (W().run) leaveFloor(); } catch (e) { } const r = lf0(f, o); try { if (W().run && f > 0) placeBushes(); } catch (e) { console.warn('[herokill]', e); } return r; };

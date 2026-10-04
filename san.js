@@ -19,7 +19,7 @@
   const tier = v => TIER.find(t => v >= t[0]);
   R.sanValue = get; R.sanAdd = d => { set(get() + d); };
   R.sanTier = () => tier(get())[1];
-  const WHISPER = ['（遠處好像有人在叫你的名字。）', '（腳步聲好像比自己的多了一個。）', '（牆上的紋路剛剛是不是動了一下？）', '（背包裡的東西數了兩次，數字不一樣。）', '（耳邊有很規律的搏動聲，跟心跳對不上。）', '（眼角好像一直有什麼在看著你。）', '（同一個轉角，好像已經走過一次了。）'];
+  const WHISPER = ['（遠處好像有人在叫你的名字。）', '（你停下來，後面卻好像又響了一步。）', '（牆上的紋路剛剛是不是動了一下？）', '（剛才數到第幾個了？你看著背包，又從頭數了一遍。）', '（耳邊有很規律的搏動聲，跟心跳對不上。）', '（眼角有東西動了一下。轉過去看，什麼都沒有。）', '（同一個轉角，好像已經走過一次了。）'];
   // ---------- 遺跡裡：靠近核心會掉、低的時候的效果 ----------
   const coreOf = w => (w.enemies || []).find(e => e.id === 'petra' && !e.dead) || (w.F && w.F.coreView);
   let whisperT = 30, hudT = 0, lookCd = 0, lastShown = null;
@@ -56,7 +56,7 @@
   if (cs0) R.coreSheet = () => {
     cs0();
     if (lookCd > 0) return; lookCd = 20; set(get() - 6);
-    try { const sh = $('r-sheet'); if (sh) { const p = document.createElement('p'); p.className = 'note'; p.style.color = '#C8A8FF'; p.textContent = '你盯著那顆眼球看得太久了，它好像也在看你。（理智 −6，現在 ' + Math.round(get()) + '）'; const row = sh.querySelector('.row'); if (row) row.before(p); else sh.appendChild(p); } } catch (e) { }
+    try { const sh = $('r-sheet'); if (sh) { const p = document.createElement('p'); p.className = 'note'; p.style.color = '#C8A8FF'; p.textContent = '眼球轉向這邊。你移開視線，過了一會兒還是忍不住看回去。（理智 −6，現在 ' + Math.round(get()) + '）'; const row = sh.querySelector('.row'); if (row) row.before(p); else sh.appendChild(p); } } catch (e) { }
   };
   // ---------- 回復：睡覺 ----------
   let inEndRun = false;
