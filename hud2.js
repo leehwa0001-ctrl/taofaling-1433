@@ -62,6 +62,7 @@
     x.putImageData(img, 0, 0);
     return (cache[k] = c.toDataURL());
   };
+  R.skillIconURL = id => icon(iconFor(id));   // 技能點畫面（talentui.js）也用同一套圖示
 
   // ---------- 搭起來：快捷欄、圓表、經驗條 ----------
   const build = () => {

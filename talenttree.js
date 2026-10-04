@@ -85,6 +85,10 @@
     return '';
   };
   R.talentWhy = (id, cls) => why(mig(stOf(cls)), id);
+  // 給 talentui.js（新的技能點畫面）用：樹的結構、現在幾級、點一下
+  R.TALENT_TREE = { ROOT, PATHS, XP, NEED_PATH, NEED_SUB, NEED_CAP };
+  R.talentLv = (id, cls) => mig(stOf(cls))[id] || 0;
+  R.talentAdd = (id, cls) => { const st = stOf(cls), t = mig(st); if (R.spFree(st) < 1 || why(t, id)) return false; t[id] = (t[id] || 0) + 1; R.save && R.save(); return true; };
 
   // ---------- 效果 ----------
   const cp0 = R.calcPlayer;
