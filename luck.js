@@ -1,6 +1,6 @@
 // 幸運、麻將的稱號（2026-10-04 作者：麻將可以有稱號，可能可以加幸運，寶箱空的機率可以再高）
 // - 幸運（P.luck，點數）：戴著的稱號（R.titleBonus('luck')）＋種族（R.RACES[..].b.luck）。
-//   每 1 點：寶箱空的機率 −3%（loot.js，最多少六成）、寶箱多開一樣的機率 +1%（crafting.js 的 P.accLucky）、暴擊率 +0.2%。
+//   每 1 點：寶箱空的機率 −3%（loot.js，最多少六成）、寶物數量 +1%（寶箱多開一樣的機率，crafting.js 的 P.accLucky）、暴擊率 +0.2%。
 // - 雀莊的稱號（mahjong.js 的 R.mjEvent）：第一次和了、滿貫、役滿、十次第一名、×10 拿第一名。稱號一次只能戴一個（公會登記處換）。
 // 放在 pact.js、loot.js、mahjong.js 後面。
 (function (R) {

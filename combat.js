@@ -410,7 +410,7 @@
     o = o || {};
     const m = o.human ? R.humanModel(o.human) : R.makeBeast(id, o.role);
     // 硬核：遺跡生物更硬、更痛，越深越強
-    const tide = w.run.tide || 1, hpMul = (1 + 0.7 * (g - 1) + 0.16 * f) * 1.2 * (o.hpMul || 1) * tide, dmgMul = (1 + 0.45 * (g - 1) + 0.1 * f) * 1.45 * tide;
+    const tide = w.run.tide || 1, hpMul = (1 + 0.7 * (g - 1)) * 1.2 * (o.hpMul || 1) * tide, dmgMul = (1 + 0.45 * (g - 1)) * 1.45 * tide;   // 2026-10-04：照層數加的那一段（每層 +16% 生命、+10% 傷害）改到 deepbonus.js（照畫面上的層數，左上角看得到）
     const e = { id, def: d, m, x, z, yaw: 0, hp: d.hp * hpMul, hpMax: d.hp * hpMul, dmg: d.dmg * dmgMul, speed: d.speed, t: Math.random() * 5, cd: 1 + Math.random(), room, st: { burn: 0, slow: 0, stun: 0, root: 0, curse: 0 }, kx: 0, kz: 0, role: o.role, aggro: !!o.aggro, flash: 0, phase: 0 };
     m.g.position.set(x, 0, z); w.scene.add(m.g); w.enemies.push(e);
     if (!o.quiet) R.fx('spawn', x, 0.1, z, { color: d.color });

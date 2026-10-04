@@ -38,7 +38,7 @@
       const g = run.grade && run.grade.lv || 1;
       if (g >= 3) {
         const depth = Math.max(0, Math.min(1, (run.floor || 0) / Math.max(1, (run.floors || 1) - 1))), hit = hitOf();
-        const n = e.id === 'petra' ? 200 : isLord(e.def) ? 120 : e.def.elite || e.def.boss ? 18 : 4, extra = e.id === 'petra' ? 200 : isLord(e.def) ? 120 : e.def.elite || e.def.boss ? 18 : 6;
+        const n = e.id === 'petra' ? 200 : isLord(e.def) ? 120 : e.def.elite || e.def.boss ? 18 : 4, extra = e.id === 'petra' ? 200 : isLord(e.def) ? 120 : 0;   // 一般、精英的深度加成改由 deepbonus.js 乘（2026-10-04）
         const pk = run.pact && run.pact.sel && run.pact.sel.hp ? [1, 1.5, 2][run.pact.sel.hp] : 1;
         hp = Math.max(hp, hit * (n + extra * depth) * (g >= 5 ? 1.3 : g >= 4 ? 1 : 0.7) * pk);
       }

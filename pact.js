@@ -1,7 +1,7 @@
 // 加注條款、稱號（作者：可以自己勾選項，像是回血量減半、怪物血量翻倍、都是精英怪；全部勾起來有成就或稱號，稱號可能有加成）
 // 設定上的說法：公會的特殊討伐令本來就可以附條件——勇者自願接下更苛刻的條款，公會照條款加付報酬。
 // - 委託書上（guildtask.js 的 R.taskExtras）勾條款；每一條有一到兩級，每級幾點「加注」。上一次勾的會記住。
-// - 加注每 1 點：委託報酬 +10%、經驗 +5%、寶箱多開一樣東西的機率 +3%。
+// - 加注每 1 點：委託報酬 +10%、經驗 +5%、寶物數量 +3%（寶箱多開一樣東西的機率；2026-10-04 作者：「寶箱裡面多一樣」改叫「寶物數量」）。
 // - 稱號：用條款走完遺跡、五軌制成績好，就會拿到稱號；一次戴一個，各有小加成（傷害、暴擊、生命、經驗、報酬、回復）。
 // - 存檔：R.S.pact = { sel: {條款: 級}, best: {分級: 最高點數}, got: {稱號: 哪一天}, title: 戴著的稱號 }
 (function (R) {
@@ -61,9 +61,9 @@
   // ---------- 委託書上的條款 ----------
   const sheet = (site, sp) => {
     const p = pact(), s = S(), sel = p.sel, party = (s.party || []).length, pts = ptsOf(party ? Object.assign({}, sel, { solo: 0 }) : sel), best = p.best[site.grade] || 0;   // 隊伍裡有人：「單獨」出發時會被拿掉，這裡就不算它
-    return '<div id="pact-box"><h3>加注條款</h3><p class="note">自願接下更苛刻的條款，公會照條款加付報酬。加注每 1 點：報酬 +10%、經驗 +5%、寶箱多開一樣的機率 +3%。</p><div class="pact-list">'
+    return '<div id="pact-box"><h3>加注條款</h3><p class="note">自願接下更苛刻的條款，公會照條款加付報酬。加注每 1 點：報酬 +10%、經驗 +5%、寶物數量 +3%。</p><div class="pact-list">'
       + TERMS.map(([id, name, lv, pt]) => { const v = sel[id] || 0, dis = id === 'solo' && party; return '<div class="pact-row' + (v ? ' on' : '') + '"><b>' + esc(name) + '</b><small>' + esc(v ? lv[v - 1] : lv.join('／')) + (dis ? (v ? '<b style="color:#FF9A7A">（隊伍裡有人：這一趟不算，點數也不算）</b>' : '（隊伍裡有人，不能選）') : '') + '</small><div class="pact-lv">' + ['不加'].concat(lv.map((_, i) => (lv.length > 1 ? (i ? '二級' : '一級') : '加') + ' ' + pt[i] + ' 點')).map((n, i) => '<button type="button" class="mini' + (v === i ? ' gold' : '') + '" data-pact="' + id + ':' + i + '"' + (dis && i ? ' disabled' : '') + '>' + n + '</button>').join('') + '</div></div>'; }).join('')
-      + '</div><p class="pact-sum">加注 <b>' + pts + '</b>／' + MAXPTS + ' 點' + (pts ? '・報酬 +' + pts * 10 + '%・經驗 +' + pts * 5 + '%・寶箱多開一樣 +' + pts * 3 + '%' : '')   /* 2026-10-04 作者：寶箱多開一樣的機率在總計列沒顯示 */ + (best ? '・這個分級的最高紀錄：' + best + ' 點' : '') + (pts === MAXPTS ? '・<b>滿注</b>' : '') + '</p></div>';
+      + '</div><p class="pact-sum">加注 <b>' + pts + '</b>／' + MAXPTS + ' 點' + (pts ? '・報酬 +' + pts * 10 + '%・經驗 +' + pts * 5 + '%・寶物數量 +' + pts * 3 + '%' : '')   /* 2026-10-04 作者：寶物數量（寶箱多開一樣的機率）在總計列沒顯示 */ + (best ? '・這個分級的最高紀錄：' + best + ' 點' : '') + (pts === MAXPTS ? '・<b>滿注</b>' : '') + '</p></div>';
   };
   if (R.taskExtras) R.taskExtras.push({
     html: (site, sp) => sheet(site, sp),
