@@ -165,7 +165,7 @@
     '.tu-sk b{font-size:13px}.tu-sk .tu-st{font-size:11px}.tu-sk .tu-bar{grid-column:2/4}.tu-sk.sel,.tu-sk:hover{border-color:var(--gold)}',
     '.tu-st{color:#E8C04A;letter-spacing:1px}.tu-st i{font-style:normal;color:#5A5260}',
     '.tu-bar{display:block;height:5px;background:#2A2430;border-radius:3px;overflow:hidden}.tu-bar i{display:block;height:100%;background:linear-gradient(90deg,#B8902A,#F0D070)}',
-    '.tu-tree{position:relative;overflow:hidden}.tu-hd{text-align:center;font-family:var(--serif);color:#E8C04A;font-size:13px}',
+    '.tu-tree{position:sticky;top:0;overflow:hidden}.tu-hd{text-align:center;font-family:var(--serif);color:#E8C04A;font-size:13px}',
     '.tu-canvas{position:relative;margin:0 4px}',
     '.tu-lines{position:absolute;inset:0;width:100%;height:calc(100% - 30px);pointer-events:none}',
     '.tu-lines line{stroke:#3A3440;stroke-width:3;vector-effect:non-scaling-stroke}.tu-lines line.lit{stroke:#C8A040}.tu-lines line.faint{stroke-dasharray:3 4;opacity:.6}',
@@ -187,7 +187,7 @@
     '.tu-big img{width:64px;height:64px;image-rendering:pixelated}',
     '.tu-lv{font-size:22px;font-weight:700;color:var(--tc)}.tu-dt hr{width:100%;border:0;border-top:1px solid var(--line);margin:2px 0}',
     '.tu-dt p{margin:0;font-size:13px}.tu-meta{color:var(--dim);font-size:12px!important}.tu-why{color:#C8A07A}.tu-ok{color:#E8C04A}',
-    '@media (max-width:900px){.tu-cols{grid-template-columns:1fr}.tu-tree{order:1}.tu-cols>.tu-side{order:2;position:sticky;bottom:-18px;top:auto;z-index:3;background:var(--bg2);box-shadow:0 -10px 24px rgba(0,0,0,.6);max-height:42dvh;overflow:auto}.tu-skills{order:3}',
+    '@media (max-width:900px){.tu-cols{grid-template-columns:1fr}.tu-tree{order:1;position:relative}.tu-cols>.tu-side{order:2;position:sticky;bottom:-18px;top:auto;z-index:3;background:var(--bg2);box-shadow:0 -10px 24px rgba(0,0,0,.6);max-height:42dvh;overflow:auto}.tu-skills{order:3}',
     '.tu-dt{grid-template-columns:72px 1fr;justify-items:start;text-align:left;column-gap:10px;row-gap:3px}.tu-dt>*{grid-column:2}.tu-big{grid-column:1;grid-row:1/8;align-self:start;width:68px;height:68px}.tu-big img{width:48px;height:48px}.tu-dt hr{display:none}.tu-dt h4{font-size:15px}.tu-lv{font-size:15px}',
     '.tu-n{width:40px;height:40px}.tu-n img{width:28px;height:28px}.tu-n.cap{width:46px;height:46px}}'
   ].join('\n');
