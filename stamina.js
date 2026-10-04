@@ -6,6 +6,7 @@
 //   舉著的時候走路變慢一半、不能普攻、體力不回；面向的左右各 75 度內打過來的攻擊，傷害 −70%（騎士拿盾 −85%），
 //   每擋一下扣體力：8＋這一下佔生命的比例×60。剛舉起的 0.25 秒內擋到＝完美防禦：完全不受傷、不扣體力，打你的那隻愣 0.8 秒。
 //   體力扣光＝防禦被打破：這一下只擋一半、人愣 0.8 秒，1.5 秒內不能再舉。陷阱、地形、看不出從哪裡來的傷害擋不了。
+// - 鍛鍊（2026-10-04 作者：加可以鍛鍊體力，在熟練那邊）：用掉的體力每 15 點，熟練度的「體力的鍛鍊」+1（prof.js）；每級體力上限 +5、回復 +4%（下一趟遺跡開始算）。
 // - 體力條在技能列的上緣（手機在畫面最下面）；快沒了變黃、扣光變紅。
 // 放在 run.js、combat.js、keybinds.js、hud2.js、hud3.js、adv2more.js 後面（包 R.dodge、R.running、R.hurtPlayer、R.attack、R.step、R.tact）。
 (function (R) {
@@ -13,8 +14,10 @@
   const MAX = 100, REGEN = 25, DELAY = 1, DODGE = 30, RUN = 12, RESUME = 30, ARC = 1.3;
   const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
   const live = () => { const w = W(); return !!(w && w.run && !w.town && w.P && !w.run.done); };
-  const init = P => { if (P.stam == null || P.stamMax !== MAX) { P.stamMax = MAX; P.stam = Math.min(P.stam == null ? MAX : P.stam, MAX); } };
-  const use = (P, v) => { P.stam = Math.max(0, P.stam - v); P.stamT = DELAY; if (P.stam <= 0) P.stamOut = true; };
+  const trained = () => (R.profLv && R.profLv.stam ? R.profLv.stam() : 0), maxOf = () => MAX + 5 * trained();
+  const init = P => { if (P.stam == null || !P.stamMax) { P.stamMax = maxOf(); P.stamRegen = REGEN * (1 + 0.04 * trained()); P.stam = P.stamMax; } };
+  let spent = 0;
+  const use = (P, v) => { const d = Math.min(P.stam, v); P.stam = Math.max(0, P.stam - v); P.stamT = DELAY; if (P.stam <= 0) P.stamOut = true; spent += d; if (spent >= 15 && R.profGain) { const n = Math.floor(spent / 15); spent -= n * 15; R.profGain('stam', null, n); } };
   let warnT = 0;
   const warn = () => { if (warnT > 0) return; warnT = 1.2; R.toast && R.toast('體力不夠', '#E0A03A'); };
 
@@ -104,7 +107,7 @@
       // 回復
       if (!w.paused) {
         if (P.stamT > 0) P.stamT -= dt;
-        else if (!P.guard && P.stam < P.stamMax) P.stam = Math.min(P.stamMax, P.stam + REGEN * dt);
+        else if (!P.guard && P.stam < P.stamMax) P.stam = Math.min(P.stamMax, P.stam + (P.stamRegen || REGEN) * dt);
         if (P.stamOut && P.stam >= RESUME) P.stamOut = false;
       }
       // 盾
@@ -120,7 +123,7 @@
   };
   // 換樓層：盾重新放進新的場景；體力回滿
   const lf0 = R.loadFloor;
-  R.loadFloor = (f, o) => { const r = lf0(f, o), P = W().P; if (shield && shield.parent) shield.parent.remove(shield); if (P) { P.stam = MAX; P.stamOut = false; P.guard = false; } return r; };
+  R.loadFloor = (f, o) => { const r = lf0(f, o), P = W().P; if (shield && shield.parent) shield.parent.remove(shield); if (P) { P.stamMax = maxOf(); P.stamRegen = REGEN * (1 + 0.04 * trained()); P.stam = P.stamMax; P.stamOut = false; P.guard = false; } return r; };
 
   const css = document.createElement('style');
   css.textContent = [
@@ -128,6 +131,8 @@
     '#st-bar i{display:block;height:100%;width:100%;border-radius:3px;background:linear-gradient(90deg,#4AA84A,#B8E070);box-shadow:0 0 6px rgba(184,224,112,.45);transition:width .08s linear}',
     '#st-bar.low i{background:linear-gradient(90deg,#C8822A,#F0C050)}#st-bar.out i{background:#C84A3A;box-shadow:none}#st-bar.guard{box-shadow:inset 0 0 0 1px #9AD8FF,0 0 8px rgba(154,216,255,.5)}',
     '#run.town #st-bar{display:none}',
+    // 電腦版：排在技能格和經驗條中間（原本疊在面板上緣，會被技能格的數字擋住；2026-10-04 作者：體力條會被技能擋住）
+    'body:not(.touch) #st-bar{position:relative;left:auto;right:auto;top:auto;order:1;align-self:stretch;margin:0 2px;height:6px}',
     'body.touch #st-bar{position:fixed;left:50%;right:auto;top:auto;width:34vw;transform:translateX(-50%);bottom:calc(max(8px,env(safe-area-inset-bottom)) + 4px);height:6px}',
     'body.touch #r-br [data-tact="guard"]{right:calc(var(--r) + var(--js) + 6px);bottom:calc(var(--b0) + 100px)}body.touch #r-br [data-tact="guard"].on{box-shadow:inset 0 0 0 2px #9AD8FF}',
     'body:not(.touch) #r-br [data-tact="guard"]{display:none!important}'
