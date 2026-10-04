@@ -103,7 +103,7 @@
 
   // ---------- 穿脫 ----------
   const slotOf = it => (R.slotOf ? R.slotOf(it) : it.kind === 'weapon' ? 'weapon' : it.kind === 'armor' ? R.ARMOR[it.base].slot : 'charm');
-  const SLOT_NAME = { weapon: '武器', head: '頭', body: '身體', legs: '腿', feet: '腳', charm: '護符', acc: '飾品' };
+  const SLOT_NAME = { weapon: '武器', head: '頭', body: '身體', legs: '腿', feet: '腳', charm: '護符', acc: '飾品', acc2: '飾品二' };
   const refreshP = weaponChanged => {
     const s = S(), P = W().P; if (!P) return;
     const fresh = R.calcPlayer(s.cls);
