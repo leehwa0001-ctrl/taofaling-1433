@@ -138,6 +138,9 @@
     RT.forEach((t, id) => { if (!seen.has(id)) { t.downed = t.dead = true; RT.delete(id); } });
   };
   R.farFromAll = (e, d) => { const P = W().P; if (P && Math.abs(e.x - P.x) + Math.abs(e.z - P.z) <= d) return false; for (const t of RT.values()) if (!t.dead && Math.abs(e.x - t.x) + Math.abs(e.z - t.z) <= d) return false; return true; };
+  // 地上畫圈的範圍招（各檔案自己的 targets()）也要打得到別人（2026-10-05 作者：讓範圍招也打得到其他玩家）：房主這邊把別人的人物交出去，
+  //   打到的時候那些檔案照樣呼叫 R.hurtAlly（下面那段把傷害送給那個人）。隊員那邊是空的（遺跡生物的招由房主算）。
+  R.netTargets = () => (host() ? [...RT.values()].filter(t => !t.downed && !t.dead) : []);
   const pt0 = R.pickTarget;
   R.pickTarget = e => {
     const best = pt0 ? pt0(e) : W().P; if (!host() || !RT.size) return best;

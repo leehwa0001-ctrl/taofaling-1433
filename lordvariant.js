@@ -12,7 +12,7 @@
   const W = () => R.W, S = () => R.S, rnd = Math.random, pick = a => a[Math.floor(rnd() * a.length)];
   const isLord = d => !!(d && /^領主體/.test(d.name || ''));
   const later = (f, ms) => { const run = W().run; setTimeout(() => { if (W().run === run && run && !run.done) f(); }, ms); };
-  const targets = () => { const w = W(); return [w.P].concat((w.allies || []).filter(a => !a.downed)).filter(t => t && !t.dead); };
+  const targets = () => { const w = W(); return [w.P].concat((w.allies || []).filter(a => !a.downed), R.netTargets ? R.netTargets() : []).filter(t => t && !t.dead); };   // 多人連線：房主這邊也算別人（net2.js）
   const hitT = (t, dmg, e, o) => (t.ally ? R.hurtAlly(t, dmg, e) : R.hurtPlayer(dmg, e, o));
   const floorAt = (x, z) => (R.nearestFloor ? R.nearestFloor(x, z) : [x, z]);
   const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z), angTo = (a, b) => Math.atan2(b.x - a.x, b.z - a.z);

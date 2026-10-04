@@ -19,7 +19,7 @@
   const isK = () => { const run = W().run; return !!(run && run.grade && run.grade.id === 'kaso' && !run.done); };
   const guest = () => { const run = W().run; return !!(run && run.coop && !run.coop.solo && !run.coop.host); };
   const isLord = e => !!(e && e.def && /^領主體/.test(e.def.name || ''));
-  const tgts = () => { const w = W(); return [w.P].concat((w.allies || []).filter(a => !a.downed)).filter(t => t && !t.dead); };
+  const tgts = () => { const w = W(); return [w.P].concat((w.allies || []).filter(a => !a.downed), R.netTargets ? R.netTargets() : []).filter(t => t && !t.dead); };   // 多人連線：房主這邊也算別人（net2.js）
   const clearLine = (x0, z0, x1, z1) => { const n = Math.ceil(Math.hypot(x1 - x0, z1 - z0) / 0.3); for (let i = 1; i <= n; i++) if (!R.isFloor(x0 + (x1 - x0) * i / n, z0 + (z1 - z0) * i / n)) return false; return true; };
 
   // ================= 卡索專屬的生物 =================

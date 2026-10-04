@@ -110,7 +110,7 @@
   }
   if (R.LORD_GEAR) R.LORD_GEAR.spikewolf = ['棘背狼皮甲', 'body_medium', { def: 5, critMult: 0.2 }, '物防 +5、暴擊傷害 +20%'];
   const AI = R.AI_X = R.AI_X || {};
-  const targets = () => { const w = W(); return [w.P].concat((w.allies || []).filter(a => !a.downed)).filter(t => t && !t.dead); };
+  const targets = () => { const w = W(); return [w.P].concat((w.allies || []).filter(a => !a.downed), R.netTargets ? R.netTargets() : []).filter(t => t && !t.dead); };   // 多人連線：房主這邊也算別人（net2.js）
   const hitT = (t, dmg, e, o) => (t.ally ? R.hurtAlly(t, dmg, e) : R.hurtPlayer(dmg, e, o));
   AI.l_spikewolf = (e, P, d, a, sp, dt, walk, H) => {
     e.yaw = a; e.rageT = (e.rageT || 0) + dt;
