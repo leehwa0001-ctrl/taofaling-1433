@@ -92,7 +92,10 @@
   // ---------- 畫面 ----------
   const stOf = () => S().classes[S().cls];
   const tree = T => { const t = {}; [T.ROOT, ...T.PATHS.map(p => p.nodes.concat(...p.subs.map(s => s.nodes.concat([s.cap])))), [T.XP]].forEach(a => a.forEach(n => { t[n.id] = n; })); return t; };
-  const stateOf = n => { const v = R.talentLv(n.id), w = R.talentWhy(n.id), full = v >= n.mx; return { v, w, full, cls: (v ? ' on' : '') + (full ? ' full' : '') + (!w && !full ? ' open' : '') + (w && !full ? ' lock' : '') + (w && w.indexOf('奧義只能學一個') >= 0 ? ' off' : '') }; };
+  // 奧義只能學一個：學了一個，別的奧義不管分支開了沒都標成 off（外框暗、打 X）
+  const capIds = () => (R.TALENT_TREE ? R.TALENT_TREE.PATHS.flatMap(p => p.subs.map(sb => sb.cap.id)) : []);
+  const capTaken = n => { const ids = capIds(); return ids.includes(n.id) && ids.some(id => id !== n.id && R.talentLv(id) > 0); };
+  const stateOf = n => { const v = R.talentLv(n.id), w = R.talentWhy(n.id), full = v >= n.mx; return { v, w, full, cls: (v ? ' on' : '') + (full ? ' full' : '') + (!w && !full ? ' open' : '') + (w && !full ? ' lock' : '') + ((w && w.indexOf('奧義只能學一個') >= 0) || (!v && capTaken(n)) ? ' off' : '') }; };
   const skillGroups = () => {
     const cls = S().cls, st = stOf(), list = R.skillsLearned ? R.skillsLearned(cls) : [];
     return [null, st.adv].filter((v, i) => i === 0 || v).map(adv => {
@@ -151,12 +154,15 @@
   };
   const scrolls = () => [$('hub-sheet'), $('r-sheet'), document.scrollingElement].filter(Boolean).map(el => [el, el.scrollTop]);
   const sp0 = R.skillPoints;
+  // 2026-10-04 作者：滑桿直接加在技能那一側，天賦樹跟細節欄位置固定——寬的畫面：技能那一欄的高度跟天賦樹一樣、自己捲（整頁不用捲）
+  const fitSkills = () => { const sk = document.querySelector('.tu-skills'), tr = document.querySelector('.tu-tree'); if (!sk || !tr) return; if (window.matchMedia && window.matchMedia('(max-width: 900px)').matches) { sk.style.maxHeight = ''; return; } sk.style.maxHeight = tr.offsetHeight + 'px'; };
   R.skillPoints = (where, keep) => {
-    const sc = keep && scrolls(), r = sp0(where, keep);
-    try { if (S() && !(R.W && R.W.run)) build(where === 'hub' ? 'hub' : 'town', where === 'hub' ? $('hub-sheet') : $('sp-host')); } catch (e) { console.warn('[talentui]', e); }
+    const sc = keep && scrolls(), sk0 = document.querySelector('.tu-skills'), skY = keep && sk0 ? sk0.scrollTop : 0, r = sp0(where, keep);
+    try { if (S() && !(R.W && R.W.run)) build(where === 'hub' ? 'hub' : 'town', where === 'hub' ? $('hub-sheet') : $('sp-host')); fitSkills(); const sk = document.querySelector('.tu-skills'); if (sk) sk.scrollTop = skY; } catch (e) { console.warn('[talentui]', e); }
     if (sc) sc.forEach(([el, y]) => { el.scrollTop = y; });
     return r;
   };
+  window.addEventListener('resize', fitSkills);
 
   const css = document.createElement('style');
   css.textContent = [
@@ -183,7 +189,10 @@
     '.tu-n.full{border-color:#E8C04A;box-shadow:0 0 0 2px rgba(232,192,74,.25)}.tu-n.full i{color:#E8C04A;border-color:#E8C04A}',
     '.tu-n.cap{width:52px;height:52px;border-radius:50%;border-width:3px;border-color:color-mix(in srgb,var(--tc) 60%,#E8C04A)}.tu-n.cap img{width:34px;height:34px}',
     '.tu-n.tr{border-style:dashed}.tu-n.tr::before{content:"±";position:absolute;left:-6px;top:-8px;font-size:10px;font-weight:700;line-height:13px;color:#FF9A6A;background:#141018;border:1px solid #6A4A40;border-radius:6px;padding:0 3px;z-index:1}.tu-pos{color:#9AE07A}.tu-neg{color:#FF8A6A}',
-    '.tu-n.off{opacity:.3}.tu-n.sel{outline:3px solid #FFF0C0;outline-offset:3px}.tu-n:hover{transform:translate(-50%,-50%) scale(1.07)}',
+    // 奧義只能學一個：學了一個以後，別的奧義外框暗下去、打一個 X（2026-10-04 作者）
+    '.tu-n.off{opacity:1!important;border-color:#3A3440!important;box-shadow:none!important;background:#100C12!important}.tu-n.off img{filter:grayscale(1) brightness(.35)!important}.tu-n.off i{opacity:.45}.tu-n.off::after{content:"✕";position:absolute;inset:0;display:grid;place-items:center;font:900 26px/1 sans-serif;color:#E0604A;text-shadow:0 0 3px #000,0 0 6px #000;pointer-events:none}',
+    '.tu-skills{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}',
+    '.tu-n.sel{outline:3px solid #FFF0C0;outline-offset:3px}.tu-n:hover{transform:translate(-50%,-50%) scale(1.07)}',
     '.tu-pl,.tu-sl{position:absolute;transform:translate(-50%,-50%);font-family:var(--serif);font-weight:700;font-size:12.5px;color:var(--tc);background:var(--bg2);padding:0 6px;border-radius:6px;white-space:nowrap;z-index:1}.tu-sl{font-size:11px;font-weight:400}',
     '.tu-xp{position:absolute;left:2%;right:2%;transform:translateY(-50%);display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:9px;background:#18141C;border:2px solid #4A4450;color:var(--dim);cursor:pointer;font:inherit}',
     '.tu-xp span{color:#E8C04A;font-size:16px}.tu-xp b{font-family:var(--serif);color:var(--ink)}.tu-xp em{font-style:normal;font-weight:700;color:#E8C04A}.tu-xp small{margin-left:auto;margin-right:auto;font-size:11px}',
