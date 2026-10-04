@@ -242,7 +242,7 @@
   const TABS = [['acc', '飾品工房'], ['refine', '精煉・重鑄・附魔'], ['buy', '買素材']];
   let csub = null;
   const matsTxt = m => Object.keys(m).map(k => esc(R.MATS[k].name) + ' ' + (S().mats[k] || 0) + '／' + m[k]).join('・');
-  const card = (it, btns) => '<div class="item-card" style="--c:' + R.rarityColor(it) + '">' + (R.itemIconTag ? R.itemIconTag(it, 'card') : '') + '<b>' + esc(R.itemName(it)) + '</b><small class="rar">' + (it.identified ? R.RARITY[it.rarity].name : '？？？') + (it.plus ? '・+' + it.plus : '') + '</small><ul>' + R.itemLines(it).map(l => '<li>' + esc(l) + '</li>').join('') + '</ul><div class="row">' + btns + '</div></div>';
+  const card = (it, btns) => '<div class="item-card" data-iid="' + it.id + '" style="--c:' + R.rarityColor(it) + '">' + (R.itemIconTag ? R.itemIconTag(it, 'card') : '') + '<b>' + esc(R.itemName(it)) + '</b><small class="rar">' + (it.identified ? R.RARITY[it.rarity].name : '？？？') + (it.plus ? '・+' + it.plus : '') + '</small><ul>' + R.itemLines(it).map(l => '<li>' + esc(l) + '</li>').join('') + '</ul><div class="row">' + btns + '</div></div>';
   const accTab = () => '<p class="note">「照圖做的東西，做出來是什麼樣子我心裡有數。」配方上寫的詞綴一定會有；其他的詞綴看運氣。做出來當場就鑑定好了。</p><div class="recipes">'
     + ACC_RC.map((rc, i) => { const d = rc.kind === 'acc' ? ACC[rc.base] : CHARM2[rc.base], imp = d ? ACCDEF(d.imp) : null, ex = rc.extra ? ACCDEF(rc.extra) : null;
       return '<div class="recipe"><b>' + esc(rc.name) + '（' + (rc.kind === 'acc' ? '飾品' : '護符') + '・物品等級 ' + rc.ilvl + '）</b><small>' + matsTxt(rc.mats) + '・' + rc.gold + ' 費拉</small>'
