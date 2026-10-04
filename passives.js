@@ -124,7 +124,7 @@
   const hp = R.hurtPlayer;
   R.hurtPlayer = (raw, src, o) => {
     const P = W().P, f = P && P.pv;
-    if (f && f.last && !P.pvLast && raw >= P.hp && P.hp > 1 && !(P.iframe > 0)) { raw = P.hp - 1; P.pvLast = 1; R.banner('不屈！', '留下了最後一口氣（這一層不會再有第二次）'); }
+    // 不屈／殉道（fx.last）：真的倒下的時候才算——改在 unyield.js（原本這裡看扣護甲之前的傷害，死不了的攻擊也會觸發）
     const r = hp(raw, src, o);
     if (f && f.thorns && src && src.def && !src.dead && raw > 0) he(src, raw * f.thorns, { thorns: 1 });
     return r;
