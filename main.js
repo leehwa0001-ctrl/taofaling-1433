@@ -64,7 +64,7 @@
     let h = '<article class="doc"><div class="order">公會令－討伐令第 1433 號　' + (s.kind === 'ruin' || s.kind === 'forbidden' ? '遺跡資料' : '地點') + '</div><h2>' + esc(s.name) + '</h2>'
       + '<div class="src">' + (R.SRC[s.src] || '') + '</div>';
     if (s.kind === 'ruin' || s.kind === 'forbidden') {
-      const g = gradeOf(s), t = R.TYPES[s.type], env = s.env ? R.ENVS[s.env] : null, fl = floorsOf(s), c = R.GRADE_COLOR[s.grade];
+      const g = gradeOf(s), t = R.TYPES[s.type], env = s.env ? { name: s.envName || R.ENVS[s.env].name } : null, fl = floorsOf(s), c = R.GRADE_COLOR[s.grade];
       h += '<div class="badges"><span class="badge fill" style="background:' + c + ';border-color:' + c + '">' + esc(g.name) + '（' + esc(g.letter) + '）</span><span class="badge" style="color:' + (g.zone === '討伐區' ? '#8A1E18' : '#3E6A48') + '">' + esc(g.zone) + '</span>'
         + (t ? '<span class="badge" style="color:#4A3A28">' + esc(t.name) + '</span>' : '') + (env ? '<span class="badge" style="color:#8A4A1E">' + esc(env.name) + '環境</span>' : '') + '</div>';
       h += '<p>' + esc(s.desc) + '</p>';

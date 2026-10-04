@@ -82,7 +82,7 @@
     const r = st0(dt); if ((t -= dt) > 0) return r; t = 0.3;
     try {
       const w = W(); if (!w.run) return r;
-      setKind($('kfx-box'), 'hf-env-', w.run.env || 'none');
+      setKind($('kfx-box'), 'hf-env-', w.run.envSkin || w.run.env || 'none');
       const fx = R.fieldFx && R.fieldFx(), kb = $('kfx-box'); if (kb) kb.classList.toggle('storm', !!(fx && fx.storm > 0));
       const mod = w.F && w.F.mod; if (mod) setKind($('rv-mod'), 'hf-mod-', mod);
       lordChip(); order();
@@ -125,6 +125,11 @@
     '.hf-env-snow::before{left:0;right:0;top:0;height:12px;background:' + ICE + ' 0 0/46px 12px repeat-x;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}',
     '.hf-env-snow::after{left:0;right:0;top:9px;height:22px;background:radial-gradient(ellipse 1.2px 2px,#E6F4FF 60%,transparent 70%) 29px 0/46px 22px repeat-x,radial-gradient(ellipse 1.2px 2px,#E6F4FF 60%,transparent 70%) 16px 0/46px 22px repeat-x;animation:hfDrip 1.6s ease-in infinite}',
     '@keyframes hfDrip{0%{background-position:29px -2px,16px -10px;opacity:1}80%{opacity:.9}100%{background-position:29px 20px,16px 12px;opacity:0}}',
+    // 熔爐（奉主兵工廠）：鐵板鉚釘、底下燒紅的鐵水、往上噴的火星
+    '.hf-env-forge{--cc:#FF9A4A;background:repeating-linear-gradient(90deg,rgba(70,66,64,.9) 0 22px,rgba(50,46,44,.9) 22px 23px)!important;box-shadow:inset 0 0 0 1px #1A1614,inset 0 -6px 10px -4px #FF6A1A}',
+    '.hf-env-forge::before{left:3px;right:3px;top:3px;height:4px;background:radial-gradient(circle,#9A948E 0 1.2px,transparent 1.6px) 0 0/23px 4px repeat-x}',
+    '.hf-env-forge::after{left:0;right:0;bottom:0;top:0;background:linear-gradient(0deg,#FF7A2A 0 2px,transparent 3px),radial-gradient(circle,#FFE08A 0 1px,transparent 1.5px) 3px 0/17px 13px,radial-gradient(circle,#FF9A3A 0 .8px,transparent 1.3px) 11px 5px/23px 17px;animation:hfSpark 1.1s linear infinite}',
+    '@keyframes hfSpark{0%{background-position:0 0,3px 26px,11px 39px}100%{background-position:0 0,3px 0,11px 5px}}',
     // 沙漠：斜吹的沙
     '.hf-env-desert{--cc:#E8C080;background:linear-gradient(90deg,rgba(110,80,40,.88),rgba(40,28,14,.85))!important}',
     '.hf-env-desert::after{inset:0;background:repeating-linear-gradient(100deg,transparent 0 16px,rgba(240,210,150,.28) 16px 18px,transparent 18px 27px,rgba(240,210,150,.16) 27px 28px);background-size:80px 100%;animation:hfSand 1.1s linear infinite}',

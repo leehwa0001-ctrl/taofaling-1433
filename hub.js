@@ -81,7 +81,7 @@
     R.syncStatus();
     const open = R.SITES.filter(s => s.kind === 'ruin' && s.status === 'open');
     return '<section class="panel-doc"><h2>公會東鶴分館</h2><p class="note">西市口的綠旗石樓。登記處的館員抬頭看了你一眼：「下一位。」</p>'
-      + '<h3>遺跡委託</h3><div class="quests">' + open.map(s => { const g = R.gradeById(s.grade); return '<div class="quest" style="--c:' + R.GRADE_COLOR[s.grade] + '"><b>' + esc(s.name) + '</b><small>' + esc(g.name) + '・' + esc(R.TYPES[s.type].name) + (s.env ? '・' + esc(R.ENVS[s.env].name) : '') + '</small><button type="button" class="btn pri" data-go="' + s.id + '">出發</button></div>'; }).join('')
+      + '<h3>遺跡委託</h3><div class="quests">' + open.map(s => { const g = R.gradeById(s.grade); return '<div class="quest" style="--c:' + R.GRADE_COLOR[s.grade] + '"><b>' + esc(s.name) + '</b><small>' + esc(g.name) + '・' + esc(R.TYPES[s.type].name) + (s.env ? '・' + esc((s.envName || R.ENVS[s.env].name)) : '') + '</small><button type="button" class="btn pri" data-go="' + s.id + '">出發</button></div>'; }).join('')
       + '<button type="button" class="btn" data-map="1">攤開地圖看全部</button></div>'
       + cardBox()
       + partyBox()

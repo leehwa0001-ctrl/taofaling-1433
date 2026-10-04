@@ -32,7 +32,7 @@
     const col = colOf(s);
     let h = BANDS.map(([lab, note], b) => row(lab, bandRange(s, b) + '・' + note, order.map(id => { const t = b ? tierAt(id, s, b) : 0; return t ? id + '_v' + t : id; }), b, col, main)).join('');
     const env = s.env && Object.keys(R.ENEMIES).filter(k => R.ENEMIES[k].env === s.env && !R.ENEMIES[k].boss);
-    if (env && env.length) h += row('環境', (R.ENVS[s.env] || {}).name + '才有的', env, 1.5, col);
+    if (env && env.length) h += row('環境', (s.envName || (R.ENVS[s.env] || {}).name) + '才有的', env, 1.5, col);
     const envLord = { snow: 'frostdeer', volcano: 'lavajaw', desert: 'sandwhale', deep: 'kraken' }[s.env], rg = regionOf(s), own = rg && rg.lords && rg.lords[s.id];
     const excl = new Set([].concat(...Object.values(R.REGIONS || {}).map(r => r.lords ? [].concat(...Object.values(r.lords)) : [])));   // 別的遺跡專屬的領主體（無主大鎧）不列
     const L = Array.from(new Set(own ? own : (envLord ? [envLord] : []).concat((G(s.grade).lords || []).filter(id => !excl.has(id))))).filter(id => R.ENEMIES[id]);
@@ -62,7 +62,7 @@
   const ruinInfo = s => {
     const g = G(s.grade), rg = regionOf(s), t = R.TYPES[s.type], main = R.siteMain ? R.siteMain(s) : [], cu = g && g.boss === 'petra' ? coreURL(s) : '';
     return '<div class="dx-banner">' + esc(s.name) + '</div>'
-      + '<div class="dr-info" style="--rc:' + colOf(s) + '"><p><b>' + esc(g ? g.name : '') + '</b>（' + esc(g ? g.letter : '') + '）・' + esc(t ? t.name : '') + (s.env ? '・' + esc(R.ENVS[s.env].name) + '環境' : '') + '・約 ' + floorsOf(s) + ' 層</p>'
+      + '<div class="dr-info" style="--rc:' + colOf(s) + '"><p><b>' + esc(g ? g.name : '') + '</b>（' + esc(g ? g.letter : '') + '）・' + esc(t ? t.name : '') + (s.env ? '・' + esc(s.envName || R.ENVS[s.env].name) + '環境' : '') + '・約 ' + floorsOf(s) + ' 層</p>'
       + '<p>' + esc(s.desc || '') + '</p>' + (rg ? '<p class="note"><b>' + esc(rg.n) + '</b>：' + esc(rg.d || '') + '</p>' : '')
       + (main.length ? '<p class="note">常見：' + main.map(id => esc(R.ENEMIES[id].name)).join('、') + '</p>' : '')
       + (cu ? '<div class="dr-core"><img src="' + cu + '" alt=""><small>這一帶的佩特拉核心</small></div>' : '') + '</div>';
