@@ -7,6 +7,7 @@
 // - 2026-10-05 再補（作者：全部東西都要解鎖）：高級炸彈、爆裂核心、公會賣的共通被動、各分級的攻略次數和卡索級的許可、
 //   每座遺跡的存檔點、觀光章（東鶴、奉主）、動物園的說明牌、每一種家具、二轉的指定試煉全部通過、所有技能熟練度 ★5。
 //   坎賽特級照設定永遠不開放；會長的劇情（kansait.js）照常走。
+// - 2026-10-05 又補：狩獵考核合格、車（跑車）、每種飾品和護符、每一套套裝各一件、每種禮物和紀念品各 5；另外有管理員面板（adminpanel.js）。
 // - 公會畫面上面會標「管理員」。
 // 放在所有內容檔的後面（要讀到全部的武器、防具、素材、技能、稱號）。
 (function (R) {
@@ -69,6 +70,13 @@
         Object.values(R.SKILL_LIB || {}).forEach(k => { if (k.cls === c) ids.add(k.id); });
         ids.forEach(id => { st.sp.r[id] = 5; st.sp.u[id] = Math.max(st.sp.u[id] || 0, PROF[PROF.length - 1]); });
       });
+      // 2026-10-05 再補（作者：要能測試全部東西）：狩獵考核合格、車、每種飾品和護符、每一套套裝各一件、每種禮物和紀念品
+      s.hunt = Object.assign({ tries: 0 }, s.hunt || {}, { passed: Math.max(2, (s.hunt && s.hunt.passed) || 0) });
+      if (!s.car) s.car = { model: 'sport', col: '#C8282A' };
+      Object.keys(R.ACC || {}).forEach(b => { try { s.stash.push(R.makeItem({ kind: 'acc', base: b, ilvl, rarity: 5, identified: true })); } catch (e) { } });
+      Object.keys(R.CHARM2 || {}).forEach(b => { try { s.stash.push(R.makeItem({ kind: 'charm', base: b, ilvl, rarity: 5, identified: true })); } catch (e) { } });
+      const ab = Object.keys(R.ARMOR); Object.keys(R.SETS || {}).forEach((k, i) => { const it = R.makeItem({ kind: 'armor', base: ab[i % ab.length], ilvl, rarity: 5, identified: true }); it.set = k; s.stash.push(it); });
+      s.gifts = s.gifts || {}; Object.keys(R.GIFTS || {}).forEach(g => { s.gifts[g] = Math.max(s.gifts[g] || 0, 5); });
     } catch (e) { console.warn('[admin]', e); }
     R.save();
   };

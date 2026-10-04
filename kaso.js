@@ -43,7 +43,7 @@
     if (st && st.grade === 'kaso') {
       kaso.pool = Array.from(new Set(kes.pool.concat(kaso.pool || [])));   // 生物的檔案（monsters2～5）比這個檔案晚載入，進去之前再合併一次
       if (!authed()) { R.say ? R.say('公會明文禁止任何個人進入卡索級遺跡。') : R.toast('禁止進入。'); return; }
-      const n = (S().party || []).length; if (n < PARTY_MIN) { R.say ? R.say('公會明文禁止任何個人單獨進入卡索級遺跡：至少要帶 ' + PARTY_MIN + ' 名隊友（現在 ' + n + ' 名）。到公會的登記處找人。') : R.toast('至少要帶兩名隊友。'); return; }
+      const n = (S().party || []).length; if (n < PARTY_MIN && !S().admin) { /* 管理員號（測試用）不用帶隊友 */ R.say ? R.say('公會明文禁止任何個人單獨進入卡索級遺跡：至少要帶 ' + PARTY_MIN + ' 名隊友（現在 ' + n + ' 名）。到公會的登記處找人。') : R.toast('至少要帶兩名隊友。'); return; }
     }
     return sr0(id);
   };
