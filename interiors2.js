@@ -190,7 +190,7 @@
     const { HW, HD, bx, block, lamp } = c;
     for (let i = 0; i < 3; i++) { const x = -6 + i * 3; bx(1.6, 2.2, 1.6, '#FF7AB8', x, 1.1, -HD + 1.4); const gl = bx(1.4, 1.2, 1.4, K().lam('#E8F0FF', {}), x, 1.6, -HD + 1.4); gl.material.transparent = true; gl.material.opacity = 0.3; bx(1.7, 0.3, 1.7, K().lam('#FFE070', { em: '#FFE070', ei: 0.8 }), x, 2.35, -HD + 1.4); block(x - 0.8, x + 0.8, -HD + 0.6, -HD + 2.2, 'deco'); c.inter(x, -HD + 3, 1.6, '夾娃娃機（一次 3 費拉）', () => (R.ufoCatcher ? R.ufoCatcher() : null)); }
     for (let r = 0; r < 2; r++) for (let i = 0; i < 4; i++) { const x = 1.5 + i * 1.2, z = 0 + r * 3; machine(c, x, z, r ? 0 : Math.PI, '#2E2E48', pick(['#7AE0FF', '#FF5A8A', '#AAFF7A'])); }
-    c.inter(3, 1.5, 2, '玩一台格鬥電玩（1 費拉）', () => { if (R.S.gold < 1) { R.toast('錢不夠。'); return; } R.S.gold -= 1; R.save(); talk('電玩', [rnd() < 0.4 ? '連贏三場！旁邊的國中生看傻了眼。' : '才第二關就輸了。背後傳來一聲嘆氣。']); });
+    c.inter(3, 1.5, 2, '玩一台格鬥電玩（1 費拉）', () => { if (R.S.gold < 1) { R.toast('錢不夠。'); return; } R.S.gold -= 1; if (R.sanAdd) R.sanAdd(3); R.save(); talk('電玩', [rnd() < 0.4 ? '連贏三場！旁邊的國中生看傻了眼。' : '才第二關就輸了。背後傳來一聲嘆氣。']); });
     bx(1.6, 2.2, 1.4, '#E8E0F0', HW - 1.2, 1.1, HD - 2); block(HW - 2, HW, HD - 2.8, HD - 1.2, 'deco'); c.inter(HW - 2.4, HD - 2, 1.6, '拍大頭貼（2 費拉）', () => { if (R.S.gold < 2) { R.toast('錢不夠。'); return; } R.S.gold -= 2; R.save(); talk('大頭貼', ['閃光燈閃了四次。印出來的貼紙上，你的眼睛被畫得很大。']); });
     guest(c, -3, 2, Math.PI, '翹課的國中生', ['「你也是來夾娃娃的？那台的爪子比較緊。」', '「不要跟我媽說我在這裡。」'], { top: '#2E3A5A' });
     lamp(-4, 3.0, -HD + 2, '#FF8AC8', 0.8, 10); lamp(3, 3.0, 1, '#8AE0FF', 0.8, 10);
