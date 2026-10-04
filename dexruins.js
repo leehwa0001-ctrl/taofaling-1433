@@ -6,10 +6,15 @@
 //   中層、深層換成會出現的變種（荒、獰、淵——照 variants.js 的 R.variantAt：淺層沒有，越深越多越兇）。列的顏色是遺跡所在地區的顏色，越往下越暗、越紅。
 // - 右頁：沒點生物的時候是遺跡的介紹（地區、分級、層數、環境、領主體、佩特拉核心的樣子）；點了生物是那一隻的大圖、說明、在哪些遺跡出現。
 // - 手機（窄的畫面）：右頁的內容跳出來。
+// - 2026-10-04 改版（作者：遺跡分層在最上面，領主和小怪分開來介紹，之後再做變體，佩特拉核心單獨介紹，圖鑑可以講場地效果）：
+//   一座遺跡的左頁照這個順序：遺跡分層（淺層、中層、深層各第幾層、變種多少、到那一段最深的深度加成；最深處是什麼）
+//   → 遺跡生物（同一個捲動框、一條滑桿，裡面分「小怪」「領主」「變體」三段：小怪＋環境才有的、領主體、荒／獰／淵各一列）
+//   → 佩特拉核心（一張卡片，點了右頁是核心自己的介紹：這一帶的長相、在哪裡能不能打、注意和五種反應）
+//   → 場地效果（這座遺跡的環境、會抽到的樓層效果；點了右頁是詳細說明，用 hudinfo.js 的 R.FIELD_INFO、R.FLOOR_MOD_MORE）。
 // 放在 dexui.js、region.js 後面。
 (function (R) {
   const $ = id => document.getElementById(id), esc = s => R.esc(s);
-  let on = false, gtab = 'amile', siteId = null, mon = null;
+  let on = false, gtab = 'amile', siteId = null, mon = null, pick = null;   // pick：'core'（佩特拉核心）、'env:火山…'、'mod:濃霧…'（場地效果）
   const wide = () => window.matchMedia && window.matchMedia('(min-width: 780px)').matches;
   const G = id => R.gradeById(id), kills = id => { const k = R.S && R.S.dexKills; if (!k) return 0; return (k[id] || 0) + [1, 2, 3].reduce((a, t) => a + (k[id + '_v' + t] || 0), 0); };
   const icon = (id, s) => (R.beastIconURL ? R.beastIconURL(id, s || 2) : '');
@@ -26,18 +31,62 @@
   const row = (lab, sub, ids, k, col, stars) => '<div class="dr-row" style="--rc:' + col + ';--k:' + k + '"><div class="dr-lab"><b>' + esc(lab) + '</b><small>' + esc(sub) + '</small></div><div class="dr-strip">' + (ids.length ? ids.map(id => th(id, stars && stars.includes(id.replace(/_v\d$/, '')))).join('') : '<span class="dr-none">（沒有）</span>') + '</div></div>';
 
   // ---------- 左頁 ----------
-  const ruinRows = s => {
-    const pool = (R.sitePool ? R.sitePool(s) : (G(s.grade).pool || [])).filter(id => R.ENEMIES[id] && !R.ENEMIES[id].noDex);
-    const main = R.siteMain ? R.siteMain(s) : [], order = pool.slice().sort((a, b) => (main.includes(b) - main.includes(a)) || (!!R.ENEMIES[a].elite - !!R.ENEMIES[b].elite));
-    const col = colOf(s);
-    let h = BANDS.map(([lab, note], b) => row(lab, bandRange(s, b) + '・' + note, order.map(id => { const t = b ? tierAt(id, s, b) : 0; return t ? id + '_v' + t : id; }), b, col, main)).join('');
-    const env = s.env && Object.keys(R.ENEMIES).filter(k => R.ENEMIES[k].env === s.env && !R.ENEMIES[k].boss);
-    if (env && env.length) h += row('環境', (s.envName || (R.ENVS[s.env] || {}).name) + '才有的', env, 1.5, col);
+  // ---------- 左頁：一座遺跡 ----------
+  // 2026-10-04 作者：遺跡分層在最上面，領主和小怪分開來介紹，之後再做變體，佩特拉核心單獨介紹，講場地效果。
+  //   順序：遺跡分層 → 小怪（＋環境才有的）→ 領主 → 變體（荒、獰、淵）——這三段在同一個捲動框（一條滑桿）→ 佩特拉核心 → 場地效果。
+  const VT = [null, ['荒', '暗紅、眼睛發紅、背上長短刺｜生命 +15%、傷害 +10%'], ['獰', '更暗、刺更長、露出獠牙、大一成｜生命 +30%、傷害 +20%'], ['淵', '幾乎全黑、發紫光、大兩成｜生命 +45%、傷害 +30%']];
+  const poolOf = s => (R.sitePool ? R.sitePool(s) : (G(s.grade).pool || [])).filter(id => R.ENEMIES[id] && !R.ENEMIES[id].noDex);
+  const lordsOf = s => {
     const envLord = { snow: 'frostdeer', volcano: 'lavajaw', desert: 'sandwhale', deep: 'kraken' }[s.env], rg = regionOf(s), own = rg && rg.lords && rg.lords[s.id];
     const excl = new Set([].concat(...Object.values(R.REGIONS || {}).map(r => r.lords ? [].concat(...Object.values(r.lords)) : [])));   // 別的遺跡專屬的領主體（無主大鎧）不列
-    const L = Array.from(new Set(own ? own : (envLord ? [envLord] : []).concat((G(s.grade).lords || []).filter(id => !excl.has(id))))).filter(id => R.ENEMIES[id]);
-    if (L.length) h += row('領主體', '每 3～5 層守在樓層通道前', L, 2.4, col);
-    const boss = G(s.grade).boss; if (boss && R.ENEMIES[boss]) h += row('最深處', '佩特拉核心', [boss], 3, col);
+    return Array.from(new Set(own ? own : (envLord ? [envLord] : []).concat((G(s.grade).lords || []).filter(id => !excl.has(id))))).filter(id => R.ENEMIES[id]);
+  };
+  const bandEnd = (s, b) => { const n = floorsOf(s), a = Math.floor(n * b / 3) + 1; return Math.max(a, Math.floor(n * (b + 1) / 3)); };
+  const depthAt = (s, n) => { try { return R.depthBonus ? R.depthBonus({ grade: G(s.grade), site: s, floor: n - 1, floors: floorsOf(s) }) : null; } catch (e) { return null; } };
+  const reserve = s => G(s.grade).boss !== 'petra';   // 保留區：最深處的核心受公會保護
+  const layers = s => {
+    const col = colOf(s), L = lordsOf(s), pc = v => Math.round(v * 100) + '%';
+    const rows = BANDS.map(([lab, note], b) => {
+      const d = depthAt(s, bandEnd(s, b)), more = d && d.hp >= 0.01 ? '到這一段最深：生物生命 +' + pc(d.hp) + '、傷害 +' + pc(d.dmg) + '、寶物數量 +' + pc(d.qty) : '';
+      return '<div class="dr-layer" style="--rc:' + col + ';--k:' + b + '"><b>' + esc(lab) + '</b><small>' + esc(bandRange(s, b)) + '</small><span>' + esc(note) + (b === 1 ? '（多半是「荒」）' : '') + (more ? '<br><i>' + esc(more) + '</i>' : '') + '</span></div>';
+    });
+    rows.push('<div class="dr-layer" style="--rc:' + col + ';--k:3"><b>最深處</b><small>第 ' + floorsOf(s) + ' 層</small><span>' + (reserve(s) ? '看得到佩特拉核心，但受公會保護，不能打。' : '佩特拉核心醒著：打倒它才算討伐完成。') + '</span></div>');
+    return '<h4 class="dr-h">遺跡分層</h4><div class="dr-layers">' + rows.join('') + '</div>'
+      + (L.length ? '<p class="note dr-lnote">領主體：每 3～5 層一隻，守在通往樓層通道的路上；牠倒下之前下不去。</p>' : '');
+  };
+  const sec = t => '<div class="dr-sec"><span>' + esc(t) + '</span></div>';
+  const ruinRows = s => {
+    const pool = poolOf(s), main = R.siteMain ? R.siteMain(s) : [], col = colOf(s);
+    const minions = pool.filter(id => !/^領主體/.test(R.ENEMIES[id].name || '')).sort((a, b) => (main.includes(b) - main.includes(a)) || (!!R.ENEMIES[a].elite - !!R.ENEMIES[b].elite));
+    // 小怪
+    let h = sec('小怪') + row('小怪', minions.length + ' 種・★常見', minions, 0, col, main);
+    const env = s.env && Object.keys(R.ENEMIES).filter(k => R.ENEMIES[k].env === s.env && !R.ENEMIES[k].boss && !R.ENEMIES[k].noDex);
+    if (env && env.length) h += row('環境', (s.envName || (R.ENVS[s.env] || {}).name || '') + '才有的', env, 1, col);
+    // 領主
+    const L = lordsOf(s);
+    h += sec('領主') + (L.length ? row('領主體', '每 3～5 層一隻', L, 2, col) : '<div class="dr-row" style="--rc:' + col + ';--k:2"><div class="dr-lab"><b>領主體</b><small>沒有</small></div><div class="dr-strip"><span class="dr-none">' + esc(G(s.grade).name) + '的遺跡沒有領主體（克森特級起才有）。</span></div></div>');
+    // 變體：中層、深層會變成哪一種
+    const byT = { 1: [], 2: [], 3: [] }, where = { 1: new Set(), 2: new Set(), 3: new Set() };
+    minions.forEach(id => [1, 2].forEach(b => { const t = tierAt(id, s, b); if (t) { if (!byT[t].includes(id + '_v' + t)) byT[t].push(id + '_v' + t); where[t].add(b); } }));
+    const vr = [1, 2, 3].filter(t => byT[t].length).map(t => row(VT[t][0], [...where[t]].sort().map(b => BANDS[b][0]).join('、') + '出現', byT[t], 1 + t * 0.6, col, main));
+    h += sec('變體') + (vr.length ? vr.join('') : '<div class="dr-row" style="--rc:' + col + ';--k:1"><div class="dr-lab"><b>變體</b><small>沒有</small></div><div class="dr-strip"><span class="dr-none">這座遺跡的生物不會變種。</span></div></div>');
+    return h;
+  };
+  const vnote = () => '<p class="note dr-tip">變體：' + [1, 2, 3].map(t => '「' + VT[t][0] + '」' + VT[t][1].replace('｜', '，')).join('；') + '。打倒的次數算在原本那一種上。</p>';
+  const coreCard = s => {
+    const cu = coreURL(s), rg = regionOf(s);
+    return '<h4 class="dr-h">佩特拉核心</h4><button type="button" class="dr-corecard' + (pick === 'core' ? ' sel' : '') + '" data-drk="1" style="--rc:' + colOf(s) + '">' + (cu ? '<img src="' + cu + '" alt="">' : '')
+      + '<span><b>佩特拉核心' + (rg ? '・' + esc(rg.n) + '一帶' : '') + '</b><small>' + (reserve(s) ? '保留區：最深處看得到，受公會保護、不能打。' : '討伐區：最深處醒著，打倒它才算討伐完成。') + '</small><em>點一下看介紹（長相、力場、反應）</em></span></button>';
+  };
+  const envsOf = s => { if (s.env) return [s.env]; const g = G(s.grade); return g && g.env ? ['volcano', 'desert', 'deep'] : []; };
+  const modsOf = s => { const M = R.FLOOR_MODS || {}, g = G(s.grade); if (s.id === 'kanko' || !g || g.id === 'hunt') return []; return Object.keys(M).filter(k => !g.passive || M[k].safe); };
+  const envName = e => (R.FIELD_ENV_NAME && R.FIELD_ENV_NAME[e]) || (R.ENVS[e] || {}).name || e;
+  const fields = s => {
+    const es = envsOf(s), ms = modsOf(s), M = R.FLOOR_MODS || {}, chip = (k, n, sub) => '<button type="button" class="dr-fc' + (pick === k ? ' sel' : '') + '" data-drf="' + k + '"><b>' + esc(n) + '</b>' + (sub ? '<small>' + esc(sub) + '</small>' : '') + '</button>';
+    let h = '<h4 class="dr-h">場地效果</h4>';
+    if (es.length) h += '<p class="note">' + (s.env ? '整座遺跡都是這種環境：' : '每一趟從這三種環境抽一種：') + '</p><div class="dr-fields">' + es.map(e => chip('env:' + e, envName(e), (R.ENVS[e] || {}).desc || (e === 'forge' ? '機關還在動。' : ''))).join('') + '</div>';
+    if (ms.length) h += '<p class="note">樓層效果：第二層起，每一層大約四成五會抽到一種（每層重新抽）' + (G(s.grade).passive ? '；這一級只有不危險的幾種' : '') + '。</p><div class="dr-fields">' + ms.map(m => chip('mod:' + m, M[m].n, M[m].d)).join('') + '</div>';
+    if (!es.length && !ms.length) h += '<p class="note">這裡沒有場地效果。</p>';
     return h;
   };
   const special = () => {
@@ -55,17 +104,42 @@
     const s = R.SITES.find(x => x.id === siteId);
     return '<div class="dr-gtabs">' + gs.map(g => '<button type="button" class="dr-gt' + (gtab === g.id ? ' on' : '') + '" data-drg="' + g.id + '" style="--gc:' + ((R.GRADE_COLOR || {})[g.id] || '#8A7A6A') + '">' + esc(g.name) + '</button>').join('') + '<button type="button" class="dr-gt' + (gtab === 'sp' ? ' on' : '') + '" data-drg="sp" style="--gc:#9A6AC8">特殊種</button></div>'
       + (gtab === 'sp' ? special() : '<div class="dr-sites">' + list.map(x => { const rg = regionOf(x); return '<button type="button" class="dr-site' + (x.id === siteId ? ' on' : '') + (x.status === 'lock' ? ' lock' : '') + '" data-drs="' + x.id + '" style="--rc:' + colOf(x) + '"><b>' + esc(x.name) + '</b><small>' + esc(rg ? rg.n : '') + (x.status === 'lock' ? '・還不能進' : '') + '</small></button>'; }).join('') + '</div>'
-        + (s ? '<div class="dr-ruin">' + ruinRows(s) + '</div><p class="note dr-tip">★＝這座遺跡常見的。暗的是還沒打倒過的。可以左右拖（每一列一起動）。</p>' : ''));
+        + (s ? layers(s) + '<h4 class="dr-h">遺跡生物</h4><div class="dr-ruin">' + ruinRows(s) + '</div><p class="note dr-tip">★＝這座遺跡常見的。暗的是還沒打倒過的。可以左右拖（每一列一起動）。</p>' + vnote() + coreCard(s) + fields(s) : ''));
   };
   // ---------- 右頁 ----------
   const coreURL = s => { try { const st = R.coreStyleOf && R.coreStyleOf(s), sh = R.beastSheetOf && R.beastSheetOf('petra'); if (!sh) return ''; const src = st && R.recolorCore ? R.recolorCore(sh.c, st) : sh.c, c = document.createElement('canvas'); c.width = sh.fw; c.height = sh.fh; c.getContext('2d').drawImage(src, 0, 0, sh.fw, sh.fh, 0, 0, sh.fw, sh.fh); return c.toDataURL(); } catch (e) { return ''; } };
   const ruinInfo = s => {
-    const g = G(s.grade), rg = regionOf(s), t = R.TYPES[s.type], main = R.siteMain ? R.siteMain(s) : [], cu = g && g.boss === 'petra' ? coreURL(s) : '';
+    const g = G(s.grade), rg = regionOf(s), t = R.TYPES[s.type], main = R.siteMain ? R.siteMain(s) : [];
     return '<div class="dx-banner">' + esc(s.name) + '</div>'
       + '<div class="dr-info" style="--rc:' + colOf(s) + '"><p><b>' + esc(g ? g.name : '') + '</b>（' + esc(g ? g.letter : '') + '）・' + esc(t ? t.name : '') + (s.env ? '・' + esc(s.envName || R.ENVS[s.env].name) + '環境' : '') + '・約 ' + floorsOf(s) + ' 層</p>'
       + '<p>' + esc(s.desc || '') + '</p>' + (rg ? '<p class="note"><b>' + esc(rg.n) + '</b>：' + esc(rg.d || '') + '</p>' : '')
       + (main.length ? '<p class="note">常見：' + main.map(id => esc(R.ENEMIES[id].name)).join('、') + '</p>' : '')
-      + (cu ? '<div class="dr-core"><img src="' + cu + '" alt=""><small>這一帶的佩特拉核心</small></div>' : '') + '</div>';
+      + '</div>';
+  };
+  const ul = l => '<ul class="dr-ul">' + l.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
+  const back = '<div class="row"><button type="button" class="btn" data-drback="1">回到遺跡的介紹</button></div>';
+  // 佩特拉核心：單獨一頁
+  const coreInfo = s => {
+    const e = R.ENEMIES.petra, cu = coreURL(s), rg = regionOf(s), RX = R.REACTIONS || {};
+    return '<div class="dx-banner">佩特拉核心</div>' + (cu ? '<div class="dr-core"><img src="' + cu + '" alt=""><small>' + esc(rg ? rg.n + '一帶的核心' : '核心') + '（每個地區的殼、血管、瞳孔顏色都不一樣）</small></div>' : '')
+      + '<p>' + esc(e.desc || '') + '</p>'
+      + '<h4 class="dx-h">在哪裡、能不能打</h4>' + ul(['每一座遺跡的最深處都有一顆，遺跡就是靠它維持的。', '保留區（哈米莉亞、阿彌勒、摩爾斯級）：看得到，但受公會保護，不能打。', '討伐區（克森特級起）：醒著、周圍五到十公尺是異常狀態力場；打倒它才算討伐完成，會掉魔力核心、翼肢碎片。'])
+      + '<h4 class="dx-h">佩特拉的注意、反應</h4>' + ul(['在遺跡裡打鬥、破壞、開寶箱……都會讓核心注意到你（右上角那一條）；滿 100 會觸發一次「反應」。'].concat(Object.keys(RX).map(k => RX[k].name + '：' + RX[k].desc)))
+      + '<p class="note">每一趟遺跡的反應是上面五種之一，第一次觸發才知道是哪一種。遺跡裡點右上角的「佩特拉的注意」看什麼會讓它升、降。</p>'
+      + (R.dexStats ? R.dexStats('petra') : '') + back;
+  };
+  // 場地效果：環境（火山、沙漠……）、樓層效果（濃霧、崩落……）
+  const fieldInfo = k => {
+    const [kind, id] = k.split(':');
+    if (kind === 'env') {
+      const F = R.FIELD_INFO && R.FIELD_INFO[id], secs = F ? F(1) : [];
+      return '<div class="dx-banner">場地效果・' + esc(envName(id)) + '</div><p>' + esc((R.ENVS[id] || {}).desc || '') + '</p>'
+        + secs.map(([h, l]) => '<h4 class="dx-h">' + esc(h) + '</h4>' + ul(l)).join('')
+        + '<p class="note">上面是第一層的強度：越往下越兇，最深的地方 ×2。遺跡裡點左上角的「場地」那一格，看現在的強度。</p>' + back;
+    }
+    const M = (R.FLOOR_MODS || {})[id] || {}, more = (R.FLOOR_MOD_MORE || {})[id] || [];
+    return '<div class="dx-banner">樓層效果・' + esc(M.n || id) + '</div><p>' + esc(M.d || '') + '</p>' + (more.length ? ul(more) : '')
+      + '<p class="note">樓層效果第二層起才有，每一層大約四成五的機率抽到一種，換一層重新抽。遺跡裡點左上角那一格看說明。</p>' + back;
   };
   const monInfo = id => {
     const e = R.ENEMIES[id], base = id.replace(/_v\d$/, ''), n = kills(base), url = icon(id, 6);
@@ -74,7 +148,7 @@
       + '<p>' + esc(e.desc || (R.ENEMIES[base] && R.ENEMIES[base].desc) || '') + '</p>'
       + (R.dexStats ? R.dexStats(id) : '') + '<p class="note">' + (n ? '打倒過 ' + n + ' 隻（包括變種）' : '還沒打倒過') + '</p>'
       + (where.length ? '<h4 class="dx-h">出現的遺跡</h4><div class="dr-where">' + where.map(s => '<button type="button" class="dr-site sm" data-drgo="' + s.id + '" style="--rc:' + colOf(s) + '"><b>' + esc(s.name) + '</b><small>' + esc(G(s.grade).name) + ((R.siteMain ? R.siteMain(s) : []).includes(base) ? '・常見' : '') + '</small></button>').join('') + '</div>' : '')
-      + '<div class="row"><button type="button" class="btn" data-drback="1">回到遺跡的介紹</button></div>';
+      + back;
   };
 
   // ---------- 畫出來 ----------
@@ -83,11 +157,12 @@
     const tabs = lp.querySelector('.dx-tabs'); tabs.querySelectorAll('.dx-tab').forEach(b => b.classList.toggle('on', b.dataset.dxtab === 'ruin'));
     [...lp.children].forEach(c => { if (c !== tabs) c.remove(); });
     const box = document.createElement('div'); box.className = 'dr-box'; box.innerHTML = left(); lp.appendChild(box);
-    const s = R.SITES.find(x => x.id === siteId), showRight = html => { if (wide() && rp) { rp.innerHTML = html; bindRight(host, rp); } else if (html) popup(host, html); };
-    if (wide() && rp) showRight(mon && R.ENEMIES[mon] ? monInfo(mon) : s ? ruinInfo(s) : '<p class="note">選一座遺跡。</p>');
-    box.querySelectorAll('[data-drg]').forEach(b => { b.onclick = () => { gtab = b.dataset.drg; mon = null; render(host); }; });
-    box.querySelectorAll('[data-drs]').forEach(b => { b.onclick = () => { siteId = b.dataset.drs; mon = null; render(host); }; });
-    box.querySelectorAll('[data-drm]').forEach(b => { b.onclick = () => { if (b.dataset.drag === '1') return; mon = b.dataset.drm; if (wide()) { render(host); } else popup(host, monInfo(mon)); }; });
+    const s = R.SITES.find(x => x.id === siteId), showRight = html => { if (wide() && rp) { rp.innerHTML = html; rp.scrollTop = 0; bindRight(host, rp); } else if (html) popup(host, html); };
+    if (wide() && rp) showRight(mon && R.ENEMIES[mon] ? monInfo(mon) : s && pick === 'core' ? coreInfo(s) : s && pick ? fieldInfo(pick) : s ? ruinInfo(s) : '<p class="note">選一座遺跡。</p>');
+    box.querySelectorAll('[data-drg]').forEach(b => { b.onclick = () => { gtab = b.dataset.drg; mon = null; pick = null; render(host); }; });
+    box.querySelectorAll('[data-drs]').forEach(b => { b.onclick = () => { siteId = b.dataset.drs; mon = null; pick = null; render(host); }; });
+    box.querySelectorAll('[data-drk],[data-drf]').forEach(b => { b.onclick = () => { mon = null; pick = b.dataset.drk ? 'core' : b.dataset.drf; if (wide()) render(host); else if (s) popup(host, pick === 'core' ? coreInfo(s) : fieldInfo(pick)); }; });
+    box.querySelectorAll('[data-drm]').forEach(b => { b.onclick = () => { if (b.dataset.drag === '1') return; mon = b.dataset.drm; pick = null; if (wide()) { render(host); } else popup(host, monInfo(mon)); }; });
     // 可以用滑鼠左右拖：整塊（每一列）一起動，只有一條滑桿（2026-10-04 作者：圖鑑的滑桿統一成同一個，四條分開挺瞎的）
     box.querySelectorAll('.dr-ruin').forEach(st => {
       let down = null;
@@ -98,7 +173,7 @@
     });
   };
   const bindRight = (host, rp) => {
-    rp.querySelectorAll('[data-drback]').forEach(b => { b.onclick = () => { mon = null; render(host); }; });
+    rp.querySelectorAll('[data-drback]').forEach(b => { b.onclick = () => { mon = null; pick = null; render(host); }; });
     rp.querySelectorAll('[data-drgo]').forEach(b => { b.onclick = () => { const s = R.SITES.find(x => x.id === b.dataset.drgo); if (!s) return; gtab = s.grade; siteId = s.id; mon = null; render(host); const m = $('dr-modal'); if (m) m.remove(); }; });
   };
   const popup = (host, html) => {
@@ -106,7 +181,7 @@
     const m = document.createElement('div'); m.className = 'modal'; m.id = 'dr-modal'; m.style.zIndex = 60;
     m.innerHTML = '<div class="sheet dx-sheet" role="dialog" aria-modal="true">' + html + '<div class="row"><button type="button" class="btn pri" id="dr-x">關閉</button></div></div>';
     document.body.appendChild(m); const close = () => m.remove(); $('dr-x').onclick = close; m.onclick = e => { if (e.target === m) close(); };
-    m.querySelectorAll('[data-drback]').forEach(b => { b.onclick = () => { mon = null; close(); }; });
+    m.querySelectorAll('[data-drback]').forEach(b => { b.onclick = () => { mon = null; pick = null; close(); }; });
     m.querySelectorAll('[data-drgo]').forEach(b => { b.onclick = () => { const s = R.SITES.find(x => x.id === b.dataset.drgo); if (!s) return; gtab = s.grade; siteId = s.id; mon = null; close(); render(host); }; });
   };
   // dexui.js 每次重畫都會換掉整個 #cards：再把「遺跡」分頁加回去
@@ -142,7 +217,22 @@
     '.dr-none{opacity:.6;font-size:12px}.dr-tip{margin-top:6px}',
     '.dr-info p{margin:6px 0}.dr-info{border-left:3px solid var(--rc);padding-left:10px}',
     '.dr-core{display:grid;justify-items:center;gap:2px;margin-top:8px}.dr-core img{width:min(220px,80%);image-rendering:pixelated}.dr-core small{opacity:.75}',
-    '.dr-where{display:grid;gap:5px}'
+    '.dr-where{display:grid;gap:5px}',
+    // 遺跡分層、段落、佩特拉核心、場地效果（2026-10-04 改版）
+    '.dr-h{margin:12px 0 6px;font-size:13.5px;letter-spacing:.06em;color:var(--gold,#C9A13A);border-bottom:1px solid var(--line);padding-bottom:3px}',
+    '.dr-layers{display:grid;gap:0;border-radius:10px;overflow:hidden;border:1px solid var(--line)}',
+    '.dr-layer{display:grid;grid-template-columns:58px 92px 1fr;gap:8px;align-items:center;padding:7px 10px;font-size:12px;background:linear-gradient(90deg,color-mix(in srgb,var(--rc) calc(40% - var(--k) * 9%),color-mix(in srgb,#000 calc(100% - var(--k) * 18%),#8A0A14)),color-mix(in srgb,#000 calc(70% - var(--k) * 6%),#5A0A10))}',
+    '.dr-layer b{font-size:13.5px;color:#F4E9CD}.dr-layer small{opacity:.8}.dr-layer i{font-style:normal;opacity:.75;font-size:11px}.dr-lnote{margin:5px 0 0}',
+    '@media (max-width:520px){.dr-layer{grid-template-columns:52px 1fr}.dr-layer span{grid-column:1/-1}}',
+    '.dr-sec{display:block;min-width:100%;width:max-content;box-sizing:border-box;background:#0C0A0C;border-top:1px solid var(--line)}.dr-sec:first-child{border-top:0}',
+    '.dr-sec span{position:sticky;left:0;display:inline-block;padding:4px 10px;font-size:11.5px;font-weight:900;letter-spacing:.12em;color:var(--gold,#C9A13A)}',
+    '.dr-corecard{display:grid;grid-template-columns:72px 1fr;gap:10px;align-items:center;width:100%;text-align:left;padding:8px 10px;border-radius:10px;border:1px solid var(--line);border-left:4px solid var(--rc);background:rgba(255,255,255,.04);color:inherit;font:inherit;cursor:pointer}',
+    '.dr-corecard img{width:72px;image-rendering:pixelated}.dr-corecard span{display:grid;gap:2px}.dr-corecard small{font-size:11.5px;opacity:.85}.dr-corecard em{font-style:normal;font-size:11px;color:var(--gold,#C9A13A)}.dr-corecard.sel,.dr-corecard:hover{border-color:var(--gold,#C9A13A)}',
+    '.dr-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-bottom:6px}',
+    '.dr-fc{display:grid;gap:1px;text-align:left;padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:inherit;font:inherit;cursor:pointer}.dr-fc b{font-size:13px}.dr-fc small{font-size:10.5px;opacity:.75;line-height:1.3}.dr-fc.sel,.dr-fc:hover{border-color:var(--gold,#C9A13A)}',
+    '.dr-ul{margin:4px 0 8px;padding-left:18px;font-size:12.5px}.dr-ul li{margin:2px 0}',
+    // 右頁比畫面高的時候（佩特拉核心、場地效果的說明）自己捲，不會被推到上面看不到標題
+    '@media (min-width:780px){.dx-book .dx-right{max-height:calc(100vh - 110px);overflow-y:auto;scrollbar-width:thin}}'
   ].join('\n');
   document.head.appendChild(css);
 })(window.R);
