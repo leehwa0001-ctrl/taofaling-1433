@@ -16,6 +16,8 @@
   const W = R.W, T = () => THREE, rnd = Math.random, pick = a => a[Math.floor(rnd() * a.length)];
   const KINDS = ['echo', 'plates', 'dials'];   // 燭台（candles）的程式還在，不再挑
   const NAMES = { candles: '燭台之室', plates: '石板之室', dials: '符文之室', echo: '回音之室' };
+  // 2026-10-04 作者：解謎種類也沒增加啊——新的種類寫在 puzzle2.js，從這裡接上（R.PUZZLE_EXT[種類] = { name, build, update }）
+  const EXT = R.PUZZLE_EXT = R.PUZZLE_EXT || {}, nameOf = k => NAMES[k] || (EXT[k] && EXT[k].name) || '機關之室';
   // 回音之室的音（R.AUDIO 的 AudioContext；靜音就不唱）
   const tone = f => { try { const A = R.AUDIO, c = A && A.ctx; if (!c || (R.isMuted && R.isMuted())) return; const v = (A.VOL ? A.VOL.sfx : 0.8) * 0.22, t = c.currentTime + 0.01, o = c.createOscillator(), g = c.createGain(); o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + 0.02); g.gain.exponentialRampToValueAtTime(0.001, t + 0.5); o.connect(g); g.connect(A.out || c.destination); o.start(t); o.stop(t + 0.55); } catch (e) { } };
 
@@ -29,7 +31,7 @@
     const main = new Set(); for (let i = end.i; i >= 0; i = prev[i]) { main.add(i); if (i === 0) break; }
     const side = rooms.filter(r => !main.has(r.i) && r.type === 'fight' && !r.big && !r.traps && (r.hx || 0) >= 6 && (r.hz || 0) >= 5).sort((a, b) => Object.keys(a.links).length - Object.keys(b.links).length || b.dist - a.dist);
     const n = Math.min(side.length, rooms.length >= 9 ? (rnd() < 0.5 ? 2 : 1) : (rnd() < 0.7 ? 1 : 0));
-    side.slice(0, n).forEach(r => { r.type = 'puzzle'; r.puzzle = pick(KINDS); r.cleared = true; });
+    side.slice(0, n).forEach(r => { r.type = 'puzzle'; r.puzzle = pick(KINDS.concat(Object.keys(EXT))); r.cleared = true; });
     return F;
   };
 
@@ -91,7 +93,7 @@
     const [cx, cz] = spot(F, r, 0.32, -0.5, 0.7);   /* 2026-10-04 作者回報：石頭被擋住——寶箱 1.6 公尺寬，別的東西要離遠一點 */
     const ch = R.addChest(scene, F, cx, cz, 2, r.i); F.chests.splice(F.chests.indexOf(ch), 1); pz.chest = ch;
     const seal = new (T().Mesh)(new (T().RingGeometry)(1.1, 1.35, 24), new (T().MeshBasicMaterial)({ color: '#B07AFF', transparent: true, opacity: 0.7, depthWrite: false, side: T().DoubleSide })); seal.rotation.x = -Math.PI / 2; seal.position.set(cx, 0.06, cz); scene.add(seal); pz.seal = seal;
-    pz.inter.push({ x: cx, z: cz, r: 2, label: '寶箱被機關封著', when: () => !pz.solved, act: () => say(NAMES[pz.kind], '寶箱的鎖孔上有一圈發光的紋路。先解開這一區的機關。') });
+    pz.inter.push({ x: cx, z: cz, r: 2, label: '寶箱被機關封著', when: () => !pz.solved, act: () => say(nameOf(pz.kind), '寶箱的鎖孔上有一圈發光的紋路。先解開這一區的機關。') });
     const ring = n => Array.from({ length: n }, (_, i) => { const a = (i + 0.5) / n * Math.PI * 2; return spot(F, r, Math.sin(a) * 0.75, Math.cos(a) * 0.55 + 0.2); });
 
     if (pz.kind === 'candles') {
@@ -167,13 +169,14 @@
       pz.dials.forEach((d, j) => { const tg = sprite(scene, pz, pz.glyph[pz.target[j]], d.x, 0.55, d.z + 1.0, 0.6); tg.material.opacity = 0.55; const b = pz.dials[j + 1]; if (b) { const L = Math.hypot(b.x - d.x, b.z - d.z), rod = new (T().Mesh)(new (T().BoxGeometry)(0.12, 0.12, Math.max(0.1, L - 0.7)), new (T().MeshBasicMaterial)({ color: '#C8A0FF', transparent: true, opacity: 0.6 })); rod.position.set((d.x + b.x) / 2, 1.1, (d.z + b.z) / 2); rod.rotation.y = Math.atan2(b.x - d.x, b.z - d.z); scene.add(rod); } });
       if (pz.dials.every((o, j) => o.sym === pz.target[j])) { const d = pz.dials[0]; d.sym = (d.sym + 1) % 4; d.sp.material.map = pz.glyph[d.sym]; }   // 一開始剛好排好就打亂一格
     }
-    pz.inter.push({ x: tx0, z: tz0 + 0.3, r: 1.9, label: pz.kind === 'echo' ? '摸石碑（再聽一次）' : '看石碑', act: () => { if (pz.kind === 'echo' && !pz.solved) { pz.step = 0; pz.last = -1; pz.play = { i: -1, t: 0.4 }; R.toast('石碑亮了一下——石頭又唱了一次。', '#B8E07A'); return; } say(NAMES[pz.kind], pz.solved ? '石碑上的字已經暗下去了。' : pz.hint); } });
+    if (EXT[pz.kind]) EXT[pz.kind].build(pz, { scene, run, F, r, tx0, tz0, mat, glyphTex, pixTex, SYM, SYMCOL, ring, spot: (fx, fz, pad) => spot(F, r, fx, fz, pad), sprite: (tex, x, y, z, sc) => sprite(scene, pz, tex, x, y, z, sc), floorRing: (x, z, r0, r1, col, op) => floorRing(scene, x, z, r0, r1, col, op), solve: () => solve(pz), fail: msg => fail(pz, msg) });
+    pz.inter.push({ x: tx0, z: tz0 + 0.3, r: 1.9, label: pz.kind === 'echo' ? '摸石碑（再聽一次）' : '看石碑', act: () => { if (pz.kind === 'echo' && !pz.solved) { pz.step = 0; pz.last = -1; pz.play = { i: -1, t: 0.4 }; R.toast('石碑亮了一下——石頭又唱了一次。', '#B8E07A'); return; } say(nameOf(pz.kind), pz.solved ? '石碑上的字已經暗下去了。' : pz.hint); } });
     F.puzzles.push(pz);
   };
   const bf = R.buildFloor;
   // 謎題擺好之後：石頭、石板、轉盤、石碑旁邊原本就有的東西（罈子、木箱、碎石堆）拿掉（2026-10-04 作者回報：有時候被擋住，踩不到）
   const clearNear = (F, n0) => {
-    const pts = []; F.puzzles.forEach(pz => [pz.stones, pz.plates, pz.dials, pz.inter].forEach(L => (L || []).forEach(o => { if (o && o.x != null) pts.push([o.x, o.z]); })));
+    const pts = []; F.puzzles.forEach(pz => [pz.stones, pz.plates, pz.dials, pz.inter, pz.objs].forEach(L => (L || []).forEach(o => { if (o && o.x != null) pts.push([o.x, o.z]); })));
     R.col.list.slice(0, n0).forEach(c => {
       if (!c.on || c.tag === 'wall' || c.tag === 'pit') return;
       if (!pts.some(([x, z]) => Math.max(c.x0 - x, 0, x - c.x1) ** 2 + Math.max(c.z0 - z, 0, z - c.z1) ** 2 < 1.6 * 1.6)) return;
@@ -197,6 +200,7 @@
     const F = W.F, P = W.P, run = W.run; if (!run || !F || !F.puzzles || !P) return;
     F.puzzles.forEach(pz => {
       if (pz.seal && !pz.solved) pz.seal.material.opacity = 0.45 + Math.sin((run.t || 0) * 3) * 0.25;
+      if (EXT[pz.kind]) { if (EXT[pz.kind].update) EXT[pz.kind].update(pz, dt, P, run); return; }
       if (pz.kind === 'echo' && !pz.solved) {
         const inRoom = R.roomIndexAt && R.roomIndexAt(P.x, P.z) === pz.r.i;
         if (!pz.started && inRoom) { pz.started = true; pz.play = { i: -1, t: 0.8 }; }
