@@ -10,7 +10,7 @@ const http = require('http');
 const { WebSocketServer } = require('ws');
 
 const PORT = +process.env.PORT || 8787, MAX = 4, MAX_BYTES = 64 * 1024;
-const PROTOCOL = '1433-net-2';
+const PROTOCOL = '1433-net-2', RATE = 40;   // 每條連線每秒最多 40 則（遊戲每秒送 10 則位置），超過的丟掉
 const LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const rooms = new Map();   // code → { code, host, members: Map(id → client) }
 let nextId = 1;
@@ -39,6 +39,7 @@ wss.on('connection', ws => {
   const c = { ws, id: nextId++, name: '', look: null, room: null };
   ws.on('pong', () => { ws.dead = false; });
   ws.on('message', raw => {
+    const now = Date.now(); if (now - (c.rt || 0) > 1000) { c.rt = now; c.rn = 0; } if (++c.rn > RATE) return;
     let o; try { o = JSON.parse(raw); } catch (e) { return; }
     if (!o || typeof o.t !== 'string') return;
     if (o.t === 'create' || o.t === 'join') {

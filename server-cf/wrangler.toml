@@ -1,0 +1,14 @@
+# 討伐令 1433 的多人連線伺服器（Cloudflare Workers ＋ Durable Objects）
+# 部署：在 server-cf 資料夾跑 npx wrangler login（第一次），再 npx wrangler deploy
+name = "taofaling-1433"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+
+[[durable_objects.bindings]]
+name = "LOBBY"
+class_name = "Lobby"
+
+# 免費方案只能用 SQLite 版的 Durable Objects
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Lobby"]

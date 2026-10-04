@@ -8,4 +8,5 @@ services:
     buildCommand: npm install
     startCommand: npm start
     plan: free
+    region: singapore   # 離台灣最近的 Render 機房（沒寫會放在美國奧勒岡）；建立以後不能改，要換地區得刪掉重建
     healthCheckPath: /
