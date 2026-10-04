@@ -53,7 +53,7 @@
   const hp0 = R.hurtPlayer;
   R.hurtPlayer = (raw, src, o) => {
     const P = W().P;
-    if (P && P.envGuard && raw > 0 && W().run && (!src || (!src.def && !src.ally && src !== P))) raw *= 1 - P.envGuard;   // 不是遺跡生物打的：場地、機關、落石
+    if (P && P.envGuard && raw > 0 && W().run && (!src || (!src.def && !src.ally && !src.pvp && src !== P))) raw *= 1 - P.envGuard;   // 不是遺跡生物打的：場地、機關、落石
     return hp0(raw, src, o);
   };
 })(window.R);
