@@ -44,14 +44,14 @@
     brooch: { name: '胸針', imp: 'guard', r: [3, 7] },
     hairpin: { name: '髮簪', imp: 'fleet', r: [3, 6] }
   };
-  const CHARM2 = { omamori: { name: '御守', imp: 'lucky', r: [5, 10] }, netsuke: { name: '根付', imp: 'leech', r: [1, 3] } };
+  const CHARM2 = { omamori: { name: '御守', imp: 'lucky', r: [5, 10] }, netsuke: { name: '根付', imp: 'leech', r: [1, 2] } };
   R.ACC = ACC; R.CHARM2 = CHARM2;
   R.ACC_AFFIX = [
     { id: 'might', name: '剛力', roll: [4, 12], txt: v => '傷害 +' + v + '%' },
     { id: 'keen', name: '銳眼', roll: [3, 9], txt: v => '暴擊率 +' + v + '%' },
     { id: 'haste', name: '疾手', roll: [4, 12], txt: v => '攻擊速度 +' + v + '%' },
     { id: 'fleet', name: '輕身', roll: [3, 8], txt: v => '移動速度 +' + v + '%' },
-    { id: 'leech', name: '飲血', roll: [1, 4], txt: v => '吸血 ' + v + '%' },
+    { id: 'leech', name: '飲血', roll: [1, 2], txt: v => '吸血 ' + v + '%' },
     { id: 'guard', name: '守護', roll: [3, 10], txt: v => '受到的傷害 −' + v + '%' },
     { id: 'wisdom', name: '求知', roll: [5, 15], txt: v => '經驗值 +' + v + '%' },
     { id: 'lucky', name: '好運', roll: [4, 12], txt: v => v + '% 機率寶箱多開出一樣東西' },

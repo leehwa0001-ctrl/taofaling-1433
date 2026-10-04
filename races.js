@@ -36,12 +36,12 @@
     spider: { name: '節肢蛛人族', tier: 'SR', from: '地下岩穴・節肢人族種', xeno: 2, skins: ['#9A8D86', '#857873'], hairs: ['#1A1A1A', '#3B3030'], b: { crit: 0.08, critMult: 0.25 }, line: '四隻眼睛，總是看得到要害。', look: { eyes4: 1 } },
     crystal: { name: '黑水晶族', tier: 'SSR', from: '深域結晶皇宮・晶體族種', xeno: 2, skins: ['#4B3B66', '#3C2F55'], hairCol: '#1E1830', b: { mp: 0.3, skillCd: 0.2, crystal: 0.5 }, line: '額頭上長著水晶。採集魔力水晶時有額外收穫。', look: { gem: 1 } },
     // 2026-10-02 加的 SSR（作者選的）：族種照《智慧生物》的 4 系 38 族種
-    vampire: { name: '吸血人族', tier: 'SSR', from: '地表荒原・吸血族種', xeno: 2, skins: ['#EDE2DC', '#E2D4CE'], hairs: ['#1A1418', '#3A1A22', '#D8D4D8'], eye: '#C8323A', b: { vamp: 0.06, critMult: 0.2, night: 0.15, hp: -0.05 }, line: '蒼白的皮膚、紅眼睛、一對小尖牙。打中會吸血；晚上出發的遺跡打得更兇。', look: { ears: 'elf', fangs: 1 } },
+    vampire: { name: '吸血人族', tier: 'SSR', from: '地表荒原・吸血族種', xeno: 2, skins: ['#EDE2DC', '#E2D4CE'], hairs: ['#1A1418', '#3A1A22', '#D8D4D8'], eye: '#C8323A', b: { vamp: 0.03, critMult: 0.2, night: 0.15, hp: -0.05 }, line: '蒼白的皮膚、紅眼睛、一對小尖牙。打中會吸血；晚上出發的遺跡打得更兇。', look: { ears: 'elf', fangs: 1 } },
     shade: { name: '暗影族', tier: 'SSR', from: '地下靈魂迴廊・光影族種', xeno: 2, skins: ['#3E3A4C', '#322E40'], hairs: ['#141018', '#2A2438'], eye: '#B8E0FF', b: { dodge: 0.3, back: 0.25, calm: 0.15 }, line: '身上飄著影子，眼睛發著淡藍的光。閃得快，從背後下手特別重，佩特拉也不太注意得到。', look: { wisp: 1 } },
     golddragon: { name: '金龍人族', tier: 'SSR', from: '地下礦脈・岩龍族種', xeno: 2, skins: ['#D8B048', '#C89A38'], b: { def: 6, hp: 0.2, ore: 0.6 }, line: '金色的鱗片和龍角，和龍人族是不同的族種。鱗片堅硬，掘礦時有機會多獲得一塊礦石。', look: { horns: 'dragon', tail: 'dragon', scales: 1, bald: 1, crest: 1 } },
     dragon: { name: '龍人族', tier: 'SSR', from: '地表山地・節鱗族種', xeno: 2, skins: ['#C8553F', '#B2463A'], b: { hp: 0.2, dmg: 0.15, def: 4, immune: { burn: 1 } }, line: '鱗片、角、尾巴。很少見。', look: { horns: 'dragon', tail: 'dragon', scales: 1, bald: 1, crest: 1 } },
     demon: { name: '魔族', tier: 'UR', from: '魔界・克拉克特斯（公會分類：神魔族）', xeno: 3, skins: ['#E8D8E0', '#C8B8D0'], hairs: ['#14101A', '#E8E4F0'], eye: '#C8323A',
-      b: { hp: 0.15, mp: 0.2, dmg: 0.12, def: 2, vamp: 0.02, skillCd: 0.1, regen: 0.4, calm: 0.1 },   // 作者：削弱（原本生命、傷害各 +30%）
+      b: { hp: 0.15, mp: 0.2, dmg: 0.12, def: 2, vamp: 0.01, skillCd: 0.1, regen: 0.4, calm: 0.1 },   // 作者：削弱（原本生命、傷害各 +30%）
       line: '翅膀、黑色雙角。人界的人怕你：店家不賣你東西、路人躲著走、私人賞金獵人會來找你。公會把你列為「受監視對象」——但也只有公會不准任何人討伐你。', look: { horns: 'demon', wings: 'demon' } }   // 作者：拿掉光環
   };
   // 混血：勇者證的註名本來就有「混血與否」這一欄（公會的勇者大約三成是混血）
@@ -72,7 +72,7 @@
     if (b.speed) out.push('移動 ' + (b.speed > 0 ? '+' : '') + PCT(b.speed)); if (b.dmg) out.push('傷害 +' + PCT(b.dmg)); if (b.melee) out.push('近戰傷害 +' + PCT(b.melee));
     if (b.magic) out.push('法術傷害 +' + PCT(b.magic)); if (b.crit) out.push('暴擊率 +' + PCT(b.crit)); if (b.critMult) out.push('暴擊傷害 +' + PCT(b.critMult));
     if (b.dodge) out.push('翻滾冷卻 −' + PCT(b.dodge)); if (b.skillCd) out.push('技能冷卻 −' + PCT(b.skillCd)); if (b.regen) out.push('每秒回復生命 ' + b.regen);
-    if (b.calm) out.push('佩特拉的注意 −' + PCT(b.calm)); if (b.xp) out.push('經驗值 +' + PCT(b.xp)); if (b.vamp) out.push('吸血 ' + PCT(b.vamp));
+    if (b.calm) out.push('佩特拉的注意 −' + PCT(b.calm)); if (b.xp) out.push('經驗值 +' + PCT(b.xp)); if (b.vamp) out.push('吸血 ' + Math.round(b.vamp * 1000) / 10 + '%');
     if (b.ignite) out.push(PCT(b.ignite) + ' 機率點燃'); if (b.thorns) out.push('貼身反傷 ' + PCT(b.thorns)); if (b.guard) out.push('隊友受到的傷害 −' + PCT(b.guard));
     if (b.night) out.push('晚上出發的遺跡傷害 +' + PCT(b.night)); if (b.back) out.push('從背後打傷害 +' + PCT(b.back)); if (b.ore) out.push('掘礦多一塊的機率 ' + PCT(b.ore));
     if (b.crystal) out.push('魔力水晶 +' + PCT(b.crystal)); if (b.immune) out.push('不怕' + Object.keys(b.immune).map(k => ({ blind: '砂幕', slow: '寒氣減速', burn: '燃燒' })[k]).join('、'));

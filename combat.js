@@ -81,7 +81,7 @@
     const kb = (o.kb != null ? o.kb : o.primary ? ws.kb : 0) * (e.def.boss ? 0.15 : 1);
     if (kb) { const a = angTo(P, e); e.kx += Math.sin(a) * kb * 6; e.kz += Math.cos(a) * kb * 6; }
     if (ws.vamp && o.primary) R.healP(dmg * ws.vamp, true);
-    if (P.buff.rage > 0) R.healP(dmg * 0.05, true);
+    if (P.buff.rage > 0) R.healP(dmg * 0.025, true);
     if (e.hp <= 0) R.killEnemy(e);
     return dmg;
   };
