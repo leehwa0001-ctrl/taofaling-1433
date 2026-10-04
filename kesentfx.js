@@ -11,7 +11,7 @@
   const deep = run => 1 + Math.min(1, (run.floor || 0) / Math.max(1, run.floors - 1));   // 1～2：越深越兇
   const NAME = { volcano: '噴發的熔岩', desert: '沙暴', deep: '水壓', snow: '凍傷', forge: '兵工廠的機關' };   // forge：兵工廠（機關在 forge.js）
   const TIP = {
-    volcano: '場地效果・火山：地上冒出紅圈、開始冒泡就快躲開，一秒半後熔岩會噴出來（噴中非常痛），留下的熔岩攤會燙人。',
+    volcano: '場地效果・火山：地上冒出紅圈、開始冒泡就快躲開，熔岩會噴出來（噴中非常痛；圈有大有小，越大的預警越久，偶爾有大噴發）。留下的熔岩攤跟噴發一樣燙，站在上面每一秒燙一次。',
     desert: '場地效果・沙漠：沙暴一陣一陣來。沙暴裡看不遠、會被風推著走，沙子一直刮掉一點生命。',
     deep: '場地效果・深海：藍色的圈是暗流，會把人沖走；水壓一縮的時候會往四周推開。',
     snow: '場地效果・凍原：地上淺藍色、亮亮的是冰面，踩上去會滑、停不下來；暴風雪來的時候走得慢、會凍傷。',
@@ -22,6 +22,16 @@
   const hurtP = (frac, flat) => { const w = W(), P = w.P; if (!P || P.dead) return; R.hurtPlayer(P.hpMax * frac + (flat || 0), { name: NAME[w.run.env] }); };
   const nearFloor = (x, z) => (R.nearestFloor ? R.nearestFloor(x, z) : [x, z]);
   const zone = (o, color) => { const z = R.addZone(o); if (z && z.mesh && color) z.mesh.material.color.set(color); return z; };
+  // 火山：噴發的大小（小、中、大，偶爾大噴發）、噴中的傷害（生命的比例 × 深度 k）、留下的熔岩攤
+  const ERUPT = 0.4;
+  const eruptSize = () => { const u = Math.random(); return u < 0.4 ? rnd(0.9, 1.4) : u < 0.8 ? rnd(1.5, 2.2) : u < 0.97 ? rnd(2.6, 3.4) : rnd(4, 5); };
+  const pool = (x, z, r, life) => {
+    const zn = zone({ kind: 'lava', x, z, r, life, dmg: 0 }, '#FF5A1A'); if (!zn) return; zn.kind = 'magma';   // 畫成熔岩，再改成 magma：combat.js 的熔岩不另外扣，這裡照噴發的傷害燙
+    // 跟噴發一樣燙，要看得很清楚：整片填滿的熔岩（中間比較亮），剛噴完那 0.6 秒淡淡的、積起來才亮
+    let fill = null, core = null;
+    if (zn.mesh && window.THREE) { const TH = THREE; fill = new TH.Mesh(new TH.CircleGeometry(r * 0.94, 28), new TH.MeshBasicMaterial({ color: '#E8400A', transparent: true, opacity: 0.15, depthWrite: false, side: TH.DoubleSide })); fill.position.z = -0.002; core = new TH.Mesh(new TH.CircleGeometry(r * 0.55, 20), new TH.MeshBasicMaterial({ color: '#FFB04A', transparent: true, opacity: 0.1, depthWrite: false, side: TH.DoubleSide })); core.position.z = -0.001; zn.mesh.add(fill, core); }
+    if (S) (S.pools = S.pools || []).push({ x, z, r, zn, arm: 0.6, fill, core, ph: Math.random() * 6 });
+  };
   const push = (o, dx, dz) => { o.x += dx; o.z += dz; if (R.collide) R.collide(o, o === W().P ? 0.42 : 0.4); };
 
   const setup = () => {
@@ -69,19 +79,28 @@
       S.next -= dt;
       if (S.next <= 0) {
         S.next = rnd(11, 17) / k;   // 2026-10-04 作者：頻率低一點、傷害高很多（20 倍）——原本像抓癢，只是一直打斷挖礦、開寶箱
-        const n = 2 + Math.round(2 * k), vx = (P.x - S.px) / Math.max(dt, 0.016), vz = (P.z - S.pz) / Math.max(dt, 0.016);
+        const n = 1 + Math.round(2 * k) + Math.floor(rnd(0, 2)), vx = (P.x - S.px) / Math.max(dt, 0.016), vz = (P.z - S.pz) / Math.max(dt, 0.016);
+        let saidBig = false;
         for (let i = 0; i < n; i++) {
           // 兩個瞄著你（往你走的方向多算一點），其他的散在附近
-          const aim = i < 2, [x, z] = nearFloor(aim ? P.x + vx * 0.9 * (i ? 1 : 0.4) + rnd(-1, 1) : P.x + rnd(-9, 9), aim ? P.z + vz * 0.9 * (i ? 1 : 0.4) + rnd(-1, 1) : P.z + rnd(-9, 9)), r = 1.6;
-          R.fx('mark', x, 0, z, { r, t: 1.5, color: '#FF5A1A' }); [0.3, 0.7, 1.1].forEach(t0 => later(t0, () => { R.fx('spark', x + rnd(-0.8, 0.8), 0.2, z + rnd(-0.8, 0.8), { color: '#FF8A3A' }); R.fx('boom', x + rnd(-0.6, 0.6), 0.1, z + rnd(-0.6, 0.6), { r: 0.45, color: '#FF5A1A' }); }));   // 預警：地上冒泡、火星
-          later(1.5, () => {
-            R.fx('boom', x, 0.4, z, { r: r + 0.4, color: '#FF7A3A' }); if (R.shake && Math.hypot(P.x - x, P.z - z) < 8) R.shake(0.15);
-            if (Math.hypot(P.x - x, P.z - z) < r + 0.3) hurtP(0.4 * k, 40);   // 噴中很痛：四成到八成生命（熔岩攤每跳的 20 倍；照字面把噴發乘 20 會一下就死，站著開寶箱、挖礦都會被噴死）
+          // 2026-10-04 作者：大小可以有大有小，多一點變化跟隨機性——小的、中的、大的、偶爾一個大噴發；越大預警越久
+          const aim = i < 2, [x, z] = nearFloor(aim ? P.x + vx * 0.9 * (i ? 1 : 0.4) + rnd(-1, 1) : P.x + rnd(-10, 10), aim ? P.z + vz * 0.9 * (i ? 1 : 0.4) + rnd(-1, 1) : P.z + rnd(-10, 10)), r = eruptSize(), warn = 1.1 + r * 0.18, big = r >= 4;
+          if (big && !saidBig) { saidBig = true; R.toast && R.toast('地面震起來了——大噴發！離開那個大紅圈！', '#FF7A3A'); R.shake && R.shake(0.25); }
+          R.fx('mark', x, 0, z, { r, t: warn, color: '#FF5A1A' }); [0.2, 0.45, 0.7].forEach(f0 => later(warn * f0, () => { for (let j = 0; j < (big ? 3 : 1); j++) { R.fx('spark', x + rnd(-r, r) * 0.5, 0.2, z + rnd(-r, r) * 0.5, { color: '#FF8A3A' }); R.fx('boom', x + rnd(-r, r) * 0.4, 0.1, z + rnd(-r, r) * 0.4, { r: 0.45, color: '#FF5A1A' }); } }));   // 預警：地上冒泡、火星
+          later(warn, () => {
+            R.fx('boom', x, 0.4, z, { r: r + 0.4, color: '#FF7A3A' }); if (R.shake && Math.hypot(P.x - x, P.z - z) < 8 + r) R.shake(big ? 0.4 : 0.15);
+            if (Math.hypot(P.x - x, P.z - z) < r + 0.3) hurtP(ERUPT * k, 40);   // 噴中很痛：四成到八成生命
             w.enemies.forEach(e => { if (!e.dead && !e.under && Math.hypot(e.x - x, e.z - z) < r + e.def.size * 0.4) R.hurtEnemy(e, 20 * k, {}); });
-            zone({ kind: 'lava', x, z, r: 1.3, life: 5, dmg: P.hpMax * 0.025 * k }, '#FF5A1A');
+            pool(x, z, r * rnd(0.7, 1), rnd(3, 7) * (0.8 + r * 0.12));
           });
         }
       }
+      // 熔岩攤（2026-10-04 作者：持續傷害應該要跟噴發的一樣，不然沒什麼感覺；原本每半秒 2.5～5% 生命、還先扣護甲）：
+      //   站在上面每一秒燙一次，一次跟噴中一樣痛；剛噴完的那 0.6 秒還沒積起來（噴中之後來得及跳出去）。遺跡生物也一樣。
+      S.lavaCd = (S.lavaCd || 0) - dt; S.pools = (S.pools || []).filter(p => p.zn && !p.zn.dead); S.pools.forEach(p => { p.arm -= dt; p.ph += dt * 3; const fade = Math.max(0, Math.min(1, p.zn.life / 0.8)); if (p.fill) p.fill.material.opacity = (p.arm > 0 ? 0.18 : 0.55 + 0.08 * Math.sin(p.ph)) * fade; if (p.core) p.core.material.opacity = (p.arm > 0 ? 0.1 : 0.4 + 0.15 * Math.sin(p.ph * 1.3)) * fade; });
+      const inPool = o => S.pools.some(p => p.arm <= 0 && Math.hypot(o.x - p.x, o.z - p.z) < p.r);
+      if (S.lavaCd <= 0 && !P.air && inPool(P)) { S.lavaCd = 1; hurtP(ERUPT * k, 40); R.fx('boom', P.x, 0.2, P.z, { r: 0.8, color: '#FF7A3A' }); if (!S.poolSaid) { S.poolSaid = 1; R.toast && R.toast('熔岩攤跟噴發一樣燙——站在上面每一秒都燙一次，快離開！', '#FF7A3A'); } }
+      w.enemies.forEach(e => { if (e.dead || e.under || e.def.fly) return; e.lavaCd = (e.lavaCd || 0) - dt; if (e.lavaCd <= 0 && inPool(e)) { e.lavaCd = 1; R.hurtEnemy(e, 20 * k, {}); } });
     } else if (S.env === 'desert' || S.env === 'snow') {
       // 沙暴／暴風雪：平靜一陣 → 提醒 → 颳一陣
       if (S.storm > 0) {
