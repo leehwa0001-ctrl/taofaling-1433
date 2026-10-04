@@ -127,7 +127,7 @@
     const P = W().P; if (g > 0 && P && P.accLucky && Math.random() < P.accLucky) { const more = rc0(g, floor, cls, tier).find(o => o.item); if (more) { out.push(more); R.toast && R.toast('好運：寶箱裡還有一樣東西', '#E8C04A'); } }
     return out;
   };
-  const ENVC = { snow: 'frostcry', volcano: 'flamecry', desert: 'sandcry', deep: 'tidecry' };
+  const ENVC = { snow: 'frostcry', volcano: 'flamecry', desert: 'sandcry', deep: 'tidecry', forge: 'flamecry' };   // forge：兵工廠的熔爐
   const ke0 = R.killEnemy;
   R.killEnemy = (e, by) => {
     const was = e && !e.dead, r = ke0(e, by);

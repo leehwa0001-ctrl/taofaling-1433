@@ -9,12 +9,13 @@
   const W = () => R.W, rnd = (a, b) => a + Math.random() * (b - a);
   const on = run => run && run.env && run.grade && !run.done && (run.grade.id === 'kesent' || (run.grade.lv || 0) >= 4 || run.grade.id === 'kaso');
   const deep = run => 1 + Math.min(1, (run.floor || 0) / Math.max(1, run.floors - 1));   // 1～2：越深越兇
-  const NAME = { volcano: '噴發的熔岩', desert: '沙暴', deep: '水壓', snow: '凍傷' };
+  const NAME = { volcano: '噴發的熔岩', desert: '沙暴', deep: '水壓', snow: '凍傷', forge: '兵工廠的機關' };   // forge：兵工廠（機關在 forge.js）
   const TIP = {
     volcano: '場地效果・火山：地上冒出紅圈、開始冒泡就快躲開，一秒半後熔岩會噴出來（噴中非常痛），留下的熔岩攤會燙人。',
     desert: '場地效果・沙漠：沙暴一陣一陣來。沙暴裡看不遠、會被風推著走，沙子一直刮掉一點生命。',
     deep: '場地效果・深海：藍色的圈是暗流，會把人沖走；水壓一縮的時候會往四周推開。',
-    snow: '場地效果・凍原：地上淺藍色、亮亮的是冰面，踩上去會滑、停不下來；暴風雪來的時候走得慢、會凍傷。'
+    snow: '場地效果・凍原：地上淺藍色、亮亮的是冰面，踩上去會滑、停不下來；暴風雪來的時候走得慢、會凍傷。',
+    forge: '場地效果・熔爐：兵工廠的機關還在動。有孔的鐵板是地刺（踩到半秒後冒刺）、圓形鐵柵是絞肉機（轉的時候會吸人）、走道上的輸送帶會把人送走。遺跡生物也會中。'
   };
   let S = null;   // 這一層的狀態
   const later = (t, f) => { if (S) S.q.push({ t, f }); };
@@ -140,7 +141,7 @@
   };
   R.fieldFx = () => S;   // 測試用
   // 左上角一直顯示這一層的場地效果（2026-10-04 作者：克森特級以上的場地效果會放在左上角）；點一下再看一次說明
-  const ENVN = { volcano: '火山', desert: '沙漠', deep: '深海', snow: '凍原' };
+  const ENVN = { volcano: '火山', desert: '沙漠', deep: '深海', snow: '凍原', forge: '熔爐' };
   let hudT = 0;
   const st1 = R.step;
   R.step = dt => {
