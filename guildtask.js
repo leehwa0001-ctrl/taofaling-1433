@@ -23,7 +23,7 @@
   const floorsOf = site => { if (R.floorsFor) return R.floorsFor(site); const g = R.gradeById(site.grade); return Math.max(2, g.floors + (R.TYPES[site.type] && R.TYPES[site.type].floors || 0)); };
   R.taskSpec = site => {
     const g = R.gradeById(site.grade), floors = floorsOf(site), patrol = g.id === 'hamilia';
-    return { kind: patrol ? 'patrol' : 'hunt', need: patrol ? floors : Math.max(10, Math.round(Math.min(floors, 10) * (K[g.id] || 12))),   /* 層數變多（depth.js）以後，討伐的數量最多照 10 層算 */ limitH: Math.ceil(floors * 4 * (1 + 0.08 * (g.lv - 1))), letter: g.letter || '', floors };
+    return { kind: patrol ? 'patrol' : 'hunt', need: patrol ? floors : Math.max(10, Math.round(Math.min(floors, 50) * (K[g.id] || 12))),   /* 2026-10-04 作者：委託的數量、時限還可以再調——後期一趟殺一兩千隻、30 層不到 20 小時，200 小時夠人掛機一整天。討伐數照層數算到第 50 層（原本只算到第 10 層） */ limitH: patrol ? Math.ceil(floors * 4 * (1 + 0.08 * (g.lv - 1))) : Math.max(6, Math.ceil(Math.min(floors, 50) * 0.8 * (1 + 0.05 * (g.lv - 1)))),   /* 時限：每層 0.8 小時（原本 4 小時） */ letter: g.letter || '', floors };
   };
   const specLines = (site, sp) => { const g = R.gradeById(site.grade); return sp.lines || ['任務分級：' + sp.letter + ' 級（' + g.name + '）', sp.kind === 'patrol' ? '任務內容：巡查（走到最深處，第 ' + sp.floors + ' 層）' : '任務內容：討伐遺跡生物 ' + sp.need + ' 隻（討伐令 1433 令）', '時限：' + sp.limitH + ' 小時（超過每小時扣 3% 的效率分）']; };
   R.taskExtras = [];   // 加注條款之類的：{ html(site), bind(box, site) }
