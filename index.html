@@ -515,9 +515,12 @@ body.pixel .mtag{font-size:12px;text-shadow:1px 1px 0 #000}
 .recruit small{color:var(--dim)}
 .recruit span{font-size:12.5px;color:#D6CCB8}
 .recruit .btn,.recruit .mini{justify-self:start;margin-top:4px}
-.sellmats{display:grid;gap:4px}
-.sellmat{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px}
-.sellmat span{margin-right:auto}
+.sellmats{display:grid;gap:0;border-top:1px solid var(--line)}
+.sellmat{display:flex;align-items:center;gap:10px;font-size:13px;padding:6px 4px;border-bottom:1px solid var(--line)}
+.sellmat:nth-child(even){background:rgba(255,255,255,.03)}
+.sellmat .sm-btns{display:flex;gap:4px;flex:none}
+.sellmat .sm-name{flex:1;min-width:0;padding-left:10px;border-left:2px solid var(--gold)}
+.sellmat .sm-name small{margin-left:8px;color:var(--dim)}
 #fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:40}
 #fade.on{animation:fade .8s ease}
 @keyframes fade{0%{opacity:0}45%,55%{opacity:1}100%{opacity:0}}
