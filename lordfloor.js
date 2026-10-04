@@ -67,13 +67,17 @@
     const floorAt = (x, z) => { const tx = t.tX(x), tz = t.tZ(z); for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) { const k = t.id(tx + dx, tz + dz); if (t.T[k] !== 1 || t.RM[k] !== r.i) return false; } return true; };
     const doors = (r.doors || []).map(k => { const tx = k % t.nx, tz = (k - tx) / t.nx; return [t.cX(tx), t.cZ(tz)]; }), nearDoor = (x, z) => doors.some(([a, b]) => Math.hypot(a - x, b - z) < 3.2);
     // 一圈柱子（白色、金色的線）：沿著房間的橢圓排（第 20 章：圓形的客廳、兩側數十根柱子）
-    const hx = Math.max(3, (r.hx || 6) - 2.6), hz = Math.max(3, (r.hz || 5) - 2.4), N = Math.max(8, Math.min(16, Math.round((hx + hz) * 0.75)));
-    for (const k of [0.78, 0.62]) { let put = 0; for (let i = 0; i < N; i++) {
-      const a = (i + 0.5) / N * Math.PI * 2, x = r.x + Math.sin(a) * hx * k, z = r.z + Math.cos(a) * hz * k; if (!floorAt(x, z) || nearDoor(x, z)) continue;
+    const hx = Math.max(3, (r.hx || 6) - 2.6), hz = Math.max(3, (r.hz || 5) - 2.4), N = Math.max(6, Math.min(12, Math.round((hx + hz) * 0.55)));   // 柱子少一點、拉開（原本最多 16 根，窄的那兩邊擠在一起，斜斜看下來一根疊一根）
+    // 2026-10-04 作者回報：柱子疊在一起——外圈放不夠的時候，原本外圈的柱子留著、再加一圈內圈（小的大廳兩圈只差半公尺，柱子一公尺粗），
+    //   也沒看那裡是不是已經有別的東西；一圈最多 16 根，窄的兩邊擠在一起。現在：每根柱子要那一塊是空的、離別根柱子 2.4 公尺以上，一圈 6～12 根；外圈放不夠，就看外圈、內圈哪一圈放得多，只放那一圈。
+    const clear = (x, z) => ![...R.boxesNear(x, z)].some(c => x + 0.6 > c.x0 && x - 0.6 < c.x1 && z + 0.6 > c.z0 && z - 0.6 < c.z1);
+    const plan = k => { const ring = []; for (let i = 0; i < N; i++) { const a = (i + 0.5) / N * Math.PI * 2, x = r.x + Math.sin(a) * hx * k, z = r.z + Math.cos(a) * hz * k; if (floorAt(x, z) && !nearDoor(x, z) && clear(x, z) && !ring.some(o => Math.hypot(o.x - x, o.z - z) < 2.4)) ring.push({ x, z }); } return ring; };
+    const outer = plan(0.78), cols = outer.length >= N * 0.5 ? outer : [outer, plan(0.62)].sort((p1, p2) => p2.length - p1.length)[0];   // 外圈放不夠（房間的形狀不規則）就看內圈，放得比較多的那一圈（只放一圈）
+    cols.forEach(({ x, z }) => {
       const p = new T.Mesh(new T.CylinderGeometry(0.42, 0.5, 4.2, 10), white); p.position.set(x, 2.1, z); p.castShadow = true; g.add(p);
       [0.25, 2.1, 3.95].forEach(y => { const b = new T.Mesh(new T.CylinderGeometry(0.54, 0.54, 0.16, 10), gold); b.position.set(x, y, z); g.add(b); });
-      R.addBox(x - 0.48, x + 0.48, z - 0.48, z + 0.48, 'deco'); put++;
-    } if (put >= N * 0.5) break; }   // 外圈放不夠（房間的形狀不規則）就往內一點
+      R.addBox(x - 0.48, x + 0.48, z - 0.48, z + 0.48, 'deco');
+    });
     // 中間的舞池：淺色的圓、金色的邊
     const mid = floorAt(r.x, r.z);   // 環形的房間中間是深淵（看得到底下的井）：不放舞池和吊燈的光
     const rr = Math.max(2.5, Math.min(hx, hz) - 1.2), disc = new T.Mesh(new T.CircleGeometry(rr, 36), new T.MeshLambertMaterial({ color: '#D8D2C4' })); disc.rotation.x = -Math.PI / 2; disc.position.set(r.x, 0.025, r.z); disc.receiveShadow = true; if (mid) g.add(disc);
