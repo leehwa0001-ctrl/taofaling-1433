@@ -99,6 +99,7 @@
   const leave = () => {
     const w = W(), run = w.run; if (!isTrain(run)) return;
     run.done = true; if (panel) panel.hidden = true;
+    if (R.clearMonTags) R.clearMonTags(); if (R.clearNums) R.clearNums();   // 2026-10-05 作者：木樁的血條會跑到主世界——直接切回城裡沒經過收尾，名牌留在畫面上
     w.allies = []; R.ensureRoster && R.ensureRoster(true);
     if (w.scene && w.P) w.scene.remove(w.P.h.g); if (w.scene && R.disposeScene) R.disposeScene(w.scene);
     w.run = null; w.P = null; w.scene = null; dummies = [];

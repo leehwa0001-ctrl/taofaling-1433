@@ -62,6 +62,9 @@
   // 換樓層、回城：名牌清掉
   const lf = R.loadFloor;
   if (lf) R.loadFloor = (...a) => { clearTags(); return lf(...a); };
+  // 進城、進建築物：一律清掉（2026-10-05 作者：訓練場木樁的血條跑到主世界——城裡不會再更新名牌，沒清的就一直留著）
+  const et = R.enterTown; if (et) R.enterTown = (...a) => { clearTags(); return et(...a); };
+  const ei = R.enterInterior; if (ei) R.enterInterior = (...a) => { clearTags(); return ei(...a); };
 
   // ---------- 圖鑑：打倒過幾隻 ----------
   const er = R.endRun;
