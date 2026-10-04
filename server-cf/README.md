@@ -6,19 +6,19 @@
 ## 上線（作者做一次就好）
 
 1. 到 https://dash.cloudflare.com/sign-up 註冊 Cloudflare 帳號（免費方案，不用信用卡）。
-2. 打開終端機，在這個資料夾（`server-cf`）執行：
+2. 打開終端機，先進到這個資料夾（`cd server-cf`），再執行（**Windows 的 PowerShell 要打 `npx.cmd`**，打 `npx` 會出現「已停用指令碼執行」的紅字）：
    ```
-   npx wrangler login
+   npx.cmd wrangler login
    ```
    瀏覽器會跳出 Cloudflare 的授權頁，按允許。
 3. 再執行：
    ```
-   npx wrangler deploy
+   npx.cmd wrangler deploy
    ```
    最後會印出網址，長得像 `https://taofaling-1433.你的帳號.workers.dev`。
 4. 把這個網址告訴 Claude（或 Codex）：填進 `net.js` 的 `PROD`、推上去，線上版就能連了。
 
-之後改了 `worker.js`，在這個資料夾再跑一次 `npx wrangler deploy` 就會更新。
+之後改了 `worker.js`，在這個資料夾再跑一次 `npx.cmd wrangler deploy` 就會更新。（Mac、Linux、Git Bash 打 `npx` 就好。）
 
 ## 本機測試
 

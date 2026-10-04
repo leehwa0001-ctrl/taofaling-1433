@@ -5,6 +5,13 @@
 // - 一般技能也加料：放出去的時候腳下炸開一圈職業顏色的光、往上飄的光點，畫面下方打出技能的名字。
 (function (R) {
   const W = () => R.W, $ = id => document.getElementById(id), rnd = Math.random;
+  // 擊飛：在原地被打上半空（0.9 秒、最高 2.6 公尺），飛在空中不能動，落地揚起灰塵；領主體、佩特拉核心不會被擊飛
+  const knockUp = (x, z, r) => (W().enemies || []).forEach(e => {
+    if (e.dead || e.under || !e.def || e.def.boss || e.def.lordPlus || e.def.fly || e.id === 'petra') return;   // 會飛的本來就在空中
+    if (Math.hypot(e.x - x, e.z - z) > r + (e.def.size || 1) * 0.4) return;
+    e.up = { t: 0, dur: 0.9, h: 2.6 / Math.max(0.8, Math.sqrt(e.def.size || 1)), x: e.x, z: e.z };
+  });
+  R.knockUp = knockUp;
   const later = (f, ms) => { const run = W().run; setTimeout(() => { if (W().run === run && run && !run.done) f(); }, ms); };
   const near = (x, z, r) => (W().enemies || []).filter(e => !e.dead && !e.dormant && Math.hypot(e.x - x, e.z - z) < r);
   // 大招的傷害基準（2026-10-04 作者：大招傷害大約是普攻的 20～30 倍，調低一半到 10～15 倍）：
@@ -63,7 +70,7 @@
       // 跳的距離、劈下去的範圍、裂地的長度就大多少（最多 2 倍）
       const ws = P.ws || {}, rk = Math.max(1, Math.min(2, ws.range0 ? ws.range / ws.range0 : 1));
       const b = base(P), [x, z] = aimPt(P, 9 * rk); P.jump = { t: 0, dur: 0.7, x0: P.x, z0: P.z, x1: x, z1: z }; P.air = 0.7; P.iframe = Math.max(P.iframe || 0, 1);
-      later(() => { R.fx('boom', x, 0.4, z, { r: 6 * rk, color: '#FF8A4A' }); R.fx('ring', x, 0.1, z, { r: 9 * rk, color: '#FFFFFF' }); R.aoe(x, z, 6 * rk, b * 12, { stun: 2, kb: 6 }); R.shake && R.shake(1);
+      later(() => { R.fx('boom', x, 0.4, z, { r: 6 * rk, color: '#FF8A4A' }); R.fx('ring', x, 0.1, z, { r: 9 * rk, color: '#FFFFFF' }); R.aoe(x, z, 6 * rk, b * 12, { stun: 2 }); knockUp(x, z, 6 * rk); R.shake && R.shake(1);   // 2026-10-04 作者：天崩斬改成擊飛而不是擊退
         for (let k = 0; k < 8; k++) { const an = k / 8 * Math.PI * 2; for (let i = 2; i <= 6; i++) { const [px, pz] = floor(x + Math.sin(an) * i * 1.5 * rk, z + Math.cos(an) * i * 1.5 * rk); later(() => { R.fx('boom', px, 0.2, pz, { r: rk, color: '#C86A3A' }); R.aoe(px, pz, rk, b * 1.2, { primary: false }); }, i * 70); } } }, 700);
     } },
     mage: { name: '七曜隕星', sub: '術士的大招：七顆隕星砸下來', go: P => {
@@ -118,4 +125,16 @@
     + '.ul-cast{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);z-index:60;pointer-events:none;font:900 22px/1 var(--serif,serif);letter-spacing:.12em;color:#FFF;text-shadow:0 0 10px var(--c),0 0 22px var(--c),0 2px 0 #000;opacity:0}.ul-cast.on{animation:ulk .9s ease-out forwards}@keyframes ulk{0%{opacity:0;transform:translate(-50%,10px) scale(.9)}15%{opacity:1;transform:translate(-50%,0) scale(1.05)}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-14px)}}'
     + 'body.touch .ul-btn{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:calc(230px + env(safe-area-inset-bottom));width:64px;height:64px;border-radius:50%;z-index:7}body.touch .ul-cast{bottom:42%}';
   document.head.appendChild(css);
+  const stU = R.step;
+  R.step = dt => {
+    const r = stU(dt);
+    (W().enemies || []).forEach(e => {
+      const u = e.up; if (!u) return;
+      if (e.dead) { e.up = null; if (e.m && e.m.g) e.m.g.position.y = 0; return; }
+      u.t += dt; const k = Math.min(1, u.t / u.dur);
+      e.x = u.x; e.z = u.z; if (e.m && e.m.g) { e.m.g.position.set(u.x, Math.sin(k * Math.PI) * u.h, u.z); e.m.g.rotation.z = Math.sin(k * Math.PI) * 0.5; }
+      if (k >= 1) { e.up = null; if (e.m && e.m.g) { e.m.g.position.y = 0; e.m.g.rotation.z = 0; } R.fx && R.fx('dust', e.x, 0.2, e.z, { color: '#C8B898' }); R.fx && R.fx('poof', e.x, 0.3, e.z, { color: '#A89878', n: 4 }); }
+    });
+    return r;
+  };
 })(window.R);
