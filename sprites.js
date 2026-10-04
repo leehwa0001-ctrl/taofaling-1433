@@ -63,7 +63,7 @@
       top: body === 'heavy' ? '#AEB6C0' : body === 'medium' ? '#7E8894' : o.top, plate: body === 'heavy', chain: body === 'medium',
       pants: { heavy: '#8E969F', medium: '#5F6873', light: '#6A5A48' }[w('legs')] || o.pants || '#3A3D48',
       shoe: { heavy: '#7F868E', medium: '#5A3A22', light: '#C8A860' }[w('feet')] || o.shoe || '#2A231D',
-      head: hood ? null : helm, weapon: o.weapon, shield: o.shield,
+      head: hood ? null : helm, headBase: hood || !helm ? null : o.eq.head.base, weapon: o.weapon, shield: o.shield,   // headBase：每一種帽子自己的畫法（headgear.js 的 R.HEAD_DRAW）
       hs: rc.bald ? 'bald' : o.hs || 'short', acc: o.acc || null, accCol: o.accCol || '#C8323A',
       hood: hood ? (o.hood ? '#3A322C' : rc.hoodCol || '#C8A870') : null,
       ears: hood || helm ? null : (rc.ears && o.ears ? o.ears : rc.ears), horns: hood ? null : (rc.horns && o.horns ? o.horns : rc.horns), wings: o.hood ? null : (rc.wings && o.wings ? o.wings : rc.wings), halo: o.hood ? null : rc.halo, tail: o.hood ? null : (rc.tail && o.tail ? o.tail : rc.tail),
@@ -169,7 +169,8 @@
     // 暗影族：身邊飄著幾縷影子
     if (L.wisp && !sit) { const wc = 'rgba(36,28,58,0.85)'; (side ? [[3, 9], [12, 11], [2, 16], [13, 18], [4, 22]] : [[2, 9], [13, 10], [1, 14], [14, 15], [3, 21], [12, 22]]).forEach(([u, v]) => p(u, v, 1, 1, wc)); }
     // 帽子
-    if (L.head === 'light') { const s = '#C8A860'; p(1, 2, 14, 1, s); p(2, 1, 12, 1, lt(s)); p(4, 0, 8, 1, s); p(6, -1, 4, 1, dk(s)); p(1, 3, 14, 1, dk(dk(s))); p(9, 0, 3, 1, dk(s)); }
+    if (L.headBase && R.HEAD_DRAW && R.HEAD_DRAW[L.headBase]) R.HEAD_DRAW[L.headBase](p, { side, back, lt, dk });
+    else if (L.head === 'light') { const s = '#C8A860'; p(1, 2, 14, 1, s); p(2, 1, 12, 1, lt(s)); p(4, 0, 8, 1, s); p(6, -1, 4, 1, dk(s)); p(1, 3, 14, 1, dk(dk(s))); p(9, 0, 3, 1, dk(s)); }
     else if (L.head === 'medium') { const s = '#7E8894'; p(3, 1, 10, 2, s); p(4, 1, 4, 1, lt(s)); p(3, 2, 2, 7, s); p(11, 2, 2, 7, dk(s)); if (back || side) { p(4, 2, 8, 7, s); for (let yy = 3; yy < 8; yy++) for (let xx = 4 + (yy % 2); xx < 12; xx += 2) p(xx, yy, 1, 1, dk(s)); } }
     else if (L.head === 'heavy') { const s = '#B8C0C8'; p(3, 0, 10, 4, s); p(3, 0, 10, 1, lt(s)); p(11, 1, 2, 3, dk(s)); p(7, -2, 2, 2, '#B8322A'); p(7, -2, 1, 1, lt('#B8322A')); if (!back) p(4, 4, side ? 3 : 8, 1, dk(dk(s))); }
     // 光環（浮在頭上）
