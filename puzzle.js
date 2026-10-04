@@ -46,6 +46,7 @@
     if (!c && near.length) c = near.slice().sort((a, b) => far(b[0]) - far(a[0]))[0];   // 真的擺不下：挑離別的東西最遠的（2026-10-04：原本全部疊在房間正中央，石板一踩翻好幾塊，解不開）
     const p = c ? c[0] : [r.x, r.z]; used.push([p[0], p[1], pad || 0]); return p;
   };
+  const noteTex = col => pixTex(c => { c.width = 10; c.height = 12; const x = c.getContext('2d'); x.fillStyle = '#140E1A'; x.fillRect(1, 7, 5, 5); x.fillRect(5, 0, 3, 9); x.fillStyle = col; x.fillRect(2, 8, 3, 3); x.fillRect(6, 1, 1, 8); x.fillRect(7, 1, 2, 2); x.fillRect(8, 3, 1, 2); });   // 浮在回音石上面的音符
   const glyphTex = (sym, col) => {
     const c = document.createElement('canvas'); c.width = 16; c.height = 16; const x = c.getContext('2d'); x.fillStyle = col; x.strokeStyle = '#140E1A'; x.lineWidth = 2;
     x.beginPath();
@@ -117,9 +118,11 @@
       const n = run.grade.lv >= 3 ? 5 : 4, L = run.grade.lv >= 3 ? 5 : 4, COLS = ['#FF6A5A', '#5AC8FF', '#7AE07A', '#FFD24A', '#C88AFF'], NOTES = [262, 330, 392, 494, 587];
       pz.hint = '「石頭會唱歌。記住牠們唱的順序，照著踩一遍。」（踩錯了會再唱一次；摸石碑也會再唱。）';
       pz.stones = ring(n).map(([x, z], i) => {
-        const m = mat(COLS[i], COLS[i]), st = new (T().Mesh)(new (T().CylinderGeometry)(0.75, 0.85, 0.18, 8), m); m.emissiveIntensity = 0.15; st.position.set(x, 0.09, z); st.receiveShadow = true; scene.add(st);
-        const rg = floorRing(scene, x, z, 0.9, 1.05, COLS[i], 0.3); rg.position.y = 0.12;
-        return { x, z, m, rg, inside: false, lit: 0, f: NOTES[i] };
+        const m = mat(COLS[i], COLS[i]), st = new (T().Mesh)(new (T().CylinderGeometry)(0.75, 0.85, 0.3, 8), m); m.emissiveIntensity = 0.55; m.fog = false; st.position.set(x, 0.15, z); st.receiveShadow = true; scene.add(st);
+        const rg = floorRing(scene, x, z, 0.9, 1.05, COLS[i], 0.55); rg.position.y = 0.32; rg.material.fog = false;
+        // 2026-10-04 回報：火山深層的機關房看不到石頭（橘色的霧、暗光把石頭的顏色蓋掉，只剩光圈）——石頭自己發光、上面浮一個同色的音符
+        const nt = sprite(scene, pz, noteTex(COLS[i]), x, 1.5, z, 1.25); nt.material.fog = false; pz.tex.push(nt.material.map);
+        return { x, z, m, rg, nt, inside: false, lit: 0, f: NOTES[i] };
       });
       pz.seq = []; for (let i = 0; i < L; i++) { let k; do { k = Math.floor(rnd() * n); } while (pz.seq.length && k === pz.seq[pz.seq.length - 1]); pz.seq.push(k); }
       pz.step = 0; pz.last = -1; pz.play = null; pz.started = false; pz.idle = 0;
@@ -197,7 +200,7 @@
       if (pz.kind === 'echo' && !pz.solved) {
         const inRoom = R.roomIndexAt && R.roomIndexAt(P.x, P.z) === pz.r.i;
         if (!pz.started && inRoom) { pz.started = true; pz.play = { i: -1, t: 0.8 }; }
-        pz.stones.forEach(s => { s.lit = Math.max(0, s.lit - dt); const k = Math.min(1, s.lit * 2.5); s.m.emissiveIntensity = 0.15 + 1.3 * k; s.rg.material.opacity = 0.3 + 0.6 * k; });
+        pz.stones.forEach(s => { s.lit = Math.max(0, s.lit - dt); const k = Math.min(1, s.lit * 2.5); s.m.emissiveIntensity = 0.55 + 1.1 * k; s.rg.material.opacity = 0.55 + 0.4 * k; if (s.nt) { const sc = 1.25 + 0.7 * k; s.nt.scale.set(sc, sc, 1); s.nt.position.y = 1.5 + Math.sin((run.t || 0) * 2.2 + s.f) * 0.12 + 0.3 * k; } });
         // 2026-10-04 作者：走過去會被當成連續按兩下——踩上去要進到 0.8 以內、要走到 1.1 以外才算離開（邊緣不會抖）；唱的時候也記住站在哪一顆
         let on = -1, bd = 1e9; pz.stones.forEach((s, i) => { const d = Math.max(Math.abs(P.x - s.x), Math.abs(P.z - s.z)); if (d < (s.inside ? 1.1 : 0.8) && d < bd) { bd = d; on = i; } });
         if (pz.play) { pz.stones.forEach((s, i) => { s.inside = i === on; }); pz.play.t -= dt; if (pz.play.t <= 0) { pz.play.i++; if (pz.play.i >= pz.seq.length) { pz.play = null; pz.idle = 0; } else { const s = pz.stones[pz.seq[pz.play.i]]; s.lit = 0.45; tone(s.f); pz.play.t = 0.7; } } return; }
