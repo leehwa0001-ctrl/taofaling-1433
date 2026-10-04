@@ -72,7 +72,7 @@
     sel('[data-tact="bag"] .h2-ic', '[data-tact="order"] .h2-ic') + '{width:20px!important;height:20px!important}',
     sel('[data-tact="hp"] .h2-n', '[data-h2="mp"] .h2-n') + '{left:2px!important;right:auto!important;top:1px!important;bottom:auto!important;font-size:10px!important}',
     // 提示、訊息：往上移，不要壓在大招寶石上
-    D + '#run:not(.town) #r-prompt{bottom:196px!important}', D + '#run:not(.town) #r-toast{bottom:166px!important}', D + '.ul-cast{bottom:220px!important}',
+    D + '#run:not(.town) #r-prompt{bottom:250px!important}', D + '#run:not(.town) #r-toast{bottom:206px!important}', D + '.ul-cast{bottom:296px!important}',   /* 2026-10-05 作者：字幕會被大招的框擋住——字幕、互動提示移到大招的菱形框上面 */
     // 左下的人物卡：窄一點的螢幕縮小，不要被生命球蓋住
     '@media (max-width:1320px){body:not(.touch) #r-bl{width:178px!important}body:not(.touch) #r-bl .bh-row,body:not(.touch) #r-bl small{font-size:11px}}',
     // ===== 大招：面板正上方的菱形寶石 =====
