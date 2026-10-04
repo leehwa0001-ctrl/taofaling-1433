@@ -113,8 +113,12 @@
     if (W.torch) W.torch.intensity = D.torchI * D.flick * (0.9 + Math.sin(t * 7.3) * 0.04 + Math.sin(t * 17.1) * 0.03 + (rnd() < 0.01 ? -0.25 : 0));
     if (D.flick < 1 && W.pool) W.pool.forEach(l => { l.intensity *= D.flick; });
     if (W.pool && D.poolN) W.pool.forEach((l, i) => { if (i >= D.poolN) l.intensity = 0; });   // 深淵：只有最近的幾支火把真的發光
-    // 霧：角色周圍一定看得清楚；一般看得到 30 公尺左右（越暗越近），濃霧樓層（ruinvar.js 的 F.fogMin）10 公尺
-    { const fg = W.scene && W.scene.fog; if (fg && fg.isFog && W.camera) { const cd = Math.hypot(W.camera.position.x - P.x, W.camera.position.y - 1, W.camera.position.z - P.z), vis = W.F && W.F.fogMin ? 10 : Math.max(8, 30 - D.k * 12 - (D.depth || 0) * 6 - (D.abyss || 0) * 8); fg.near = Math.max(1, cd - 3); fg.far = cd + vis; } }
+    // 霧：角色周圍一定看得清楚；一般看得到 30 公尺左右（越暗越近），濃霧樓層（ruinvar.js 的 F.fogMin）4.5 公尺
+    // 濃霧（2026-10-04 作者：濃霧被削弱到完全沒效果了，調回來一點）：原本 10 公尺（比深層一般的還遠），霧的顏色又跟黑暗一樣，看不出是霧。
+    //   現在角色往外 4.5 公尺就看不見，霧是灰白的（深淵裡暗一點）；角色自己照樣看得清楚（霧從角色前面一點點才開始）。
+    { const fg = W.scene && W.scene.fog, fog = W.F && W.F.fogMin; if (fg && fg.isFog && W.camera) {
+      if (fog && W.F.fogTint !== W.F) { W.F.fogTint = W.F; fg.color.lerp(new (T().Color)('#A8AEB4'), 0.6).multiplyScalar(0.55 + 0.45 * (1 - (D.abyss || 0))); if (W.scene.background && W.scene.background.isColor) W.scene.background.copy(fg.color); }
+      const cd = Math.hypot(W.camera.position.x - P.x, W.camera.position.y - 1, W.camera.position.z - P.z), vis = fog ? 4.5 : Math.max(8, 30 - D.k * 12 - (D.depth || 0) * 6 - (D.abyss || 0) * 8); fg.near = Math.max(1, cd - (fog ? 0.5 : 3)); fg.far = cd + vis; } }
     // 哈米莉亞級：不嚇人（沒有四周的黑、黑影、低語、敲門聲）——2026-10-04 回饋：探索起來太壓抑
     if (run.grade && run.grade.id === 'hamilia') { if (veil) veil.style.opacity = 0; return; }
     // 四周的黑：注意越高、生命越少越黑
