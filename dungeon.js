@@ -347,7 +347,7 @@
     // --- 深淵（高塔的井、橋下、浮島外面的海；火山是熔岩） ---
     const pitCol = env === 'volcano' ? '#FF5A1A' : env === 'deep' ? '#0E2A3A' : form.pit;
     const abyss = new TH.Mesh(new TH.PlaneGeometry(nx * TS + 60, nz * TS + 60), new TH.MeshBasicMaterial({ color: pitCol }));
-    abyss.rotation.x = -Math.PI / 2; abyss.position.set(t.X0 + nx * TS / 2, -9, t.Z0 + nz * TS / 2); group.add(abyss);
+    abyss.rotation.x = -Math.PI / 2; abyss.position.set(t.X0 + nx * TS / 2, -9, t.Z0 + nz * TS / 2); group.add(abyss); F.abyss = abyss;   // dread.js 深層調暗用
     if (run.type === 'island' || run.type === 'tower' || env === 'volcano') {
       // 深淵底下的光：浮島是海面的反光，高塔是佩特拉的光，火山是熔岩
       const glow = new TH.Mesh(new TH.PlaneGeometry(nx * TS + 60, nz * TS + 60), new TH.MeshBasicMaterial({ color: env === 'volcano' ? '#FFB050' : run.type === 'island' ? '#5FC8E0' : th.accent, transparent: true, opacity: run.type === 'tower' ? 0.3 : 0.14, depthWrite: false }));
