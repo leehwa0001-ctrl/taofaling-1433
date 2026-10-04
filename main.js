@@ -35,7 +35,7 @@
   // ---------- 遺跡資料 ----------
   const gradeOf = s => R.gradeById(s.grade);
   const floorsOf = s => { const g = gradeOf(s), t = R.TYPES[s.type]; return g && g.floors ? (R.floorsFor ? R.floorsFor(s) : Math.max(2, g.floors + (t ? t.floors : 0))) : null; };
-  const monstersOf = s => { const g = gradeOf(s); if (!g || !g.pool) return []; let ids = g.pool.slice(); if (s.env) ids = ids.concat(Object.keys(R.ENEMIES).filter(k => R.ENEMIES[k].env === s.env)); if (g.lords) ids = ids.concat(g.lords); if (g.boss) ids.push(g.boss); return ids; };
+  const monstersOf = s => { const g = gradeOf(s); if (!g || !g.pool) return []; let ids = (R.sitePool ? R.sitePool(s) : g.pool).slice(); if (s.env) ids = ids.concat(Object.keys(R.ENEMIES).filter(k => R.ENEMIES[k].env === s.env)); const lords = R.siteLords ? R.siteLords(s) : g.lords; if (lords) ids = ids.concat(lords); if (g.boss) ids.push(g.boss); return ids; };
   const LORE = {
     hamilia: '威脅最低。經公會登記與審核，一般民眾也能進入；轉化效率低，戰利品多半靠人工採集。',
     amile: '保留區裡數量最多的分級，也是初階勇者試煉的主要來源。從這一級開始，只有取得公會勇者資格的人能進入。',

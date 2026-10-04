@@ -15,7 +15,7 @@
   const clamp = v => Math.max(1, Math.min(100, Math.round(v)));
   const quests = () => { const s = S(); s.quests = s.quests || []; return s.quests; };
   const monName = id => (R.ENEMIES[id] ? R.ENEMIES[id].name : id), matName = id => (R.MATS[id] ? R.MATS[id].name : id);
-  const text = q => q.kind === 'floor' ? '攻略「' + q.site + '」到第 ' + q.need + ' 層' : q.kind === 'kill' ? '討伐「' + monName(q.mon) + '」' + q.need + ' 隻（' + R.gradeById(q.grade).name + '以上的遺跡）' : '採集「' + matName(q.mat) + '」' + q.need + ' 個（帶回地面）';
+  const text = q => q.kind === 'floor' ? '攻略「' + q.site + '」到第 ' + q.need + ' 層' : q.kind === 'kill' ? '討伐「' + monName(q.mon) + '」' + q.need + ' 隻（' + R.gradeById(q.grade).name + '以上的遺跡' + (R.monSites ? R.monSites(q.mon, q.grade) : '') + '）' : '採集「' + matName(q.mat) + '」' + q.need + ' 個（帶回地面）';
   const times = q => q.kind === 'kill' ? Math.min(CAP, Math.floor(q.prog / q.need)) : (q.prog >= q.need ? 1 : 0);
   const cap = q => q.kind === 'kill' ? q.need * CAP : q.need;
 

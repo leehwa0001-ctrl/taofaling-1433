@@ -122,7 +122,7 @@
       if (id === 'kodama') { const k = 2 + Math.floor(Math.random() * 3); for (let i = 0; i < k; i++) put('kodama'); n -= Math.ceil(k / 2); continue; }   // 木魂成群，兩隻算一隻
       put(id); n--;
     }
-    if (run.env) { const envs = Object.keys(R.ENEMIES).filter(k => R.ENEMIES[k].env === run.env), envId = envs[Math.floor(Math.random() * envs.length)]; if (envId && Math.random() < 0.7) put(envId); }   // 同一種環境可能有好幾種生物
+    if (run.env) { const envs = Object.keys(R.ENEMIES).filter(k => R.ENEMIES[k].env === run.env && !R.ENEMIES[k].boss), envId = envs[Math.floor(Math.random() * envs.length)]; if (envId && Math.random() < 0.7) put(envId); }   // 同一種環境可能有好幾種生物
   };
   // 一層開始時：房間裡本來就有遺跡生物在活動；通道裡也有在遊蕩的
   R.populateFloor = () => {
