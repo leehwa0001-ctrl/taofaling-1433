@@ -13,14 +13,16 @@
   const lf = R.loadFloor;
   R.loadFloor = (f, o) => {
     const r = lf(f, o), run = W.run, sc = W.scene; if (!run || !sc || (run.site && run.site.outdoor)) return r;   // 外面（hunt.js 的狩獵場）不暗
-    const k = Math.min(0.7, (DARK[run.grade.lv] || 0.4) + 0.015 * (f || 0)); D.k = k;
+    // 2026-10-04 作者：遺跡越深層，光影效果可以越明顯（營造壓抑感）——原本照絕對層數，十幾層以後就到頂；改成照「走到第幾成」
+    const depth = Math.max(0, Math.min(1, (f || 0) / Math.max(1, (run.floors || 1) - 1))); D.depth = depth;
+    const k = Math.min(0.82, (DARK[run.grade.lv] || 0.4) + 0.3 * depth); D.k = k;
     sc.children.forEach(c => { if (c.isHemisphereLight) c.intensity = 0.62 * (1 - k) + 0.14; });
     if (W.moon) W.moon.intensity = 0.6 * (1 - k) * 0.8 + 0.05;
     if (sc.fog) { sc.fog.density = 0.02 * (1 + k * 0.7); sc.fog.color.multiplyScalar(1 - k * 0.35); if (sc.background && sc.background.isColor) sc.background.copy(sc.fog.color); }
     if (W.torch) { W.torch.intensity = D.torchI = 2.3; W.torch.distance = 15 + (1 - k) * 6; W.torch.decay = 1.4; }
     // 霧改成「從角色那裡才開始算」（2026-10-04 作者回報：濃霧樓層完全看不到）：
     // 原本的 FogExp2 照離鏡頭的距離算，鏡頭在角色上方二十幾公尺，角色自己就埋在霧裡。改成線性的霧，近端每一格對齊鏡頭到角色的距離（updateLights）
-    if (sc.fog) { const c = sc.fog.color.clone(); sc.fog = new (T().Fog)(c, 20, 60); }
+    if (sc.fog) { const c = sc.fog.color.clone(); if (run.grade.id !== 'hamilia' && depth > 0.3) c.lerp(new (T().Color)('#2A0A14'), (depth - 0.3) * 0.6); sc.fog = new (T().Fog)(c, 20, 60); if (sc.background && sc.background.isColor) sc.background.copy(c); }   // 深處的霧帶一點暗紅
     if (W.F && W.F.lights) W.F.lights.forEach(L => { L.I *= 0.85; });
     D.flick = 1; D.flickT = 0; D.nextT = 25 + rnd() * 20; removeShadow();
     return r;
@@ -98,11 +100,11 @@
     if (W.torch) W.torch.intensity = D.torchI * D.flick * (0.9 + Math.sin(t * 7.3) * 0.04 + Math.sin(t * 17.1) * 0.03 + (rnd() < 0.01 ? -0.25 : 0));
     if (D.flick < 1 && W.pool) W.pool.forEach(l => { l.intensity *= D.flick; });
     // 霧：角色周圍一定看得清楚；一般看得到 30 公尺左右（越暗越近），濃霧樓層（ruinvar.js 的 F.fogMin）10 公尺
-    { const fg = W.scene && W.scene.fog; if (fg && fg.isFog && W.camera) { const cd = Math.hypot(W.camera.position.x - P.x, W.camera.position.y - 1, W.camera.position.z - P.z), vis = W.F && W.F.fogMin ? 10 : 30 - D.k * 12; fg.near = Math.max(1, cd - 3); fg.far = cd + vis; } }
+    { const fg = W.scene && W.scene.fog; if (fg && fg.isFog && W.camera) { const cd = Math.hypot(W.camera.position.x - P.x, W.camera.position.y - 1, W.camera.position.z - P.z), vis = W.F && W.F.fogMin ? 10 : 30 - D.k * 12 - (D.depth || 0) * 6; fg.near = Math.max(1, cd - 3); fg.far = cd + vis; } }
     // 哈米莉亞級：不嚇人（沒有四周的黑、黑影、低語、敲門聲）——2026-10-04 回饋：探索起來太壓抑
     if (run.grade && run.grade.id === 'hamilia') { if (veil) veil.style.opacity = 0; return; }
     // 四周的黑：注意越高、生命越少越黑
-    if (veil) veil.style.opacity = Math.min(0.95, 0.22 + D.k * 0.2 + run.aware / 100 * 0.25 + Math.max(0, 0.5 - P.hp / P.hpMax) * 0.4).toFixed(3);
+    if (veil) veil.style.opacity = Math.min(0.95, 0.22 + D.k * 0.2 + (D.depth || 0) * 0.18 + run.aware / 100 * 0.25 + Math.max(0, 0.5 - P.hp / P.hpMax) * 0.4).toFixed(3);
     // 黑影：走近或時間到就不見
     const s = D.shadow;
     if (s) {
