@@ -1,8 +1,9 @@
 // 遺跡生物的破防、虛弱、重傷；克森特級以上治療變少
 // （2026-10-05 作者：克森特級以上，可能會有降治療和降回血、吸血的效果；怪物可以有破防或讓玩家降攻擊的手段）
-// - 克森特級以上（魔力太濃，傷口長不好）：受到的治療（回復藥、技能、每秒回血、吸血全部算）−25%（克森特級）／−40%（卡索級）。
+// - 克森特級以上（魔力太濃，傷口長不好）：受到的治療（回復藥、技能、每秒回血、吸血全部算）−40%（克森特級）／−60%（卡索級）。
+//   （2026-10-05 作者：降治療的效果加強——原本 −25%／−40%，重傷原本 6 秒 −60%）
 // - 遺跡生物打中你的時候可能帶一種狀態（摩爾斯級以上）：
-//   破防（6 秒：受到的傷害 +25%）、虛弱（6 秒：打出去的傷害 −25%）、重傷（6 秒：受到的治療再 −60%）。
+//   破防（6 秒：受到的傷害 +25%）、虛弱（6 秒：打出去的傷害 −25%）、重傷（8 秒：受到的治療再 −80%）。
 //   每一種生物固定帶一種（照編號算，大約六成的生物有）；精英、領主體三種都可能。
 //   機率：一般 15%、精英 30%、領主體 40%，卡索級再 +10%。同一種再中就重新計時（不疊加）。
 //   卡索專屬：噬界者、虛甲騎士＝破防；錯位影、稜鏡體＝虛弱；殘響、裂隙獵手＝重傷。
@@ -13,14 +14,14 @@
   const KIND = {
     armor: { n: '破防', c: '#FF9A6A', t: 6, d: '受到的傷害 +25%' },
     atk: { n: '虛弱', c: '#C8A0FF', t: 6, d: '打出去的傷害 −25%' },
-    heal: { n: '重傷', c: '#FF6A8A', t: 6, d: '受到的治療 −60%' }
+    heal: { n: '重傷', c: '#FF6A8A', t: 8, d: '受到的治療 −80%' }
   };
   const FIX = { k_maw: 'armor', k_hollow: 'armor', k_shade: 'atk', k_prism: 'atk', k_echo: 'heal', k_echo_s: 'heal', k_rift: 'heal' };
   const hash = s => { let h = 7; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h; };
   const baseId = id => String(id || '').replace(/_v\d+$/, '');
   const kindOf = e => { const id = baseId(e.id); if (FIX[id]) return FIX[id]; if (e.def && (e.def.elite || e.def.boss)) return ['armor', 'atk', 'heal'][Math.floor(rnd() * 3)]; return [null, 'armor', 'atk', 'heal', null][hash(id) % 5]; };
   const lv = run => (run && run.grade && run.grade.lv) || 0;
-  const auraOf = run => (!run || run.done ? 0 : run.grade && run.grade.id === 'kaso' ? 0.4 : lv(run) >= 4 ? 0.25 : 0);
+  const auraOf = run => (!run || run.done ? 0 : run.grade && run.grade.id === 'kaso' ? 0.6 : lv(run) >= 4 ? 0.4 : 0);
   const D = P => P.dbf || (P.dbf = {});
   const on = (P, k) => !!(P && P.dbf && P.dbf[k] > 0);
   R.playerDebuff = (k, t) => { const P = W().P; if (!P || P.dead || !KIND[k]) return; const was = on(P, k); D(P)[k] = Math.max(D(P)[k] || 0, t || KIND[k].t); if (!was) R.num && R.num(P.x, 2.8, P.z, KIND[k].n + '！', 'crit'); };
@@ -29,7 +30,7 @@
   const hl0 = R.healP;
   R.healP = (v, q) => {
     const w = W(), P = w.P; if (!P || !w.run || v <= 0) return hl0(v, q);
-    let k = 1 - auraOf(w.run); if (on(P, 'heal')) k *= 0.4;
+    let k = 1 - auraOf(w.run); if (on(P, 'heal')) k *= 0.2;
     return hl0(v * k, q);
   };
   // ---------- 受到的傷害、打出去的傷害 ----------
