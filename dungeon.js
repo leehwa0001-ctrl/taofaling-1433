@@ -60,8 +60,8 @@
       if (crowd > 1 && Math.random() < 0.8) continue;
       add(nx, ny, base);
     }
-    // 偶爾多開一條通道，形成迴圈
-    rooms.forEach(r => DIRS.forEach(d => { const o = at.get(K(r.gx + d[0], r.gy + d[1])); if (o && !r.links[d[2]] && Math.random() < (run.type === 'tower' ? 0.12 : 0.24)) { r.links[d[2]] = o.i; o.links[{ n: 's', s: 'n', e: 'w', w: 'e' }[d[2]]] = r.i; } }));
+    // 偶爾多開一條通道，形成迴圈（2026-10-04 作者：迷宮型的遺跡入口要少一點——迷宮型只剩 5%，比較多死路、要繞）
+    rooms.forEach(r => DIRS.forEach(d => { const o = at.get(K(r.gx + d[0], r.gy + d[1])); if (o && !r.links[d[2]] && Math.random() < (run.type === 'tower' ? 0.12 : run.type === 'maze' ? 0.05 : 0.24)) { r.links[d[2]] = o.i; o.links[{ n: 's', s: 'n', e: 'w', w: 'e' }[d[2]]] = r.i; } }));
     // 從入口算距離
     const dist = rooms.map(() => 1e9); dist[0] = 0; const q = [0];
     while (q.length) { const i = q.shift(); Object.values(rooms[i].links).forEach(j => { if (dist[j] > dist[i] + 1) { dist[j] = dist[i] + 1; q.push(j); } }); }

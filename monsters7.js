@@ -452,8 +452,12 @@
   setAi('gearsentry', 'sentry');
   AI.sentry = (e, P, d, a, sp, dt, walk, H) => {
     if (e.hot > 0) { e.hot -= dt; e.dmgK = 2; if (rnd() < 0.3) R.fx('poof', e.x, 1.2, e.z, { color: '#8A8A8A', n: 1 }); if (e.hot <= 0) e.dmgK = null; return false; }
-    if (e.sw) { const S = e.sw; S.t -= dt; S.a += S.dir * 2.4 * dt; e.yaw = S.a; S.f -= dt; if (S.f <= 0) { S.f = 0.09; R.fire({ kind: 'bullet', owner: 'e', x: e.x, z: e.z, a: S.a, speed: 16, dmg: e.dmg * 0.45, life: 1.4, src: e }); } if (S.t <= 0) { e.sw = null; e.hot = 2; e.cd = 3; say(e, '過熱'); } return false; }
-    e.yaw = a; if (e.cd <= 0 && d < 12) { e.sw = { t: 2.4, a: a - 1.2 * (e.dir = -(e.dir || 1)), dir: e.dir, f: 0 }; e.sw.a = a - 1.2 * e.sw.dir; R.fx('sector', e.x, 0, e.z, { a, arc: 2.4, range: 10, t: 0.4 }); }
+    if (e.sw) { const S = e.sw; S.t -= dt; S.a += S.dir * (Math.PI * 2 / 2.4) * dt; e.yaw = S.a; S.f -= dt; if (S.f <= 0) { S.f = 0.09; R.fire({ kind: 'bullet', owner: 'e', x: e.x, z: e.z, a: S.a, speed: 16, dmg: e.dmg * 0.45, life: 1.4, src: e }); } if (S.t <= 0) { e.sw = null; e.hot = 2; e.cd = 3; say(e, '過熱'); } return false; }
+    e.yaw = a; if (e.cd <= 0 && d < 12) {
+      e.mode = !e.mode;   // 兩招輪流（作者 2026-10-04：齒輪哨兵可以 360 度射擊）
+      if (e.mode) { e.dir = -(e.dir || 1); e.sw = { t: 2.75, a, dir: e.dir, f: 0.35 }; R.fx('mark', e.x, 0, e.z, { r: 10, t: 0.4 }); say(e, '轉起來了'); }   // 原地轉一整圈掃射：預警 0.35 秒，之後 2.4 秒轉滿 360 度
+      else { e.cd = 3.6; R.fx('ring', e.x, 0.2, e.z, { r: 1.6, color: '#FF5A3A' }); [0, 0.45, 0.9].forEach((ms, k) => later(() => { if (e.dead) return; for (let i = 0; i < 12; i++) R.fire({ kind: 'bullet', owner: 'e', x: e.x, z: e.z, a: i / 12 * Math.PI * 2 + k * Math.PI / 12, speed: 13, dmg: e.dmg * 0.55, life: 1.3, src: e }); }, 500 + ms * 1000)); }   // 全方位齊射：三輪、每輪錯開半格
+    }
     return false;
   };
 
