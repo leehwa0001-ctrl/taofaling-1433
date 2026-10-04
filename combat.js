@@ -721,7 +721,9 @@
       const beam = new TH.Mesh(new TH.CylinderGeometry(0.25, 0.25, 5, 8, 1, true), new TH.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.25, depthWrite: false })); beam.position.y = 2.5; g.add(beam); }
     const a = Math.random() * Math.PI * 2, r = d.type === 'item' ? rnd(0.6, 1.6) : rnd(0.2, 1);
     d.x += Math.sin(a) * r; d.z += Math.cos(a) * r;
-    const blk = R.pointBlocked(d.x, d.z); if (blk || !R.isFloor(d.x, d.z)) { d.x -= Math.sin(a) * r; d.z -= Math.cos(a) * r; }
+    const blk = R.pointBlocked(d.x, d.z); if (blk || !R.isFloor(d.x, d.z) || (R.lineOpen && W().F && W().F.tile && !R.lineOpen(d.x - Math.sin(a) * r, d.z - Math.cos(a) * r, d.x, d.z))) { d.x -= Math.sin(a) * r; d.z -= Math.cos(a) * r; }
+    // 掉在牆裡、柱子裡、牆的另一邊就永遠撿不到（遺跡生物死在牆邊、背包丟東西靠牆的時候）：挪到最近一塊走得到的地板
+    if (R.openFloorNear && W().F && W().F.tile) { const [ox, oz] = R.openFloorNear(d.x, d.z, d.from); d.x = ox; d.z = oz; }
     g.position.set(d.x, 0.5, d.z); W().scene.add(g); d.mesh = g; d.t = Math.random() * 3; W().drops.push(d);
     return d;
   };
