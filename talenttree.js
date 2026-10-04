@@ -36,7 +36,7 @@
     { id: 'shield', n: '盾之道', c: '#6AB0FF', d: '守勢：減傷、回復。',
       nodes: [N('T_tou', '堅韌', 5, '受到的傷害 −1.5%', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.015 * v; }), N('T_rec', '調息', 5, '每秒回復 0.3 生命', (P, v) => { P.regen = (P.regen || 0) + 0.3 * v; }), N('T_vit2', '厚實', 5, '生命 +4%', (P, v) => { P.hpMax = Math.round(P.hpMax * (1 + 0.04 * v)); })],
       subs: [
-        { id: 'wall', n: '鐵壁', d: '站著不倒。', nodes: [N('T_def', '鐵壁', 5, '物防 +2', (P, v) => { P.def = (P.def || 0) + 2 * v; }), N('T_tou2', '不屈', 5, '受到的傷害 −1.5%', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.015 * v; }),
+        { id: 'wall', n: '鐵壁', d: '站著不倒。', nodes: [N('T_def', '鐵壁', 5, '物防 +2', (P, v) => { P.def = (P.def || 0) + 2 * v; }), N('T_tou2', '硬撐', 5, '受到的傷害 −1.5%', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.015 * v; }),
           N('T_trB1', '重甲', 5, '受到的傷害 −4%｜移動 −3%', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.04 * v; P.speed *= 1 - 0.03 * v; }, 1)],
           cap: N('T_capB1', '奧義・不動如山', 5, '受到的傷害 −1.6%、生命 +2%', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.016 * v; P.hpMax = Math.round(P.hpMax * (1 + 0.02 * v)); }) },
         { id: 'life', n: '再生', d: '打不死就會好。', nodes: [N('T_rec2', '再生', 5, '每秒回復 0.5 生命', (P, v) => { P.regen = (P.regen || 0) + 0.5 * v; }), N('T_hp3', '生機', 5, '生命 +3%、魔防 +1', (P, v) => { P.hpMax = Math.round(P.hpMax * (1 + 0.03 * v)); P.mdef = (P.mdef || 0) + v; }),
