@@ -362,7 +362,8 @@
   const book = (host, close) => {
     const S = R.S, cls = S.cls, st = S.classes[cls], lo = R.loadoutOf(cls), keys = KEYS();
     const ids = allOf(cls), learned = ids.filter(id => known(cls, st, id)), locked = ids.filter(id => !known(cls, st, id));
-    const req = id => { const s = info(id); if (s.taught) return '望月瀧教的：成為戀人之後向她學'; if (s.adv2) return R.adv2Req ? R.adv2Req(s, st) : '二次轉職'; if (s.adv && s.adv !== st.adv) return '轉職：' + R.ADV[cls].find(a => a.id === s.adv).name + (need(s, st) > R.PROMOTE_LV ? '・Lv ' + need(s, st) : ''); return '職業等級 ' + need(s, st); };
+    const who = t => (R.TEACHER && R.TEACHER[t]) || '望月瀧';   // 教的人（storyally.js：雷諾、楚璐也會教）
+    const req = id => { const s = info(id); if (s.taught) return who(s.taught) + '教的：成為戀人之後請' + who(s.taught) + '教'; if (s.adv2) return R.adv2Req ? R.adv2Req(s, st) : '二次轉職'; if (s.adv && s.adv !== st.adv) return '轉職：' + R.ADV[cls].find(a => a.id === s.adv).name + (need(s, st) > R.PROMOTE_LV ? '・Lv ' + need(s, st) : ''); return '職業等級 ' + need(s, st); };
     // 照轉職路線分段：基本技能、你走的那條路線、其他路線（收起來）
     const groups = ids => {
       const advs = (R.ADV[cls] || []).filter(a => !a.legacy || a.id === st.adv).map(a => a.id).sort((a, b) => (b === st.adv) - (a === st.adv));
@@ -370,7 +371,7 @@
       return [null].concat(advs, ['adv2', 'taught']).map(r => {
         const list = ids.filter(id => gk(id) === r && !(r === 'adv2' && info(id).adv && info(id).adv !== st.adv)); if (!list.length) return '';   // 二轉的覺醒技能只列你走的那條路線的（adv2plus.js：每條路線各有兩招）
         const a = r && r !== 'taught' && r !== 'adv2' && R.ADV[cls].find(x => x.id === r), got = list.filter(id => known(cls, st, id)), mine = r === 'taught' || r === 'adv2' ? got.length > 0 : (!r || r === st.adv || !st.adv);
-        const title = r === 'taught' ? '望月瀧教的' : r === 'adv2' ? (R.adv2Title ? R.adv2Title(cls, st) : '二次轉職') : r ? '轉職・' + a.name + (r === st.adv ? '（你的路線）' : st.adv ? '（別的路線）' : '（職業等級 ' + R.PROMOTE_LV + ' 轉職以後）') : '基本・' + R.CLASSES[cls].name;
+        const title = r === 'taught' ? who(info(list[0]).taught) + '教的' : r === 'adv2' ? (R.adv2Title ? R.adv2Title(cls, st) : '二次轉職') : r ? '轉職・' + a.name + (r === st.adv ? '（你的路線）' : st.adv ? '（別的路線）' : '（職業等級 ' + R.PROMOTE_LV + ' 轉職以後）') : '基本・' + R.CLASSES[cls].name;
         return '<details class="sb-group"' + (mine ? ' open' : '') + '><summary><b>' + esc(title) + '</b> <small>學會 ' + got.length + '／' + list.length + '</small></summary><div class="recipes sb-list">'
           + got.map(id => card(id, true)).join('') + list.filter(id => !known(cls, st, id)).map(id => card(id, false)).join('') + '</div></details>';
       }).join('');
