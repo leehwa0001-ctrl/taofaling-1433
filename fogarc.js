@@ -8,10 +8,13 @@
 // - 像素風放大時的描邊（pixel.js）：霧裡的像素不描邊，不然牆的輪廓會從霧裡透出來，背後的地形一看就知道。
 // - 遺跡生物頭上的名牌（monlabel.js）：在霧裡的不顯示（R.fogHides）。
 // - three.js 是 main.js 在背景載入的（R.three）：要在任何東西畫出來之前改好，所以接在 R.three 上（main.js 設 R.three 的時候）。
+// - 2026-10-05 作者：迷霧還是有點看不到視野——視角縮成 45 度但自身半徑提高，45 度角的視野可以無限遠。
+//   現在：朝準心 45 度的扇形（左右各 22.5 度，邊上 4 度左右慢慢變濃）一路看到底；扇形外面只看得到身邊 5 公尺（原本背後 2.5）。
+//   照鏡頭距離的霧退到 60 公尺外（等於沒有）。fogArc2 改成：x＝扇形半角的 cos、y＝身邊的半徑、z＝邊緣、w＝開關。
 // 放在 dread.js、ruinvar.js 後面、main.js 前面（包 R.updateLights）。
 (function (R) {
-  const W = R.W, ARC = { x: 0, y: 0, z: 0, w: 1 }, ARC2 = { x: 8, y: 2.5, z: 2, w: 0 };
-  const FRONT = 8, BACK = 2.5, SOFT = 2;
+  const CONE = Math.cos(22.5 * Math.PI / 180), SELF = 5, SOFT = 1.5, FAR = 60;
+  const W = R.W, ARC = { x: 0, y: 0, z: 0, w: 1 }, ARC2 = { x: CONE, y: SELF, z: SOFT, w: 0 };
   let done = false;
   const patch = () => {
     const T = window.THREE; if (done || !T || !T.ShaderChunk) return; done = true;
@@ -21,8 +24,8 @@
     C.fog_pars_fragment += '\n#ifdef USE_FOG\n\tvarying vec2 vFogXZ;\n\tuniform vec4 fogArc;\n\tuniform vec4 fogArc2;\n#endif';
     C.fog_fragment = C.fog_fragment.replace('gl_FragColor.rgb = mix(',
       'if ( fogArc2.w > 0.5 ) {\n\t\tvec2 fd = vFogXZ - fogArc.xy; float fl = length( fd );\n\t\tfloat fc = fl > 0.001 ? dot( fd / fl, fogArc.zw ) : 1.0;\n'
-      + '\t\tfloat fr = mix( fogArc2.y, fogArc2.x, smoothstep( -0.1, 0.1, fc ) ), fs = min( fogArc2.z, fr * 0.6 );\n'
-      + '\t\tfogFactor = max( fogFactor, smoothstep( fr - fs, fr, fl ) );\n\t}\n\tgl_FragColor.rgb = mix(');
+      + '\t\tfloat fs = min( fogArc2.z, fogArc2.y * 0.6 ), fself = smoothstep( fogArc2.y - fs, fogArc2.y, fl ), fcone = 1.0 - smoothstep( fogArc2.x - 0.03, fogArc2.x + 0.03, fc );\n'
+      + '\t\tfogFactor = max( fogFactor, min( fself, fcone ) );\n\t}\n\tgl_FragColor.rgb = mix(');
     Object.keys(T.ShaderLib).forEach(k => { const u = T.ShaderLib[k].uniforms; if (u && u.fogColor) { u.fogArc = { value: ARC }; u.fogArc2 = { value: ARC2 }; } });
   };
   if (window.THREE) patch();
@@ -37,8 +40,8 @@
     if (!ARC2.w) return false;
     const dx = x - ARC.x, dz = z - ARC.y, l = Math.hypot(dx, dz), c = l > 0.001 ? (dx * ARC.z + dz * ARC.w) / l : 1;
     const ss = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
-    const r = ARC2.y + (ARC2.x - ARC2.y) * ss(-0.1, 0.1, c), s = Math.min(ARC2.z, r * 0.6);
-    return ss(r - s, r, l) > 0.6;
+    const s = Math.min(ARC2.z, ARC2.y * 0.6);
+    return Math.min(ss(ARC2.y - s, ARC2.y, l), 1 - ss(ARC2.x - 0.03, ARC2.x + 0.03, c)) > 0.6;
   };
 
   // ---------- 每一格：角色的位置、面向 ----------
@@ -53,9 +56,9 @@
     if (!on) { ang = null; return; }
     const a = P.aimA != null ? P.aimA : Math.PI;
     if (ang == null) ang = a; else { let d = a - ang; d = Math.atan2(Math.sin(d), Math.cos(d)); ang += d * Math.min(1, (dt || 0.016) * 14); }
-    ARC.x = P.x; ARC.y = P.z; ARC.z = Math.sin(ang); ARC.w = Math.cos(ang); ARC2.x = FRONT; ARC2.y = BACK; ARC2.z = SOFT;
-    // 照鏡頭距離的霧退到半圓外面（只剩更遠的地方）
-    const fg = W.scene && W.scene.fog; if (fg && fg.isFog && W.camera) { const cd = Math.hypot(W.camera.position.x - P.x, W.camera.position.y - 1, W.camera.position.z - P.z); fg.near = cd + FRONT; fg.far = cd + FRONT + 10; }
+    ARC.x = P.x; ARC.y = P.z; ARC.z = Math.sin(ang); ARC.w = Math.cos(ang); ARC2.x = CONE; ARC2.y = SELF; ARC2.z = SOFT;
+    // 照鏡頭距離的霧退到很遠（扇形裡一路看到底）
+    const fg = W.scene && W.scene.fog; if (fg && fg.isFog && W.camera) { const cd = Math.hypot(W.camera.position.x - P.x, W.camera.position.y - 1, W.camera.position.z - P.z); fg.near = cd + FAR; fg.far = cd + FAR + 10; }
     const pu = R.pixPost && R.pixPost.uniforms; if (pu && pu.fogArc && W.camera) { pu.fogArc.value = ARC; pu.fogArc2.value = ARC2; pu.projInv.value = W.camera.projectionMatrixInverse; pu.camWorld.value = W.camera.matrixWorld; }
   };
 })(window.R);
