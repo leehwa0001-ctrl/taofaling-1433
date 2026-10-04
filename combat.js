@@ -176,7 +176,7 @@
 
   // ---------- 投射物 ----------
   const SHOT_LOOK = {
-    bullet: { c: '#FFE08A', s: [0.12, 0.12, 0.5] }, arrow: { c: '#E8D8B8', s: [0.06, 0.06, 0.9] }, orb: { c: '#B89AFF', r: 0.26, glow: 1 }, holy: { c: '#FFE8A0', r: 0.24, glow: 1 },
+    bullet: { c: '#FFE08A', s: [0.12, 0.12, 0.5] }, arrow: { c: '#E8D8B8', s: [0.11, 0.11, 0.9] }, orb: { c: '#B89AFF', r: 0.26, glow: 1 }, holy: { c: '#FFE8A0', r: 0.24, glow: 1 },
     fire: { c: '#FF8A3A', r: 0.5, glow: 1 }, eorb: { c: '#7FD8FF', r: 0.24, glow: 1 }, ering: { c: '#FF5A6A', r: 0.22, glow: 1 }, sand: { c: '#D8B880', r: 0.3 }, cold: { c: '#BFE6FF', r: 0.28, glow: 1 },
     web: { c: '#EDEDED', r: 0.3 }, seed: { c: '#9ACF6A', r: 0.16 }, feather: { c: '#1E1E26', s: [0.08, 0.04, 0.7] }, kasa: { c: '#FFB0A0', r: 0.2, glow: 1 }, grenade: { c: '#6A6A70', r: 0.3 }, hama: { c: '#FFFFFF', s: [0.1, 0.1, 1.4], glow: 1 }, spirit: { c: '#E8E0FF', r: 0.18, glow: 1 }
   };
