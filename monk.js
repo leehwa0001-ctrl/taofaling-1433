@@ -5,7 +5,7 @@
   const W = () => R.W;
   if (R.CLASS_GLOW) R.CLASS_GLOW.monk = '#FFB45A';
   const later = (f, ms) => { const run = W().run; setTimeout(() => { const w = W(); if (w.run === run && w.P && !w.P.dead && run && !run.done) f(); }, ms); };
-  const base = P => { const ws = P.ws || {}; return (ws.dmg || 10) * (ws.hits || 1) * (P.dmgMult || 1); };
+  const base = P => R.ultBase(P);   // 一下普攻×ULT_K（ult.js；原本多乘一次傷害倍率）
   if (R.ULTS) R.ULTS.monk = {
     name: '天崩拳', sub: '武術家的大招：閃到附近的遺跡生物面前各打一拳，最後一拳打在地上',
     go: P => {

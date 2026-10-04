@@ -17,7 +17,9 @@
   const ROOT = [
     N('T_vit', '體魄', 5, '生命 +3%', (P, v) => { P.hpMax = Math.round(P.hpMax * (1 + 0.03 * v)); }),
     N('T_str', '力量', 5, '傷害 +2%', (P, v) => { P.dmgMult *= 1 + 0.02 * v; }),
-    N('T_wis', '魔力', 5, '魔力 +4%', (P, v) => { P.mpMax = Math.round(P.mpMax * (1 + 0.04 * v)); })
+    N('T_wis', '魔力', 5, '魔力 +4%', (P, v) => { P.mpMax = Math.round(P.mpMax * (1 + 0.04 * v)); }),
+    // 2026-10-04 作者：天賦樹加個攻擊範圍（reach.js）——近戰是攻擊距離和揮砍的角度，遠程是射程；戰士的大招範圍也跟著攻擊距離變大
+    N('T_reach', '伸展', 5, '攻擊範圍 +3%（近戰的攻擊距離、揮砍角度；遠程的射程）', (P, v) => { if (P.ws) { P.ws.range = (P.ws.range || 2) * (1 + 0.03 * v); if (P.ws.arc) P.ws.arc *= 1 + 0.03 * v; } })
   ];
   const PATHS = [
     { id: 'blade', n: '刃之道', c: '#FF6A5A', d: '攻勢：暴擊、穿透。',

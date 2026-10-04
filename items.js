@@ -25,7 +25,7 @@
   R.makeItem = (o) => {
     const it = { id: newId(), kind: o.kind, base: o.base, ilvl: o.ilvl || 1, rarity: o.rarity || 0, affixes: [], identified: !!o.identified, plus: 0, legend: null };
     if (it.rarity >= 4 && it.kind === 'weapon') { const ls = R.LEGENDS.filter(l => l.base === it.base); if (ls.length) it.legend = pick(ls).id; }
-    const pool = (it.kind === 'weapon' ? R.W_AFFIX : R.A_AFFIX).filter(a => !(a.ranged && !['gun', 'bow', 'magic'].includes(R.WEAPONS[it.base] && R.WEAPONS[it.base].kind)));
+    const pool = (it.kind === 'weapon' ? R.W_AFFIX : R.A_AFFIX).filter(a => !(a.ranged && !['gun', 'bow', 'magic'].includes(R.WEAPONS[it.base] && R.WEAPONS[it.base].kind)) && !(a.melee && !['melee', 'thrust'].includes(R.WEAPONS[it.base] && R.WEAPONS[it.base].kind)));
     const n = it.kind === 'charm' ? Math.max(1, R.RARITY[it.rarity].affix) : R.RARITY[it.rarity].affix;
     const bag = pool.slice();
     for (let i = 0; i < n && bag.length; i++) {

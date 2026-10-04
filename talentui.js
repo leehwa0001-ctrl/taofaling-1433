@@ -30,6 +30,7 @@
       case 'T_vit2': heart('#B83A3A', '#FF8A8A'); P(10, 1, 2, 6, '#FFFFFF'); P(8, 3, 6, 2, '#FFFFFF'); break;
       case 'T_str': P(4, 6, 8, 7, '#E0A070'); [5, 7, 9].forEach(a => P(a, 5, 2, 3, '#F0B880')); P(4, 9, 8, 1, '#A86A40'); P(3, 8, 2, 4, '#E0A070'); P(5, 13, 6, 2, '#8A4A2A'); break;
       case 'T_wis': orb('#3A6ADA', '#6A9AFF'); break;
+      case 'T_reach': ln(3, 13, 11, 5, '#C8CCD4', 2); P(2, 12, 3, 3, '#8A5A2A'); poly([[15, 1], [9, 3], [13, 7]], '#E8C04A'); ln(5, 6, 3, 8, '#E8C04A', 1); ln(10, 11, 8, 13, '#E8C04A', 1); break;   // 伸展：劍往前伸、金色的箭頭
       case 'T_acc': ring(8, 8, 5, '#FF6A5A', 1.5); ln(8, 1, 8, 5, '#FF6A5A', 1.5); ln(8, 11, 8, 15, '#FF6A5A', 1.5); ln(1, 8, 5, 8, '#FF6A5A', 1.5); ln(11, 8, 15, 8, '#FF6A5A', 1.5); P(7, 7, 2, 2, '#FFE0A0'); break;
       case 'T_fat': star(8, 8, 7, '#FF4A3A'); circ(8, 8, 2, '#FFF0C0'); break;
       case 'T_pen': P(9, 2, 3, 12, '#8A8E96'); P(10, 2, 1, 12, '#B8BCC4'); ln(1, 8, 14, 8, '#E8D8B0', 1.5); poly([[15, 8], [12, 5.5], [12, 10.5]], '#E8E0D0'); ln(1, 6.5, 3, 8, '#C84A3A', 1); ln(1, 9.5, 3, 8, '#C84A3A', 1); break;
@@ -66,9 +67,9 @@
   const ROW = 62, XPAD = 8.333;
   const layout = T => {
     const out = [], lines = [], colX = [100 / 6, 50, 500 / 6];
-    T.ROOT.forEach((n, i) => out.push({ n, x: 50 + (i - 1) * 15, y: 0.55, col: '#E8C04A', where: '根基' }));
+    T.ROOT.forEach((n, i) => out.push({ n, x: 50 + (i - (T.ROOT.length - 1) / 2) * 15, y: 0.55, col: '#E8C04A', where: '根基' }));
     const hub = [50, 1.35];
-    T.ROOT.forEach((n, i) => lines.push({ a: [50 + (i - 1) * 15, 0.55], b: hub, to: null, root: 1 }));
+    T.ROOT.forEach((n, i) => lines.push({ a: [50 + (i - (T.ROOT.length - 1) / 2) * 15, 0.55], b: hub, to: null, root: 1 }));
     T.PATHS.forEach((p, pi) => {
       const px = colX[pi];
       p.nodes.forEach((n, i) => { out.push({ n, x: px, y: 2.1 + i, col: p.c, where: p.n }); lines.push(i ? { a: [px, 1.1 + i], b: [px, 2.1 + i], to: n } : { a: hub, b: [px, 2.1], to: n }); });
