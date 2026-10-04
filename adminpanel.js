@@ -50,7 +50,7 @@
       + '<button type="button" class="btn" id="adm-aw0">注意歸零</button><button type="button" class="btn" id="adm-aw100">注意加滿</button></div>'
       + '<div class="adm-row"><button type="button" class="btn" id="adm-tp-down">傳送到下樓的樓梯</button><button type="button" class="btn" id="adm-tp-out">傳送到出口（回歸水晶／入口）</button><small style="opacity:.7">遇到生成擋住路、卡在牆裡用；也可以勾下面的「穿牆」</small></div>'
       + '<div class="adm-row"><label>生出<select id="adm-foe">' + Object.keys(R.ENEMIES).filter(k => !R.ENEMIES[k].human).sort((a, b) => String(R.ENEMIES[a].name || a).localeCompare(String(R.ENEMIES[b].name || b), 'zh-Hant')).map(k => opt(k, (R.ENEMIES[k].name || k) + '（' + k + '）')).join('') + '</select></label>'
-      + '<label>幾隻<input id="adm-n" type="number" min="1" max="20" value="1" style="width:3.5em"></label><button type="button" class="btn pri" id="adm-spawn">生在準心那裡</button></div>');
+      + '<label>幾隻<input id="adm-n" type="number" min="1" max="20" value="1" style="width:3.5em"></label><label class="adm-chk"><input type="checkbox" id="adm-var">異變（領主體才有）</label><button type="button" class="btn pri" id="adm-spawn">生在準心那裡</button></div>');
     h += sec('開關', '<div class="adm-row"><label class="adm-chk"><input type="checkbox" id="adm-god"' + (F.god ? ' checked' : '') + '>無敵</label><label class="adm-chk"><input type="checkbox" id="adm-one"' + (F.oneshot ? ' checked' : '') + '>一下打倒（傷害 ×10000）</label><label class="adm-chk"><input type="checkbox" id="adm-clip"' + (F.noclip ? ' checked' : '') + '>穿牆</label>'
       + (town ? '<button type="button" class="btn" id="adm-day">過一天</button><button type="button" class="btn" id="adm-aff">劇情人物好感全滿</button>' : '') + '</div>');
     return h;
@@ -100,7 +100,7 @@
     on('adm-aw100', () => { const run = W().run; if (R.addAware) R.addAware(100 - run.aware, 'admin'); else run.aware = 100; toast('佩特拉的注意加滿', '#7FE0FF'); });
     on('adm-spawn', () => {
       const id = $('adm-foe').value, n = Math.max(1, Math.min(20, +$('adm-n').value || 1)), P = W().P, x0 = P.aimX != null ? P.aimX : P.x, z0 = P.aimZ != null ? P.aimZ : P.z - 4;
-      for (let i = 0; i < n; i++) { const [x, z] = R.nearestFloor ? R.nearestFloor(x0 + (Math.random() - 0.5) * 2, z0 + (Math.random() - 0.5) * 2) : [x0, z0]; const e = R.spawnEnemy(id, x, z, -1, { aggro: true }); if (e) { e.dormant = false; e.aggro = true; } }
+      for (let i = 0; i < n; i++) { const [x, z] = R.nearestFloor ? R.nearestFloor(x0 + (Math.random() - 0.5) * 2, z0 + (Math.random() - 0.5) * 2) : [x0, z0]; const e = R.spawnEnemy(id, x, z, -1, { aggro: true, noVariant: true }); if (e) { e.dormant = false; e.aggro = true; if ($('adm-var') && $('adm-var').checked && R.lordVariant) R.lordVariant(e); } }
       toast('生出了 ' + R.ENEMIES[id].name + ' ×' + n, '#7FE0FF');
     });
     const g = $('adm-god'); if (g) g.onchange = () => { F.god = g.checked; };
