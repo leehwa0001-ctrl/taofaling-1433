@@ -1,8 +1,10 @@
 // 討伐令 1433：天賦樹（作者 2026-10-04：天賦點不滿，感覺可以變成類似天賦樹的東西，有不同種分支這樣，點了一種就沒辦法點另一種）
 // 原本 skillpoints.js 的天賦是一排一排的（三階、十二種，全部點滿要 80 點），換成一棵樹：
-//   根基（體魄、力量、魔力）→ 投滿 8 點以後選一條「道」：刃（攻）、盾（守）、心（術）——選了一條，另外兩條就鎖起來
-//   → 那條道投滿 10 點以後再分兩支，一樣只能選一支 → 那一支投滿 8 點開「奧義」 → 奧義點滿以後，多出來的點數放進「歷練」（沒有上限）。
-//   一條路走到底：根基 15＋道 15＋分支 10＋奧義 5＝45 點（等級 50 就有 50 點），剩下的和滿級後攢的點進歷練。
+//   根基（體魄、力量、魔力）→ 投滿 8 點以後開三條「道」：刃（攻）、盾（守）、心（術）
+//   → 一條道投滿 10 點以後開它的兩個分支 → 一個分支投滿 8 點開它的「奧義」 → 奧義點滿以後，多出來的點數放進「歷練」（沒有上限）。
+// - 2026-10-04 作者：技能樹應該要可以點其他方向的，只不過奧義只能學會一個。
+//   所以三條道、六個分支都可以點（原本選了一條道／一個分支，另外的就鎖起來）；六個奧義只能學一個，學了別的奧義就鎖起來。
+//   一條路走到底：根基 15＋道 15＋分支 10＋奧義 5＝45 點；多的點數可以點別的道、別的分支，或進歷練。
 // - 點數照舊是 skillpoints.js 算的（等級＋滿級後攢的點，st.sp.t 裡全部加起來是用掉的）；這裡的天賦 id 都是 T_ 開頭。
 // - 舊存檔：原本點的天賦（沒有 T_ 的）全部退回來，提醒一次。
 // - 重新分配照舊在公會的武器登記那裡（skillpoints.js 的按鈕，收 40 × 等級）。
@@ -61,23 +63,25 @@
     return t;
   };
   const sum = (t, list) => list.reduce((a, n) => a + (t[n.id] || 0), 0);
-  const pathOf = t => PATHS.find(p => sum(t, p.nodes) + p.subs.reduce((a, s) => a + sum(t, s.nodes.concat([s.cap])), 0) > 0) || null;
-  const subOf = (t, p) => p ? p.subs.find(s => sum(t, s.nodes.concat([s.cap])) > 0) || null : null;
+  const pathPts = (t, p) => sum(t, p.nodes) + p.subs.reduce((a, s) => a + sum(t, s.nodes.concat([s.cap])), 0);
+  const subPts = (t, s) => sum(t, s.nodes.concat([s.cap]));
+  const CAPS = [].concat(...PATHS.map(p => p.subs.map(s => s.cap)));
+  const capOf = t => CAPS.find(c => (t[c.id] || 0) > 0) || null;   // 學了的奧義（只能有一個）
   // 這個節點能不能點：回傳 '' 或擋住的原因
   const why = (t, id) => {
     const n = BY[id]; if (!n) return '沒有這個天賦';
     if ((t[id] || 0) >= n.mx) return '滿級';
     if (ROOT.includes(n)) return '';
     const root = sum(t, ROOT);
-    if (n === XP) { const p = pathOf(t), s = subOf(t, p); return s && (t[s.cap.id] || 0) >= s.cap.mx ? '' : '先把奧義點滿'; }
-    const p = PATHS.find(x => x.nodes.includes(n) || x.subs.some(s => s.nodes.includes(n) || s.cap === n)), cur = pathOf(t);
+    if (n === XP) { const c = capOf(t); return c && (t[c.id] || 0) >= c.mx ? '' : '先把一個奧義點滿'; }
+    const p = PATHS.find(x => x.nodes.includes(n) || x.subs.some(s => s.nodes.includes(n) || s.cap === n));
     if (root < NEED_PATH) return '根基要先投 ' + NEED_PATH + ' 點';
-    if (cur && cur !== p) return '已經走了「' + cur.n + '」';
     if (p.nodes.includes(n)) return '';
-    const s = p.subs.find(x => x.nodes.includes(n) || x.cap === n), cs = subOf(t, p);
+    const s = p.subs.find(x => x.nodes.includes(n) || x.cap === n);
     if (sum(t, p.nodes) < NEED_SUB) return '「' + p.n + '」要先投 ' + NEED_SUB + ' 點';
-    if (cs && cs !== s) return '已經選了「' + cs.n + '」';
-    if (s.cap === n && sum(t, s.nodes) < NEED_CAP) return '「' + s.n + '」要先投 ' + NEED_CAP + ' 點';
+    if (s.cap !== n) return '';
+    if (sum(t, s.nodes) < NEED_CAP) return '「' + s.n + '」要先投 ' + NEED_CAP + ' 點';
+    const c = capOf(t); if (c && c !== n) return '已經學了「' + c.n + '」（奧義只能學一個）';
     return '';
   };
   R.talentWhy = (id, cls) => why(mig(stOf(cls)), id);
@@ -105,15 +109,14 @@
       + (full ? '<em>滿級</em>' : w ? '<em class="why">' + esc(w) + '</em>' : '<button type="button" class="mini gold" data-ttp="' + n.id + '"' + (free ? '' : ' disabled') + '>+1</button>') + '</div>';
   };
   const treeHtml = st => {
-    const t = mig(st), p0 = pathOf(t), s0 = subOf(t, p0), root = sum(t, ROOT);
+    const t = mig(st), c0 = capOf(t), root = sum(t, ROOT);
     return '<h3>天賦樹（投了 ' + Object.values(t).reduce((a, v) => a + v, 0) + ' 點）</h3>'
-      + '<p class="note">根基投滿 ' + NEED_PATH + ' 點以後選一條道；道投滿 ' + NEED_SUB + ' 點以後再選一個分支；分支投滿 ' + NEED_CAP + ' 點開奧義。<b>選了就不能換</b>（要換到公會的武器登記那裡重新分配）。一條路走到底要 45 點，多的點數放進「歷練」。</p>'
+      + '<p class="note">根基投滿 ' + NEED_PATH + ' 點以後開三條道；一條道投滿 ' + NEED_SUB + ' 點以後開它的兩個分支；分支投滿 ' + NEED_CAP + ' 點開它的奧義。道和分支都可以點好幾條，<b>奧義只能學一個</b>（學了別的就鎖起來；要換到公會的武器登記那裡重新分配）。一條路走到底要 45 點；奧義點滿以後，多的點數也可以放進「歷練」。</p>'
       + '<div class="tt-tree"><div class="tt-root"><div class="tt-h">根基<small>' + root + '／15</small></div><div class="tt-row">' + ROOT.map(n => nodeHtml(t, n)).join('') + '</div></div>'
       + '<div class="tt-paths">' + PATHS.map(p => {
-        const off = p0 && p0 !== p;
-        return '<div class="tt-path' + (off ? ' off' : '') + (p0 === p ? ' pick' : '') + '" style="--tc:' + p.c + '"><div class="tt-h">' + esc(p.n) + '<small>' + esc(p.d) + '</small></div>'
+        return '<div class="tt-path' + (pathPts(t, p) ? ' pick' : '') + '" style="--tc:' + p.c + '"><div class="tt-h">' + esc(p.n) + '<small>' + esc(p.d) + '</small></div>'
           + p.nodes.map(n => nodeHtml(t, n, p.c)).join('')
-          + '<div class="tt-subs">' + p.subs.map(s => '<div class="tt-sub' + (s0 && s0 !== s && p0 === p ? ' off' : '') + (s0 === s ? ' pick' : '') + '"><div class="tt-h sm">' + esc(s.n) + '<small>' + esc(s.d) + '</small></div>' + s.nodes.map(n => nodeHtml(t, n, p.c)).join('') + nodeHtml(t, s.cap, p.c) + '</div>').join('') + '</div></div>';
+          + '<div class="tt-subs">' + p.subs.map(s => '<div class="tt-sub' + (subPts(t, s) ? ' pick' : '') + '"><div class="tt-h sm">' + esc(s.n) + '<small>' + esc(s.d) + '</small></div>' + s.nodes.map(n => nodeHtml(t, n, p.c)).join('') + '<div class="tt-cap' + (c0 && c0 !== s.cap ? ' off' : '') + '">' + nodeHtml(t, s.cap, p.c) + '</div></div>').join('') + '</div></div>';
       }).join('') + '</div>'
       + '<div class="tt-root">' + nodeHtml(t, XP, '#E8C04A') + '</div></div>';
   };
@@ -140,7 +143,7 @@
     '.tt-paths{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px;position:relative}',
     '.tt-path{display:grid;gap:5px;align-content:start;background:var(--bg2);border:1px solid var(--line);border-top:3px solid var(--tc);border-radius:10px;padding:8px}',
     '.tt-path.pick{box-shadow:0 0 0 1px var(--tc),0 0 14px -4px var(--tc)}',
-    '.tt-path.off,.tt-sub.off{opacity:.38;filter:grayscale(.7)}',
+    '.tt-path.off,.tt-sub.off,.tt-cap.off{opacity:.38;filter:grayscale(.7)}',
     '.tt-subs{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:6px;margin-top:4px;padding-top:6px;border-top:1px dashed var(--line)}',
     '.tt-sub{display:grid;gap:5px;align-content:start;border:1px solid var(--line);border-radius:8px;padding:6px}.tt-sub.pick{border-color:var(--tc)}',
     '.tt-node{display:grid;grid-template-columns:1fr auto;gap:1px 6px;align-items:center;background:rgba(255,255,255,.03);border:1px solid var(--line);border-left:3px solid #4A4450;border-radius:7px;padding:5px 7px;font-size:12.5px}',
