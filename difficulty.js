@@ -20,10 +20,20 @@
     cache = { t: run ? run.floor : -1, run, v }; return v;
   };
   R.playerHitEstimate = hitOf;
+  // 坦度差距縮小（2026-10-04 作者：坦克跟脆皮的坦度差太多，差了快 10 倍，清完小怪常常剩幾隻很硬的；坦克生命至少 −30%、脆皮 ×2）：
+  //   一般的遺跡生物照「生命 ÷ (1 − 護甲)」分：25 以下的脆皮 ×2、100 以上的坦克 ×0.65，中間照對數慢慢接（中位數 46 大約 ×1.2）。
+  //   原本最脆 9、最硬 217（24 倍），大部分落在 18～120；調完大部分落在 36～78。精英、領主體、核心不動；變種照原本那一種算。
+  const toughK = d => {
+    const b = d && d.vbase ? R.ENEMIES[d.vbase] || d : d; if (!b || b.elite || b.boss || isLord(b) || b.human || b.wild) return 1;
+    const t = (b.hp || 1) / (1 - Math.min(0.9, b.armor || 0)), lo = 25, hi = 100;
+    if (t <= lo) return 2; if (t >= hi) return 0.65;
+    const x = (Math.log(t) - Math.log(lo)) / (Math.log(hi) - Math.log(lo)); return Math.exp(Math.log(2) + x * (Math.log(0.65) - Math.log(2)));
+  };
+  R.toughK = toughK;
   const se0 = R.spawnEnemy;
   R.spawnEnemy = (id, x, z, room, o) => {
     const e = se0(id, x, z, room, o), run = W().run; if (!e || !run || !e.def || e.def.human || e.def.wild || e.fake) return e;
-    let hp = e.hpMax * 2;   // 全部 ×2
+    let hp = e.hpMax * 2 * (e.id === 'petra' ? 1 : toughK(e.def));   // 全部 ×2；一般的照坦度拉近
     try {
       const g = run.grade && run.grade.lv || 1;
       if (g >= 3) {
