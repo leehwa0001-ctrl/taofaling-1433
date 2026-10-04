@@ -86,7 +86,9 @@
     let h = '<h4 class="dr-h">場地效果</h4>';
     if (es.length) h += '<p class="note">' + (s.env ? '整座遺跡都是這種環境：' : '每一趟從這三種環境抽一種：') + '</p><div class="dr-fields">' + es.map(e => chip('env:' + e, envName(e), (R.ENVS[e] || {}).desc || (e === 'forge' ? '機關還在動。' : ''))).join('') + '</div>';
     if (ms.length) h += '<p class="note">樓層效果：第二層起，每一層大約四成五會抽到一種（每層重新抽）' + (G(s.grade).passive ? '；這一級只有不危險的幾種' : '') + '。</p><div class="dr-fields">' + ms.map(m => chip('mod:' + m, M[m].n, M[m].d)).join('') + '</div>';
-    if (!es.length && !ms.length) h += '<p class="note">這裡沒有場地效果。</p>';
+    const gx = R.gradeFxOf ? R.gradeFxOf(s) : [];   // 這個分級帶來的效果（hudinfo.js 的 R.GRADE_FX；2026-10-05 作者：圖鑑裡的場地效果也要更新）
+    if (gx.length) h += '<p class="note">這個分級（' + esc(G(s.grade).name) + '）：</p><div class="dr-fields">' + gx.map(k => chip('gfx:' + k, R.GRADE_FX[k].n, R.GRADE_FX[k].d)).join('') + '</div>';
+    if (!es.length && !ms.length && !gx.length) h += '<p class="note">這裡沒有場地效果。</p>';
     return h;
   };
   const special = () => {
@@ -136,6 +138,10 @@
       return '<div class="dx-banner">場地效果・' + esc(envName(id)) + '</div><p>' + esc((R.ENVS[id] || {}).desc || '') + '</p>'
         + secs.map(([h, l]) => '<h4 class="dx-h">' + esc(h) + '</h4>' + ul(l)).join('')
         + '<p class="note">上面是第一層的強度：越往下越兇，最深的地方 ×2。遺跡裡點左上角的「場地」那一格，看現在的強度。</p>' + back;
+    }
+    if (kind === 'gfx') {
+      const X = (R.GRADE_FX || {})[id] || {}, s = R.SITES.find(x => x.id === siteId), g = s ? G(s.grade) : null;
+      return '<div class="dx-banner">分級的效果・' + esc(X.n || id) + '</div><p>' + esc(X.d || '') + '</p>' + (X.more && g ? ul(X.more(g)) : '') + back;
     }
     const M = (R.FLOOR_MODS || {})[id] || {}, more = (R.FLOOR_MOD_MORE || {})[id] || [];
     return '<div class="dx-banner">樓層效果・' + esc(M.n || id) + '</div><p>' + esc(M.d || '') + '</p>' + (more.length ? ul(more) : '')
