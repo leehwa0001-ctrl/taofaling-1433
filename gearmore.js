@@ -59,7 +59,7 @@
     return r;
   };
   // ---------- 拿在手上的樣子：借用同一種類、樣子相近的武器（sprites.js） ----------
-  const LOOK = { dualpistol: 'pistol', repeater: 'crossbow', warhammer: 'mace', wand: 'staff', censer: 'bell', nodachi: 'katana', halberd: 'spear', claws: 'gauntlet', harp: 'lute', totem: 'staff', compass: 'disc', runeaxe: 'axe', brush: 'chalk' };
+  const LOOK = R.WEAPON_LOOK = Object.assign(R.WEAPON_LOOK || {}, { dualpistol: 'pistol', repeater: 'crossbow', warhammer: 'mace', wand: 'staff', censer: 'bell', nodachi: 'katana', halberd: 'spear', claws: 'gauntlet', harp: 'lute', totem: 'staff', compass: 'disc', runeaxe: 'axe', brush: 'chalk' });   // 別的檔案可以再加（R.WEAPON_LOOK）
   const mk0 = R.makeHeroSprite;
   R.makeHeroSprite = (cls, base, look) => { const h = mk0(cls, LOOK[base] || base, look); if (LOOK[base]) h.base = base; return h; };
   const sw0 = R.setHeroWeapon;
