@@ -49,7 +49,7 @@
       if (e.m && e.m.g && e.m.g.visible === false) continue;
       let t = tags.get(e) || makeTag(e); if (t.top == null) t.top = topOf(e);
       v.set(e.x, (e.m && e.m.g ? e.m.g.position.y : 0) + t.top, e.z).project(W.camera);
-      if (v.z > 1 || v.x < -1.1 || v.x > 1.1 || v.y < -1.1 || v.y > 1.2) { t.el.style.display = 'none'; live.add(e); continue; }
+      if (v.z > 1 || v.x < -1.1 || v.x > 1.1 || v.y < -1.1 || v.y > 1.2 || (R.fogHides && R.fogHides(e.x, e.z))) { t.el.style.display = 'none'; live.add(e); continue; }   // 濃霧裡的不顯示（fogarc.js）
       t.el.style.display = '';
       t.el.style.transform = 'translate(' + Math.round((v.x + 1) / 2 * w) + 'px,' + Math.round((1 - v.y) / 2 * h) + 'px) translate(-50%,-100%)';
       const pc = Math.max(0, Math.min(1, e.hp / e.hpMax)); if (pc !== t.last) { t.last = pc; t.bar.style.width = (pc * 100).toFixed(1) + '%'; }

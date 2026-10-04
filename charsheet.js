@@ -18,7 +18,7 @@
     h += '<div class="cs-sec"><h4>攻擊</h4>' + row('武器', esc(P.item ? R.itemName(P.item) : '（沒有）')) + row('每一下', n1(hit) + ((ws.pellets || 1) > 1 ? ' × ' + ws.pellets : '') + ((w.hits || 1) > 1 ? ' × ' + w.hits : ''), '傷害倍率 ' + pct((P.dmgMult || 1) - 1))
       + row('攻擊速度', n1(ws.rate || 0) + ' 次／秒') + row('估計每秒傷害', Math.round(dps), '含暴擊的平均') + row('暴擊率', Math.round(crit * 100) + '%') + row('暴擊傷害', '×' + n1(cm))
       + (ws.vamp ? row('吸血', Math.round(ws.vamp * 100) + '%') : '') + (elem ? row('屬性', elem) : '') + (ws.pierce ? row('穿透', ws.pierce) : '') + (ws.range ? row('射程', n1(ws.range) + ' 公尺') : '') + '</div>';
-    h += '<div class="cs-sec"><h4>防守・其他</h4>' + row('翻滾冷卻', n1(P.dodgeCdMax || 0) + ' 秒') + row('技能冷卻', pct((P.skillCdMult || 1) - 1)) + row('每秒回復', n1(P.regen || 0) + ' 生命') + (P.mpRegen ? row('回魔', '每秒 +' + n1(P.mpRegen) + ' 魔力') : '') + (P.pen ? row('穿透', '無視 ' + Math.round(P.pen * 100) + '% 護甲') : '')
+    h += '<div class="cs-sec"><h4>防守・其他</h4>' + row('翻滾冷卻', n1(P.dodgeCdMax || 0) + ' 秒') + (P.haste != null ? row('技能急速', '+' + Math.round(P.haste), '冷卻 ' + pct((P.skillCdMult || 1) - 1)) : row('技能冷卻', pct((P.skillCdMult || 1) - 1))) + row('每秒回復', n1(P.regen || 0) + ' 生命') + (P.mpRegen ? row('回魔', '每秒 +' + n1(P.mpRegen) + ' 魔力') : '') + (P.pen ? row('穿透', '無視 ' + Math.round(P.pen * 100) + '% 護甲') : '')
       + row('佩特拉的注意', P.calm ? '上升慢 ' + Math.round(P.calm * 100) + '%' : '照常') + (P.greed ? row('撿錢', pct(P.greed)) : '') + ((P.accGuard || P.talGuard) ? row('受到的傷害', '−' + Math.round(((P.accGuard || 0) + (P.talGuard || 0)) * 100) + '%') : '')
       + (P.luck ? row('幸運', P.luck + ' 點', '寶箱比較不會空、寶物數量多一點、暴擊率高一點') : '') + (P.accLucky ? row('寶物數量', pct(P.accLucky)) : '') + (P.immune && Object.keys(P.immune).length ? row('免疫', Object.keys(P.immune).join('、')) : '') + '</div>';
     h += '</div><h4>從哪裡來</h4><div class="cs-src">';
@@ -37,7 +37,7 @@
     const rb = R.raceBonusText && s.race ? R.raceBonusText(s.race) : [];
     const tn = R.titleName ? R.titleName() : '', tt = tn && R.TITLES ? R.TITLES.find(t => t[1] === tn) : null;
     const pf = R.profLv ? [P.item ? '武器 ' + (R.profLv.weapon(P.item.base) || 0) + ' 級' : '', '魔法 ' + (R.profLv.magic() || 0) + ' 級', '敏捷 ' + (R.profLv.agi() || 0) + ' 級'].filter(Boolean).join('・') : '';
-    const bf = s.buff && s.buff.until === s.day && s.buff.b ? Object.keys(s.buff.b).map(k => ({ hp: '生命', mp: '魔力', dmg: '傷害', skillCd: '技能冷卻', regen: '回復', aware: '佩特拉的注意' })[k] || k).join('、') : '';
+    const bf = s.buff && s.buff.until === s.day && s.buff.b ? Object.keys(s.buff.b).map(k => ({ hp: '生命', mp: '魔力', dmg: '傷害', skillCd: '技能急速', regen: '回復', aware: '佩特拉的注意' })[k] || k).join('、') : '';
     h += '<div><b>其他</b><ul>' + (rb.length ? '<li>種族：' + esc(rb.join('・')) + '</li>' : '') + (tn ? '<li>稱號「' + esc(tn) + '」' + (tt ? '：' + esc(tt[3]) : '') + '</li>' : '<li>稱號：沒有戴</li>') + (pf ? '<li>熟練度：' + esc(pf) + '</li>' : '')
       + (bf ? '<li>今天吃的東西：' + esc(bf) + '（下遺跡的時候才算，上面的數字沒有含）</li>' : '') + '</ul></div>';
     h += '</div></details>';

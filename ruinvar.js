@@ -13,7 +13,7 @@
   const later = (f, ms) => { const run = W().run; setTimeout(() => { if (W().run === run && run && !run.done) f(); }, ms); };
   const floorAt = (x, z) => (R.nearestFloor ? R.nearestFloor(x, z) : [x, z]);
   const MODS = {
-    fog: { n: '濃霧', d: '霧很濃，看不遠。', safe: 1 }, treasure: { n: '寶藏', d: '這一層多了兩個寶箱。', safe: 1 }, crystal: { n: '結晶', d: '牆邊長滿可以掘的魔晶礦。', safe: 1 },
+    fog: { n: '濃霧', d: '霧很濃，只看得到面前的半圈。', safe: 1 }, treasure: { n: '寶藏', d: '這一層多了兩個寶箱。', safe: 1 }, crystal: { n: '結晶', d: '牆邊長滿可以掘的魔晶礦。', safe: 1 },
     nest: { n: '巢穴', d: '遺跡生物多五成，經驗 +30%。' }, silent: { n: '寂靜', d: '遺跡生物少一半，剩下的都帶著特性。' }, rockfall: { n: '崩落', d: '天花板一直掉石頭——看地上的圈。' },
     mana: { n: '魔力潮', d: '技能冷卻 −30%，遺跡生物的傷害 +15%。' }, lost: { n: '迷途', d: '小地圖看不到，只能靠自己記路。' }
   };
@@ -94,7 +94,7 @@
   R.gainXp = v => gx0(W().F && W().F.mod === 'nest' && W().run ? v * 1.3 : v);
   // 魔力潮：技能冷卻
   const cp0 = R.calcPlayer;
-  R.calcPlayer = cls => { const P = cp0(cls); if (W().run && W().F && W().F.mod === 'mana') P.skillCdMult *= 0.7; return P; };
+  R.calcPlayer = cls => { const P = cp0(cls); if (W().run && W().F && W().F.mod === 'mana') R.cdMul(P, 0.7); return P; };   // 場地效果：照舊乘，不算技能急速（haste.js）
   // 試煉之間：清完一波再來一波
   const lr0 = R.lockRoom;
   R.lockRoom = (r, on) => {

@@ -36,6 +36,7 @@
       ['遺跡生物', ['一樣會中（地刺 ' + Math.round(30 * k) + ' 點、絞肉機每次 ' + Math.round(14 * k) + ' 點）：把牠們引到鐵板、鐵柵上。領主體不會被絞肉機吸過去。']]]
   };
   const ENV_NAME = { volcano: '火山', desert: '沙漠', deep: '深海', snow: '凍原', forge: '熔爐' };
+  R.FIELD_INFO = FIELD; R.FIELD_ENV_NAME = ENV_NAME;   // 圖鑑的遺跡頁（dexruins.js）也用
   R.fieldSheet = () => {
     const run = W().run; if (!run || !run.env || !FIELD[run.env]) return;
     const k = deep(run);
@@ -57,10 +58,11 @@
 
   // ---------- 樓層效果、領主層 ----------
   const MOD_MORE = {
-    fog: ['霧很濃：看得到的距離變短，遺跡生物走近了才看得到。'], treasure: ['這一層多兩個寶箱。'], crystal: ['牆邊長滿可以掘的魔晶礦，帶十字鎬來。'],
+    fog: ['霧很濃：只看得到面前的半圈（準心那一邊 8 公尺），背後 2.5 公尺外就看不見——轉準心才看得到後面的遺跡生物。'], treasure: ['這一層多兩個寶箱。'], crystal: ['牆邊長滿可以掘的魔晶礦，帶十字鎬來。'],
     nest: ['遺跡生物多五成（上鎖的房間會再多叫幾隻）；打倒的經驗 +30%。'], silent: ['遺跡生物少一半，但剩下的每一隻都帶著特性（〔迅捷〕〔堅甲〕……）。'],
     rockfall: ['每 3.5～6 秒，你身邊會出現兩個圈，1.1 秒後天花板的石頭掉下來：砸到扣生命上限的 10%。'], mana: ['技能冷卻 −30%，但遺跡生物的傷害 +15%。'], lost: ['小地圖看不到，只能靠自己記路。']
   };
+  R.FLOOR_MOD_MORE = MOD_MORE;   // 圖鑑的遺跡頁（dexruins.js）也用
   R.floorModSheet = () => {
     const F = W().F, m = F && F.mod, M = R.FLOOR_MODS && R.FLOOR_MODS[m]; if (!M) return;
     sheet('樓層效果', M.n, [['這一層', [M.d].concat(MOD_MORE[m] || [])]], '樓層效果每一層重新抽（第一層以後，大約四成五的樓層有）。');

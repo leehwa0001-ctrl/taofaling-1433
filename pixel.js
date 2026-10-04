@@ -47,11 +47,14 @@
     P.rt.depthTexture.minFilter = P.rt.depthTexture.magFilter = TH.NearestFilter;
     // 放大的時候順便描邊：旁邊的像素比自己遠很多（牆頂、屋頂、柱子的輪廓）就暗一點
     P.mat = new TH.ShaderMaterial({
-      uniforms: { tColor: { value: P.rt.texture }, tDepth: { value: P.rt.depthTexture }, res: { value: new TH.Vector2(4, 4) }, scale: { value: 1 }, off: { value: new TH.Vector2(0, 0) }, dRange: { value: 1 }, edge: { value: 0.9 }, persp: { value: 0 }, cNear: { value: 1 }, cFar: { value: 100 } },
+      uniforms: { tColor: { value: P.rt.texture }, tDepth: { value: P.rt.depthTexture }, res: { value: new TH.Vector2(4, 4) }, scale: { value: 1 }, off: { value: new TH.Vector2(0, 0) }, dRange: { value: 1 }, edge: { value: 0.9 }, persp: { value: 0 }, cNear: { value: 1 }, cFar: { value: 100 }, fogOn: { value: 0 }, projInv: { value: new TH.Matrix4() }, camWorld: { value: new TH.Matrix4() }, fogArc: { value: new TH.Vector4() }, fogArc2: { value: new TH.Vector4() } },
       vertexShader: 'void main(){ gl_Position = vec4(position.xy, 0.0, 1.0); }',
       fragmentShader: [
         'uniform sampler2D tColor; uniform sampler2D tDepth; uniform vec2 res; uniform float scale; uniform vec2 off; uniform float dRange; uniform float edge;',
-        'uniform float persp; uniform float cNear; uniform float cFar;',
+        'uniform float persp; uniform float cNear; uniform float cFar; uniform float fogOn; uniform mat4 projInv; uniform mat4 camWorld; uniform vec4 fogArc; uniform vec4 fogArc2;',
+        // 濃霧（fogarc.js）：用深度換回世界座標，算這個像素在半圓的霧裡多濃（跟材質裡的霧同一個算法）
+        'float fogAt(vec2 p){ vec4 v = projInv * vec4((p + 0.5) / res * 2.0 - 1.0, texture2D(tDepth, (p + 0.5) / res).x * 2.0 - 1.0, 1.0); vec3 w = (camWorld * vec4(v.xyz / v.w, 1.0)).xyz;',
+        '  vec2 fd = w.xz - fogArc.xy; float fl = length(fd), fc = fl > 0.001 ? dot(fd / fl, fogArc.zw) : 1.0, fr = mix(fogArc2.y, fogArc2.x, smoothstep(-0.1, 0.1, fc)), fs = min(fogArc2.z, fr * 0.6); return smoothstep(fr - fs, fr, fl); }',
         // 透視鏡頭的深度不是線性的，換回「離鏡頭幾公尺」再比
         'float dep(vec2 p){ float z = texture2D(tDepth, (p + 0.5) / res).x; return persp > 0.5 ? cNear * cFar / (cFar - z * (cFar - cNear)) : z * dRange; }',
         'void main(){',
@@ -59,13 +62,14 @@
         '  vec3 c = texture2D(tColor, (p + 0.5) / res).rgb;',
         '  float d = dep(p);',
         '  float far = max(max(dep(p + vec2(1.0, 0.0)), dep(p - vec2(1.0, 0.0))), max(dep(p + vec2(0.0, 1.0)), dep(p - vec2(0.0, 1.0))));',
-        '  if (far - d > edge) c *= 0.5;',
+        '  if (far - d > edge) c *= 1.0 - 0.5 * (fogOn > 0.5 ? 1.0 - fogAt(p) : 1.0);',   // 濃霧（fogarc.js）：霧裡的東西不描邊，不然牆的輪廓會透出來
         '  gl_FragColor = vec4(c, 1.0);',
         '  #include <encodings_fragment>',
         '}'
       ].join('\n'),
       depthTest: false, depthWrite: false
     });
+    R.pixPost = P.mat;   // fogarc.js 設 fogOn、fogArc……
     P.scene = new TH.Scene(); P.cam = new TH.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     const quad = new TH.Mesh(new TH.PlaneGeometry(2, 2), P.mat); quad.frustumCulled = false; P.scene.add(quad);
   };
