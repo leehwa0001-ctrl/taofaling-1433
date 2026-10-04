@@ -5,7 +5,8 @@
 //   獰（高兩級）：更暗、刺更長、露出獠牙，身體大一成。
 //   淵（高三級以上）：幾乎全黑帶紫、眼睛發紫光、一圈紫色的光邊，身體大兩成。
 // 數值只多一點（生命 +15／30／45%、傷害 +10／20／30%，跑快一點）——分級本來就有加強。
-// 出現的機率七成（同一層也看得到原本的樣子，看得出是同一種）。圖鑑不另外列（noDex），打倒的次數算在原本那一種上。
+// 2026-10-04 作者：同種怪物越深層越容易出現變種；變異種只在深層出現，越深外觀越危險——
+//   出現的機率照走到第幾成：淺層一成、最深九成；兇的程度＝分級差＋深度（最深多兩級）。原本固定七成、只看分級。圖鑑不另外列（noDex），打倒的次數算在原本那一種上。
 // 有特別寫法的不變（三連貂、福影童、預言犢、分裂膠、喚群燈、行壁、礦殼的礦脈房……）。
 (function (R) {
   const W = R.W, rnd = Math.random, ART = R.BEAST_ART;
@@ -46,7 +47,7 @@
   order.forEach((gid, i) => { const g = R.gradeById(gid); (g && g.pool || []).forEach(id => { if (home[id] == null) home[id] = i + 1; }); });
   const VAR = {};
   Object.keys(home).forEach(id => {
-    const d = R.ENEMIES[id]; if (!d || d.boss || d.elite || d.env || d.noDex || SKIP_ID.includes(id) || SKIP_AI.includes(d.ai) || home[id] > 3) return;
+    const d = R.ENEMIES[id]; if (!d || d.boss || d.elite || d.env || d.noDex || SKIP_ID.includes(id) || SKIP_AI.includes(d.ai) || home[id] > 4) return;   /* 克森特級原生的也有變種（深層才出現） */
     for (let t = 1; t <= 3; t++) {
       const art = mkArt(id, t); if (!art) continue; const vid = id + '_v' + t, T = TIER[t];
       ART[vid] = art;
@@ -59,7 +60,7 @@
   const se = R.spawnEnemy;
   R.spawnEnemy = (id, x, z, room, o) => {
     const run = W.run, h = home[id];
-    if (run && VAR[id] && h && !(o && (o.human || o.role)) && rnd() < 0.7) { const diff = Math.min(3, (run.grade.lv || 1) - h); if (diff >= 1 && VAR[id][diff]) { const e = se(VAR[id][diff], x, z, room, o); if (e) { e.vbase = id; const k = TIER[diff].sc; if (k !== 1 && e.m && e.m.g) e.m.g.scale.multiplyScalar(k); } return e; } }
+    if (run && VAR[id] && h && !(o && (o.human || o.role))) { const dep = Math.max(0, Math.min(1, (run.floor || 0) / Math.max(1, ((run.floors || 1) - 1) * (run.depthK && run.depthK < 1 ? run.depthK : 1)))),   /* depth.js 生怪時把 run.floor 換算成舊的層數，總層數也要一起換算 */ diff = Math.min(3, Math.max(0, (run.grade.lv || 1) - h) + Math.floor(dep * 2.5)); if (diff >= 1 && VAR[id][diff] && rnd() < 0.1 + 0.8 * dep) { const e = se(VAR[id][diff], x, z, room, o); if (e) { e.vbase = id; const k = TIER[diff].sc; if (k !== 1 && e.m && e.m.g) e.m.g.scale.multiplyScalar(k); } return e; } }
     return se(id, x, z, room, o);
   };
   // 打倒的次數也算在原本那一種上（圖鑑、之後的寵物）
