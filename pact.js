@@ -77,13 +77,13 @@
   const sr0 = R.startRun;
   R.startRun = id => {
     const r = sr0(id), run = W().run;
-    if (run && run.task && !run.pact) {
+    if (run && !run.pact) {   // 不接委託也可以開條款（2026-10-04 作者：段位太高接不了低階任務，不接任務就開不了條款，要全條款的稱號拿不到）
       const sel = Object.assign({}, pact().sel); if ((S().party || []).length) delete sel.solo;
       const pts = ptsOf(sel);
       if (pts) {
         run.pact = { sel, pts };
-        if (sel.time) run.task.limitH = Math.ceil(run.task.limitH / 2);
-        if (sel.more && run.task.kind === 'hunt') run.task.need = Math.round(run.task.need * 1.5);
+        if (sel.time && run.task) run.task.limitH = Math.ceil(run.task.limitH / 2);
+        if (sel.more && run.task && run.task.kind === 'hunt') run.task.need = Math.round(run.task.need * 1.5);
         setTimeout(() => R.toast && R.toast('加注條款 ' + pts + ' 點：' + Object.keys(sel).map(k => T[k][1]).join('、'), '#FF9A6A'), 4200);
       }
     }

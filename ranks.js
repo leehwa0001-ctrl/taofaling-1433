@@ -61,7 +61,8 @@
   R.taskSpec = site => {
     const sp = ts0(site), r = rk(); if (!r || !site || site.kind === 'hunt') return sp;
     const g = R.gradeById(site.grade), rg = rangeOf(g.letter); if (!rg.length) return sp;
-    const L = letterFor(g, r.dan);
+    let L = letterFor(g, r.dan);
+    if (!L && site.grade === 'kaso' && r.dan >= 3) L = rg[0];   // 卡索級是會長的特別討伐令：獵殺段以上就能接（2026-10-04 作者：升到獵殺段後就沒辦法繼續往上升——特攻段考核要卡索級，原本接不到）
     if (!L) { sp.blocked = '你是' + rankName(r) + '：公會不把 ' + g.letter + ' 級的委託發給這個段位。'; sp.letter = g.letter; return sp; }
     sp.letter = L; sp.range = g.letter; sp.bonusK = 0.15 * (li(L) - li(rg[0]));
     return sp;
@@ -99,7 +100,7 @@
     const out = [];
     if (q.never) return [{ ok: false, txt: '由會長決定（遊戲裡還沒開放）' }];
     if (q.any) { const n = done().length; out.push({ ok: n >= q.any, txt: '完成任務 ' + n + '／' + q.any + ' 件' }); }
-    LET.forEach(l => { if (q[l]) { const n = countAtLeast(l); out.push({ ok: n >= q[l], txt: l + ' 級以上的任務 ' + n + '／' + q[l] + ' 件' }); } });
+    LET.forEach(l => { if (q[l]) { const n = countAtLeast(l); out.push({ ok: n >= q[l], txt: l + ' 級以上的任務（更高級的也算）' + n + '／' + q[l] + ' 件' }); } });
     if (q.avg) { const a = recentAvg(); out.push({ ok: a >= q.avg, txt: '最近 10 件的成績平均 ' + a + '%／' + q.avg + '%' }); }
     return out;
   };
