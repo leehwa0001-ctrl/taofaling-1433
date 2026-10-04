@@ -67,6 +67,11 @@
   // 強化：詞綴的效果每一級 ×0.08（2026-10-04 作者：武器、防具也要，原本只有護符、飾品）
   const mult = it => (it && it.plus ? 1 + 0.08 * it.plus : 1);
   const FLAT = { pierce: 1, multi: 1 };   // 貫穿、多重是「多一發」，不跟著強化變大
+  // 武器的詞綴也要跟著強化變強（2026-10-04 作者回報：裝備強化，詞綴效果沒有跟著提升）：
+  //   原本只有 R.affixSum（防具、飾品、護符那些加總）乘了強化，武器自己的詞綴（鋒利、迅捷、暴擊、吸血、燃燒、霜寒、電擊、沉重……）
+  //   在 items.js 的 R.weaponStats 裡直接用原本的數字，說明寫「詞綴的效果 ×1.24」卻沒有真的變強。
+  const scaled = it => (it && it.plus && it.identified ? Object.assign({}, it, { affixes: it.affixes.map(a => (FLAT[a.id] ? a : Object.assign({}, a, { v: a.v * mult(it) }))) }) : it);
+  const ws0 = R.weaponStats; R.weaponStats = it => ws0(scaled(it));
 
   // 新的裝備欄
   if (!R.GEAR_KEYS.includes('acc')) R.GEAR_KEYS.push('acc');
@@ -90,7 +95,7 @@
   // 說明
   const il0 = R.itemLines;
   R.itemLines = it => {
-    if (!isTrinket(it)) { const L = il0(it), a = it.enchant && it.identified && it.affixes.find(x => x.ench), df = a && R.W_AFFIX.find(x => x.id === a.id), i = df ? L.lastIndexOf('・' + df.txt(a.v)) : -1; if (i >= 0) L[i] += '（附魔）'; if (it.plus && it.identified && it.affixes.length) L.push('強化 +' + it.plus + '：詞綴的效果 ×' + mult(it).toFixed(2)); return L; }
+    if (!isTrinket(it)) { const L = il0(it), a = it.enchant && it.identified && it.affixes.find(x => x.ench), df = a && R.W_AFFIX.find(x => x.id === a.id), i = df ? L.lastIndexOf('・' + df.txt(a.v)) : -1; if (i >= 0) L[i] += '（附魔）'; if (it.plus && it.identified && it.affixes.length) { const m = mult(it); it.affixes.forEach(a0 => { if (FLAT[a0.id]) return; const d0 = R.affixDef(it, a0.id), j = d0 ? L.findIndex(l => l.indexOf('・' + d0.txt(a0.v)) === 0) : -1; if (j >= 0) L[j] = L[j].replace('・' + d0.txt(a0.v), '・' + d0.txt(Math.round(a0.v * m * 10) / 10)); }); L.push('強化 +' + it.plus + '：詞綴的效果 ×' + m.toFixed(2) + '（上面的數字已經算進去）'); } return L; }   // 說明裡的詞綴寫強化後的數字
     const d = defOf(it), L = [(it.kind === 'acc' ? '飾品・' : '護符・') + R.baseName(it), '物品等級 ' + it.ilvl];
     if (!it.identified) { L.push('？？？　稀有度與詞綴要鑑定後才知道，也才會生效。'); return L; }
     const m = mult(it);
