@@ -12,7 +12,7 @@
   const AI = R.AI_X = R.AI_X || {};
   const later = (f, ms) => { const run = W().run; setTimeout(() => { if (W().run === run && run && !run.done) f(); }, ms); };
   const floorAt = (x, z) => (R.nearestFloor ? R.nearestFloor(x, z) : [x, z]);
-  const targets = () => { const w = W(); return [w.P].concat((w.allies || []).filter(a => !a.downed)).filter(t => t && !t.dead); };
+  const targets = () => { const w = W(); return [w.P].concat((w.allies || []).filter(a => !a.downed), R.netTargets ? R.netTargets() : []).filter(t => t && !t.dead); };   // 多人連線：房主這邊也算別人（net2.js）
   const hurtAny = (t, dmg, e, o) => (t.ally ? R.hurtAlly(t, dmg, e) : R.hurtPlayer(dmg, e, o));
   const near = (x, z, r) => targets().filter(t => Math.hypot(t.x - x, t.z - z) < r);
   const setAi = (id, ai) => Object.keys(R.ENEMIES).forEach(k => { const d = R.ENEMIES[k]; if (k === id || d.vbase === id || k.indexOf(id + '_v') === 0) d.ai = ai; });
