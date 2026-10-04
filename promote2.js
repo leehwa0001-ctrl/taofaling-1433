@@ -13,12 +13,13 @@
   const W = () => R.W, S = () => R.S, $ = id => document.getElementById(id), esc = s => R.esc(s);
   const LV = 40, COST = { core: 3, purecry: 2 };
   const LIB = R.SKILL_LIB || {};
-  const scaleK = p => { const q = JSON.parse(JSON.stringify(p || {})); const f = o => { if (!o || typeof o !== 'object') return; if (typeof o.k === 'number') o.k *= 1.5; Object.values(o).forEach(f); }; f(q); return q; };
+  // 2026-10-05 作者：覺醒的不死狂怒還比原版弱——原本只放大威力（k），增益、無敵的部分跟原版一樣；現在增益的加成 ×1.5、持續時間 ×1.25、吸血回復護盾 ×1.5、暈眩 ×1.25
+  const scaleK = p => { const q = JSON.parse(JSON.stringify(p || {})); const f = o => { if (!o || typeof o !== 'object') return; if (typeof o.k === 'number') o.k *= 1.5; if (typeof o.dmg === 'number' && o.dmg > 1) o.dmg = 1 + (o.dmg - 1) * 1.5; if (typeof o.speed === 'number' && o.speed > 1) o.speed = 1 + (o.speed - 1) * 1.5; if (typeof o.t === 'number' && o.t < 30) o.t *= 1.25; ['vamp', 'pct', 'shield', 'allies', 'allyShield', 'regen', 'crit', 'def'].forEach(k => { if (typeof o[k] === 'number' && o[k] > 0 && o[k] < 1) o[k] = Math.min(0.95, o[k] * 1.5); }); if (typeof o.stun === 'number') o.stun *= 1.25; if (Array.isArray(o) && typeof o[0] === 'string' && typeof o[2] === 'number' && o[2] >= 1000) o[2] *= 1.25; Object.values(o).forEach(f); };   /* 組合技裡等增益結束才發動的那一段（例如狂怒爆發）跟著延後 */ f(q); return q; };
   // ---------- 覺醒技：每條路線最強的那一招 ×1.5 ----------
   const AW = {};
   R.CLASS_IDS.forEach(cls => (R.ADV[cls] || []).filter(a => !a.legacy).forEach(a => {
     const own = Object.values(LIB).filter(s => s.cls === cls && s.adv === a.id && !s.adv2).sort((x, y) => y.lv - x.lv)[0]; if (!own) return;
-    const id = own.id + '_aw', desc = '（二轉・覺醒）' + own.desc + '威力 ×1.5。';
+    const id = own.id + '_aw', desc = '（二轉・覺醒）' + own.desc + '威力 ×1.5；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。';
     LIB[id] = { id, name: '覺醒・' + own.name, cls, lv: LV, cd: own.cd, mp: Math.round(own.mp * 1.25), type: own.type, p: scaleK(own.p), desc, adv: a.id, adv2: 'awaken' };
     R.SKILLS[id] = { name: '覺醒・' + own.name, cd: own.cd, mp: Math.round(own.mp * 1.25), desc }; AW[cls + ':' + a.id] = id;
   }));

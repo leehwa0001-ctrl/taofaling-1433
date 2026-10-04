@@ -26,7 +26,7 @@
   const talSpent = st => Object.values(sp(st).t).reduce((a, v) => a + v, 0);
   R.spTotal = st => Math.max(0, st.lv) + (st.spBonus || 0);   // 2026-10-04 作者：等級有 50 就有 50 點天賦點（原本是等級 − 1）
   R.spFree = st => R.spTotal(st) - spent(st);
-  const rank = (id, cls) => { const s = S(); if (!s) return 0; const st = stOf(cls); return (st && st.sp && st.sp.r[id]) || 0; };
+  const rank = (id, cls) => { const s = S(); if (!s) return 0; const st = stOf(cls), r = (st && st.sp && st.sp.r) || {}; return Math.max(r[id] || 0, /_aw$/.test(id || '') ? r[id.replace(/_aw$/, '')] || 0 : 0); };   // 覺醒版（_aw）沿用原版的星數
   const tal = (id, cls) => { const s = S(); if (!s) return 0; const st = stOf(cls); return (st && st.sp && st.sp.t[id]) || 0; };
   R.skillRank = rank;
 
