@@ -566,6 +566,7 @@
   };
   R.goHosu = () => { const s = S(); s.gold = Math.max(0, s.gold - FARE); R.save(); R.closeSheet(); R.fade(enter); };
   R.inHosu = () => !!(W.town && W.town.hosu);
+  R.hosuEnter = enter;   // 不收車錢、直接進奉主（hosubranch.js：從奉主分館出發的遺跡回來）
 
   // ---------- 每一格 ----------
   const smokeGeo = () => smokeGeo.g || (smokeGeo.g = (() => { const g = new (T().SphereGeometry)(0.45, 6, 5); g.userData.shared = true; return g; })());
