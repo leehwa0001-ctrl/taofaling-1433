@@ -156,7 +156,7 @@
     const o = occ(g), free = []; for (let i = o.length - 1; i >= 0; i--) if (!o[i]) free.push(i);
     const stacks = []; Object.keys(run.mats).forEach(k => { let n = run.mats[k]; while (n > 0) { stacks.push({ k, n: Math.min(ST(k), n) }); n -= ST(k); } });
     const cells = Array.from({ length: g.w * g.h }, (_, i) => '<div class="tk-cell" style="grid-column:' + (i % g.w + 1) + ';grid-row:' + (Math.floor(i / g.w) + 1) + '"></div>').join('');
-    const items = run.bag.map((it, i) => { const p = g.at.get(it); if (!p) return ''; const [w, h] = dims(it, p.r); return '<div class="tk-item' + (sel && sel.it === it ? ' sel' : '') + '" data-bi="' + i + '" style="grid-column:' + (p.x + 1) + '/span ' + w + ';grid-row:' + (p.y + 1) + '/span ' + h + ';--c:' + R.rarityColor(it) + '">' + icon(it) + '<small>' + esc(R.itemName(it)) + '</small></div>'; }).join('');
+    const items = run.bag.map((it, i) => { const p = g.at.get(it); if (!p) return ''; const [w, h] = dims(it, p.r); return '<div class="tk-item' + (sel && sel.it === it ? ' sel' : '') + '" data-bi="' + i + '" style="grid-column:' + (p.x + 1) + '/span ' + w + ';grid-row:' + (p.y + 1) + '/span ' + h + ';--c:' + R.rarityColor(it) + '">' + icon(it) + '<i class="tk-lv">' + it.ilvl + '</i><small>' + esc(R.itemName(it)) + '</small></div>'; }).join('');
     const matsHtml = stacks.map((st, j) => { const i = free[j]; if (i == null) return ''; return '<div class="tk-mat' + (sel && sel.mat === st.k ? ' sel' : '') + '" data-mk="' + st.k + '" style="grid-column:' + (i % g.w + 1) + ';grid-row:' + (Math.floor(i / g.w) + 1) + ';--c:' + (R.MATS[st.k].color || '#C8B88A') + '" title="' + esc(R.MATS[st.k].name) + '"><i></i><b>' + st.n + '</b></div>'; }).join('');
     const loose = run.bag.filter(it => !g.at.get(it));
     let info = '<p class="note">點一下看說明；拖曳搬動，拖的時候按 R 或右鍵轉向；拖到左邊的裝備欄就是穿上。</p>';
@@ -168,7 +168,7 @@
       const it = sel.it || eq[sel.slot];
       if (it) {
         const k = slotOf(it), can = k && R.GEAR_KEYS.includes(k) && (!R.canUse || R.canUse(it, s.cls));
-        info = '<div class="tk-info"><b style="color:' + R.rarityColor(it) + '">' + esc(R.itemName(it)) + '</b><small>' + esc(R.itemLines(it).join('・')) + '・佔 ' + sizeOf(it).join('×') + ' 格</small><div class="row">'
+        info = '<div class="tk-info"><b style="color:' + R.rarityColor(it) + '">' + esc(R.itemName(it)) + '</b>' + (R.itemInfo ? R.itemInfo(it, '佔 ' + sizeOf(it).join('×') + ' 格') : '<small>' + esc(R.itemLines(it).join('・')) + '・佔 ' + sizeOf(it).join('×') + ' 格</small>') + '<div class="row">'
           + (sel.it ? (can ? '<button type="button" class="btn pri" data-act="eq">' + (eq[k] ? '換上' : '穿上') + '</button>' : '') + '<button type="button" class="btn" data-act="rot">轉向</button><button type="button" class="btn" data-act="drop">丟在地上</button>'
             : (sel.slot !== 'weapon' ? '<button type="button" class="btn" data-act="uneq">脫下（放進背包）</button>' : '<span class="note">武器只能換，不能空手。</span>'))
           + '</div></div>';

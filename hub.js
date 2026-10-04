@@ -60,7 +60,7 @@
     R.save();
   };
   const matsLine = () => Object.keys(R.MATS).filter(k => R.S.mats[k]).map(k => '<span class="mat" style="--c:' + R.MATS[k].color + '">' + esc(R.MATS[k].name) + ' ' + R.S.mats[k] + '</span>').join('') || '<span class="note">還沒有素材。</span>';
-  const itemCard = (it, btns) => '<div class="item-card" style="--c:' + R.rarityColor(it) + '">' + (R.itemIconTag ? R.itemIconTag(it, 'card') : '') + '<b>' + esc(R.itemName(it)) + '</b>' + (it.identified ? '<small class="rar">' + R.RARITY[it.rarity].name + '</small>' : '<small class="rar">？？？</small>') + (it.locked ? '<span class="tag lock-tag">🔒 上鎖</span>' : '') + '<ul>' + R.itemLines(it).map(l => '<li>' + esc(l) + '</li>').join('') + '</ul><div class="row">' + btns + '</div></div>';
+  const itemCard = (it, btns) => '<div class="item-card" style="--c:' + R.rarityColor(it) + '">' + (R.itemIconTag ? R.itemIconTag(it, 'card') : '') + '<b>' + esc(R.itemName(it)) + '</b>' + (R.itemInfo ? '' : (it.identified ? '<small class="rar">' + R.RARITY[it.rarity].name + '</small>' : '<small class="rar">？？？</small>')) + (it.locked ? '<span class="tag lock-tag">🔒 上鎖</span>' : '') + (R.itemInfo ? R.itemInfo(it) : '<ul>' + R.itemLines(it).map(l => '<li>' + esc(l) + '</li>').join('') + '</ul>') + '<div class="row">' + btns + '</div></div>';
 
   // 同行的勇者：最多兩個人；每個人分走一成五的委託報酬
   const partyBox = () => {
