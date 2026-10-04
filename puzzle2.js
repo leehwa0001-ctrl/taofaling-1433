@@ -1,195 +1,217 @@
-// 討伐令 1433：遺跡的解謎，新的四種（2026-10-04 作者：解謎種類也沒增加啊）
-// 照作者之前說的「希望不用看規則說明就能直接解」：每一種看了就知道要做什麼，做對的時候畫面上馬上看得到。
-//  - 光之室：房間一角的水晶射出一道光，中間有兩面（摩爾斯以上三面）鏡子。走到鏡子旁邊轉它（每次轉 90 度），
-//    光會跟著轉；讓光一路照到房間另一頭的水晶，寶箱就解開。
-//  - 色光之室：紅、綠、藍三盞燈，中間一顆球照出混在一起的顏色；石碑上浮著要的顏色。開關燈讓顏色一樣。
-//    摩爾斯以上：燈之間有連桿，開關一盞，右邊那盞也會跟著動。
-//  - 注視之室：三尊（摩爾斯以上四尊）石像圍著寶箱，眼睛照出一道光在地上。轉石像（每次 45 度），讓每一尊都看著寶箱。
-//  - 記憶之室：六塊（摩爾斯以上八塊）石板，踩上去會浮出下面的符號；連續踩到兩塊一樣的，它們就一直亮著。全部配對就解開。
-//    踩錯不算失敗（不會讓佩特拉注意），只是兩塊會再蓋回去。
-// 接在 puzzle.js 的 R.PUZZLE_EXT 上（選房間、石碑、被封住的寶箱、解開、互動都照 puzzle.js）。放在 puzzle.js 後面。
+// 討伐令 1433：遺跡的解謎多三種（作者 2026-10-04：解謎可以多類型一點）
+// puzzle.js 原本有回音之室、石板之室、符文之室。這裡另外三種，一樣不用看規則就能直接解（作者 2026-10-04 說的）：
+// - 記憶之室：地上一排石板（6 塊、摩爾斯級以上 8 塊）。踩上去翻出底下的圖案；連續翻兩塊一樣的就留著亮，不一樣的過一下蓋回去。全部配對完就解開。
+// - 時限之室：房間各處三支拉桿（摩爾斯級以上四支）。拉下第一支開始倒數（8 秒，摩爾斯級以上 7 秒），每支拉桿腳下的光圈一直縮；
+//   時間內全部拉下就解開，來不及就全部彈回去（佩特拉的注意 +5）。
+// - 重石之室：兩顆刻著符文的大石頭（摩爾斯級以上三顆）和同樣多的壓板。走過去頂著石頭就會推動一格（兩公尺）；全部壓板上都有石頭就解開。
+//   推到角落推不出來的時候，摸石碑讓石頭回到原位。保證推得到：每顆石頭照「直的推」或「先橫再直」的路擺。
+// 做法：puzzle.js 選好的謎題房有一半換成這三種（r.puzzle）。puzzle.js 照舊幫忙蓋石碑和被封住的金寶箱（不認得的種類只蓋這兩樣），
+//   這裡再把機關擺上去、把石碑的說明換掉、解開的時候照 puzzle.js 的做法打開寶箱。
+// 放在 puzzle.js 後面。
 (function (R) {
-  const T = () => THREE, rnd = Math.random, EXT = R.PUZZLE_EXT = R.PUZZLE_EXT || {};
-  const ang = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
-  // 地上的一條光：從 (x0,z0) 到 (x1,z1)
-  const beam = (scene, col, w, y) => {
-    const m = new (T().Mesh)(new (T().BoxGeometry)(1, 1, 1), new (T().MeshBasicMaterial)({ color: col, transparent: true, opacity: 0.75, depthWrite: false }));
-    m.material.fog = false; scene.add(m);
-    m.to = (x0, z0, x1, z1) => { const L = Math.max(0.05, Math.hypot(x1 - x0, z1 - z0)); m.scale.set(w, w * 0.6, L); m.position.set((x0 + x1) / 2, y, (z0 + z1) / 2); m.rotation.y = ang(x0, z0, x1, z1); };
-    return m;
+  const W = R.W, T = () => THREE, rnd = Math.random, pick = a => a[Math.floor(rnd() * a.length)];
+  const KINDS = ['memory', 'levers', 'push'];
+  const NAMES = { memory: '記憶之室', levers: '時限之室', push: '重石之室' };
+  const mine = k => KINDS.includes(k);
+  const mat = (col, em) => new (T().MeshLambertMaterial)(Object.assign({ color: col }, em ? { emissive: em, emissiveIntensity: 0 } : {}));
+  const ring = (scene, x, z, r0, r1, col, op) => { const m = new (T().Mesh)(new (T().RingGeometry)(r0, r1, 24), new (T().MeshBasicMaterial)({ color: col, transparent: true, opacity: op, depthWrite: false, side: T().DoubleSide })); m.rotation.x = -Math.PI / 2; m.position.set(x, 0.06, z); scene.add(m); return m; };
+  const say = (title, line) => { R.sheet('<p class="kicker">' + R.esc(title) + '</p><p class="hand">' + R.esc(line) + '</p>', '<div class="row"><button type="button" class="btn pri" id="pz2-x">知道了</button></div>'); document.getElementById('pz2-x').onclick = R.closeSheet; };
+  const fail = (pz, msg, n) => { const run = W.run; run.aware = Math.min(100, run.aware + (n || 4)); R.toast(msg, '#E07A5A'); if (R.shake) R.shake(0.15); };
+  // 解開：和 puzzle.js 的 solve 一樣（寶箱放進 F.chests、封印消失、掉魔力水晶）
+  const solve = pz => {
+    if (pz.solved) return; pz.solved = true;
+    const F = W.F, run = W.run, ch = pz.chest;
+    if (ch && !F.chests.includes(ch)) F.chests.push(ch);
+    if (pz.seal) pz.seal.visible = false; if (pz.mark) pz.mark.visible = false;
+    if (R.playSfx) R.playSfx('unlock', 200); else if (R.sfx) R.sfx('chest');
+    R.toast('機關解開了——寶箱的封印消失了。', '#B8E07A');
+    if (ch && R.dropMat) R.dropMat('crystal', 1 + run.grade.lv, ch.x + 1.2, ch.z + 0.9);
+    if (R.fx) R.fx('spawn', ch ? ch.x : pz.r.x, 0.1, ch ? ch.z : pz.r.z, { color: '#B8E07A' });
   };
-  const glow = (K, col, r) => { const m = K.mat(col, col); m.emissiveIntensity = 0.4; m.fog = false; return new (T().Mesh)(new (T().OctahedronGeometry)(r || 0.35, 0), m); };
-  const hard = run => (run.grade.lv || 1) >= 3;
+  // 圖案（記憶之室）
+  const GLYPH = [['#FFD86A', 0], ['#7FE0FF', 1], ['#FF8A7A', 2], ['#C8A0FF', 3], ['#9AE08A', 4], ['#FFB0D8', 5]];
+  const glyphTex = (col, k) => {
+    const c = document.createElement('canvas'); c.width = c.height = 16; const x = c.getContext('2d'); x.fillStyle = col; x.strokeStyle = '#140E1A'; x.lineWidth = 2; x.beginPath();
+    if (k === 0) x.arc(8, 8, 5.5, 0, 7); else if (k === 1) { x.moveTo(8, 2); x.lineTo(14, 13); x.lineTo(2, 13); x.closePath(); } else if (k === 2) x.rect(3, 3, 10, 10);
+    else if (k === 3) { x.moveTo(8, 1.5); x.lineTo(14.5, 8); x.lineTo(8, 14.5); x.lineTo(1.5, 8); x.closePath(); }
+    else if (k === 4) { for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2 - Math.PI / 2, r = i % 2 ? 2.8 : 6.5; i ? x.lineTo(8 + Math.cos(a) * r, 8 + Math.sin(a) * r) : x.moveTo(8 + Math.cos(a) * r, 8 + Math.sin(a) * r); } x.closePath(); }
+    else { x.arc(8, 8, 6, -1.1, 2.3); x.arc(10.5, 6.5, 4.5, 2.1, -0.9, true); x.closePath(); }
+    x.fill(); x.stroke(); const t = new (T().CanvasTexture)(c); t.magFilter = t.minFilter = T().NearestFilter; return t;
+  };
 
-  // ---------- 光之室：轉鏡子，把光引到水晶上 ----------
-  EXT.mirror = {
-    name: '光之室',
-    build(pz, K) {
-      const n = hard(K.run) ? 3 : 2, sc = K.scene;
-      pz.hint = '「把光引到水晶上。」（走到鏡子旁邊轉動它，光會跟著轉。）';
-      // 起點、終點在房間的兩頭，鏡子在中間走「之」字
-      const pts = [K.spot(-0.8, 0.7, 0.4)];
-      const mids = n === 3 ? [[-0.3, -0.05], [0.3, 0.75], [0.75, 0.05]] : [[-0.15, 0.0], [0.45, 0.75]];
-      mids.forEach(([fx, fz]) => pts.push(K.spot(fx, fz, 0.4)));
-      pts.push(K.spot(0.85, n === 3 ? 0.75 : 0.0, 0.4));
-      const node = ([x, z], col, r) => { const g = glow(K, col, r); g.position.set(x, 1.0, z); sc.add(g); const base = new (T().Mesh)(new (T().CylinderGeometry)(0.35, 0.45, 0.6, 8), K.mat('#4A4458')); base.position.set(x, 0.3, z); sc.add(base); R.addBox(x - 0.35, x + 0.35, z - 0.35, z + 0.35, 'deco'); return g; };
-      pz.src = node(pts[0], '#FFF0A0', 0.32); pz.src.material.emissiveIntensity = 1.4;
-      pz.dst = node(pts[pts.length - 1], '#9AF0FF', 0.36);
-      pz.objs = pts.map(([x, z]) => ({ x, z }));
-      pz.mirrors = pts.slice(1, -1).map(([x, z], i) => {
-        const nx = pts[i + 2], good = ang(x, z, nx[0], nx[1]);
-        const g = new (T().Group)(); g.position.set(x, 0, z); sc.add(g);
-        const post = new (T().Mesh)(new (T().CylinderGeometry)(0.12, 0.16, 1.1, 6), K.mat('#5A5466')); post.position.y = 0.55; g.add(post);
-        const pane = new (T().Mesh)(new (T().BoxGeometry)(0.9, 0.9, 0.08), K.mat('#C8E8F0', '#9AD8F0')); pane.material.emissiveIntensity = 0.35; pane.position.y = 1.15; g.add(pane);
-        R.addBox(x - 0.3, x + 0.3, z - 0.3, z + 0.3, 'deco');
-        const m = { x, z, g, pane, good, st: 1 + Math.floor(rnd() * 3) };   // 0＝對的方向；一開始一定是錯的
-        pz.inter.push({ x, z, r: 1.7, get label() { return '轉動鏡子（第 ' + (pz.mirrors.indexOf(m) + 1) + ' 面）'; }, when: () => !pz.solved, act: () => { m.st = (m.st + 1) % 4; R.sfx && R.sfx('swing'); trace(pz); } });
-        return m;
-      });
-      pz.beams = pts.slice(0, -1).map(() => beam(sc, '#FFF0A0', 0.16, 1.0));
-      trace(pz);
-    },
-    update(pz, dt, P, run) {
-      const t = run.t || 0; pz.mirrors.forEach(m => { m.pane.material.emissiveIntensity = 0.3 + (m.lit ? 0.5 : 0) + 0.1 * Math.sin(t * 3 + m.x); });
-      pz.dst.rotation.y += dt * (pz.done ? 3 : 0.8); pz.src.rotation.y += dt * 1.5;
+  // ---------- 選房間：puzzle.js 選好的謎題房，一半換成這三種 ----------
+  const gf = R.genFloor;
+  R.genFloor = (run, f) => { const F = gf(run, f); try { F.rooms.forEach(r => { if (r.type === 'puzzle' && rnd() < 0.5) r.puzzle = pick(KINDS); }); } catch (e) { } return F; };
+
+  // ---------- 房間裡的格子 ----------
+  const roomTiles = (F, r, avoid) => {
+    const t = F.tile, out = [];
+    for (let k = 0; k < t.nx * t.nz; k++) {
+      if (t.RM[k] !== r.i || t.T[k] !== 1) continue;
+      const tx = k % t.nx, tz = (k - tx) / t.nx; let ok = true;
+      for (let dz = -1; dz <= 1 && ok; dz++) for (let dx = -1; dx <= 1; dx++) { const kk = t.id(tx + dx, tz + dz); if (t.T[kk] !== 1 || t.RM[kk] !== r.i) { ok = false; break; } }
+      if (!ok) continue; const x = t.cX(tx), z = t.cZ(tz);
+      if (avoid.some(([ax, az, ar]) => Math.hypot(ax - x, az - z) < ar)) continue;
+      out.push({ k, tx, tz, x, z });
     }
+    return out;
   };
-  // 光走的路：起點 → 第一面鏡子（一定照得到）→ 鏡子照它對著的方向；對的方向會照到下一面（或終點的水晶）
-  const trace = pz => {
-    const L = pz.objs; let lit = true;
-    pz.beams.forEach((b, i) => {
-      const a = L[i], m = pz.mirrors[i - 1];   // 第 i 段從 L[i] 出發；i>0 時 L[i] 是第 i 面鏡子
-      if (!lit) { b.visible = false; return; }
-      b.visible = true;
-      if (i === 0) { b.to(a.x, a.z, L[1].x, L[1].z); return; }
-      const dir = m.good + m.st * Math.PI / 2;
-      if (m.st === 0) { b.to(a.x, a.z, L[i + 1].x, L[i + 1].z); }
-      else { b.to(a.x, a.z, a.x + Math.sin(dir) * 2.6, a.z + Math.cos(dir) * 2.6); lit = false; }
-    });
-    // 鏡面轉到「照進來的光」和「照出去的方向」中間（看起來真的是在反射）
-    pz.mirrors.forEach((m, i) => { m.lit = pz.mirrors.slice(0, i).every(o => o.st === 0); const pv = L[i], inA = ang(pv.x, pv.z, m.x, m.z), dir = m.good + m.st * Math.PI / 2; m.g.rotation.y = Math.atan2(Math.sin(dir) - Math.sin(inA), Math.cos(dir) - Math.cos(inA)); });
-    const ok = pz.mirrors.every(m => m.st === 0);
-    pz.dst.material.emissiveIntensity = ok ? 1.6 : 0.4;
-    if (ok && !pz.done) { pz.done = true; R.fx && R.fx('ring', L[L.length - 1].x, 0.1, L[L.length - 1].z, { r: 1.6, color: '#9AF0FF' }); pz.solveNow(); }
-  };
+  // 那一格有沒有擋路的東西（柱子之類的；石頭自己的不算）
+  const solidAt = (x, z, skip) => { const B = R.boxesNear ? R.boxesNear(x, z) : []; for (const c of B) { if (!c.on || (skip && skip.includes(c)) || c.tag === 'chest') continue; if (c.x1 > x - 0.7 && c.x0 < x + 0.7 && c.z1 > z - 0.7 && c.z0 < z + 0.7) return true; } return false; };
+  // 擺好之後，把擋在機關上的罈子、木箱這些拿掉
+  const clearAt = pts => R.col.list.forEach(c => {
+    if (!c.on || !c.ref || !c.ref.mesh || c.tag === 'wall' || c.tag === 'pit') return;
+    if (!pts.some(([x, z]) => Math.max(c.x0 - x, 0, x - c.x1) ** 2 + Math.max(c.z0 - z, 0, z - c.z1) ** 2 < 1.6 * 1.6)) return;
+    c.on = false; const p = c.ref; p.alive = false; if (p.mesh.parent) p.mesh.parent.remove(p.mesh);
+  });
 
-  // ---------- 色光之室：開關紅、綠、藍三盞燈，讓混出來的顏色和石碑上的一樣 ----------
-  const RGB = ['#FF4A3A', '#4AE05A', '#4A7AFF'], MIX = c => { const v = [c[0] ? 255 : 0, c[1] ? 255 : 0, c[2] ? 255 : 0]; return '#' + v.map(x => x.toString(16).padStart(2, '0')).join(''); };
-  const CNAME = { '#ff0000': '紅', '#00ff00': '綠', '#0000ff': '藍', '#ffff00': '黃', '#ff00ff': '紫', '#00ffff': '青', '#ffffff': '白' };
-  EXT.color = {
-    name: '色光之室',
-    build(pz, K) {
-      const sc = K.scene, link = hard(K.run);
-      // 要的顏色：簡單的（沒有連桿）六種裡挑；有連桿的時候只挑得到兩盞燈混出來的（黃、紫、青）
-      const opts = link ? [[1, 1, 0], [1, 0, 1], [0, 1, 1]] : [[1, 1, 0], [1, 0, 1], [0, 1, 1], [1, 1, 1], [1, 0, 0], [0, 0, 1]];
-      pz.want = opts[Math.floor(rnd() * opts.length)];
-      pz.hint = '「讓中間那顆球的顏色，和石碑上浮著的一樣。」（紅加綠是黃、紅加藍是紫、綠加藍是青、三盞全開是白。' + (link ? '燈之間有連桿：開關一盞，右邊那盞也會跟著動。' : '') + '）';
-      // 石碑上浮著要的顏色
-      const want = MIX(pz.want), tg = glow(K, want, 0.32); tg.material.emissiveIntensity = 1.3; tg.position.set(K.tx0, 2.6, K.tz0); sc.add(tg); pz.tg = tg;
-      const [ox, oz] = K.spot(0, 0.15, 0.4); pz.orb = glow(K, '#202020', 0.5); pz.orb.position.set(ox, 1.4, oz); sc.add(pz.orb);
-      const base = new (T().Mesh)(new (T().CylinderGeometry)(0.4, 0.5, 0.8, 8), K.mat('#4A4458')); base.position.set(ox, 0.4, oz); sc.add(base); R.addBox(ox - 0.4, ox + 0.4, oz - 0.4, oz + 0.4, 'deco');
-      pz.objs = [{ x: ox, z: oz }];
-      pz.lamps = [-0.55, 0, 0.55].map((fx, i) => {
-        const [x, z] = K.spot(fx, 0.75, 0.4), m = K.mat(RGB[i], RGB[i]), lamp = new (T().Mesh)(new (T().SphereGeometry)(0.38, 10, 8), m); m.fog = false; lamp.position.set(x, 1.1, z); sc.add(lamp);
-        const post = new (T().Mesh)(new (T().CylinderGeometry)(0.14, 0.2, 0.9, 6), K.mat('#5A5466')); post.position.set(x, 0.45, z); sc.add(post); R.addBox(x - 0.3, x + 0.3, z - 0.3, z + 0.3, 'deco');
-        const rg = K.floorRing(x, z, 0.6, 0.78, RGB[i], 0.3);
-        const L = { i, x, z, m, rg, on: false };
-        pz.inter.push({ x, z, r: 1.7, label: '開關' + ['紅', '綠', '藍'][i] + '燈', when: () => !pz.solved, act: () => { press(pz, i); R.sfx && R.sfx('ui'); } });
+  // ---------- 蓋機關 ----------
+  const setup = (scene, run, F, pz) => {
+    const r = pz.r, lv = run.grade.lv || 1, hard = lv >= 3;
+    const tab = pz.inter.find(it => /石碑/.test(String(it.label))) || null;
+    const avoid = [[pz.chest.x, pz.chest.z, 2.6]].concat(tab ? [[tab.x, tab.z - 0.3, 2.4]] : []);
+    let tiles = roomTiles(F, r, avoid); if (tiles.length < 8) { pz.kind = 'memory'; tiles = roomTiles(F, r, avoid.map(a => [a[0], a[1], a[2] * 0.7])); }
+    pz.p2 = { kind: pz.kind }; const S = pz.p2, pts = [];
+    if (pz.kind === 'memory') {
+      const n = Math.min(hard ? 8 : 6, tiles.length - (tiles.length % 2)); if (n < 4) return;
+      // 離房間中心最近的 n 格（盡量排在一起），兩兩一組的圖案打亂
+      const cx = tiles.reduce((a, t) => a + t.x, 0) / tiles.length, cz = tiles.reduce((a, t) => a + t.z, 0) / tiles.length;
+      const pickT = tiles.slice().sort((a, b) => Math.hypot(a.x - cx, a.z - cz) - Math.hypot(b.x - cx, b.z - cz)).slice(0, n);
+      const syms = []; for (let i = 0; i < n / 2; i++) syms.push(i, i); syms.sort(() => rnd() - 0.5);
+      S.tex = GLYPH.slice(0, n / 2).map(([c, k]) => glyphTex(c, k));
+      S.tiles = pickT.map((t, i) => {
+        const m = mat('#6A6478', '#BFE8FF'), p = new (T().Mesh)(new (T().BoxGeometry)(1.5, 0.12, 1.5), m); p.position.set(t.x, 0.06, t.z); p.receiveShadow = true; scene.add(p);
+        const sp = new (T().Sprite)(new (T().SpriteMaterial)({ map: S.tex[syms[i]], transparent: true, depthWrite: false })); sp.scale.set(1, 1, 1); sp.position.set(t.x, 1.0, t.z); sp.visible = false; scene.add(sp);
+        const rg = ring(scene, t.x, t.z, 0.55, 0.7, '#BFE8FF', 0.3); pts.push([t.x, t.z]);
+        return { x: t.x, z: t.z, m, sp, rg, sym: syms[i], open: false, done: false, inside: false };
+      });
+      S.flip = []; S.hide = 0;
+      pz.hint = '「石板底下刻著圖案，一樣的有兩塊。」踩上去會翻開；連續翻到兩塊一樣的就會留著，不一樣的過一下會蓋回去。';
+    } else if (pz.kind === 'levers') {
+      const n = hard ? 4 : 3; S.time = hard ? 7 : 8; S.left = 0; S.on = false;
+      // 分散在房間各處：先挑離中心最遠的方向，再挑彼此最遠的
+      const ch = []; const far = t => ch.length ? Math.min(...ch.map(c => Math.hypot(c.x - t.x, c.z - t.z))) : Math.hypot(t.x - r.x, t.z - r.z);
+      for (let i = 0; i < n && tiles.length; i++) { const t = tiles.slice().sort((a, b) => far(b) - far(a))[0]; ch.push(t); tiles = tiles.filter(x => x !== t); }
+      S.levers = ch.map(t => {
+        const base = new (T().Mesh)(new (T().BoxGeometry)(0.7, 0.35, 0.5), mat('#4A4450')); base.position.set(t.x, 0.18, t.z); scene.add(base);
+        const arm = new (T().Group)(); arm.position.set(t.x, 0.35, t.z); scene.add(arm);
+        const stick = new (T().Mesh)(new (T().BoxGeometry)(0.1, 0.9, 0.1), mat('#8A7A5A')); stick.position.y = 0.45; arm.add(stick);
+        const knob = new (T().Mesh)(new (T().SphereGeometry)(0.13, 8, 6), mat('#C83A3A', '#FF5A3A')); knob.position.y = 0.92; arm.add(knob); arm.rotation.x = -0.6;
+        const rg = ring(scene, t.x, t.z, 0.9, 1.05, '#FFD86A', 0.45); R.addBox(t.x - 0.35, t.x + 0.35, t.z - 0.25, t.z + 0.25, 'deco'); pts.push([t.x, t.z]);
+        const L = { x: t.x, z: t.z, arm, knob, rg, on: false };
+        pz.inter.push({ x: t.x, z: t.z + 0.6, r: 1.5, label: '拉下拉桿', when: () => !pz.solved && !L.on, act: () => pull(pz, L) });
         return L;
       });
-      pz.lamps.sort((a, b) => a.x - b.x);   // 由左到右（連桿照這個順序）
-      pz.link = link;
-      if (link) pz.lamps.forEach((a, j) => { const b = pz.lamps[(j + 1) % 3]; if (j === 2) return; const ln = beam(sc, '#C8A0FF', 0.1, 1.1); ln.to(a.x, a.z, b.x, b.z); ln.material.opacity = 0.5; });
-      // 一開始：亂開幾盞（不會剛好對）
-      pz.lamps.forEach(l => { l.on = rnd() < 0.5; });
-      if (link) { pz.lamps.forEach(l => { l.on = false; }); press(pz, Math.floor(rnd() * 3), true); }
-      if (same(pz)) press(pz, 0, true);
-      paint(pz);
-    },
-    update(pz, dt, P, run) { pz.tg.rotation.y += dt * 1.2; pz.orb.rotation.y += dt * 0.8; }
-  };
-  const same = pz => pz.lamps.every(l => !!l.on === !!pz.want[l.i]);
-  const press = (pz, i, quiet) => {
-    const k = quiet ? i : pz.lamps.findIndex(l => l.i === i), a = pz.lamps[k];
-    a.on = !a.on; if (pz.link && k < 2) { const b = pz.lamps[k + 1]; b.on = !b.on; }
-    if (!quiet) { paint(pz); if (same(pz)) pz.solveNow(); }
-  };
-  const paint = pz => {
-    const c = [0, 0, 0]; pz.lamps.forEach(l => { if (l.on) c[l.i] = 1; l.m.emissiveIntensity = l.on ? 1.3 : 0.05; l.rg.material.opacity = l.on ? 0.85 : 0.2; });
-    const col = MIX(c); pz.orb.material.color.set(c.some(Boolean) ? col : '#202020'); pz.orb.material.emissive.set(col); pz.orb.material.emissiveIntensity = c.some(Boolean) ? 1.2 : 0;
-  };
-
-  // ---------- 注視之室：轉石像，讓每一尊都看著寶箱 ----------
-  EXT.gaze = {
-    name: '注視之室',
-    build(pz, K) {
-      const sc = K.scene, n = hard(K.run) ? 4 : 3, ch = pz.chest;
-      pz.hint = '「讓石像都看著寶箱。」（轉動石像，地上那道眼光會跟著轉。）';
-      const pos = n === 4 ? [[-0.75, 0.75], [0.0, 0.8], [0.8, 0.55], [-0.6, -0.1]] : [[-0.7, 0.7], [0.15, 0.8], [0.85, 0.4]];
-      pz.objs = [];
-      pz.statues = pos.map(([fx, fz]) => {
-        const [x, z] = K.spot(fx, fz, 0.4), good = Math.round(ang(x, z, ch.x, ch.z) / (Math.PI / 4)) & 7;
-        const g = new (T().Group)(); g.position.set(x, 0, z); sc.add(g);
-        const body = new (T().Mesh)(new (T().BoxGeometry)(0.7, 1.2, 0.6), K.mat('#7A7484')); body.position.y = 0.6; g.add(body);
-        const head = new (T().Mesh)(new (T().BoxGeometry)(0.5, 0.45, 0.45), K.mat('#8A8496')); head.position.y = 1.45; g.add(head);
-        const eyeM = K.mat('#FFD86A', '#FFD86A'); eyeM.emissiveIntensity = 1.2; eyeM.fog = false;
-        [-0.12, 0.12].forEach(dx => { const e = new (T().Mesh)(new (T().BoxGeometry)(0.08, 0.06, 0.04), eyeM); e.position.set(dx, 1.5, 0.24); g.add(e); });
-        R.addBox(x - 0.4, x + 0.4, z - 0.4, z + 0.4, 'deco'); pz.objs.push({ x, z });
-        let st; do { st = Math.floor(rnd() * 8); } while (st === good);
-        const s = { x, z, g, good, st, ln: beam(sc, '#FFD86A', 0.14, 0.08), eyeM };
-        pz.inter.push({ x, z, r: 1.7, label: '轉動石像', when: () => !pz.solved, act: () => { s.st = (s.st + 1) & 7; R.sfx && R.sfx('swing'); look(pz); } });
-        return s;
-      });
-      look(pz);
-    },
-    update(pz, dt, P, run) { const t = run.t || 0; pz.statues.forEach(s => { s.ln.material.opacity = (s.st === s.good ? 0.85 : 0.45) + 0.1 * Math.sin(t * 4 + s.x); }); }
-  };
-  const look = pz => {
-    const ch = pz.chest;
-    pz.statues.forEach(s => {
-      const a = s.st * Math.PI / 4; s.g.rotation.y = a;
-      if (s.st === s.good) { s.ln.to(s.x, s.z, ch.x, ch.z); s.ln.material.color.set('#FFE89A'); }
-      else { s.ln.to(s.x + Math.sin(a) * 0.5, s.z + Math.cos(a) * 0.5, s.x + Math.sin(a) * 2.6, s.z + Math.cos(a) * 2.6); s.ln.material.color.set('#C8A040'); }
-    });
-    if (pz.statues.every(s => s.st === s.good)) pz.solveNow();
-  };
-
-  // ---------- 記憶之室：踩石板看符號，找出一樣的兩塊 ----------
-  EXT.memory = {
-    name: '記憶之室',
-    build(pz, K) {
-      const n = hard(K.run) ? 8 : 6, cols = n / 2, sc = K.scene;
-      pz.hint = '「踩上石板，會浮出下面的符號。連續踩到兩塊一樣的，它們就會一直亮著。」';
-      const syms = []; for (let i = 0; i < n / 2; i++) syms.push(i, i); syms.sort(() => rnd() - 0.5);
-      pz.glyph = K.SYM.map((s, i) => K.glyphTex(i, K.SYMCOL[i])); pz.tex.push(...pz.glyph);
-      pz.objs = [];
-      pz.tiles = syms.map((sym, i) => {
-        const c = i % cols, row = Math.floor(i / cols), [x, z] = K.spot((c - (cols - 1) / 2) * (cols === 4 ? 0.36 : 0.45), row ? 0.75 : 0.15, 0.6);
-        const m = K.mat('#6A6478', '#C8A0FF'), t = new (T().Mesh)(new (T().BoxGeometry)(1.4, 0.1, 1.4), m); t.position.set(x, 0.05, z); t.receiveShadow = true; sc.add(t);
-        const rg = K.floorRing(x, z, 0.45, 0.62, '#C8A0FF', 0.3); rg.position.y = 0.11;
-        const sp = K.sprite(pz.glyph[sym], x, 1.2, z, 1.1); sp.visible = false;
-        pz.objs.push({ x, z });
-        return { x, z, sym, m, rg, sp, open: false, done: false, inside: false };
-      });
-      pz.first = null; pz.hideT = 0;
-    },
-    update(pz, dt, P, run) {
-      if (pz.hideT > 0) { pz.hideT -= dt; if (pz.hideT <= 0) { pz.tiles.forEach(t => { if (!t.done) { t.open = false; t.sp.visible = false; } }); pz.first = null; } }
-      let on = -1, bd = 1e9; pz.tiles.forEach((t, i) => { const d = Math.max(Math.abs(P.x - t.x), Math.abs(P.z - t.z)); if (d < (t.inside ? 1.0 : 0.75) && d < bd) { bd = d; on = i; } });
-      pz.tiles.forEach((t, i) => {
-        const inside = i === on;
-        if (inside && !t.inside && !t.done && !t.open && pz.hideT <= 0) {
-          t.open = true; t.sp.visible = true; R.sfx && R.sfx('ui');
-          if (!pz.first) pz.first = t;
-          else if (pz.first.sym === t.sym) { pz.first.done = t.done = true; pz.first = null; R.sfx && R.sfx('crystal'); if (pz.tiles.every(o => o.done)) pz.solveNow(); }
-          else { pz.hideT = 0.9; R.toast && R.toast('不一樣——石板又蓋回去了。', '#C8A0FF'); }
+      pz.hint = '「' + n + ' 支拉桿。拉下第一支之後，要在 ' + S.time + ' 秒內把全部拉下。」腳下的光圈縮到沒有之前，跑過去拉。';
+    } else if (pz.kind === 'push') {
+      const n = hard ? 3 : 2, t = F.tile, set = new Set(tiles.map(x => x.k)), used = new Set(), at = (tx, tz) => t.id(tx, tz);
+      const free = (tx, tz) => set.has(at(tx, tz)) && !used.has(at(tx, tz)) && !solidAt(t.cX(tx), t.cZ(tz));
+      S.rocks = []; S.plates = [];
+      const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      for (let i = 0; i < n * 20 && S.rocks.length < n; i++) {
+        const p0 = pick(tiles); if (!free(p0.tx, p0.tz)) continue;
+        // 壓板 → 往一個方向走 2 格是石頭，石頭後面一格要站得到（推的人站的地方）；難的再多一段橫的
+        const [dx, dz] = pick(DIRS), steps = 2;
+        let ok = true; const path = [];
+        for (let s = 1; s <= steps + 1; s++) { const tx = p0.tx + dx * s, tz = p0.tz + dz * s; if (!free(tx, tz)) { ok = false; break; } path.push([tx, tz]); }
+        if (!ok) continue;
+        let rock = path[steps - 1], stand = path[steps];
+        if (hard && rnd() < 0.6) {   // 先橫再直：石頭再往旁邊挪一格，要先往側面推一格
+          const [ex, ez] = dz ? [pick([1, -1]), 0] : [0, pick([1, -1])], r2 = [rock[0] + ex, rock[1] + ez], st2 = [rock[0] + 2 * ex, rock[1] + 2 * ez];
+          if (free(r2[0], r2[1]) && free(st2[0], st2[1])) { path.push(r2, st2); rock = r2; }
         }
-        t.inside = inside;
-        t.m.emissiveIntensity = t.done ? 0.9 : t.open ? 0.6 : 0.05; t.rg.material.opacity = t.done ? 0.9 : t.open ? 0.6 : 0.25; t.rg.material.color.set(t.done ? '#9AE07A' : '#C8A0FF');
-        if (t.sp.visible) t.sp.position.y = 1.2 + 0.08 * Math.sin((run.t || 0) * 3 + t.x);
-      });
+        used.add(at(p0.tx, p0.tz)); path.forEach(([a, b]) => used.add(at(a, b)));
+        const px = t.cX(p0.tx), pz0 = t.cZ(p0.tz), rx = t.cX(rock[0]), rz = t.cZ(rock[1]);
+        const pm = mat('#5A5466', '#9AF0FF'), plate = new (T().Mesh)(new (T().BoxGeometry)(1.7, 0.08, 1.7), pm); plate.position.set(px, 0.04, pz0); plate.receiveShadow = true; scene.add(plate);
+        const prg = ring(scene, px, pz0, 0.95, 1.1, '#9AF0FF', 0.35);
+        S.plates.push({ x: px, z: pz0, m: pm, rg: prg, on: false });
+        const rm = new (T().Mesh)(new (T().DodecahedronGeometry)(0.85, 0), mat('#7A7484', '#9AF0FF')); rm.position.set(rx, 0.8, rz); rm.castShadow = true; scene.add(rm);
+        const col = R.addBox(rx - 0.8, rx + 0.8, rz - 0.8, rz + 0.8, 'deco');
+        S.rocks.push({ x: rx, z: rz, x0: rx, z0: rz, tx: rock[0], tz: rock[1], tx0: rock[0], tz0: rock[1], m: rm, col, push: 0, anim: null });
+        pts.push([px, pz0], [rx, rz]);
+      }
+      if (!S.rocks.length) { pz.kind = 'memory'; return setup(scene, run, F, pz); }
+      S.set = set; S.t = t;
+      pz.hint = '「刻著符文的石頭要壓在發光的壓板上。」走過去頂著石頭就會推動一格。推不動了就摸石碑，石頭會回到原位。';
     }
+    // 石碑：換成這一種的說明（重石之室摸石碑＝石頭回到原位）
+    if (tab) { tab.label = pz.kind === 'push' ? '摸石碑（石頭回到原位）' : '看石碑'; tab.act = () => { if (pz.kind === 'push' && !pz.solved) { resetRocks(pz); R.toast('石碑亮了一下——石頭都回到原位了。', '#B8E07A'); return; } say(NAMES[pz.kind], pz.hint); }; }
+    pz.inter.forEach(it => { if (/封著/.test(String(it.label))) it.act = () => say(NAMES[pz.kind], '寶箱的鎖孔上有一圈發光的紋路。先解開這一區的機關。'); });
+    try { clearAt(pts); } catch (e) { }
   };
-  // 解開：puzzle.js 給的 solve（build 的時候記下來）
-  Object.keys(EXT).forEach(k => { const b = EXT[k].build; EXT[k].build = (pz, K) => { pz.solveNow = () => { if (!pz.solved) K.solve(); }; pz.tex = pz.tex || []; return b(pz, K); }; });
+  const pull = (pz, L) => {
+    const S = pz.p2; L.on = true; L.arm.rotation.x = 0.6; L.knob.material.color.set('#7AE07A'); L.knob.material.emissive.set('#3AC83A'); L.knob.material.emissiveIntensity = 0.8; L.rg.material.color.set('#7AE07A');
+    if (R.sfx) R.sfx('lock');
+    if (!S.on) { S.on = true; S.left = S.time; R.toast(S.time + ' 秒內把全部的拉桿拉下！', '#FFD86A'); }
+    if (S.levers.every(l => l.on)) { S.on = false; solve(pz); }
+  };
+  const resetLevers = pz => { const S = pz.p2; S.on = false; S.levers.forEach(L => { L.on = false; L.arm.rotation.x = -0.6; L.knob.material.color.set('#C83A3A'); L.knob.material.emissive.set('#FF5A3A'); L.knob.material.emissiveIntensity = 0; L.rg.material.color.set('#FFD86A'); L.rg.scale.setScalar(1); }); };
+  const moveRock = (rk, tx, tz, S) => {
+    rk.tx = tx; rk.tz = tz; const x = S.t.cX(tx), z = S.t.cZ(tz);
+    rk.col.on = false; rk.col = R.addBox(x - 0.8, x + 0.8, z - 0.8, z + 0.8, 'deco');
+    rk.anim = { x0: rk.x, z0: rk.z, x1: x, z1: z, t: 0 }; rk.x = x; rk.z = z;
+  };
+  const resetRocks = pz => { const S = pz.p2; S.rocks.forEach(rk => { if (rk.tx !== rk.tx0 || rk.tz !== rk.tz0) moveRock(rk, rk.tx0, rk.tz0, S); }); };
+
+  // ---------- 蓋樓層：puzzle.js 蓋好石碑、寶箱之後 ----------
+  const bf = R.buildFloor;
+  R.buildFloor = (scene, run, F) => { const out = bf(scene, run, F); try { (F.puzzles || []).forEach(pz => { if (mine(pz.kind)) setup(scene, run, F, pz); }); } catch (e) { console.warn('[puzzle2]', e); } return out; };
+
+  // ---------- 每一格 ----------
+  const st0 = R.step;
+  R.step = dt => {
+    const out = st0(dt), F = W.F, P = W.P, run = W.run;
+    if (!run || !F || !F.puzzles || !P) return out;
+    // 想往哪邊走（方向鍵、搖桿換成世界座標，和 run.js 一樣）：頂著石頭的時候人其實走不動，所以看按鍵不看位移
+    const I = R.input || { keys: {} }; let ix = 0, iz = 0; if (I.keys.w || I.keys.arrowup) iz -= 1; if (I.keys.s || I.keys.arrowdown) iz += 1; if (I.keys.a || I.keys.arrowleft) ix -= 1; if (I.keys.d || I.keys.arrowright) ix += 1; if (I.moveStick) { ix += I.moveStick.x; iz += I.moveStick.y; }
+    const cy = Math.cos(W.cam ? W.cam.yaw : 0), sy = Math.sin(W.cam ? W.cam.yaw : 0), mvx = ix * cy + iz * sy, mvz = -ix * sy + iz * cy;
+    F.puzzles.forEach(pz => {
+      const S = pz.p2; if (!S || pz.solved) return;
+      if (pz.kind === 'memory' && S.tiles) {
+        if (S.hide > 0) { S.hide -= dt; if (S.hide <= 0) { S.flip.forEach(tl => { tl.open = false; tl.sp.visible = false; tl.m.emissiveIntensity = 0; }); S.flip = []; } }
+        let on = -1, bd = 1e9; S.tiles.forEach((tl, i) => { const d = Math.max(Math.abs(P.x - tl.x), Math.abs(P.z - tl.z)); if (d < (tl.inside ? 1.05 : 0.8) && d < bd) { bd = d; on = i; } });
+        S.tiles.forEach((tl, i) => {
+          const inside = i === on;
+          if (inside && !tl.inside && !tl.open && !tl.done && S.hide <= 0) {
+            tl.open = true; tl.sp.visible = true; tl.m.emissiveIntensity = 0.7; S.flip.push(tl); if (R.sfx) R.sfx('ui');
+            if (S.flip.length === 2) {
+              const [a, b] = S.flip;
+              if (a.sym === b.sym) { a.done = b.done = true; a.rg.material.opacity = b.rg.material.opacity = 0.9; a.m.emissiveIntensity = b.m.emissiveIntensity = 1; S.flip = []; if (R.sfx) R.sfx('magic'); if (S.tiles.every(t => t.done)) solve(pz); }
+              else { S.hide = 0.9; fail(pz, '圖案不一樣……石板慢慢蓋回去了。', 2); }
+            }
+          }
+          tl.inside = inside;
+          if (tl.done) tl.sp.position.y = 1.0 + Math.sin((run.t || 0) * 2 + i) * 0.08;
+        });
+      } else if (pz.kind === 'levers' && S.levers) {
+        if (S.on) {
+          S.left -= dt; const k = Math.max(0, S.left / S.time);
+          S.levers.forEach(L => { if (!L.on) { L.rg.scale.setScalar(0.25 + 0.75 * k); L.rg.material.opacity = 0.45 + 0.4 * Math.sin((run.t || 0) * 12); } });
+          if (S.left <= 0) { resetLevers(pz); fail(pz, '來不及——拉桿全部彈回去了。……牆上的眼睛張開了一點。', 5); }
+        }
+      } else if (pz.kind === 'push' && S.rocks) {
+        S.rocks.forEach(rk => {
+          if (rk.anim) { const a = rk.anim; a.t += dt / 0.25; const u = Math.min(1, a.t); rk.m.position.set(a.x0 + (a.x1 - a.x0) * u, 0.8, a.z0 + (a.z1 - a.z0) * u); rk.m.rotation.z += dt * 4; if (u >= 1) rk.anim = null; return; }
+          const dx = rk.x - P.x, dz = rk.z - P.z, d = Math.hypot(dx, dz), sp = Math.hypot(mvx, mvz);
+          // 頂著石頭（貼著、往石頭的方向走）0.25 秒：推一格
+          if (d < 1.45 && sp > 0.001 && (mvx * dx + mvz * dz) / (sp * d) > 0.6) {
+            rk.push += dt;
+            if (rk.push > 0.25) {
+              rk.push = 0; const ax = Math.abs(dx) > Math.abs(dz), sx = ax ? Math.sign(dx) : 0, sz = ax ? 0 : Math.sign(dz), nx = rk.tx + sx, nz = rk.tz + sz, k = S.t.id(nx, nz);
+              const blocked = !S.set.has(k) || S.rocks.some(o => o !== rk && o.tx === nx && o.tz === nz) || solidAt(S.t.cX(nx), S.t.cZ(nz), S.rocks.map(o => o.col));
+              if (blocked) { if (!rk.told) { rk.told = 1; R.toast('推不動——那邊是牆或另一顆石頭。推錯了就摸石碑讓石頭回去。', '#B8B0A0'); } }
+              else { moveRock(rk, nx, nz, S); if (R.sfx) R.sfx('hit'); }
+            }
+          } else rk.push = 0;
+        });
+        let all = true;
+        S.plates.forEach(pl => { const on = S.rocks.some(rk => !rk.anim && Math.hypot(rk.x - pl.x, rk.z - pl.z) < 0.6); if (on !== pl.on) { pl.on = on; pl.m.emissiveIntensity = on ? 1 : 0; pl.rg.material.opacity = on ? 0.9 : 0.35; if (on && R.sfx) R.sfx('lock'); } if (!on) all = false; });
+        if (all) solve(pz);
+      }
+    });
+    return out;
+  };
+  // 換樓層：Sprite、貼圖丟掉
+  const lf = R.loadFloor;
+  R.loadFloor = (f, o) => { const F = W.F; if (F && F.puzzles) F.puzzles.forEach(pz => { const S = pz.p2; if (!S) return; (S.tiles || []).forEach(t => t.sp.material.dispose()); (S.tex || []).forEach(t => t.dispose()); }); return lf(f, o); };
 })(window.R);
