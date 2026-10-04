@@ -366,7 +366,7 @@
       const advs = (R.ADV[cls] || []).filter(a => !a.legacy || a.id === st.adv).map(a => a.id).sort((a, b) => (b === st.adv) - (a === st.adv));
       const gk = id => { const s = info(id) || {}; return s.taught ? 'taught' : s.adv2 ? 'adv2' : (s.adv || null); };   // 二次轉職的技能（promote2.js）也自己一段   // 望月瀧教的（takiteach.js）自己一段
       return [null].concat(advs, ['adv2', 'taught']).map(r => {
-        const list = ids.filter(id => gk(id) === r); if (!list.length) return '';
+        const list = ids.filter(id => gk(id) === r && !(r === 'adv2' && info(id).adv && info(id).adv !== st.adv)); if (!list.length) return '';   // 二轉的覺醒技能只列你走的那條路線的（adv2plus.js：每條路線各有兩招）
         const a = r && r !== 'taught' && r !== 'adv2' && R.ADV[cls].find(x => x.id === r), got = list.filter(id => known(cls, st, id)), mine = r === 'taught' || r === 'adv2' ? got.length > 0 : (!r || r === st.adv || !st.adv);
         const title = r === 'taught' ? '望月瀧教的' : r === 'adv2' ? (R.adv2Title ? R.adv2Title(cls, st) : '二次轉職') : r ? '轉職・' + a.name + (r === st.adv ? '（你的路線）' : st.adv ? '（別的路線）' : '（職業等級 ' + R.PROMOTE_LV + ' 轉職以後）') : '基本・' + R.CLASSES[cls].name;
         return '<details class="sb-group"' + (mine ? ' open' : '') + '><summary><b>' + esc(title) + '</b> <small>學會 ' + got.length + '／' + list.length + '</small></summary><div class="recipes sb-list">'

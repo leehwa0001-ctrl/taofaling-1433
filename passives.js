@@ -64,12 +64,12 @@
     });
   });
   const BY = {}; LIST.forEach(p => { BY[p.id] = p; });
-  R.PASSIVES = BY;
+  R.PASSIVES = BY; R.PASSIVE_LIST = LIST;   // adv2plus.js 加二轉的被動（p.adv2：選了哪一個二轉才學得會；p.adv：限哪一條轉職路線）
 
   // ---------- 學會、裝上 ----------
   const st = cls => R.S.classes[cls];
   const slots = cls => SLOT_LV.filter(l => (st(cls) ? st(cls).lv : 1) >= l).length;
-  const learned = (cls, id) => { const p = BY[id], S = R.S; if (!p) return false; if (p.cls === '*') return (S.pvBought || []).includes(id); return p.cls === cls && (st(cls) ? st(cls).lv : 1) >= p.lv; };
+  const learned = (cls, id) => { const p = BY[id], S = R.S; if (!p) return false; if (p.cls === '*') return (S.pvBought || []).includes(id); return p.cls === cls && (st(cls) ? st(cls).lv : 1) >= p.lv && (!p.adv2 || !!(st(cls) && st(cls).adv2 === p.adv2 && (!p.adv || p.adv === st(cls).adv))); };
   R.passivesOf = cls => {
     const S = R.S; S.pvEquip = S.pvEquip || {};
     let eq = (S.pvEquip[cls] || []).filter(id => learned(cls, id)).slice(0, slots(cls));
@@ -144,18 +144,18 @@
   R.gainXp = v => {
     const S = R.S, cls = S.cls, s = st(cls), lv0 = s.lv; gx(v);
     if (s.lv === lv0) return;
-    const got = LIST.filter(p => p.cls === cls && p.lv > lv0 && p.lv <= s.lv), slot = SLOT_LV.some(l => l > lv0 && l <= s.lv);
+    const got = LIST.filter(p => p.cls === cls && p.lv > lv0 && p.lv <= s.lv && learned(cls, p.id)), slot = SLOT_LV.some(l => l > lv0 && l <= s.lv);
     if (got.length || slot) setTimeout(() => R.banner(got.length ? '學會新的被動：' + got.map(p => p.name).join('、') : '被動欄多了一格', '回到城裡，在暫停選單或公會的「被動技能」換上去'), 5200);
   };
 
   // ---------- 被動技能的畫面 ----------
   const sheet = (host, where, close) => {
     const S = R.S, cls = S.cls, s = st(cls), eq = R.passivesOf(cls), n = slots(cls), atGuild = where === 'hub';
-    const mine = LIST.filter(p => p.cls === cls), common = LIST.filter(p => p.cls === '*');
+    const mine = LIST.filter(p => p.cls === cls && (!p.adv || p.adv === s.adv)), common = LIST.filter(p => p.cls === '*');
     const card = p => {
       const ok = learned(cls, p.id), on = eq.includes(p.id);
       const btn = ok ? '<button type="button" class="btn' + (on ? '' : ' pri') + '" data-pv="' + p.id + '"' + (!on && eq.length >= n ? ' disabled' : '') + '>' + (on ? '卸下' : '裝上') + '</button>'
-        : p.cls === '*' ? '<button type="button" class="btn" data-learn="' + p.id + '"' + (!atGuild || S.gold < p.cost ? ' disabled' : '') + '>學（' + p.cost + ' 費拉）</button>' : '<span class="note">職業等級 ' + p.lv + ' 學會</span>';
+        : p.cls === '*' ? '<button type="button" class="btn" data-learn="' + p.id + '"' + (!atGuild || S.gold < p.cost ? ' disabled' : '') + '>學（' + p.cost + ' 費拉）</button>' : '<span class="note">' + esc(p.need || '職業等級 ' + p.lv + ' 學會') + '</span>';
       return '<div class="recipe pv-card' + (on ? ' on' : '') + (ok ? '' : ' lock') + '"><b>' + esc(p.name) + '</b><small>' + esc(p.desc) + '</small>' + btn + '</div>';
     };
     host.innerHTML = '<h2>被動技能・' + esc(R.clsName(cls)) + ' Lv ' + s.lv + '</h2><p class="note">被動欄 ' + eq.length + '／' + n + '（職業等級 ' + SLOT_LV.join('、') + ' 各開一格）。職業的被動照等級自動學會；共通的被動要在公會的訓練場花錢學，學一次每個職業都能用。進了遺跡就不能換。</p>'
