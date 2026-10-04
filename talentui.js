@@ -58,6 +58,9 @@
       case 'T_amp2': up(5, '#D8B8FF'); up(9, '#B88AFF'); up(13, '#8A5AD8'); break;
       case 'T_capC2': poly([[1, 8], [8, 3], [15, 8], [8, 13]], '#F0E6C8'); circ(8, 8, 3, '#C88A2A'); circ(8, 8, 1.4, '#1A1A1E'); [[8, 0], [2, 2], [14, 2]].forEach(([a, b]) => ln(8, 3, a, b, '#FFD27A', 1)); break;
       case 'T_xp': star(8, 8.5, 7, '#E8C04A'); star(8, 8.5, 3.5, '#FFF0B0'); break;
+      case 'T_trA1': case 'T_trA2': case 'T_trB1': case 'T_trB2': case 'T_trC1': case 'T_trC2': {   // 增益減益參半：天秤，左邊綠、右邊紅
+        const c = { A: '#FF8A7A', B: '#8AC0FF', C: '#C8A8FF' }[id[4]]; ln(8, 2, 8, 13, '#C8C0B0', 1.5); ln(2, 4, 14, 4, c, 1.5); P(5, 13, 6, 2, '#8A8070');
+        ln(2, 4, 1, 9, '#7AE07A', 1); ln(2, 4, 4, 9, '#7AE07A', 1); P(0, 9, 5, 2, '#7AE07A'); ln(14, 4, 12, 9, '#FF6A5A', 1); ln(14, 4, 15, 9, '#FF6A5A', 1); P(11, 9, 5, 2, '#FF6A5A'); break; }
       default: star(8, 8, 6, '#C8C0B0');
     }
     return (cache[id] = c.toDataURL());
@@ -67,6 +70,8 @@
   const ROW = 62, XPAD = 8.333;
   const layout = T => {
     const out = [], lines = [], colX = [100 / 6, 50, 500 / 6];
+    // 分支的格數（2026-10-04 多了增益減益參半的一格）：奧義、歷練跟著往下
+    const M = Math.max(2, ...T.PATHS.map(p => Math.max(...p.subs.map(s => s.nodes.length)))), capY = 5.45 + M, xpY = capY + 1.1;   // 兩格時：奧義 7.45、歷練 8.55（原本的位置）
     T.ROOT.forEach((n, i) => out.push({ n, x: 50 + (i - (T.ROOT.length - 1) / 2) * 15, y: 0.55, col: '#E8C04A', where: '根基' }));
     const hub = [50, 1.35];
     T.ROOT.forEach((n, i) => lines.push({ a: [50 + (i - (T.ROOT.length - 1) / 2) * 15, 0.55], b: hub, to: null, root: 1 }));
@@ -77,11 +82,11 @@
       p.subs.forEach((s, si) => {
         const sx = px + (si ? XPAD : -XPAD);
         s.nodes.forEach((n, i) => { out.push({ n, x: sx, y: 5.3 + i, col: p.c, where: p.n + '・' + s.n }); lines.push(i ? { a: [sx, 4.3 + i], b: [sx, 5.3 + i], to: n } : { a: [px, 4.1], b: split, to: n, half: 1 }, ...(i ? [] : [{ a: split, b: [sx, 5.3], to: n }])); });
-        out.push({ n: s.cap, x: sx, y: 7.45, col: p.c, where: p.n + '・' + s.n, cap: 1 }); lines.push({ a: [sx, 6.3], b: [sx, 7.45], to: s.cap });
-        lines.push({ a: [sx, 7.45], b: [sx, 8.55], to: T.XP, faint: 1 });
+        out.push({ n: s.cap, x: sx, y: capY, col: p.c, where: p.n + '・' + s.n, cap: 1 }); lines.push({ a: [sx, 4.3 + s.nodes.length], b: [sx, capY], to: s.cap });
+        lines.push({ a: [sx, capY], b: [sx, xpY], to: T.XP, faint: 1 });
       });
     });
-    return { nodes: out, lines, h: 9.2 };
+    return { nodes: out, lines, h: xpY + 0.65, xpY };
   };
 
   // ---------- 畫面 ----------
@@ -106,9 +111,9 @@
     const L = layout(T), H = Math.round(L.h * ROW), vb = L.h * 10;
     const lit = n => { if (!n) return true; const s = stateOf(n); return s.v > 0 || !s.w || s.full; };
     const svg = '<svg class="tu-lines" viewBox="0 0 100 ' + vb + '" preserveAspectRatio="none" aria-hidden="true">' + L.lines.map(l => '<line x1="' + l.a[0] + '" y1="' + l.a[1] * 10 + '" x2="' + l.b[0] + '" y2="' + l.b[1] * 10 + '" class="' + (lit(l.to) ? 'lit' : '') + (l.faint ? ' faint' : '') + '"/>').join('') + '</svg>';
-    const nodes = L.nodes.map(o => { const s = stateOf(o.n); return '<button type="button" class="tu-n' + s.cls + (o.cap ? ' cap' : '') + (sel && sel.k === 'tal' && sel.id === o.n.id ? ' sel' : '') + '" data-tun="' + o.n.id + '" style="left:' + o.x + '%;top:' + Math.round(o.y * ROW) + 'px;--tc:' + o.col + '" title="' + esc(o.n.n) + '"><img src="' + tIcon(o.n.id) + '" alt=""><i>' + s.v + (o.n.mx > 99 ? '' : '/' + o.n.mx) + '</i></button>'; }).join('');
+    const nodes = L.nodes.map(o => { const s = stateOf(o.n); return '<button type="button" class="tu-n' + s.cls + (o.cap ? ' cap' : '') + (o.n.tr ? ' tr' : '') + (sel && sel.k === 'tal' && sel.id === o.n.id ? ' sel' : '') + '" data-tun="' + o.n.id + '" style="left:' + o.x + '%;top:' + Math.round(o.y * ROW) + 'px;--tc:' + o.col + '" title="' + esc(o.n.n) + '"><img src="' + tIcon(o.n.id) + '" alt=""><i>' + s.v + (o.n.mx > 99 ? '' : '/' + o.n.mx) + '</i></button>'; }).join('');
     const xs = stateOf(T.XP);
-    const xp = '<button type="button" class="tu-xp' + xs.cls + (sel && sel.id === T.XP.id ? ' sel' : '') + '" data-tun="' + T.XP.id + '" style="top:' + Math.round(8.55 * ROW) + 'px"><span>★</span><b>歷練</b><em>' + xs.v + '</em><small>' + esc(T.XP.d) + '／級</small><span>★</span></button>';
+    const xp = '<button type="button" class="tu-xp' + xs.cls + (sel && sel.id === T.XP.id ? ' sel' : '') + '" data-tun="' + T.XP.id + '" style="top:' + Math.round(L.xpY * ROW) + 'px"><span>★</span><b>歷練</b><em>' + xs.v + '</em><small>' + esc(T.XP.d) + '／級</small><span>★</span></button>';
     return '<div class="tu-hd"><b>根基</b></div><div class="tu-canvas" style="height:' + (H + 30) + 'px">' + svg + nodes + xp
       + T.PATHS.map((p, i) => '<span class="tu-pl" style="left:' + [100 / 6, 50, 500 / 6][i] + '%;top:' + Math.round(1.55 * ROW) + 'px;--tc:' + p.c + '">' + esc(p.n) + '</span>' + p.subs.map((s, si) => '<span class="tu-sl" style="left:' + ([100 / 6, 50, 500 / 6][i] + (si ? XPAD : -XPAD)) + '%;top:' + Math.round(4.85 * ROW) + 'px;--tc:' + p.c + '">' + esc(s.n) + '</span>').join('')).join('')
       + '</div>';
@@ -124,7 +129,7 @@
     }
     const n = BY[sel && sel.id] || T.ROOT[0], s = stateOf(n), o = layout(T).nodes.find(q => q.n === n), col = o ? o.col : '#E8C04A';
     return '<div class="tu-dt' + (o && o.cap ? ' cap' : '') + '" style="--tc:' + col + '"><div class="tu-big"><img src="' + tIcon(n.id) + '" alt=""></div><h4>' + esc(n.n) + '</h4><div class="tu-lv">' + s.v + (n.mx > 99 ? ' 級' : ' ／ ' + n.mx) + '</div><hr>'
-      + '<p>每級：' + esc(n.d) + '</p><p class="tu-meta">' + esc(o ? o.where : '歷練') + (o && o.cap ? '・奧義只能學一個' : '') + '</p>'
+      + (n.tr ? '<p>每級：<span class="tu-pos">' + esc(n.d.split('｜')[0]) + '</span><br><span class="tu-neg">代價：' + esc(n.d.split('｜')[1] || '') + '</span></p>' : '<p>每級：' + esc(n.d) + '</p>') + '<p class="tu-meta">' + esc(o ? o.where : '歷練') + (o && o.cap ? '・奧義只能學一個' : '') + '</p>'
       + (s.full ? '<p class="tu-ok">滿級</p>' : s.w ? '<p class="tu-why">' + esc(s.w) + '</p>' : '<button type="button" class="btn pri" data-tuadd="' + n.id + '"' + (free > 0 ? '' : ' disabled') + '>+1' + (free > 0 ? '' : '（沒有點數）') + '</button>')
       + '</div>';
   };
@@ -177,6 +182,7 @@
     '.tu-n.on{border-color:var(--tc);background:color-mix(in srgb,var(--tc) 22%,#141018)}.tu-n.on i{color:var(--tc);border-color:var(--tc)}',
     '.tu-n.full{border-color:#E8C04A;box-shadow:0 0 0 2px rgba(232,192,74,.25)}.tu-n.full i{color:#E8C04A;border-color:#E8C04A}',
     '.tu-n.cap{width:52px;height:52px;border-radius:50%;border-width:3px;border-color:color-mix(in srgb,var(--tc) 60%,#E8C04A)}.tu-n.cap img{width:34px;height:34px}',
+    '.tu-n.tr{border-style:dashed}.tu-n.tr::before{content:"±";position:absolute;left:-6px;top:-8px;font-size:10px;font-weight:700;line-height:13px;color:#FF9A6A;background:#141018;border:1px solid #6A4A40;border-radius:6px;padding:0 3px;z-index:1}.tu-pos{color:#9AE07A}.tu-neg{color:#FF8A6A}',
     '.tu-n.off{opacity:.3}.tu-n.sel{outline:3px solid #FFF0C0;outline-offset:3px}.tu-n:hover{transform:translate(-50%,-50%) scale(1.07)}',
     '.tu-pl,.tu-sl{position:absolute;transform:translate(-50%,-50%);font-family:var(--serif);font-weight:700;font-size:12.5px;color:var(--tc);background:var(--bg2);padding:0 6px;border-radius:6px;white-space:nowrap;z-index:1}.tu-sl{font-size:11px;font-weight:400}',
     '.tu-xp{position:absolute;left:2%;right:2%;transform:translateY(-50%);display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:9px;background:#18141C;border:2px solid #4A4450;color:var(--dim);cursor:pointer;font:inherit}',
