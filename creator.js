@@ -34,31 +34,37 @@
     if (k !== sheetKey) { sheet = R.heroSheetCanvas(look); sheetKey = k; }
     let t = 0;
     const draw = () => {
-      const x = cv.getContext('2d'), S = 5, fr = [0, 1, 0, 2][t++ % 4];
+      const x = cv.getContext('2d'), S = 5, fr = [0, 1, 0, 2][t++ % 4], k = R.lookScale ? R.lookScale(st.look) : { x: 1, y: 1 };
       x.imageSmoothingEnabled = false; x.clearRect(0, 0, cv.width, cv.height);
-      [0, 2, 1].forEach((dir, i) => x.drawImage(sheet, fr * 24, dir * 30, 24, 30, i * 24 * S, 0, 24 * S, 30 * S));
+      [0, 2, 1].forEach((dir, i) => { const w = 24 * S * k.x, hh = 30 * S * k.y; x.drawImage(sheet, fr * 24, dir * 30, 24, 30, i * 24 * S + (24 * S - w) / 2, cv.height - hh, w, hh); });   // 身高、體格（lookplus.js）
     };
     draw(); clearInterval(timer); timer = setInterval(() => { if (!cv.isConnected) { clearInterval(timer); return; } draw(); }, 240);
   };
   const sw = (key, list, cur, dis) => '<div class="swatches">' + list.map(c => '<button type="button" class="sw' + (c === cur ? ' on' : '') + '" data-k="' + key + '" data-v="' + c + '" style="--c:' + c + '" aria-label="' + c + '"' + (dis ? ' disabled' : '') + '></button>').join('') + '</div>';
   const chips = (key, list, cur, dis) => '<div class="chips">' + list.map(([v, n]) => '<button type="button" class="chip' + (v === cur ? ' on' : '') + '" data-k="' + key + '" data-v="' + v + '"' + (dis ? ' disabled' : '') + '>' + esc(n) + '</button>').join('') + '</div>';
   const lookStep = h => {
-    const r = R.RACES[st.race], L = st.look, bald = !!r.look.bald, fixedHair = !!r.hairCol;
-    h.innerHTML = '<div class="creator"><div class="cr-prev"><canvas id="cr-cv" width="360" height="150"></canvas><p class="note"><b style="color:' + R.TIERS[r.tier].color + '">' + esc(r.tier) + '・' + esc(r.name) + '</b>　' + esc(R.raceBonusText(st.race).join('・')) + '</p></div>'
+    const r = R.RACES[st.race], L = st.look, bald = !!r.look.bald, fixedHair = !!r.hairCol, O = R.LOOK_OPTS, FCOL = { ears: 'earCol', horns: 'hornCol', wings: 'wingCol', tail: 'tailCol' };
+    h.innerHTML = '<div class="creator"><div class="cr-prev"><canvas id="cr-cv" width="360" height="166"></canvas><p class="note"><b style="color:' + R.TIERS[r.tier].color + '">' + esc(r.tier) + '・' + esc(r.name) + '</b>　' + esc(R.raceBonusText(st.race).join('・')) + '</p></div>'
       + '<div class="cr-opts">'
       + '<label class="field">名字<input id="cr-name" maxlength="12" value="' + esc(st.name) + '"><button type="button" class="mini" id="cr-rname">換一個</button></label>'
-      + '<h3>髮型</h3>' + (bald ? '<p class="note">' + esc(r.name) + '沒有頭髮。</p>' : chips('hs', HS, L.hs))
+      + '<h3>髮型</h3>' + (bald ? '<p class="note">' + esc(r.name) + '沒有頭髮。</p>' : chips('hs', HS.concat(O ? O.HAIR_NEW : []), L.hs))
       + '<h3>髮色</h3>' + (fixedHair ? '<p class="note">' + esc(r.name) + '的頭髮是天生的顏色。</p>' : sw('hair', (r.hairs || []).concat(HAIR.filter(c => !(r.hairs || []).includes(c))), L.hair, bald && !r.look.leaves))
       + '<h3>膚色</h3>' + sw('skin', r.skins, L.skin)
       + '<h3>眼睛</h3>' + sw('eye', EYES, L.eye)
-      + '<h3>衣服</h3>' + sw('top', CLOTH, L.top) + '<h3>披風</h3>' + sw('cloak', CLOTH, L.cloak)
+      + (O ? '<h3>臉</h3><p class="note cr-sub">眉毛</p>' + chips('brow', O.BROW, L.brow || '') + '<p class="note cr-sub">瞳孔</p>' + chips('pupil', O.PUPIL, L.pupil || '') + '<p class="note cr-sub">表情</p>' + chips('mouth', O.MOUTH, L.mouth || '')
+        + '<h3>體型</h3><p class="note cr-sub">身高</p>' + chips('height', O.HEIGHT, L.height || '') + '<p class="note cr-sub">體格</p>' + chips('build', O.BUILD, L.build || '') : '')
+      + '<h3>上衣</h3>' + (O ? chips('topStyle', O.TOP, L.topStyle || '') : '') + sw('top', CLOTH, L.top)
+      + (O && ['vest', 'coat', 'kimono'].includes(L.topStyle) ? '<p class="note cr-sub">' + (L.topStyle === 'kimono' ? '腰帶' : '裡面的襯衫') + '</p>' + sw('top2', CLOTH, L.top2 || '#E8E4DA') : '')
+      + '<h3>披風</h3>' + sw('cloak', CLOTH, L.cloak)
+      + (O ? '<h3>褲子</h3>' + chips('pantsStyle', O.PANTS, L.pantsStyle || '') + sw('pants', CLOTH, L.pants || '') + '<h3>鞋子</h3>' + chips('shoeStyle', O.SHOES, L.shoeStyle || '') + sw('shoe', O.SHOE_COL, L.shoe || '') : '')
+      + (O && R.raceFeatureOpts ? R.raceFeatureOpts(st.race).map(f => '<h3>' + esc(f.n) + '</h3>' + (f.styles.length > 1 ? chips(f.key, f.styles, L[f.key] || f.def) : '') + sw(FCOL[f.key], O.FEAT_COL, L[FCOL[f.key]] || '')).join('') : '')
       + '<h3>配件</h3>' + chips('acc', ACC, L.acc) + (L.acc !== 'none' && L.acc !== 'glasses' && L.acc !== 'eyepatch' && L.acc !== 'earring' ? sw('accCol', ACCC, L.accCol) : '')
       + '</div></div><div class="row"><button type="button" class="btn" id="cr-rand">全部隨機</button><button type="button" class="btn pri" id="cr-next">下一步：登記武器</button></div>';
     preview($('cr-cv'));
     $('cr-name').oninput = e => { st.name = e.target.value.trim(); };
     $('cr-rname').onclick = () => { st.name = R.randomName(st.race); $('cr-name').value = st.name; };
     h.querySelectorAll('[data-k]').forEach(b => { b.onclick = () => { st.look[b.dataset.k] = b.dataset.v; lookStep(h); }; });
-    $('cr-rand').onclick = () => { st.look = defaultLook(st.race); if (!bald) st.look.hs = pick(HS.slice(0, 8))[0]; st.look.acc = pick(ACC)[0]; st.look.accCol = pick(ACCC); st.look.eye = r.eye || pick(EYES); st.name = R.randomName(st.race); lookStep(h); };
+    $('cr-rand').onclick = () => { st.look = defaultLook(st.race); if (!bald) st.look.hs = pick(HS.slice(0, 8))[0]; st.look.acc = pick(ACC)[0]; st.look.accCol = pick(ACCC); st.look.eye = r.eye || pick(EYES); if (O) { const pv = l => pick(l)[0]; Object.assign(st.look, { brow: pv(O.BROW), pupil: pv(O.PUPIL), mouth: pv(O.MOUTH), height: pv(O.HEIGHT), build: pv(O.BUILD), topStyle: pv(O.TOP), pantsStyle: pv(O.PANTS), shoeStyle: pv(O.SHOES), pants: pick(CLOTH), shoe: pick(O.SHOE_COL), top2: pick(CLOTH) }); if (!bald && Math.random() < 0.4) st.look.hs = pv(O.HAIR_NEW); } st.name = R.randomName(st.race); lookStep(h); };
     if (st.edit) {
       // 重新捏角：照好了才換；「不換了」什麼都不改。從公會打開的回到公會，其他回到街上（或建築物裡）
       const leave = msg => { clearInterval(timer); if (st.from === 'hub') { R.showScreen('hub'); R.hub(); if (msg && R.say) R.say(msg); } else { R.backToTown(); if (msg) R.toast(msg); } };
@@ -71,7 +77,7 @@
   };
   const clsStep = h => {
     const g0 = R.regGroup(st.cls), d0 = R.CLASSES[st.cls];
-    h.innerHTML = '<div class="creator"><div class="cr-prev"><canvas id="cr-cv" width="360" height="150"></canvas><p class="note"><b>' + esc(st.name) + '</b>・' + esc(R.RACES[st.race].name) + '</p>'
+    h.innerHTML = '<div class="creator"><div class="cr-prev"><canvas id="cr-cv" width="360" height="166"></canvas><p class="note"><b>' + esc(st.name) + '</b>・' + esc(R.RACES[st.race].name) + '</p>'
       + '<p class="note">登記：<b>' + esc(R.regName(st.cls, st.weapon)) + '</b>　公會分類：' + esc(g0.group) + '（' + esc(d0.name) + '）<br>生命 ' + d0.hp + '・魔力 ' + d0.mp + '・' + esc(d0.desc) + '<br><span style="color:var(--gold)">轉職：' + esc(R.ADV[st.cls].map(a => a.name).join('／')) + '</span></p></div>'
       + '<div class="cr-opts"><div class="reg-groups">'
       + R.REG.map(g => { const d = R.CLASSES[g.cls]; return '<div class="reg-group" style="--c:' + d.color + '"><h4>' + esc(g.group) + '<small>' + esc(d.name) + '</small></h4><div class="reg-list">'

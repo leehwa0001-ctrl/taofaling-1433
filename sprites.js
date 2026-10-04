@@ -14,6 +14,9 @@
   R.PIX = { PX, TILT, TOP, LOOKY: 3 * PX * TILT };
   const cvs = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
   const rgb = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+  // 種族特徵換色：原本那一格比原本的基準色亮多少、暗多少，就把指定的顏色調亮、調暗多少
+  const lum = h => { const [r, g, b] = rgb(h); return 0.3 * r + 0.59 * g + 0.11 * b; };
+  const tint = (c, base, ref) => (base ? shade(base, Math.max(-0.85, Math.min(0.85, (lum(c) - lum(ref || c)) / 255 * 1.4))) : c);
   const shade = (h, k) => '#' + rgb(h).map(v => Math.max(0, Math.min(255, Math.round(k > 0 ? v + (255 - v) * k : v * (1 + k))))).map(v => v.toString(16).padStart(2, '0')).join('');
   const OUT = '#1A1418';
   let seed = 1; const srnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
@@ -59,11 +62,12 @@
       cloak: o.hood ? '#3A322C' : o.cloak,
       top: body === 'heavy' ? '#AEB6C0' : body === 'medium' ? '#7E8894' : o.top, plate: body === 'heavy', chain: body === 'medium',
       pants: { heavy: '#8E969F', medium: '#5F6873', light: '#6A5A48' }[w('legs')] || o.pants || '#3A3D48',
-      shoe: { heavy: '#7F868E', medium: '#5A3A22', light: '#C8A860' }[w('feet')] || '#2A231D',
+      shoe: { heavy: '#7F868E', medium: '#5A3A22', light: '#C8A860' }[w('feet')] || o.shoe || '#2A231D',
       head: hood ? null : helm, weapon: o.weapon, shield: o.shield,
       hs: rc.bald ? 'bald' : o.hs || 'short', acc: o.acc || null, accCol: o.accCol || '#C8323A',
       hood: hood ? (o.hood ? '#3A322C' : rc.hoodCol || '#C8A870') : null,
-      ears: hood || helm ? null : rc.ears, horns: hood ? null : rc.horns, wings: o.hood ? null : rc.wings, halo: o.hood ? null : rc.halo, tail: o.hood ? null : rc.tail,
+      ears: hood || helm ? null : (rc.ears && o.ears ? o.ears : rc.ears), horns: hood ? null : (rc.horns && o.horns ? o.horns : rc.horns), wings: o.hood ? null : (rc.wings && o.wings ? o.wings : rc.wings), halo: o.hood ? null : rc.halo, tail: o.hood ? null : (rc.tail && o.tail ? o.tail : rc.tail),
+      earCol: rc.ears ? o.earCol || null : null, hornCol: rc.horns ? o.hornCol || null : null, wingCol: rc.wings ? o.wingCol || null : null, tailCol: rc.tail ? o.tailCol || null : null, ext: o,
       fin: hood ? null : rc.fin, flame: hood || helm ? null : rc.flame, leaves: hood || helm ? null : rc.leaves, gem: hood ? null : rc.gem, cracks: rc.cracks, rock: rc.rock, scales: rc.scales,
       eyes4: rc.eyes4, beard: rc.beard, whisk: rc.whisk && !hood, crest: rc.crest && !hood && !helm, fangs: rc.fangs, wisp: rc.wisp,
       sig: hood || helm ? null : o.sig   // 劇情人物自己的衣服、髮型細節（storylooks.js 的 R.HERO_SIG）
@@ -79,14 +83,14 @@
     // ---- 身體後面的東西：翅膀、尾巴（正面看在身體後面；背面看蓋在披風上，最後畫） ----
     const wings = () => {
       if (!L.wings) return;
-      const demon = L.wings === 'demon', a = demon ? '#2A2030' : '#F2F0EA', b = demon ? '#5A4A6A' : '#C8C4BC', e = demon ? '#140E18' : '#A8A49C';
+      const demon = L.wings === 'demon', WR = demon ? '#2A2030' : '#F2F0EA', WC = c => tint(c, L.wingCol, WR), a = WC(demon ? '#2A2030' : '#F2F0EA'), b = WC(demon ? '#5A4A6A' : '#C8C4BC'), e = WC(demon ? '#140E18' : '#A8A49C');
       if (side) { p(0, 7, 4, 2, b); p(0, 9, 5, 4, a); p(1, 13, 3, 2, a); p(0, 13, 1, 3, e); p(2, 15, 1, 1, e); return; }
       const one = (wx, s) => { p(wx, 7, 3, 1, b); p(wx + (s < 0 ? -1 : 1), 8, 3, 5, a); p(wx + (s < 0 ? -2 : 2), 9, 2, 5, a); p(wx + (s < 0 ? -2 : 3), 14, 1, 2, e); if (demon) { p(wx + (s < 0 ? -2 : 3), 8, 1, 1, e); p(wx, 10, 1, 4, e); } else p(wx + (s < 0 ? -1 : 2), 12, 2, 1, b); };
       one(back ? 3 : 1, -1); one(back ? 10 : 12, 1);
     };
     const tail = () => {
       const t = L.tail; if (!t) return;
-      const c = t === 'dragon' ? L.skin : t === 'fox' ? L.hair : t === 'cat' ? L.hair : dk(L.hair), tip = t === 'fox' ? '#F2EEE6' : lt(c);
+      const c = L.tailCol || (t === 'dragon' ? L.skin : t === 'fox' ? L.hair : t === 'cat' ? L.hair : dk(L.hair)), tip = t === 'fox' ? '#F2EEE6' : lt(c);
       if (side) {
         if (t === 'cat') { p(2, 13, 2, 1, c); p(1, 10, 1, 3, c); p(1, 9, 1, 1, tip); }
         else if (t === 'fox') { p(0, 12, 4, 3, c); p(1, 11, 2, 1, c); p(0, 12, 1, 2, tip); }
@@ -160,6 +164,7 @@
       hairTop(p, L, 'side');
     }
     // 劇情人物的細節（storylooks.js）
+    if (R.HERO_EXTRA) R.HERO_EXTRA(p, side ? 'side' : back ? 'back' : 'front', fr, L, { sit, atk, shade, clr: (a, b, w, h) => x.clearRect(ox + a, oy + b, w, h) });
     if (L.sig && R.HERO_SIG && R.HERO_SIG[L.sig]) R.HERO_SIG[L.sig](p, side ? 'side' : back ? 'back' : 'front', fr, L, sit, shade);
     // 暗影族：身邊飄著幾縷影子
     if (L.wisp && !sit) { const wc = 'rgba(36,28,58,0.85)'; (side ? [[3, 9], [12, 11], [2, 16], [13, 18], [4, 22]] : [[2, 9], [13, 10], [1, 14], [14, 15], [3, 21], [12, 22]]).forEach(([u, v]) => p(u, v, 1, 1, wc)); }
@@ -259,6 +264,7 @@
   };
   // 頭髮、耳朵、角、配件、兜帽（正面 front、背面 back、側面 side）
   const hairTop = (p, L, v) => {
+    const EH = L.earCol || L.hair, EC = c => tint(c, L.earCol, L.ears === 'antenna' ? '#2A2A2A' : '#5A9A9A'), HC = c => tint(c, L.hornCol, ({ small: '#3A2A4A', dragon: '#E8D8B0', antler: '#C8A878', goat: '#D8D0C0', demon: '#141018' })[L.horns] || '#C8B890');
     const H = L.hair, dk = c => shade(c, -0.24), lt = c => shade(c, 0.2), hs = L.hs, bald = hs === 'bald';
     if (v === 'side') {
       if (!bald) {
@@ -271,19 +277,19 @@
         else if (hs === 'braid') { p(3, 3, 2, 3, H); p(3, 6, 1, 6, H); p(3, 8, 1, 1, dk(H)); p(3, 11, 1, 1, dk(H)); }
         else if (hs === 'crop') { p(4, 3, 3, 4, L.skin); p(4, 1, 7, 1, H); p(4, 2, 2, 2, H); }
       } else if (L.crest) { p(6, 1, 5, 1, dk(L.skin)); p(5, 2, 1, 1, dk(L.skin)); }
-      if (L.ears === 'cat' || L.ears === 'wolf') { p(6, 0, 2, 1, H); p(6, -1, 1, 1, H); if (L.ears === 'wolf') p(6, -2, 1, 1, H); }
-      else if (L.ears === 'fox') { p(5, 0, 3, 1, H); p(5, -1, 2, 1, H); p(5, -2, 1, 1, H); p(6, 0, 1, 1, '#F0E6DA'); }
-      else if (L.ears === 'dog') { p(5, 2, 2, 6, dk(H)); p(5, 8, 1, 1, dk(H)); }
+      if (L.ears === 'cat' || L.ears === 'wolf') { p(6, 0, 2, 1, EH); p(6, -1, 1, 1, EH); if (L.ears === 'wolf') p(6, -2, 1, 1, EH); }
+      else if (L.ears === 'fox') { p(5, 0, 3, 1, EH); p(5, -1, 2, 1, EH); p(5, -2, 1, 1, EH); p(6, 0, 1, 1, EC('#F0E6DA')); }
+      else if (L.ears === 'dog') { p(5, 2, 2, 6, dk(EH)); p(5, 8, 1, 1, dk(EH)); }
       else if (L.ears === 'elf') { p(6, 4, 1, 2, L.skin); p(5, 3, 1, 1, L.skin); }
-      else if (L.ears === 'fin') { p(4, 3, 3, 3, '#5A9A9A'); p(3, 4, 1, 2, '#7ABAB4'); }
-      else if (L.ears === 'round') { p(6, -1, 2, 2, H); }
-      else if (L.ears === 'rabbit') { p(6, -5, 2, 5, H); p(6, -4, 1, 3, '#F0C0C8'); }
-      else if (L.ears === 'antenna') { p(7, -3, 1, 3, '#2A2A2A'); p(8, -4, 1, 1, '#2A2A2A'); }
-      if (L.horns === 'small') { p(8, 0, 1, 2, '#3A2A4A'); }
-      else if (L.horns === 'antler') { p(6, -1, 1, 2, '#C8A878'); p(5, -3, 1, 2, '#C8A878'); p(4, -3, 1, 1, '#C8A878'); p(6, -4, 1, 1, '#C8A878'); }
-      else if (L.horns === 'goat') { p(6, 0, 1, 1, '#D8D0C0'); p(5, -1, 2, 1, '#D8D0C0'); p(4, 0, 1, 2, '#B8B0A0'); }
-      else if (L.horns === 'dragon') { p(6, 0, 1, 2, '#E8D8B0'); p(5, -1, 1, 1, '#E8D8B0'); }
-      else if (L.horns === 'demon') { p(7, 0, 1, 2, '#141018'); p(6, -1, 1, 2, '#141018'); p(5, -3, 1, 2, '#141018'); p(5, -4, 1, 1, '#4A3A5A'); }
+      else if (L.ears === 'fin') { p(4, 3, 3, 3, EC('#5A9A9A')); p(3, 4, 1, 2, EC('#7ABAB4')); }
+      else if (L.ears === 'round') { p(6, -1, 2, 2, EH); }
+      else if (L.ears === 'rabbit') { p(6, -5, 2, 5, EH); p(6, -4, 1, 3, EC('#F0C0C8')); }
+      else if (L.ears === 'antenna') { p(7, -3, 1, 3, EC('#2A2A2A')); p(8, -4, 1, 1, EC('#2A2A2A')); }
+      if (L.horns === 'small') { p(8, 0, 1, 2, HC('#3A2A4A')); }
+      else if (L.horns === 'antler') { p(6, -1, 1, 2, HC('#C8A878')); p(5, -3, 1, 2, HC('#C8A878')); p(4, -3, 1, 1, HC('#C8A878')); p(6, -4, 1, 1, HC('#C8A878')); }
+      else if (L.horns === 'goat') { p(6, 0, 1, 1, HC('#D8D0C0')); p(5, -1, 2, 1, HC('#D8D0C0')); p(4, 0, 1, 2, HC('#B8B0A0')); }
+      else if (L.horns === 'dragon') { p(6, 0, 1, 2, HC('#E8D8B0')); p(5, -1, 1, 1, HC('#E8D8B0')); }
+      else if (L.horns === 'demon') { p(7, 0, 1, 2, HC('#141018')); p(6, -1, 1, 2, HC('#141018')); p(5, -3, 1, 2, HC('#141018')); p(5, -4, 1, 1, HC('#4A3A5A')); }
       if (L.fin) { p(6, -1, 4, 2, '#5A9A9A'); p(7, -2, 2, 1, '#7ABAB4'); }
       if (L.leaves) { p(5, 0, 2, 1, '#5A8A3A'); p(8, -1, 2, 1, '#7AAA4A'); p(4, 2, 1, 1, '#4A7A2E'); }
       if (L.flame) { p(5, 0, 1, 1, '#FFB84A'); p(7, -1, 1, 2, '#FFD27A'); p(9, 0, 1, 1, '#FFB84A'); p(4, 1, 1, 2, '#FF8A3A'); }
@@ -313,19 +319,19 @@
     // 耳朵（畫在頭髮之後）
     const E = L.ears;
     if (E === 'elf') { p(2, 4, 2, 1, L.skin); p(1, 3, 1, 1, L.skin); p(12, 4, 2, 1, dk(L.skin)); p(14, 3, 1, 1, dk(L.skin)); }
-    else if (E === 'cat') { p(4, 0, 3, 1, H); p(4, -1, 2, 1, H); p(4, -2, 1, 1, H); p(9, 0, 3, 1, H); p(10, -1, 2, 1, H); p(11, -2, 1, 1, H); if (front) { p(5, 0, 1, 1, '#E8A0A8'); p(10, 0, 1, 1, '#E8A0A8'); } }
-    else if (E === 'fox') { p(3, 0, 4, 1, H); p(3, -1, 3, 1, H); p(3, -2, 2, 1, H); p(3, -3, 1, 1, H); p(9, 0, 4, 1, H); p(10, -1, 3, 1, H); p(11, -2, 2, 1, H); p(12, -3, 1, 1, H); if (front) { p(4, 0, 2, 1, '#F0E6DA'); p(10, 0, 2, 1, '#F0E6DA'); } }
-    else if (E === 'wolf') { p(4, 0, 3, 1, H); p(4, -1, 2, 1, H); p(4, -2, 2, 1, H); p(4, -3, 1, 1, H); p(9, 0, 3, 1, H); p(10, -1, 2, 1, H); p(10, -2, 2, 1, H); p(11, -3, 1, 1, H); }
-    else if (E === 'dog') { p(2, 2, 2, 5, dk(H)); p(2, 7, 1, 1, dk(H)); p(12, 2, 2, 5, dk(H)); p(13, 7, 1, 1, dk(H)); }
-    else if (E === 'fin') { p(1, 3, 2, 4, '#5A9A9A'); p(0, 4, 1, 2, '#7ABAB4'); p(13, 3, 2, 4, '#5A9A9A'); p(15, 4, 1, 2, '#7ABAB4'); }
-    else if (E === 'round') { p(3, -1, 3, 2, H); p(10, -1, 3, 2, H); if (front) { p(4, 0, 1, 1, '#E8B0A0'); p(11, 0, 1, 1, '#E8B0A0'); } }
-    else if (E === 'rabbit') { p(5, -5, 2, 6, H); p(9, -5, 2, 6, H); if (front) { p(5, -4, 1, 4, '#F0C0C8'); p(10, -4, 1, 4, '#F0C0C8'); } }
-    else if (E === 'antenna') { p(5, -3, 1, 3, '#2A2A2A'); p(4, -4, 1, 1, '#2A2A2A'); p(10, -3, 1, 3, '#2A2A2A'); p(11, -4, 1, 1, '#2A2A2A'); }
-    if (L.horns === 'small') { p(5, 0, 1, 1, '#3A2A4A'); p(5, -1, 1, 1, '#5A4A6A'); p(10, 0, 1, 1, '#3A2A4A'); p(10, -1, 1, 1, '#5A4A6A'); }
-    else if (L.horns === 'dragon') { p(4, 0, 1, 2, '#E8D8B0'); p(3, -1, 1, 1, '#E8D8B0'); p(11, 0, 1, 2, '#C8B890'); p(12, -1, 1, 1, '#C8B890'); }
-    else if (L.horns === 'antler') { p(4, -1, 1, 2, '#C8A878'); p(3, -3, 1, 2, '#C8A878'); p(2, -3, 1, 1, '#C8A878'); p(4, -4, 1, 1, '#C8A878'); p(11, -1, 1, 2, '#C8A878'); p(12, -3, 1, 2, '#C8A878'); p(13, -3, 1, 1, '#C8A878'); p(11, -4, 1, 1, '#C8A878'); }
-    else if (L.horns === 'goat') { p(4, 0, 1, 1, '#D8D0C0'); p(3, -1, 2, 1, '#D8D0C0'); p(2, 0, 1, 2, '#B8B0A0'); p(11, 0, 1, 1, '#D8D0C0'); p(11, -1, 2, 1, '#D8D0C0'); p(13, 0, 1, 2, '#B8B0A0'); }
-    else if (L.horns === 'demon') { p(4, 0, 1, 2, '#141018'); p(3, -1, 1, 2, '#141018'); p(2, -3, 1, 2, '#141018'); p(3, -4, 1, 1, '#4A3A5A'); p(11, 0, 1, 2, '#141018'); p(12, -1, 1, 2, '#141018'); p(13, -3, 1, 2, '#141018'); p(12, -4, 1, 1, '#4A3A5A'); }
+    else if (E === 'cat') { p(4, 0, 3, 1, EH); p(4, -1, 2, 1, EH); p(4, -2, 1, 1, EH); p(9, 0, 3, 1, EH); p(10, -1, 2, 1, EH); p(11, -2, 1, 1, EH); if (front) { p(5, 0, 1, 1, EC('#E8A0A8')); p(10, 0, 1, 1, EC('#E8A0A8')); } }
+    else if (E === 'fox') { p(3, 0, 4, 1, EH); p(3, -1, 3, 1, EH); p(3, -2, 2, 1, EH); p(3, -3, 1, 1, EH); p(9, 0, 4, 1, EH); p(10, -1, 3, 1, EH); p(11, -2, 2, 1, EH); p(12, -3, 1, 1, EH); if (front) { p(4, 0, 2, 1, EC('#F0E6DA')); p(10, 0, 2, 1, EC('#F0E6DA')); } }
+    else if (E === 'wolf') { p(4, 0, 3, 1, EH); p(4, -1, 2, 1, EH); p(4, -2, 2, 1, EH); p(4, -3, 1, 1, EH); p(9, 0, 3, 1, EH); p(10, -1, 2, 1, EH); p(10, -2, 2, 1, EH); p(11, -3, 1, 1, EH); }
+    else if (E === 'dog') { p(2, 2, 2, 5, dk(EH)); p(2, 7, 1, 1, dk(EH)); p(12, 2, 2, 5, dk(EH)); p(13, 7, 1, 1, dk(EH)); }
+    else if (E === 'fin') { p(1, 3, 2, 4, EC('#5A9A9A')); p(0, 4, 1, 2, EC('#7ABAB4')); p(13, 3, 2, 4, EC('#5A9A9A')); p(15, 4, 1, 2, EC('#7ABAB4')); }
+    else if (E === 'round') { p(3, -1, 3, 2, EH); p(10, -1, 3, 2, EH); if (front) { p(4, 0, 1, 1, EC('#E8B0A0')); p(11, 0, 1, 1, EC('#E8B0A0')); } }
+    else if (E === 'rabbit') { p(5, -5, 2, 6, EH); p(9, -5, 2, 6, EH); if (front) { p(5, -4, 1, 4, EC('#F0C0C8')); p(10, -4, 1, 4, EC('#F0C0C8')); } }
+    else if (E === 'antenna') { p(5, -3, 1, 3, EC('#2A2A2A')); p(4, -4, 1, 1, EC('#2A2A2A')); p(10, -3, 1, 3, EC('#2A2A2A')); p(11, -4, 1, 1, EC('#2A2A2A')); }
+    if (L.horns === 'small') { p(5, 0, 1, 1, HC('#3A2A4A')); p(5, -1, 1, 1, HC('#5A4A6A')); p(10, 0, 1, 1, HC('#3A2A4A')); p(10, -1, 1, 1, HC('#5A4A6A')); }
+    else if (L.horns === 'dragon') { p(4, 0, 1, 2, HC('#E8D8B0')); p(3, -1, 1, 1, HC('#E8D8B0')); p(11, 0, 1, 2, HC('#C8B890')); p(12, -1, 1, 1, HC('#C8B890')); }
+    else if (L.horns === 'antler') { p(4, -1, 1, 2, HC('#C8A878')); p(3, -3, 1, 2, HC('#C8A878')); p(2, -3, 1, 1, HC('#C8A878')); p(4, -4, 1, 1, HC('#C8A878')); p(11, -1, 1, 2, HC('#C8A878')); p(12, -3, 1, 2, HC('#C8A878')); p(13, -3, 1, 1, HC('#C8A878')); p(11, -4, 1, 1, HC('#C8A878')); }
+    else if (L.horns === 'goat') { p(4, 0, 1, 1, HC('#D8D0C0')); p(3, -1, 2, 1, HC('#D8D0C0')); p(2, 0, 1, 2, HC('#B8B0A0')); p(11, 0, 1, 1, HC('#D8D0C0')); p(11, -1, 2, 1, HC('#D8D0C0')); p(13, 0, 1, 2, HC('#B8B0A0')); }
+    else if (L.horns === 'demon') { p(4, 0, 1, 2, HC('#141018')); p(3, -1, 1, 2, HC('#141018')); p(2, -3, 1, 2, HC('#141018')); p(3, -4, 1, 1, HC('#4A3A5A')); p(11, 0, 1, 2, HC('#141018')); p(12, -1, 1, 2, HC('#141018')); p(13, -3, 1, 2, HC('#141018')); p(12, -4, 1, 1, HC('#4A3A5A')); }
     if (L.fin) { p(7, -1, 2, 2, '#5A9A9A'); p(7, -2, 1, 1, '#7ABAB4'); }
     if (L.leaves) { p(5, 0, 2, 1, '#5A8A3A'); p(6, -1, 1, 1, '#7AAA4A'); p(9, 0, 2, 1, '#4A7A2E'); p(10, -1, 1, 1, '#7AAA4A'); }
     if (L.flame) { p(5, 0, 1, 1, '#FFB84A'); p(7, -1, 1, 2, '#FFD27A'); p(9, 0, 1, 1, '#FFB84A'); p(11, 0, 1, 1, '#FF8A3A'); p(4, -1, 1, 1, '#FF8A3A'); }
