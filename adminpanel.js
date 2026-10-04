@@ -9,7 +9,7 @@
 // 放在 admin.js 後面（index.html 最後面附近，要讀到全部的職業、裝備、遺跡生物）。
 (function (R) {
   const W = () => R.W, S = () => R.S, $ = id => document.getElementById(id), esc = s => R.esc(s);
-  const F = { god: false, oneshot: false };
+  const F = { god: false, oneshot: false, noclip: false };
   const opt = (v, t, sel) => '<option value="' + esc(String(v)) + '"' + (sel ? ' selected' : '') + '>' + esc(t) + '</option>';
   const nm = (o, k) => (o && o[k] && o[k].name) || k;
 
@@ -48,9 +48,10 @@
     if (run) h += sec('這一趟', '<div class="adm-row"><label>跳到第<input id="adm-floor" type="number" min="1" max="' + run.floors + '" value="' + (run.floor + 1) + '" style="width:4em">層（共 ' + run.floors + ' 層）</label><button type="button" class="btn pri" id="adm-floor-go">跳</button>'
       + '<button type="button" class="btn" id="adm-clear">清掉這一層的遺跡生物</button><button type="button" class="btn" id="adm-heal">回滿</button>'
       + '<button type="button" class="btn" id="adm-aw0">注意歸零</button><button type="button" class="btn" id="adm-aw100">注意加滿</button></div>'
+      + '<div class="adm-row"><button type="button" class="btn" id="adm-tp-down">傳送到下樓的樓梯</button><button type="button" class="btn" id="adm-tp-out">傳送到出口（回歸水晶／入口）</button><small style="opacity:.7">遇到生成擋住路、卡在牆裡用；也可以勾下面的「穿牆」</small></div>'
       + '<div class="adm-row"><label>生出<select id="adm-foe">' + Object.keys(R.ENEMIES).filter(k => !R.ENEMIES[k].human).sort((a, b) => String(R.ENEMIES[a].name || a).localeCompare(String(R.ENEMIES[b].name || b), 'zh-Hant')).map(k => opt(k, (R.ENEMIES[k].name || k) + '（' + k + '）')).join('') + '</select></label>'
       + '<label>幾隻<input id="adm-n" type="number" min="1" max="20" value="1" style="width:3.5em"></label><button type="button" class="btn pri" id="adm-spawn">生在準心那裡</button></div>');
-    h += sec('開關', '<div class="adm-row"><label class="adm-chk"><input type="checkbox" id="adm-god"' + (F.god ? ' checked' : '') + '>無敵</label><label class="adm-chk"><input type="checkbox" id="adm-one"' + (F.oneshot ? ' checked' : '') + '>一下打倒（傷害 ×10000）</label>'
+    h += sec('開關', '<div class="adm-row"><label class="adm-chk"><input type="checkbox" id="adm-god"' + (F.god ? ' checked' : '') + '>無敵</label><label class="adm-chk"><input type="checkbox" id="adm-one"' + (F.oneshot ? ' checked' : '') + '>一下打倒（傷害 ×10000）</label><label class="adm-chk"><input type="checkbox" id="adm-clip"' + (F.noclip ? ' checked' : '') + '>穿牆</label>'
       + (town ? '<button type="button" class="btn" id="adm-day">過一天</button><button type="button" class="btn" id="adm-aff">劇情人物好感全滿</button>' : '') + '</div>');
     return h;
   };
@@ -104,6 +105,11 @@
     });
     const g = $('adm-god'); if (g) g.onchange = () => { F.god = g.checked; };
     const o = $('adm-one'); if (o) o.onchange = () => { F.oneshot = o.checked; };
+    const cl = $('adm-clip'); if (cl) cl.onchange = () => { F.noclip = cl.checked; };
+    // 傳送（2026-10-05 作者：遺跡生成錯亂擋到路的時候，管理員要能脫困）
+    const tp = (x, z, what) => { const P = W().P; if (!P) return; const [x1, z1] = R.nearestFloor ? R.nearestFloor(x, z) : [x, z]; P.x = x1; P.z = z1; P.h && P.h.g.position.set(x1, 0, z1); close(); toast('傳送到' + what, '#7FE0FF'); };
+    on('adm-tp-down', () => { const F2 = W().F, st = F2 && F2.stairs; if (!st) { toast('這一層沒有下樓的樓梯（最後一層？）'); return; } tp(st.x + 1.6, st.z + 1.6, '下樓的樓梯'); });
+    on('adm-tp-out', () => { const F2 = W().F, P = W().P, c = (F2.crystals || []).slice().sort((a, b) => Math.hypot(a.x - P.x, a.z - P.z) - Math.hypot(b.x - P.x, b.z - P.z))[0]; if (c) { tp(c.x + 1.8, c.z + 1.8, '回歸水晶'); return; } if (F2.up) { tp(F2.up.x + 1.6, F2.up.z + 1.6, F2.up.exit ? '入口' : '上樓的樓梯'); return; } toast('這一層找不到出口'); });
     on('adm-day', () => { R.advanceDays && R.advanceDays(1); R.save(); toast('過了一天', '#7FE0FF'); });
     on('adm-aff', () => { s.aff = s.aff || {}; Object.keys(R.PEOPLE || {}).forEach(id => { s.aff[id] = 10; }); R.save(); toast('劇情人物好感全滿', '#7FE0FF'); });
   };
@@ -114,6 +120,9 @@
   R.hurtPlayer = (raw, src, o) => (F.god && adm() ? undefined : hp0(raw, src, o));
   const he0 = R.hurtEnemy;
   R.hurtEnemy = (e, raw, o) => he0(e, F.oneshot && adm() ? raw * 10000 : raw, o);
+  // 穿牆：自己不被牆推出去（遺跡生物照舊）
+  const col0 = R.collide;
+  R.collide = (p, r) => (F.noclip && p && p === W().P && adm() ? false : col0(p, r));
 
   const css = document.createElement('style');
   css.textContent = '#adm-btn{position:fixed;right:8px;top:46%;z-index:40;padding:6px 8px;border-radius:8px;border:1px solid #FF7A7A;background:rgba(40,10,10,.85);color:#FFB0A0;font-weight:bold;font-size:12px;cursor:pointer}'
