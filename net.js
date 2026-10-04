@@ -168,7 +168,7 @@
     if (R.closeSheet) try { R.closeSheet(); } catch (e) { }
     const hm = $('hub-modal'); if (hm) hm.hidden = true;
     R.startRun(d.site);
-    let tries = 0; const accept = () => { const b = $('tk-go'); if (b && b.offsetParent) { b.click(); return; } if (++tries < 20 && guestGo && pending === d) setTimeout(accept, 100); };
+    let tries = 0; const accept = () => { const b = $('tk-go'), fb = $('tk-free'); if (b && b.offsetParent && !b.disabled) { b.click(); return; } if (b && b.offsetParent && b.disabled && fb && !fb.disabled) { fb.click(); return; }   /* 接不了這張委託（段位、分級）：不接委託跟著下去（2026-10-05 作者：連線的朋友要算） */ if (++tries < 20 && guestGo && pending === d) setTimeout(accept, 100); };
     setTimeout(accept, 0);
     setTimeout(() => { if (pending === d) { pending = null; guestGo = false; R.toast('未能跟隨出發，請確認委託條件後重新組隊。'); } }, 6000);
   };

@@ -42,8 +42,11 @@
     const st = R.SITES.find(s => s.id === id);
     if (st && st.grade === 'kaso') {
       kaso.pool = Array.from(new Set(kes.pool.concat(kaso.pool || [])));   // 生物的檔案（monsters2～5）比這個檔案晚載入，進去之前再合併一次
-      if (!authed()) { R.say ? R.say('公會明文禁止任何個人進入卡索級遺跡。') : R.toast('禁止進入。'); return; }
-      const n = (S().party || []).length; if (n < PARTY_MIN && !S().admin) { /* 管理員號（測試用）不用帶隊友 */ R.say ? R.say('公會明文禁止任何個人單獨進入卡索級遺跡：至少要帶 ' + PARTY_MIN + ' 名隊友（現在 ' + n + ' 名）。到公會的登記處找人。') : R.toast('至少要帶兩名隊友。'); return; }
+      // 2026-10-05 作者：連線的朋友要算——房裡的其他人算隊友；跟著房主進去的隊員不用自己有許可（房主有就好）
+      const N = R.net, follow = !!(N && N.room && N.isHost && !N.isHost()), online = N && N.room ? Math.max(0, (N.members || []).length - 1) : 0;
+      if (follow && site) Object.assign(site, { kind: 'ruin', type: 'island', status: 'open' });   // 跟著房主：遺跡的形式要跟房主那邊一樣（浮島型），不然長出來的樓層不一樣、連線會斷
+      if (!authed() && !follow) { R.say ? R.say('公會明文禁止任何個人進入卡索級遺跡。') : R.toast('禁止進入。'); return; }
+      const n = (S().party || []).length + online; if (n < PARTY_MIN && !S().admin && !follow) { /* 管理員號（測試用）不用帶隊友 */ R.say ? R.say('公會明文禁止任何個人單獨進入卡索級遺跡：至少要帶 ' + PARTY_MIN + ' 名隊友（現在 ' + n + ' 名，連線的朋友也算）。到公會的登記處找人，或開房找朋友。') : R.toast('至少要帶兩名隊友。'); return; }
     }
     return sr0(id);
   };
