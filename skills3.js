@@ -144,9 +144,9 @@
     ['on_cleave', '鬼哭斬', 'warrior', 21, 10, 16, 'arc', { range: 3.8, arc: 3.6, k: 2.8, kb: 2, stun: 0.6 }, '戴著鬼面橫掃一刀，周圍的敵人嚇得愣住。', 'onimusha'],
     ['on_rage', '百鬼夜行', 'warrior', 24, 24, 24, 'combo', { parts: [['buff', { t: 8, dmg: 1.4, def: -0.15, color: '#C83A3A' }], ['nova', { r: 4.5, k: 2.4, stun: 1, color: '#8A2A2A' }, 150]] }, '讓鬼面完全上身：周圍的敵人重傷暈眩，8 秒內傷害 +40%（受到的傷害 +15%）。', 'onimusha'],
     // 外修者（術士）
-    ['wx_pulse', '氣脈', 'mage', 18, 18, 0, 'heal', { shield: 0.25, mp: 0.2, color: '#9AE8FF' }, '把魔力罩重新撐起來：護盾 25%、回復 20% 魔力。', 'waixiu'],
-    ['wx_rain', '氣彈雨', 'mage', 21, 10, 16, 'shots', { burst: 4, gap: 80, n: 3, spread: 0.5, k: 0.9, kind: 'eorb', sp: 26 }, '魔力罩化成十幾顆氣彈連發。', 'waixiu'],
-    ['wx_storm', '氣旋', 'mage', 24, 16, 22, 'aura', { t: 5, r: 3.6, gap: 0.2, k: 0.7, color: '#9AE8FF' }, '魔力罩轉成氣旋，5 秒內不停打周圍。', 'waixiu']
+    ['wx_pulse', '氣脈', 'mage', 18, 18, 0, 'heal', { shield: 0.25, mp: 0.2, color: '#9AE8FF' }, '獲得可吸收相當於最大生命 25% 傷害的護盾，回復最大魔力的 20%。', 'waixiu'],
+    ['wx_rain', '氣彈雨', 'mage', 21, 10, 16, 'shots', { burst: 4, gap: 80, n: 3, spread: 0.5, k: 0.9, kind: 'eorb', sp: 26 }, '將魔力罩化成氣彈，連射四輪，每輪三發。', 'waixiu'],
+    ['wx_storm', '氣旋', 'mage', 24, 16, 22, 'aura', { t: 5, r: 3.6, gap: 0.2, k: 0.7, color: '#9AE8FF' }, '將魔力罩化為氣旋，持續 5 秒傷害周圍敵人。', 'waixiu']
   ];
   NEW.forEach(([id, name, cls, lv, cd, mp, type, p, desc, adv]) => {
     if (L[id]) return;

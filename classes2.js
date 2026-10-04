@@ -9,7 +9,7 @@
 (function (R) {
   Object.assign(R.CLASSES, {
     bard: { name: '吟遊詩人', hp: 98, mp: 85, speed: 6.1, skill: 'bd_anthem', color: '#C86AA8', desc: '魯特琴、長笛。吟遊派：把咒文編成曲子彈出來，鼓舞自己和隊友、用音波攻擊。', look: { top: '#8A3A6A', hair: '#E8C878', cloak: '#4A2A5A' } },
-    summoner: { name: '召喚師', hp: 92, mp: 100, speed: 5.9, skill: 'sn_dog', color: '#6A8A5A', desc: '契約書、召喚鈴。召喚派：用執念把魔力捏成具象的召喚物，替你咬、替你擋。', look: { top: '#3E5A3A', hair: '#2A2420', cloak: '#5A4A2E' } },
+    summoner: { name: '召喚師', hp: 92, mp: 100, speed: 5.9, skill: 'sn_dog', color: '#6A8A5A', desc: '契約書、召喚鈴。召喚派：用執念把魔力捏成具象的召喚物，召喚物會主動攻擊附近的敵人。', look: { top: '#3E5A3A', hair: '#2A2420', cloak: '#5A4A2E' } },
     arraymage: { name: '術陣師', hp: 90, mp: 105, speed: 5.9, skill: 'ry_burst', color: '#4A8AA8', desc: '陣筆、陣盤。術陣派：在地上畫閉環的法陣——陷阱、結界、持續燒人的場域。', look: { top: '#2E4A6A', hair: '#C8D0D8', cloak: '#1E3A4A' } },
     enchanter: { name: '附魔師', hp: 118, mp: 60, speed: 6.2, skill: 'en_flame', color: '#B85A3A', desc: '附魔劍、附魔短刀。附魔派：把咒文刻進武器裡，揮出焰、霜、雷；打得穿魔力罩（無視一部分護甲）。', look: { top: '#6A3A2E', hair: '#1A1418', cloak: '#3A2A2A' } },
     scroll: { name: '符卷師', hp: 90, mp: 95, speed: 6.2, skill: 'sc_volley', color: '#C8A85A', desc: '卷軸、符紙。卷軸派：預先寫好咒文的卷軸，注入一點魔力就發動，零前搖、可以一次放好幾張。', look: { top: '#8A7A4A', hair: '#3A2A1E', cloak: '#6A5A3A' } }
@@ -36,12 +36,12 @@
   );
   Object.assign(R.ADV, {
     bard: [
-      { id: 'aria', name: '詠嘆詩人', path: '強化', skill: 'ai_hymn', desc: '技能「頌歌」：你和隊友都回復一大口生命，還多一層護盾。被動：治療 +30%、隊友受到的傷害 −15%。' },
+      { id: 'aria', name: '詠嘆詩人', path: '強化', skill: 'ai_hymn', desc: '技能「頌歌」：回復自己與附近隊友的生命，並提供護盾。被動：治療 +30%、隊友受到的傷害 −15%。' },
       { id: 'drummer', name: '戰鼓手', path: '變化', skill: 'dm_thunder', desc: '技能「雷鼓」：連敲三下，一圈一圈的鼓聲震飛周圍的敵人。被動：技能冷卻 −12%、暴擊率 +6%。' },
       { id: 'serane', name: '奏域師', path: '昭旭・遺跡', skill: 'se_field', desc: '諧鳴奏域派系「瑟蘭派」：用共振圍出一個閉環的「奏域」。技能「奏域」：腳下展開 8 秒的奏域，裡面回血、灼傷敵人。被動：佩特拉的注意上升 −20%、魔力 +20%。' }],
     summoner: [
-      { id: 'beastlord', name: '萬獸師', path: '強化', skill: 'bl_pack', desc: '技能「百獸」：一口氣召喚四隻土狼。被動：召喚物的傷害 +40%、多撐一陣子。' },
-      { id: 'medium', name: '靈媒師', path: '變化', skill: 'md_haunt', desc: '技能「附身」：放出怨靈纏著周圍的敵人 8 秒，一直咬。被動：每次召喚回復 6% 生命（回收召喚物的空虛感，換成了生命）。' },
+      { id: 'beastlord', name: '萬獸師', path: '強化', skill: 'bl_pack', desc: '技能「百獸」：一口氣召喚四隻土狼。被動：召喚物傷害 +40%、持續時間 +30%。' },
+      { id: 'medium', name: '靈媒師', path: '變化', skill: 'md_haunt', desc: '技能「附身」：放出怨靈纏著周圍的敵人 8 秒，一直咬。被動：每次召喚回復最大生命的 6%。' },
       { id: 'tamer', name: '遺跡馴獸師', path: '昭旭・遺跡', skill: 'tm_tame', desc: '技能「馴服」：用執念捏出這一層遺跡生物的樣子，替你打 15 秒。被動：佩特拉的注意上升 −15%、召喚物的傷害 +20%。' },
       // 式神使（2026-10-04 從術士搬過來：紙式神也是用執念捏出來的召喚物）
       { id: 'shikigami', name: '式神使', path: '式神', skill: 'ss_shiki', desc: '把執念寫進紙裡，折成會動的式神。技能「式神」：放出三隻紙式神環繞你、自動攻擊 10 秒。被動：常駐一隻式神。' }],

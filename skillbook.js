@@ -69,7 +69,7 @@
     ['k_sweep', '橫掃', 'knight', 8, 8, 12, 'arc', { range: 3.4, arc: 2.6, k: 1.4, kb: 2.5, stun: 0.4 }, '用盾和劍橫掃一大片，把敵人推開。'],
     ['k_bulwark', '不動', 'knight', 10, 18, 14, 'buff', { t: 4, def: 0.6, regen: 0.02, speed: 0.6, color: '#C9A13A' }, '4 秒內受到的傷害 −60%、每秒回復 2% 生命，但走得慢。'],
     ['k_judge', '制裁', 'knight', 12, 10, 16, 'dash', { len: 5, dur: 0.25, k: 2, stun: 1, end: { r: 2.6, k: 1.2, color: '#FFE8A0' } }, '衝上去撞暈敵人，落地再震一圈。'],
-    ['k_vow', '誓約', 'knight', 15, 20, 20, 'heal', { pct: 0.25, shield: 0.25 }, '回復 25% 生命，並得到吸收 25% 生命的護盾。'],
+    ['k_vow', '誓約', 'knight', 15, 20, 20, 'heal', { pct: 0.25, shield: 0.25 }, '回復 25% 生命，並獲得可吸收相當於最大生命 25% 傷害的護盾。'],
     // ---------- 轉職路線的技能 ----------
     ['s_headshot', '爆頭', 'gunner', 8, 9, 14, 'line', { len: 18, width: 0.4, k: 5, crit: 1, delay: 600, color: '#FFE08A' }, '瞄準 0.6 秒，射出必定暴擊的一槍。', 'sniper'],
     ['s_camo', '偽裝', 'gunner', 14, 16, 12, 'buff', { t: 4, crit: 0.3, invis: 3, color: '#6A7A5A' }, '披上偽裝隱身 3 秒；4 秒內暴擊率 +30%。', 'sniper'],
@@ -111,7 +111,7 @@
     ['sd_stitch', '影縫', 'blade', 14, 12, 16, 'at', { range: 9, r: 3, k: 0.8, root: 2, invis: 2, fx: 'ring', color: '#3A2A4A' }, '以影子束縛敵人：範圍內的敵人定身 2 秒，你隱身 2 秒。', 'shadow'],
     ['yt_drink', '啜血', 'blade', 8, 10, 10, 'arc', { range: 3, arc: 6.28, k: 1.2, vamp: 0.3 }, '妖刀轉一圈啜飲：傷害的 30% 變成你的生命。', 'yoto'],
     ['yt_mad', '妖氣', 'blade', 14, 16, 14, 'buff', { t: 6, dmg: 1.35, def: -0.15, color: '#B83AE8' }, '釋放妖刀吸收的魔力質：6 秒內傷害 +35%，但受到的傷害 +15%。', 'yoto'],
-    ['tp_aegis', '神盾', 'knight', 8, 16, 16, 'heal', { shield: 0.4, color: '#C9A13A' }, '得到吸收 40% 生命的神盾。', 'templar'],
+    ['tp_aegis', '神盾', 'knight', 8, 16, 16, 'heal', { shield: 0.4, color: '#C9A13A' }, '獲得可吸收相當於最大生命 40% 傷害的神盾。', 'templar'],
     ['tp_crusade', '聖戰', 'knight', 14, 14, 18, 'nova', { r: 4, k: 2, stun: 1, taunt: 4, color: '#C9A13A' }, '高舉長劍：周圍的敵人暈眩，接下來 4 秒改打你。', 'templar'],
     ['pl_hands', '按手禮', 'knight', 8, 16, 20, 'heal', { pct: 0.4, allies: 0.3 }, '你回復 40% 生命，隊友回復 30%。', 'paladin'],
     ['pl_hammer', '審判之錘', 'knight', 14, 10, 18, 'at', { range: 10, r: 2.6, k: 3, stun: 1.2, delay: 400, fx: 'pillar', color: '#FFE8A0' }, '在準心處落下光之錘，敵人暈眩。', 'paladin'],
@@ -139,7 +139,7 @@
     // 外修者（術士的外修派「東方派」：體外的魔力罩當矛也當盾；2026-10-04 從武術家搬過來）
     ['wx_burst', '氣爆', 'mage', 8, 8, 14, 'nova', { r: 3.4, k: 1.9, kb: 4, color: '#9AE8FF' }, '把體外的魔力罩一口氣炸開：震飛、震傷周圍的敵人。', 'waixiu'],
     ['wx_palm', '隔空掌', 'mage', 14, 5, 10, 'shots', { k: 2.2, kind: 'eorb', sp: 30, pierce: 1 }, '用魔力罩的魔力隔空打一掌，幾乎沒有前搖。', 'waixiu'],
-    ['wx_shell', '氣罩', 'mage', 14, 14, 14, 'heal', { shield: 0.35, color: '#9AE8FF' }, '把魔力罩一口氣撐厚：得到吸收 35% 生命的護盾。', 'waixiu'],
+    ['wx_shell', '氣罩', 'mage', 14, 14, 14, 'heal', { shield: 0.35, color: '#9AE8FF' }, '強化魔力罩，獲得可吸收相當於最大生命 35% 傷害的護盾。', 'waixiu'],
     // 鬼武者（戰士的第三條路，2026-10-04 內修者搬到武術家之後補上）
     ['on_rend', '鬼斬', 'warrior', 8, 8, 14, 'arc', { range: 3.4, arc: 2.6, k: 2.4, stun: 0.6, kb: 1.5 }, '戴著鬼面往前大斬一刀，打中的敵人被嚇得愣住。', 'onimusha'],
     ['on_mask', '鬼面', 'warrior', 14, 16, 12, 'buff', { t: 6, dmg: 1.3, def: -0.1, color: '#C83A3A' }, '讓鬼面的惡意上身：6 秒內傷害 +30%，但受到的傷害 +10%。', 'onimusha'],

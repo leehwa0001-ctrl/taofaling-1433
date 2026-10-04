@@ -1,10 +1,10 @@
 // 物理傷害、魔法傷害；物防、魔防（2026-10-04 作者：分一下魔傷和物傷以及魔防、物防）
 // - 你打出去的：武器普攻照武器（法杖、法球、短杖……＝魔法；刀、槍、弓、拳＝物理）；技能照職業
 //   （術士、牧師、吟遊詩人、召喚師、術陣師、附魔師、符卷師的技能＝魔法；其他＝物理）；火、冰、雷的屬性傷害＝魔法。
-//   物理傷害會被敵人的護甲擋（原本的 e.def.armor）；魔法傷害不看護甲，看魔抗。
-//   魔抗：靈、影、焰、霧……這類遺跡生物 30%（物理打牠們也 −20%，比較打不實）；領主體 15%；佩特拉核心 20%。
+//   物理傷害會被敵人的護甲擋（原本的 e.def.armor）；魔法傷害依魔抗計算減傷。
+//   魔抗：靈、影、焰、霧……這類遺跡生物 30%（物理打牠們也 −20%，物理傷害也會降低）；領主體 15%；佩特拉核心 20%。
 // - 你受到的：遺跡生物照牠的樣子分物理、魔法（靈、影、焰、電……的是魔法），陷阱、落石是物理。
-//   物防＝原本的防禦；魔防＝物防的一半＋輕甲的防禦（再算一次）＋中甲防禦的一半＋法系職業 3＋「魔防」詞條。重甲擋不太住法術。
+//   物防＝原本的防禦；魔防＝物防的一半＋輕甲的防禦（再算一次）＋中甲防禦的一半＋法系職業 3＋「魔防」詞條。防具的防禦值換算為魔防：輕甲 150%、中甲 100%、重甲 50%。
 // - 新詞條：武器「物理傷害 +%」「魔法傷害 +%」；防具「物防 +」「魔防 +」。
 // - 魔法傷害的數字是紫色的。角色總數值、裝備說明會分開寫物攻／魔攻、物防／魔防。
 // 放在 combat.js、items.js、sets.js、charsheet.js 後面。
@@ -79,8 +79,8 @@
   R.itemLines = it => {
     const L = il0(it);
     try {
-      if (it && it.kind === 'weapon' && R.WEAPONS[it.base]) L.splice(1, 0, '傷害類型：' + (R.WEAPONS[it.base].kind === 'magic' ? '魔法（不看護甲，看魔抗）' : '物理（會被護甲擋）'));
-      else if (it && it.kind === 'armor' && R.ARMOR[it.base]) { const a = R.ARMOR[it.base], f = WF[a.w] || 0; L.splice(1, 0, '魔防 +' + (Math.round(R.armorStats(it).def * (0.5 + f) * 10) / 10) + '（' + (f >= 1 ? '輕甲比較擋得住法術' : f ? '中甲' : '重甲擋不太住法術') + '）'); }
+      if (it && it.kind === 'weapon' && R.WEAPONS[it.base]) L.splice(1, 0, '傷害類型：' + (R.WEAPONS[it.base].kind === 'magic' ? '魔法（依魔抗計算減傷）' : '物理（依護甲計算減傷）'));
+      else if (it && it.kind === 'armor' && R.ARMOR[it.base]) { const a = R.ARMOR[it.base], f = WF[a.w] || 0; L.splice(1, 0, '魔防 +' + (Math.round(R.armorStats(it).def * (0.5 + f) * 10) / 10) + '（' + (f >= 1 ? '輕甲：防禦值的 150% 換算為魔防' : f ? '中甲：防禦值的 100% 換算為魔防' : '重甲：防禦值的 50% 換算為魔防') + '）'); }
     } catch (e) { }
     return L;
   };
@@ -90,8 +90,8 @@
     try {
       const P = R.calcPlayer(cls || R.S.cls), n1 = v => (Math.round(v * 10) / 10).toString(), row = (k, v, note) => '<div class="cs-row"><span>' + k + '</span><b>' + v + '</b>' + (note ? '<small>' + note + '</small>' : '') + '</div>';
       const mag = P.ws && P.ws.kind === 'magic', pct = v => (v >= 1 ? '+' : '') + Math.round((v - 1) * 100) + '%';
-      h = h.replace(row('防禦', n1(P.def || 0)), row('物防', n1(P.def || 0), '擋刀、槍、牙、爪') + row('魔防', n1(P.mdef || 0), '擋火、冰、雷、靈、影的攻擊'));
-      h = h.replace('<h4>攻擊</h4>', '<h4>攻擊</h4>' + row('普攻', mag ? '魔法' : '物理', mag ? '不看護甲，看魔抗' : '會被護甲擋') + row('技能', R.CLASSES[P.cls] && MAG_CLS[P.cls] ? '魔法' : '物理') + row('物攻', pct(P.patk || 1)) + row('魔攻', pct(P.matk || 1)));
+      h = h.replace(row('防禦', n1(P.def || 0)), row('物防', n1(P.def || 0), '降低受到的物理傷害') + row('魔防', n1(P.mdef || 0), '降低受到的魔法傷害'));
+      h = h.replace('<h4>攻擊</h4>', '<h4>攻擊</h4>' + row('普攻', mag ? '魔法' : '物理', mag ? '依魔抗計算減傷' : '依護甲計算減傷') + row('技能', R.CLASSES[P.cls] && MAG_CLS[P.cls] ? '魔法' : '物理') + row('物攻', pct(P.patk || 1)) + row('魔攻', pct(P.matk || 1)));
     } catch (e) { }
     return h;
   };
