@@ -30,12 +30,12 @@
   });
   const OPTS = cls => [{ id: 'awaken', name: '覺醒', desc: '走原本的轉職路線再往上：傷害 +12%、生命 +10%、技能冷卻 −8%。路線上最強的那一招多一個「覺醒」版（威力 ×1.5）。' }]
     .concat(cls === 'mage' && HM.length ? [{ id: 'harmonic', name: '諧鳴・瑟蘭派', desc: '諧鳴有五個派系，公會目前只登錄了瑟蘭派：用共振圍出閉環的「奏域」，在裡面改寫法術的頻率。學會' + HM.map(id => '「' + R.SKILLS[id].name + '」').join('') + '（40～' + (LV + HM.length - 1) + ' 級）。魔法傷害 +10%、魔力 +15%、技能冷卻 −5%。' }] : []);
-  const optName = (cls, id) => { const o = OPTS(cls).find(x => x.id === id); return o ? o.name : ''; };
-  R.ADV2_OPTS = OPTS;
+  R.ADV2_OPTS = OPTS;   // adv2more.js 會包住它，加每個職業自己的二轉、諧鳴的其他派系
+  const optName = (cls, id) => { const o = R.ADV2_OPTS(cls).find(x => x.id === id); return o ? o.name : ''; };
   // ---------- 技能書：學會的條件 ----------
   const nl0 = R.skillNeedLv;
   R.skillNeedLv = (sk, st) => (sk && sk.adv2 ? (st && st.adv2 === sk.adv2 && (!sk.adv || sk.adv === st.adv) ? sk.lv : 999) : nl0(sk, st));
-  R.adv2Req = (s, st) => '二次轉職：' + (s.adv2 === 'harmonic' ? '諧鳴・瑟蘭派' : '覺醒') + '・Lv ' + s.lv;
+  R.adv2Req = (s, st) => '二次轉職：' + (optName(s.cls, s.adv2) || '覺醒') + '・Lv ' + s.lv;
   R.adv2Title = (cls, st) => '二次轉職' + (st.adv2 ? '・' + optName(cls, st.adv2) + '（你選的）' : '（職業等級 ' + LV + '、轉職以後）');
   // ---------- 名字、數值 ----------
   const cn0 = R.clsName;
@@ -68,7 +68,7 @@
     const redo = !!st.adv2, canRedo = redo && (s.mats.core || 0) >= 1;
     $('hub-sheet').innerHTML = '<h2>' + esc(R.CLASSES[cls].name) + '的二次轉職</h2>'
       + (redo ? '<p class="note">現在：' + esc(optName(cls, st.adv2)) + '。想換的話交 1 顆魔力核心重選。</p>' : '<p class="note">二次轉職要公會認可：等級、段位、二轉試煉都要過，再交魔力核心 ' + COST.core + ' 顆、高純度魔力水晶 ' + COST.purecry + ' 個。</p><ul class="loot">' + cs.map(c => '<li style="color:' + (c.ok ? '#7AE0A0' : '#E8B07A') + '">' + (c.ok ? '✓ ' : '✗ ') + esc(c.txt) + '</li>').join('') + '</ul>')
-      + '<div class="recipes">' + OPTS(cls).map(o => '<div class="recipe"><b>' + esc(o.name) + (st.adv2 === o.id ? '（現在的）' : '') + '</b><small>' + esc(o.desc) + '</small><button type="button" class="btn' + (st.adv2 === o.id ? '' : ' pri') + '" data-p2="' + o.id + '"' + (st.adv2 === o.id || !(redo ? canRedo : ready) ? ' disabled' : '') + '>' + (redo ? '重選這一個（魔力核心 1 顆）' : '選這一個') + '</button></div>').join('') + '</div>'
+      + '<div class="recipes">' + R.ADV2_OPTS(cls).map(o => '<div class="recipe"><b>' + esc(o.name) + (st.adv2 === o.id ? '（現在的）' : '') + '</b><small>' + esc(o.desc) + '</small><button type="button" class="btn' + (st.adv2 === o.id ? '' : ' pri') + '" data-p2="' + o.id + '"' + (st.adv2 === o.id || !(redo ? canRedo : ready) ? ' disabled' : '') + '>' + (redo ? '重選這一個（魔力核心 1 顆）' : '選這一個') + '</button></div>').join('') + '</div>'
       + '<div class="row">' + (!st.trial2 && !redo ? '<button type="button" class="btn pri" id="p2-trial"' + (st.lv >= LV && st.adv ? '' : ' disabled') + '>報名二轉試煉</button>' : '') + '<button type="button" class="btn" id="p2-x">好了</button></div>';
     $('p2-x').onclick = () => { el.hidden = true; back && back(); };
     const tb = $('p2-trial'); if (tb) tb.onclick = () => { st.trial2 = 1; R.save(); R.toast && R.toast('報名了二轉試煉：帶著委託下遺跡，用' + R.CLASSES[cls].name + '打倒一隻領主體。', '#E8C04A'); sheet(cls, back); };
