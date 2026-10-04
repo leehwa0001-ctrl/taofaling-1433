@@ -14,7 +14,7 @@
     volcano: '場地效果・火山：地上冒出紅圈、開始冒泡就快躲開，一秒半後熔岩會噴出來（噴中非常痛），留下的熔岩攤會燙人。',
     desert: '場地效果・沙漠：沙暴一陣一陣來。沙暴裡看不遠、會被風推著走，沙子一直刮掉一點生命。',
     deep: '場地效果・深海：藍色的圈是暗流，會把人沖走；水壓一縮的時候會往四周推開。',
-    snow: '場地效果・凍原：白色的圈是冰，踩上去會滑；暴風雪來的時候走得慢、會凍傷。'
+    snow: '場地效果・凍原：地上淺藍色、亮亮的是冰面，踩上去會滑、停不下來；暴風雪來的時候走得慢、會凍傷。'
   };
   let S = null;   // 這一層的狀態
   const later = (t, f) => { if (S) S.q.push({ t, f }); };
@@ -36,7 +36,21 @@
       for (let i = 0; i < 3; i++) { const g = new TH.ShapeGeometry(new TH.Shape([new TH.Vector2(-0.35, -0.25), new TH.Vector2(0, 0.35), new TH.Vector2(0.35, -0.25), new TH.Vector2(0, -0.05)])); const m = new TH.Mesh(g, am); m.rotation.x = -Math.PI / 2; m.rotation.z = -a; w.F.group.add(m); arrows.push(m); }
       return { x, z, r, dx: Math.sin(a), dz: Math.cos(a), arrows, ph: Math.random() };
     });
-    if (S.env === 'snow') S.ice = spots(Math.round(7 * k)).map(([x, z]) => { const r = rnd(2.4, 3.8); zone({ kind: 'ice', x, z, r, life: 1e9 }, '#E8F4FF'); return { x, z, r }; });
+    if (S.env === 'snow') {
+      // 冰（2026-10-04 作者：冰可以做成地形的一部分，站上去會滑；放個圈圈蠻奇怪的）：地板上一塊一塊不規則的冰面，貼著地板的格子長
+      const t = w.F.tile, ice = S.iceT = new Set(), N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      spots(Math.round(7 * k)).forEach(([x, z]) => {
+        const k0 = t.id(t.tX(x), t.tZ(z)); if (t.T[k0] !== 1) return; const want = 6 + Math.floor(Math.random() * 10), q = [k0]; let n = 0;
+        while (q.length && n < want) { const kk = q.splice(Math.floor(Math.random() * q.length), 1)[0]; if (ice.has(kk) || t.T[kk] !== 1) continue; ice.add(kk); n++; const tx = kk % t.nx, tz = (kk - tx) / t.nx; N4.forEach(([dx, dz]) => { const nk = t.id(tx + dx, tz + dz); if (!ice.has(nk) && t.T[nk] === 1) q.push(nk); }); }
+      });
+      if (ice.size) {
+        const TH = THREE, c = document.createElement('canvas'); c.width = c.height = 16; const g = c.getContext('2d'); g.fillStyle = '#BFE4F4'; g.fillRect(0, 0, 16, 16); g.fillStyle = '#E8F8FF'; [[2, 3, 6], [9, 1, 5], [4, 10, 7], [11, 12, 4]].forEach(([a, b, l]) => { for (let i = 0; i < l; i++) g.fillRect(a + i, b + Math.floor(i / 2), 1, 1); }); g.fillStyle = '#9ACDE4'; g.fillRect(0, 15, 16, 1); g.fillRect(15, 0, 1, 16);
+        const tex = new TH.CanvasTexture(c); tex.magFilter = tex.minFilter = TH.NearestFilter;
+        const m = new TH.InstancedMesh(new TH.PlaneGeometry(t.TS, t.TS), new TH.MeshLambertMaterial({ map: tex, emissive: '#5A8AA8', emissiveIntensity: 0.25, transparent: true, opacity: 0.92 }), ice.size), o = new TH.Object3D(); let i = 0;
+        ice.forEach(kk => { const tx = kk % t.nx, tz = (kk - tx) / t.nx; o.position.set(t.cX(tx), 0.03, t.cZ(tz)); o.rotation.set(-Math.PI / 2, 0, (Math.floor(Math.random() * 4)) * Math.PI / 2); o.updateMatrix(); m.setMatrixAt(i++, o.matrix); });
+        m.receiveShadow = true; w.F.group.add(m); S.iceMesh = m;
+      }
+    }
     setTimeout(() => { if (S && R.toast) R.toast(TIP[S.env], '#FFB45A'); }, 1200);
   };
 
@@ -105,9 +119,9 @@
     }
     if (S.env === 'snow') {
       // 冰：在冰上停不下來（照上一格的速度繼續滑）
-      const onIce = S.ice.some(c => Math.hypot(P.x - c.x, P.z - c.z) < c.r) && !P.air;
+      const t = w.F && w.F.tile, onIce = !!(S.iceT && t && S.iceT.has(t.id(t.tX(P.x), t.tZ(P.z)))) && !P.air;
       const vx = (P.x - S.px) / Math.max(dt, 0.016), vz = (P.z - S.pz) / Math.max(dt, 0.016);
-      if (onIce) { S.vx = S.vx * 0.9 + vx * 0.1; S.vz = S.vz * 0.9 + vz * 0.1; const sl = Math.min(1, dt * 2.2); push(P, S.vx * sl * 0.6, S.vz * sl * 0.6); }
+      if (onIce) { S.vx = S.vx * 0.94 + vx * 0.06; S.vz = S.vz * 0.94 + vz * 0.06; const sl = Math.min(1, dt * 2.6); push(P, S.vx * sl * 0.85, S.vz * sl * 0.85); if (Math.hypot(S.vx, S.vz) > 2 && Math.random() < dt * 8) R.fx('dust', P.x, 0.1, P.z, { color: '#E8F8FF' }); }   // 冰上停不下來、轉不了彎
       else { S.vx *= 0.5; S.vz *= 0.5; }
     }
     S.px = P.x; S.pz = P.z;
