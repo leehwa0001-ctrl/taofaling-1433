@@ -5,7 +5,8 @@
 //   照玩家「一下普攻打多少」算一個最低生命：普通 4～10 下、精英 18～36 下、領主體 120～240 下、佩特拉核心 200～400 下（越深越多，照走到第幾成）。
 //   遺跡生物的生命至少是這個數字（加注條款的生命倍率另外再乘）。
 // - 傷害不動（作者：傷害目前感覺差不多）。
-// 放在所有包 R.spawnEnemy 的檔案後面（最外面）。
+// - 穿透加強（見下面）。
+// 放在所有包 R.spawnEnemy、R.enemyDefend 的檔案後面（最外面）。
 (function (R) {
   const W = () => R.W, S = () => R.S;
   const isLord = d => !!(d && (/^領主體/.test(d.name || '')));
@@ -34,5 +35,23 @@
     } catch (err) { }
     const k = hp / e.hpMax; e.hp *= k; e.hpMax = hp;
     return e;
+  };
+  // ---------- 穿透（2026-10-04 回報：穿甲感覺沒有效果，坦克打起來還是超硬） ----------
+  // 原本：護甲 × (1 − 穿透)，22% 穿透打 35% 護甲只多 12% 傷害；格擋、縮殼、護盾、「堅硬」這些減傷完全不受影響。
+  // 現在：物理傷害無視的護甲是穿透的兩倍（50% 穿透就完全無視護甲）；每 1% 穿透再打穿 1.5% 的格擋、縮殼、護盾之類的減傷。
+  const he1 = R.hurtEnemy;
+  R.hurtEnemy = (e, raw, o) => {
+    const P = W().P, pen = P ? P.pen || 0 : 0;
+    if (e && !e.dead && pen > 0 && e.def && e.def.armor && !(R.isMagHit && R.isMagHit(o))) { const a = e.def.armor, a1 = Math.min(0.9, a * (1 - pen)), a2 = a * Math.max(0, 1 - pen * 2); raw *= (1 - a2) / (1 - a1); }
+    return he1(e, raw, o);
+  };
+  const pa = (R.W_AFFIX || []).find(a => a.id === 'pen'); if (pa) pa.txt = v => '穿透 ' + v + '%（無視 ' + Math.min(100, v * 2) + '% 護甲、打穿 ' + Math.min(100, Math.round(v * 1.5)) + '% 格擋之類的減傷）';
+  const cs0 = R.charSheetHtml;
+  if (cs0) R.charSheetHtml = cls => { const h = cs0(cls); try { const P = R.calcPlayer(cls || R.S.cls), p = P.pen || 0; if (!p) return h; return h.replace('無視 ' + Math.round(p * 100) + '% 護甲', '無視 ' + Math.min(100, Math.round(p * 200)) + '% 護甲、打穿 ' + Math.min(100, Math.round(p * 150)) + '% 減傷'); } catch (e) { return h; } };
+  const ed0 = R.enemyDefend;
+  if (ed0) R.enemyDefend = (e, dmg, o, crit) => {
+    const out = ed0(e, dmg, o, crit), P = W().P, pen = P ? P.pen || 0 : 0;
+    if (pen > 0 && dmg > 0 && out < dmg) { const r = out / dmg; return dmg * (r + (1 - r) * Math.min(1, pen * 1.5)); }
+    return out;
   };
 })(window.R);

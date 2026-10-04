@@ -46,6 +46,7 @@
     if (o.primary) return !!(P.ws && P.ws.kind === 'magic');
     return !!MAG_CLS[P.cls];
   };
+  R.isMagHit = (o) => { const P = W().P; return !!(P && isMagHit(P, o || {})); };   // difficulty.js 的穿透用
   let magNow = false;
   const he0 = R.hurtEnemy;
   R.hurtEnemy = (e, raw, o) => {
