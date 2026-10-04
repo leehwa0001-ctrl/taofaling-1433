@@ -6,6 +6,8 @@
 //   完成度：實際／要求（巡查：走到第幾層）；效率：時限內 100%，超過每小時扣 3%，最低 1%；
 //   創傷：申請完成時的身體狀況（任務中治療不算，「能使自己在戰後恢復的與戰前無異，也是實力」），倒下＝1%，隊友倒著也扣；
 //   環境（2026-10-04 作者：要嚴查，照佩特拉核心的關注算）：佩特拉的注意每跨過 25、50、75 算一次關注，扣 5；注意滿了引起反應，扣 20。
+//   （2026-10-05 作者回報卡索級的環境分可能有 bug：卡索級 60～100 層，關注一路累積，環境分幾乎一定 0 分）→ 扣的分照走過的層數攤：
+//   15 層以內照扣；超過的 ×15÷走到的層數（30 層扣一半、60 層扣四分之一、100 層扣 15%）。
 //   打壞東西、殺多少遺跡生物都不直接扣（打壞東西會讓注意上升，就會算進去）；巡查一樣算；反饋：專員事後調查民眾和環境的反應。
 //   五項平均是這個任務的成績。成績不會馬上知道：專員調查、分館綜合後，隔天才登錄到勇者證（公會登記處查詢）。
 // - 2026-10-04（作者：委託必須到公會分館找櫃台繳交後才算完成；忘了配裝、出個遺跡就被結算了）：遺跡的委託回到地面不再馬上結算，
@@ -102,7 +104,7 @@
   const record = (h, failed) => {
     const s = S(), hh = h.t / HOUR, done = h.kind === 'patrol' ? Math.min(h.deepest, h.floors) : h.kills;
     const comp = clamp(100 * done / h.need), eff = hh <= h.limitH ? 100 : clamp(100 - 3 * Math.ceil(hh - h.limitH));
-    const hurt = failed ? 1 : clamp(100 * h.hp - 15 * h.downAllies), env = clamp(100 - 5 * (h.notice || 0) - 20 * (h.react || 0));
+    const hurt = failed ? 1 : clamp(100 * h.hp - 15 * h.downAllies), env = clamp(100 - (5 * (h.notice || 0) + 20 * (h.react || 0)) * Math.min(1, 15 / Math.max(1, h.deepest || h.floors || 1)));   // 照走過的層數攤：15 層以內照扣，越深每次扣得越少（卡索級 60～100 層原本幾乎一定 0 分）
     s.tasks = s.tasks || [];
     const t = { id: s.tasks.length + 1, site: h.site, grade: h.grade, letter: h.letter, kind: h.kind, need: h.need, done, limitH: h.limitH, h: Math.round(hh * 10) / 10, s: [comp, eff, hurt, env, null], day: s.day, ready: s.day + 1, failed: !!failed };
     s.tasks.push(t); return t;

@@ -31,7 +31,7 @@
   // 自己的名片：名字、職業、武器、長相、身上的護甲（別人畫你用）
   const myCard = () => {
     const s = S(), P = W().P, cls = s.cls, eq = R.equipped ? R.equipped(cls) : null, slim = {};
-    if (eq) ['body', 'head', 'feet'].forEach(k => { if (eq[k] && eq[k].base) slim[k] = { base: eq[k].base }; });
+    if (eq) ['body', 'head', 'feet'].forEach(k => { if (eq[k] && eq[k].base && !(R.gearHidden && R.gearHidden(k))) slim[k] = { base: eq[k].base }; });   // gearlook.js：設定成不顯示的不送
     let weapon = P && P.item && P.item.base; if (!weapon) { try { weapon = R.calcPlayer(cls).item.base; } catch (e) { weapon = 'sword'; } }
     return { name: s.name || '無名的勇者', look: { cls, weapon, look: R.playerLook ? R.playerLook() : null, eq: slim } };
   };
