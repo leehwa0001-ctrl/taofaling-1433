@@ -33,10 +33,12 @@
     if (!g.lords.includes('spikewolf')) g.lords.push('spikewolf', 'spikewolf');   // lords.js 每層會重排 g.lords
     if (!want || F.last) { F.rooms.forEach(r => { if (r.type === 'lord') r.type = 'fight'; }); return F; }
     // 只留一間：通往樓層通道的路上、越靠近終點越好（守門）
-    const path = mainPath(F), onPath = path.slice(1, -1).reverse().map(i => F.rooms[i]).filter(r => r.type === 'fight' || r.type === 'lord');
-    const pickR = onPath.find(r => r.type === 'lord') || onPath.find(r => r.big) || onPath[0] || F.rooms.find(r => r.type === 'lord');
+    // 大空洞打通的房間（zones.js 的 r.zone）不行：那幾間算清空過，走進去領主體不會出現，樓層通道就一直封著（2026-10-04 作者：領主房間跟大空洞混在一起時，領主直接沒出現）
+    const path = mainPath(F), onPath = path.slice(1, -1).reverse().map(i => F.rooms[i]).filter(r => (r.type === 'fight' || r.type === 'lord') && !r.zone);
+    const pickR = onPath.find(r => r.type === 'lord') || onPath.find(r => r.big) || onPath[0] || F.rooms.find(r => r.type === 'lord' && !r.zone) || F.rooms.find(r => r.type === 'fight' && !r.zone && r.i > 0);
     F.rooms.forEach(r => { if (r.type === 'lord' && r !== pickR) r.type = 'fight'; });
     if (pickR) { pickR.type = 'lord'; F.lordGate = { room: pickR.i, down: false }; }
+    else { const L = lordFloors(run); if (f + 1 < (run.floors || 0) - 1 && !L.includes(f + 1)) { L.push(f + 1); L.sort((a, b) => a - b); } }   // 這一層放不下：挪到下一層
     return F;
   };
   // ---------- 守門：牠倒下之前樓層通道封著 ----------
