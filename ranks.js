@@ -36,7 +36,7 @@
     { name: '討伐段考核', grades: ['mors', 'kesent'], need: 85, desc: '報名之後，下一次在摩爾斯級以上的遺跡接的委託就是考核：成績要 85% 以上。' },
     { name: '獵殺段考核', grades: ['kesent'], need: 90, boss: 1, desc: '報名之後，下一次克森特級的委託就是考核：要打倒最深處的佩特拉核心，成績 90% 以上。' },
     { name: '特攻段考核', grades: ['kaso'], need: 95, desc: '提交申請之後，下一次卡索級的特別討伐令就是考核：成績要 95% 以上。' },
-    { name: '近神段', never: 1, desc: '阿特斯階的勇者會收到會長直接指派的特殊任務，最後由會長決定。（遊戲裡還沒開放）' }
+    { name: '近神段', never: 1, desc: '阿特斯階的勇者會收到會長直接指派的特殊任務，最後由會長決定（kansait.js）。' }
   ];
   R.RANK_DANS = DANS;
 
@@ -54,7 +54,7 @@
   // ---------- 委託的分級 ----------
   const OLD = { 'E～D': 'D', 'C～A': 'C', 'AA～SS': 'AA', 'SSS～G': 'SSS' };
   const rangeOf = txt => { const p = String(txt || '').split('～'); if (p.length < 2) return li(p[0]) >= 0 ? [p[0]] : []; const a = li(p[0]), b = li(p[1]); return a < 0 || b < 0 ? [] : LET.slice(a, b + 1); };
-  const allowed = dan => { const set = DANS[dan].range.slice(); if (dan > 0) { const pr = DANS[dan - 1].range; set.push(pr[pr.length - 1]); } return set; };
+  const allowed = dan => { const set = DANS[dan].range.slice(); if (dan > 0) { const pr = DANS[dan - 1].range; if (!set.includes(pr[pr.length - 1])) set.push(pr[pr.length - 1]); } return set; };
   // 這座遺跡公會會發給你哪一級（null：接不了）
   const letterFor = (g, dan) => { const rg = rangeOf(g.letter), ok = allowed(dan).filter(l => rg.includes(l)); return ok.length ? ok.sort((a, b) => li(b) - li(a))[0] : null; };
   const ts0 = R.taskSpec;
