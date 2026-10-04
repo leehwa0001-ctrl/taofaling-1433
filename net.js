@@ -7,7 +7,7 @@
 // - 第一階段還沒做：遺跡生物、寶箱、掉落各算各的（第二階段改成房主決定遺跡生物）。
 (function (R) {
   const W = () => R.W, S = () => R.S, $ = id => document.getElementById(id), esc = s => R.esc(s);
-  const PROD = '';   // 伺服器架好之後填 wss://…
+  const PROD = 'wss://taofaling-1433.1433.workers.dev';   // Cloudflare（server-cf/，2026-10-05 上線）
   const LS = 'tf-net-server';
   const PROTOCOL = '1433-net-2';
   // https://… 也收（Render 給的網址是 https）：換成 wss://

@@ -5,6 +5,8 @@
 
 ## 上線（作者做一次就好）
 
+> 2026-10-05 已經上線：`wss://taofaling-1433.1433.workers.dev`（已填進 net.js 的 PROD）。下面的步驟留著，換帳號或重新部署時照做。
+
 1. 到 https://dash.cloudflare.com/sign-up 註冊 Cloudflare 帳號（免費方案，不用信用卡）。
 2. 打開終端機，先進到這個資料夾（`cd server-cf`），再執行（**Windows 的 PowerShell 要打 `npx.cmd`**，打 `npx` 會出現「已停用指令碼執行」的紅字）：
    ```
