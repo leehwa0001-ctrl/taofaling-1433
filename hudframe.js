@@ -145,11 +145,12 @@
     '.hf-env-snow::before{left:0;right:0;top:0;height:12px;background:' + ICE + ' 0 0/46px 12px repeat-x;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))}',
     '.hf-env-snow::after{left:0;right:0;top:9px;height:22px;background:radial-gradient(ellipse 1.2px 2px,#E6F4FF 60%,transparent 70%) 29px 0/46px 22px repeat-x,radial-gradient(ellipse 1.2px 2px,#E6F4FF 60%,transparent 70%) 16px 0/46px 22px repeat-x;animation:hfDrip 1.6s ease-in infinite}',
     '@keyframes hfDrip{0%{background-position:29px -2px,16px -10px;opacity:1}80%{opacity:.9}100%{background-position:29px 20px,16px 12px;opacity:0}}',
-    // 熔爐（奉主兵工廠）：鐵板鉚釘、底下燒紅的鐵水、往上噴的火星
-    '.hf-env-forge{--cc:#FF9A4A;background:repeating-linear-gradient(90deg,rgba(70,66,64,.9) 0 22px,rgba(50,46,44,.9) 22px 23px)!important;box-shadow:inset 0 0 0 1px #1A1614,inset 0 -6px 10px -4px #FF6A1A}',
-    '.hf-env-forge::before{left:3px;right:3px;top:3px;height:4px;background:radial-gradient(circle,#9A948E 0 1.2px,transparent 1.6px) 0 0/23px 4px repeat-x}',
-    '.hf-env-forge::after{left:0;right:0;bottom:0;top:0;background:linear-gradient(0deg,#FF7A2A 0 2px,transparent 3px),radial-gradient(circle,#FFE08A 0 1px,transparent 1.5px) 3px 0/17px 13px,radial-gradient(circle,#FF9A3A 0 .8px,transparent 1.3px) 11px 5px/23px 17px;animation:hfSpark 1.1s linear infinite}',
-    '@keyframes hfSpark{0%{background-position:0 0,3px 26px,11px 39px}100%{background-position:0 0,3px 0,11px 5px}}',
+    // 熔爐（奉主兵工廠）：機關——鐵板和鉚釘、底下一條黃黑警示條（像輸送帶一樣往前走）、右邊一個會轉的齒輪（作者 2026-10-04：場地效果改成地刺、絞肉機、輸送帶，跟火焰沒關係了）
+    '.hf-env-forge{--cc:#E8C04A;background:repeating-linear-gradient(90deg,rgba(74,78,86,.92) 0 22px,rgba(52,55,62,.92) 22px 23px)!important;box-shadow:inset 0 0 0 1px #14161A,inset 0 0 12px -6px #E8C04A;padding-bottom:9px!important}',
+    '.hf-env-forge::before{inset:0;background:radial-gradient(circle,#A8ACB4 0 1.2px,transparent 1.6px) 4px 3px/23px 4px repeat-x,repeating-linear-gradient(-45deg,#E8C04A 0 4px,#16181C 4px 8px) 0 100%/100% 5px no-repeat;animation:hfBelt 1.2s linear infinite}',
+    '.hf-env-forge::after{right:26px;top:50%;width:16px;height:16px;margin-top:-10px;border-radius:50%;background:radial-gradient(circle,#2A2C32 0 2.5px,#B8BCC4 3px 5px,transparent 5.5px),repeating-conic-gradient(#B8BCC4 0 18deg,transparent 18deg 36deg);-webkit-mask:radial-gradient(circle,#000 0 7.5px,transparent 8px);mask:radial-gradient(circle,#000 0 7.5px,transparent 8px);animation:hfSpin 3s linear infinite}',
+    '.hf-env-forge.hi-click,.hf-env-forge{padding-right:48px!important}',
+    '@keyframes hfBelt{0%{background-position:4px 3px,0 100%}100%{background-position:4px 3px,16px 100%}}',
     // 沙漠：斜吹的沙
     '.hf-env-desert{--cc:#E8C080;background:linear-gradient(90deg,rgba(110,80,40,.88),rgba(40,28,14,.85))!important}',
     '.hf-env-desert::after{inset:0;background:repeating-linear-gradient(100deg,transparent 0 16px,rgba(240,210,150,.28) 16px 18px,transparent 18px 27px,rgba(240,210,150,.16) 27px 28px);background-size:80px 100%;animation:hfSand 1.1s linear infinite}',
