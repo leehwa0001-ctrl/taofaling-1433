@@ -11,7 +11,7 @@
   const deep = run => 1 + Math.min(1, (run.floor || 0) / Math.max(1, run.floors - 1));   // 1～2：越深越兇
   const NAME = { volcano: '噴發的熔岩', desert: '沙暴', deep: '水壓', snow: '凍傷' };
   const TIP = {
-    volcano: '場地效果・火山：地上冒出紅圈就快躲開，一秒後熔岩會噴出來，留下的熔岩攤會燙人。',
+    volcano: '場地效果・火山：地上冒出紅圈、開始冒泡就快躲開，一秒半後熔岩會噴出來（噴中非常痛），留下的熔岩攤會燙人。',
     desert: '場地效果・沙漠：沙暴一陣一陣來。沙暴裡看不遠、會被風推著走，沙子一直刮掉一點生命。',
     deep: '場地效果・深海：藍色的圈是暗流，會把人沖走；水壓一縮的時候會往四周推開。',
     snow: '場地效果・凍原：白色的圈是冰，踩上去會滑；暴風雪來的時候走得慢、會凍傷。'
@@ -40,23 +40,28 @@
     setTimeout(() => { if (S && R.toast) R.toast(TIP[S.env], '#FFB45A'); }, 1200);
   };
 
+  // 被打斷（挖礦 mining.js、搜寶箱 raid.js）：只有遺跡生物打到、或一下掉超過 15% 生命才算；場地一點一點的傷害不算
+  const hp1 = R.hurtPlayer;
+  R.hurtPlayer = (raw, src, o) => { const P = W().P; if (P && src && src.def) P.hurtByT = performance.now(); return hp1(raw, src, o); };
+  R.hitInterrupts = loss => { const P = W().P; return !!P && (performance.now() - (P.hurtByT || 0) < 300 || loss > P.hpMax * 0.15); };
   const tick = dt => {
     const w = W(), run = w.run, P = w.P; if (!S || !on(run) || !P || P.dead) return;
     S.t += dt;
     for (const it of S.q) { it.t -= dt; if (it.t <= 0) { it.done = 1; it.f(); } } S.q = S.q.filter(it => !it.done);
     const k = S.k;
     if (S.env === 'volcano') {
+      S.amb = (S.amb || 0) - dt; if (S.amb <= 0) { S.amb = 0.3; const [bx, bz] = nearFloor(P.x + rnd(-10, 10), P.z + rnd(-10, 10)); R.fx('spark', bx, 0.15, bz, { color: rnd() < 0.5 ? '#FF8A3A' : '#FFD04A' }); if (rnd() < 0.3) R.fx('boom', bx, 0.05, bz, { r: 0.4, color: '#FF5A1A' }); }   // 岩漿冒泡、火星（只是畫面）
       S.next -= dt;
       if (S.next <= 0) {
-        S.next = rnd(5.5, 8.5) / k;
+        S.next = rnd(11, 17) / k;   // 2026-10-04 作者：頻率低一點、傷害高很多（20 倍）——原本像抓癢，只是一直打斷挖礦、開寶箱
         const n = 2 + Math.round(2 * k), vx = (P.x - S.px) / Math.max(dt, 0.016), vz = (P.z - S.pz) / Math.max(dt, 0.016);
         for (let i = 0; i < n; i++) {
           // 兩個瞄著你（往你走的方向多算一點），其他的散在附近
           const aim = i < 2, [x, z] = nearFloor(aim ? P.x + vx * 0.9 * (i ? 1 : 0.4) + rnd(-1, 1) : P.x + rnd(-9, 9), aim ? P.z + vz * 0.9 * (i ? 1 : 0.4) + rnd(-1, 1) : P.z + rnd(-9, 9)), r = 1.6;
-          R.fx('mark', x, 0, z, { r, t: 1.1, color: '#FF5A1A' });
-          later(1.1, () => {
+          R.fx('mark', x, 0, z, { r, t: 1.5, color: '#FF5A1A' }); [0.3, 0.7, 1.1].forEach(t0 => later(t0, () => { R.fx('spark', x + rnd(-0.8, 0.8), 0.2, z + rnd(-0.8, 0.8), { color: '#FF8A3A' }); R.fx('boom', x + rnd(-0.6, 0.6), 0.1, z + rnd(-0.6, 0.6), { r: 0.45, color: '#FF5A1A' }); }));   // 預警：地上冒泡、火星
+          later(1.5, () => {
             R.fx('boom', x, 0.4, z, { r: r + 0.4, color: '#FF7A3A' }); if (R.shake && Math.hypot(P.x - x, P.z - z) < 8) R.shake(0.15);
-            if (Math.hypot(P.x - x, P.z - z) < r + 0.3) hurtP(0.07 * k, 4);
+            if (Math.hypot(P.x - x, P.z - z) < r + 0.3) hurtP(0.4 * k, 40);   // 噴中很痛：四成到八成生命（熔岩攤每跳的 20 倍；照字面把噴發乘 20 會一下就死，站著開寶箱、挖礦都會被噴死）
             w.enemies.forEach(e => { if (!e.dead && !e.under && Math.hypot(e.x - x, e.z - z) < r + e.def.size * 0.4) R.hurtEnemy(e, 20 * k, {}); });
             zone({ kind: 'lava', x, z, r: 1.3, life: 5, dmg: P.hpMax * 0.025 * k }, '#FF5A1A');
           });

@@ -27,7 +27,7 @@
     const P = W().P, o = d.o;
     if (!W().run || !P || P.dead || W().F !== d.F || P.h !== d.h || o.left <= 0) { stop(); return; }
     if (Math.hypot(P.x - d.x, P.z - d.z) > 0.3) { stop('掘礦中斷了（礦還在，可以再挖）'); return; }
-    if (P.hp < d.hp - 0.5) { stop('被打斷了，礦還沒挖下來'); return; }
+    if (P.hp < d.hp - 0.5 && (!R.hitInterrupts || R.hitInterrupts(d.hp - P.hp))) { stop('被打斷了，礦還沒挖下來'); return; }   // 場地的小傷害不打斷（kesentfx.js）
     if (P.h.atk && d.atk && P.h.atk !== d.atk) { stop(); return; }   // 自己出手攻擊
     d.hp = P.hp; d.t += dt;
     // 一下一下敲：舉起 → 敲下去 → 收回
