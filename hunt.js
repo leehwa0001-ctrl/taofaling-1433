@@ -137,7 +137,7 @@
   R.addAware = (v, why) => (outdoor() ? undefined : aw0(v, why));   // 沒有佩特拉核心
   const lf0 = R.loadFloor;
   R.loadFloor = (f, o) => {
-    const r = lf0(f, o), run = W().run, F = W().F; if (!run || !run.site || !run.site.outdoor || !F) return r;
+    const r = lf0(f, o), run = W().run, F = W().F; if (!run || !run.site || !run.site.outdoor || run.site.kind === 'train' || !F) return r;   // 公會的訓練場（training.js）也是戶外，但沒有野獸、考核
     if (run.exam == null) { run.exam = pending !== 'job'; if (run.exam) hs().tries++; pending = null; }   // 第一層是在 startRun 裡面載入的，這時就要知道是不是考核
     const ab = $('r-aware-box'); if (ab) ab.hidden = true;   // 山裡沒有佩特拉核心
     dress(F);
