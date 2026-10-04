@@ -28,30 +28,30 @@
       subs: [
         { id: 'gale', n: '疾風', d: '手快、腳快。', nodes: [N('T_spd', '迅捷', 5, '攻擊速度 +3%', (P, v) => { if (P.ws) P.ws.rate *= 1 + 0.03 * v; }), N('T_eva', '身法', 5, '翻滾冷卻 −5%', (P, v) => { P.dodgeCdMax *= 1 - 0.05 * v; }),
           N('T_trA1', '狂速', 5, '攻擊速度 +12%｜技能冷卻 +6%', (P, v) => { if (P.ws) P.ws.rate *= 1 + 0.12 * v; P.skillCdMult *= 1 + 0.06 * v; }, 1)],
-          cap: N('T_capA1', '奧義・千刃', 5, '攻擊速度 +2%、暴擊率 +0.8%', (P, v) => { if (P.ws) { P.ws.rate *= 1 + 0.02 * v; P.ws.crit += 0.008 * v; } }) },
+          cap: N('T_capA1', '奧義・千刃', 5, '攻擊速度 +5%、暴擊率 +2%；點滿：每第五下普攻多砍一下', (P, v) => { if (P.ws) { P.ws.rate *= 1 + 0.05 * v; P.ws.crit += 0.02 * v; } if (v >= 5) P.ttCap = 'A1'; }) },   // 2026-10-05 作者：奧義的數值強一點（talentcap.js）
         { id: 'heavy', n: '重擊', d: '一下比一下重。', nodes: [N('T_str2', '剛力', 5, '傷害 +3%', (P, v) => { P.dmgMult *= 1 + 0.03 * v; }), N('T_brk', '破勢', 5, '無視護甲 +3%、暴擊傷害 +4%', (P, v) => { P.pen = Math.min(0.8, (P.pen || 0) + 0.03 * v); P.critMult += 0.04 * v; }),
           N('T_trA2', '捨身', 5, '傷害 +6%｜受到的傷害 +4%', (P, v) => { P.dmgMult *= 1 + 0.06 * v; P.ttGuard = (P.ttGuard || 0) - 0.04 * v; }, 1)],
-          cap: N('T_capA2', '奧義・斬鐵', 5, '暴擊傷害 +6%、無視護甲 +2%', (P, v) => { P.critMult += 0.06 * v; P.pen = Math.min(0.8, (P.pen || 0) + 0.02 * v); }) }
+          cap: N('T_capA2', '奧義・斬鐵', 5, '暴擊傷害 +15%、無視護甲 +5%；點滿：對精英、領主體的傷害 +25%', (P, v) => { P.critMult += 0.15 * v; P.pen = Math.min(0.85, (P.pen || 0) + 0.05 * v); if (v >= 5) P.ttCap = 'A2'; }) }
       ] },
     { id: 'shield', n: '盾之道', c: '#6AB0FF', d: '守勢：減傷、回復。',
       nodes: [N('T_tou', '堅韌', 5, '受到的傷害 −1.5%', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.015 * v; }), N('T_rec', '調息', 5, '每秒回復 0.3 生命', (P, v) => { P.regen = (P.regen || 0) + 0.3 * v; }), N('T_vit2', '厚實', 5, '生命 +4%', (P, v) => { P.hpMax = Math.round(P.hpMax * (1 + 0.04 * v)); })],
       subs: [
         { id: 'wall', n: '鐵壁', d: '站著不倒。', nodes: [N('T_def', '鐵壁', 5, '物防 +2', (P, v) => { P.def = (P.def || 0) + 2 * v; }), N('T_tou2', '硬撐', 5, '受到的傷害 −1.5%', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.015 * v; }),
           N('T_trB1', '重甲', 5, '受到的傷害 −4%｜移動 −3%', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.04 * v; P.speed *= 1 - 0.03 * v; }, 1)],
-          cap: N('T_capB1', '奧義・不動如山', 5, '受到的傷害 −1.6%、生命 +2%', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.016 * v; P.hpMax = Math.round(P.hpMax * (1 + 0.02 * v)); }) },
+          cap: N('T_capB1', '奧義・不動如山', 5, '受到的傷害 −4%、生命 +5%；點滿：不會被擊退', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.04 * v; P.hpMax = Math.round(P.hpMax * (1 + 0.05 * v)); if (v >= 5) P.ttCap = 'B1'; }) },
         { id: 'life', n: '再生', d: '打不死就會好。', nodes: [N('T_rec2', '再生', 5, '每秒回復 0.5 生命', (P, v) => { P.regen = (P.regen || 0) + 0.5 * v; }), N('T_hp3', '生機', 5, '生命 +3%、魔防 +1', (P, v) => { P.hpMax = Math.round(P.hpMax * (1 + 0.03 * v)); P.mdef = (P.mdef || 0) + v; }),
           N('T_trB2', '苦修', 5, '生命 +8%｜傷害 −3%', (P, v) => { P.hpMax = Math.round(P.hpMax * (1 + 0.08 * v)); P.dmgMult *= 1 - 0.03 * v; }, 1)],
-          cap: N('T_capB2', '奧義・不死身', 5, '生命剩三成以下時，每秒再回復 0.6% 生命', (P, v) => { P.ttLowRegen = 0.006 * v; }) }
+          cap: N('T_capB2', '奧義・不死身', 5, '生命剩三成以下時，每秒再回復 1.5% 生命；點滿：受到致命傷時留 1 點生命、3 秒不會受傷（90 秒一次）', (P, v) => { P.ttLowRegen = 0.015 * v; if (v >= 5) P.ttCap = 'B2'; }) }
       ] },
     { id: 'mind', n: '心之道', c: '#B88AFF', d: '術勢：技能、魔力。',
       nodes: [N('T_med', '冥想', 5, '技能冷卻 −2%', (P, v) => { P.skillCdMult *= 1 - 0.02 * v; }), N('T_mpr', '回魔', 5, '每秒回復魔力 +0.4', (P, v) => { P.mpRegen = (P.mpRegen || 0) + 0.4 * v; }), N('T_amp', '共鳴', 5, '技能書技能的傷害 +3%', (P, v) => { P.ttSkill = (P.ttSkill || 0) + 0.03 * v; })],
       subs: [
         { id: 'swift', n: '迅思', d: '技能一直放。', nodes: [N('T_med2', '疾思', 5, '技能冷卻 −2.5%', (P, v) => { P.skillCdMult *= 1 - 0.025 * v; }), N('T_mpr2', '湧泉', 5, '每秒回復魔力 +0.5', (P, v) => { P.mpRegen = (P.mpRegen || 0) + 0.5 * v; }),
           N('T_trC1', '急咒', 5, '技能冷卻 −5%｜魔力 −6%', (P, v) => { P.skillCdMult *= 1 - 0.05 * v; P.mpMax = Math.round(P.mpMax * (1 - 0.06 * v)); }, 1)],
-          cap: N('T_capC1', '奧義・無念', 5, '技能冷卻 −2%', (P, v) => { P.skillCdMult *= 1 - 0.02 * v; }) },
+          cap: N('T_capC1', '奧義・無念', 5, '技能冷卻 −5%；點滿：放技能有 25% 不進冷卻', (P, v) => { P.skillCdMult *= 1 - 0.05 * v; if (v >= 5) P.ttCap = 'C1'; }) },
         { id: 'abyss', n: '深淵', d: '一發比一發重。', nodes: [N('T_wis2', '深魔', 5, '魔力 +5%', (P, v) => { P.mpMax = Math.round(P.mpMax * (1 + 0.05 * v)); }), N('T_amp2', '增幅', 5, '技能書技能的傷害 +4%', (P, v) => { P.ttSkill = (P.ttSkill || 0) + 0.04 * v; }),
           N('T_trC2', '專精', 5, '技能書技能的傷害 +6%｜普攻的傷害 −3%', (P, v) => { P.ttSkill = (P.ttSkill || 0) + 0.06 * v; P.ttPrimary = (P.ttPrimary || 0) + 0.03 * v; }, 1)],
-          cap: N('T_capC2', '奧義・天啟', 5, '技能書技能的傷害 +3%、魔力 +3%', (P, v) => { P.ttSkill = (P.ttSkill || 0) + 0.03 * v; P.mpMax = Math.round(P.mpMax * (1 + 0.03 * v)); }) }
+          cap: N('T_capC2', '奧義・天啟', 5, '技能書技能的傷害 +8%、魔力 +6%；點滿：技能的暴擊率 +15%', (P, v) => { P.ttSkill = (P.ttSkill || 0) + 0.08 * v; P.mpMax = Math.round(P.mpMax * (1 + 0.06 * v)); if (v >= 5) P.ttCap = 'C2'; }) }
       ] }
   ];
   const XP = N('T_xp', '歷練', 999, '傷害 +0.5%、生命 +0.5%', (P, v) => { P.dmgMult *= 1 + 0.005 * v; P.hpMax = Math.round(P.hpMax * (1 + 0.005 * v)); });
