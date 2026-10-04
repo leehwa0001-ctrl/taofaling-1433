@@ -4,7 +4,7 @@
 // 做法：
 // - 記下「自己的動作」：普攻（R.attack）、技能（R.useSkill、R.castSlot）、大招（R.castUlt）、種族技能（R.castRaceSkill）、翻滾（R.dodge）。
 //   動作裡排的延後的事（setTimeout）、每一幀跑的東西（W.dyn：召喚獸咬人、砲台、持續的範圍）也算——這些時候呼叫的 R.fx 和自己射出去的東西（R.fire，owner 'p'）就是自己的特效。
-// - 連線中每 0.1 秒把這段時間的特效 { k: 'pfx', rid, f, n, fx: [[種類, x, y, z, 參數]…], sh: [[種類, x, z, y, 方向, 速度, 壽命, 追蹤, 拋物線, 往上的速度, 爆開的範圍, 穿透]…] } 送出去（一次最多 60 個特效、30 發）。
+// - 連線中每 0.2 秒把這段時間的特效 { k: 'pfx', rid, f, n, fx: [[種類, x, y, z, 參數]…], sh: [[種類, x, z, y, 方向, 速度, 壽命, 追蹤, 拋物線, 往上的速度, 爆開的範圍, 穿透]…] } 送出去（一次最多 60 個特效、30 發）。
 //   參數裡指到遺跡生物的換成編號（房主那邊的 nid，兩邊都認得），指到自己的換成「送的人」（隊友那邊用對方的人物位置）；認不得的整個不送。
 // - 隊友那邊照樣播：特效直接放；射出去的東西只有樣子（自己飛、撞牆或時間到就消失，會爆開的照樣冒一團爆炸的光），不會打到任何東西。
 // 放在所有包 R.attack、R.useSkill、R.castSlot、R.castUlt、R.castRaceSkill、R.dodge、R.fire、R.fx 的檔案後面（net2.js、netsummon.js 後面）。
@@ -107,7 +107,7 @@
       else {
         hook(); if (!W().paused) visStep(dt);
         sendT -= dt;
-        if (sendT <= 0) { sendT = 0.1; if (Q.fx.length || Q.sh.length) { try { N().send({ k: 'pfx', rid: run.coop.seed, f: run.floor, n: run.coop.n, fx: Q.fx.splice(0), sh: Q.sh.splice(0) }); } catch (e) { Q.fx.length = 0; Q.sh.length = 0; } } }
+        if (sendT <= 0) { sendT = 0.2; if (Q.fx.length || Q.sh.length) { try { N().send({ k: 'pfx', rid: run.coop.seed, f: run.floor, n: run.coop.n, fx: Q.fx.splice(0), sh: Q.sh.splice(0) }); } catch (e) { Q.fx.length = 0; Q.sh.length = 0; } } }
       }
     } catch (e) { console.warn('[netfx]', e); }
     return r;

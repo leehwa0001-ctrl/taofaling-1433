@@ -1,7 +1,7 @@
 // 多人連線：看得到隊友的狀態欄（2026-10-05 作者：應該也要看的到連線的隊友的狀態欄）
 // 原本左下角的隊友欄（hudframe.js 的 #r-party）只有電腦控制的隊友，連線的朋友剩多少血、有沒有倒下都看不到。
 // 現在：
-// - 連線中每 0.3 秒送自己的狀態 { k: 'ps', rid, hp, hm, mp, mm, lv, cls, adv, dn, db }（生命、魔力、等級、職業、轉職、倒下、身上的破防／虛弱／重傷）。
+// - 連線中每 0.5 秒送自己的狀態 { k: 'ps', rid, hp, hm, mp, mm, lv, cls, adv, dn, db }（生命、魔力、等級、職業、轉職、倒下、身上的破防／虛弱／重傷）。
 // - 隊友欄照原本的樣子多幾行連線的朋友：頭像（從對方的人物切）、名字（後面標「連線」）、職業 等級・生命、血條，
 //   再多一條細的魔力條、身上的狀態（破防 4 這樣）；倒下會變灰、寫「倒下了：走過去扶起來」（net2.js 扶得起來）。
 //   超過 4 秒沒收到寫「連線不穩」，超過 15 秒就先拿掉。
@@ -18,7 +18,7 @@
   const tick = dt => {
     const run = crun(); if (!run) { if (stats.size) stats.clear(); return; }
     hook();
-    sendT -= dt; if (sendT > 0) return; sendT = 0.3;
+    sendT -= dt; if (sendT > 0) return; sendT = 0.5;
     const P = W().P, S = R.S; if (!P || !S) return;
     const st = S.classes && S.classes[S.cls] || {};
     const db = P.dbf ? Object.keys(P.dbf).filter(k => P.dbf[k] > 0).map(k => [k, Math.ceil(P.dbf[k])]) : [];
