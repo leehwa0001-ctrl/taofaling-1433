@@ -1,7 +1,7 @@
 // 炸彈（2026-10-04 作者：可以新增炸彈，可以帶下去炸遺跡，可以讓佩特拉核心的注意度高速上升）
 // 2026-10-04 作者：遺跡用炸藥可以更狠一點，分好幾種——低級炸藥、高級炸藥、爆裂核心（範圍跟傷害依照等級提升），
 //   爆裂核心必定觸發佩特拉核心反應（直接讓注意等於 100，裝備詞條降不了）；下方的 HUD 也要顯示炸彈的數量（原本要二十幾顆才引得起反應）。
-// - 三種（公會的商店買；身上最多帶的數量不一樣）：
+// - 三種（公會的商店買；2026-10-04 作者：購買上限刪掉——原本最多 5／3／1 顆，爆裂核心只能帶一顆蠻沒用的，現在要帶幾顆都可以）：
 //   低級炸藥：120 費拉、最多 5 顆、範圍 3.5 公尺、威力約你普攻的 6 倍、佩特拉的注意 +35、太近自己掉一成五生命；
 //   高級炸藥：600 費拉、最多 3 顆、範圍 5 公尺、威力約普攻的 15 倍、注意 +60、太近掉三成；
 //   爆裂核心：2000 費拉＋魔力核心 1 顆、最多 1 顆、範圍 5.5＋等級／20 公尺、威力約普攻的 40 倍（再照等級加）、
@@ -76,11 +76,11 @@
       const tab = document.querySelector('[data-htab][aria-selected="true"]'), body = $('hub-body'), s = S(); if (!body || !tab || tab.dataset.htab !== 'shop' || !s) return;
       const box = document.createElement('div'); box.className = 'bomb-shop';
       box.innerHTML = '<h3>遺跡用炸藥</h3><p class="note">遺跡裡按 ' + (R.keyName ? R.keyName('bomb') : 'G') + ' 丟出選中的那一種（快捷列的「炸彈」那格點一下換種類）。炸得越大，佩特拉越會注意到你；爆裂核心一定會引起反應。帶進去用掉就沒了。</p><div class="recipes">'
-        + IDS.map(id => { const T = TYPES[id], n = cnt(id), ok = n < T.max && s.gold >= T.price && (!T.core || (s.mats.core || 0) >= T.core); return '<div class="recipe"><img src="' + icon(id) + '" alt="" style="width:32px;height:32px;image-rendering:pixelated"><b style="color:' + T.color + '">' + T.name + ' ×' + n + '／' + T.max + '</b><small>' + T.desc + '範圍 ' + T.rad(lvOf()).toFixed(1) + ' 公尺；佩特拉的注意 ' + (T.aware === 'max' ? '直接到 100' : '+' + T.aware) + '。一顆 ' + T.price + ' 費拉' + (T.core ? '＋魔力核心 ' + T.core + ' 顆' : '') + '。</small><div class="row"><button type="button" class="btn pri" data-bomb="' + id + ':1"' + (ok ? '' : ' disabled') + '>買一顆</button>' + (T.max > 1 ? '<button type="button" class="btn" data-bomb="' + id + ':max"' + (ok ? '' : ' disabled') + '>買到滿</button>' : '') + '</div></div>'; }).join('') + '</div>';
+        + IDS.map(id => { const T = TYPES[id], n = cnt(id), ok = s.gold >= T.price && (!T.core || (s.mats.core || 0) >= T.core); return '<div class="recipe"><img src="' + icon(id) + '" alt="" style="width:32px;height:32px;image-rendering:pixelated"><b style="color:' + T.color + '">' + T.name + ' ×' + n + '</b><small>' + T.desc + '範圍 ' + T.rad(lvOf()).toFixed(1) + ' 公尺；佩特拉的注意 ' + (T.aware === 'max' ? '直接到 100' : '+' + T.aware) + '。一顆 ' + T.price + ' 費拉' + (T.core ? '＋魔力核心 ' + T.core + ' 顆' : '') + '。</small><div class="row"><button type="button" class="btn pri" data-bomb="' + id + ':1"' + (ok ? '' : ' disabled') + '>買一顆</button>' + '<button type="button" class="btn" data-bomb="' + id + ':5"' + (ok ? '' : ' disabled') + '>買五顆</button>' + '</div></div>'; }).join('') + '</div>';
       body.querySelector('.panel-doc') ? body.querySelector('.panel-doc').appendChild(box) : body.appendChild(box);
       box.querySelectorAll('[data-bomb]').forEach(b => { b.onclick = () => {
-        const [id, m] = b.dataset.bomb.split(':'), T = TYPES[id]; let k = m === 'max' ? T.max - cnt(id) : 1;
-        k = Math.min(k, Math.floor(s.gold / T.price), T.max - cnt(id), T.core ? Math.floor((s.mats.core || 0) / T.core) : 99); if (k <= 0) return;
+        const [id, m] = b.dataset.bomb.split(':'), T = TYPES[id]; let k = +m || 1;
+        k = Math.min(k, Math.floor(s.gold / T.price), T.core ? Math.floor((s.mats.core || 0) / T.core) : 99); if (k <= 0) return;
         s.gold -= k * T.price; if (T.core) s.mats.core -= k * T.core; s[T.key] = cnt(id) + k; s.bombSel = id; R.save(); R.sfx && R.sfx('coin'); R.hub(t, f);
       }; });
     } catch (e) { console.warn('[bomb]', e); }
