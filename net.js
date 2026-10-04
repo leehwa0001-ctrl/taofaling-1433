@@ -9,6 +9,7 @@
   const W = () => R.W, S = () => R.S, $ = id => document.getElementById(id), esc = s => R.esc(s);
   const PROD = '';   // 伺服器架好之後填 wss://…
   const LS = 'tf-net-server';
+  const PROTOCOL = '1433-net-2';
   // https://… 也收（Render 給的網址是 https）：換成 wss://
   const wsOf = u => String(u || '').trim().replace(/^http(s?):\/\//, 'ws$1://').replace(/\/+$/, '');
   const serverUrl = () => wsOf(serverUrl0());
@@ -34,31 +35,79 @@
   };
 
   // ---------- 連線 ----------
-  const connect = () => new Promise((ok, no) => {
-    if (N.ws && N.ws.readyState === 1) { ok(); return; }
-    const url = serverUrl(); if (!url) { no(new Error('尚未設定連線網址，請在「換伺服器」填入《討伐令 1433》的伺服器網址。')); return; }
-    let ws; try { ws = new WebSocket(url); } catch (e) { no(new Error('伺服器網址不對：' + url)); return; }
+  // 一次只允許一個開房／加入請求；舊 socket 的事件不能動到新連線。
+  let connecting = null, cancelConnect = null, request = null, requestTimer = null;
+  const finishRequest = () => { request = null; clearTimeout(requestTimer); requestTimer = null; };
+  const disconnect = why => {
+    const ws = N.ws; N.ws = null;
+    if (cancelConnect) cancelConnect(new Error(why || '已取消連線。'));
+    connecting = null; cancelConnect = null; finishRequest();
+    if (ws) try { ws.close(); } catch (e) { }
+    drop(why);
+  };
+  const connect = () => {
+    if (N.ws && N.ws.readyState === 1) return Promise.resolve(N.ws);
+    if (connecting) return connecting;
+    const url = serverUrl();
+    if (!url) return Promise.reject(new Error('尚未設定連線網址，請在「換伺服器」填入《討伐令 1433》的伺服器網址。'));
+    let ws; try { ws = new WebSocket(url); } catch (e) { return Promise.reject(new Error('伺服器網址不對：' + url)); }
     N.ws = ws; N.busy = '連線中……'; refresh();
-    // Render 免費的伺服器閒置會睡著，第一次連要等它醒（最多一分鐘左右）
-    const wake = setTimeout(() => { if (!opened) { N.busy = '伺服器仍在連線中，可能正在從休眠啟動，請稍候……'; refresh(); } }, 3000);
-    const giveUp = setTimeout(() => { if (!opened) { try { ws.close(); } catch (e) { } N.busy = ''; no(new Error('伺服器一直沒有回應（' + url + '）。')); } }, 75000);
-    let opened = false;
-    ws.onopen = () => { opened = true; clearTimeout(wake); clearTimeout(giveUp); N.busy = ''; ok(); };
-    ws.onerror = () => { if (!opened) { clearTimeout(wake); clearTimeout(giveUp); N.busy = ''; no(new Error('連不上伺服器（' + url + '）。')); } };
-    ws.onclose = () => { if (N.ws === ws) N.ws = null; drop(opened && N.room ? '和伺服器斷線了。' : ''); };
-    ws.onmessage = ev => { let o; try { o = JSON.parse(ev.data); } catch (e) { return; } onServer(o); };
-  });
-  const act = (o) => connect().then(() => raw(Object.assign(o, myCard())), e => { N.busy = ''; R.toast(e.message, '#FF9A6A'); refresh(); });
+    let opened = false, settled = false, resolve, reject;
+    const promise = new Promise((ok, no) => { resolve = ok; reject = no; });
+    connecting = promise;
+    const settle = err => {
+      if (settled) return; settled = true; clearTimeout(wake); clearTimeout(giveUp);
+      if (connecting === promise) { connecting = null; cancelConnect = null; }
+      if (err) reject(err); else resolve(ws);
+    };
+    cancelConnect = settle;
+    const wake = setTimeout(() => { if (N.ws === ws && !opened) { N.busy = '伺服器仍在連線中，請稍候……'; refresh(); } }, 3000);
+    const giveUp = setTimeout(() => { if (N.ws === ws && !opened) disconnect('伺服器一直沒有回應（' + url + '）。'); }, 75000);
+    ws.onopen = () => { if (N.ws !== ws) { ws.close(); return; } opened = true; settle(); };
+    ws.onerror = () => { if (N.ws === ws && !opened) disconnect('連不上伺服器（' + url + '）。'); };
+    ws.onclose = () => {
+      if (N.ws !== ws) return;
+      N.ws = null; settle(new Error('伺服器在連線完成前關閉了連線。')); finishRequest();
+      drop(opened && N.room ? '和伺服器斷線了。' : '');
+    };
+    ws.onmessage = ev => {
+      if (N.ws !== ws) return;
+      let o; try { o = JSON.parse(ev.data); } catch (e) { return; }
+      if (o && typeof o === 'object' && !Array.isArray(o)) onServer(o);
+    };
+    return promise;
+  };
+  const act = o => {
+    if (request) return request.promise;
+    const token = {}; request = token;
+    token.promise = connect().then(ws => {
+      if (request !== token || N.ws !== ws || ws.readyState !== 1) return;
+      N.busy = o.t === 'create' ? '正在開房……' : '正在加入房間……'; refresh();
+      requestTimer = setTimeout(() => { if (request === token) { disconnect('伺服器沒有回覆房間請求。'); R.toast('伺服器沒有回覆房間請求，請重新連線。', '#FF9A6A'); } }, 10000);
+      ws.send(JSON.stringify(Object.assign(o, myCard(), { v: PROTOCOL })));
+    }, e => { if (request === token || !request) { finishRequest(); N.busy = ''; R.toast(e.message, '#FF9A6A'); refresh(); } });
+    return token.promise;
+  };
   N.create = () => act({ t: 'create' });
-  N.join = code => { code = String(code || '').trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(code)) { R.toast('房號是 4 個英文字母。'); return; } act({ t: 'join', code }); };
-  N.leave = () => { raw({ t: 'leave' }); drop('離開了房間。'); };
+  N.join = code => { code = String(code || '').trim().toUpperCase(); if (!/^[A-Z]{4}$/.test(code)) { R.toast('房號是 4 個英文字母。'); return; } return act({ t: 'join', code }); };
+  N.leave = () => disconnect('離開了房間。');
+  N.setServer = value => {
+    const url = wsOf(value);
+    if (url) { try { const u = new URL(url); if (!['ws:', 'wss:'].includes(u.protocol) || u.username || u.password || u.hash || (location.protocol === 'https:' && u.protocol !== 'wss:')) throw Error(); } catch (e) { R.toast('請填有效的連線網址；線上版需要 wss:// 或 https://。'); return false; } }
+    try {
+      if (url) localStorage.setItem(LS, url); else localStorage.removeItem(LS);
+      // 分享網址的舊參數不能每次又蓋回玩家剛改的設定。
+      const page = new URL(location.href); page.searchParams.delete('server'); history.replaceState(null, '', page.href);
+    } catch (e) { R.toast('瀏覽器無法儲存伺服器設定。'); return false; }
+    disconnect('已更換伺服器，請重新開房或加入。'); refresh(); return true;
+  };
 
   // 離開房間（自己離開、房主走了、斷線）：遺跡裡的人變回一個人，樓層不再跟著別人
   const drop = why => {
-    const had = !!N.room;
+    const had = !!N.room; finishRequest();
     N.room = null; N.me = null; N.host = null; N.members = []; N.busy = '';
     clearRemotes(); const run = W().run; if (run && run.coop) run.coop.solo = true;
-    pending = null; lastFloor = null;
+    pending = null; lastFloor = null; guestGo = false; cks.mine = {}; cks.host = {};
     if (had && why) R.toast(why, '#FFB45A');
     refresh();
   };
@@ -67,6 +116,8 @@
     // 別的遊戲的伺服器（例如 TOD 格鬥遊戲的房間伺服器會先送 { type: 'connected' }）：講清楚、斷線
     if (o && o.type && !o.t) { N.busy = ''; R.toast('這個網址是別的遊戲的伺服器，不是討伐令 1433 的（' + serverUrl() + '）。', '#FF9A6A'); try { N.ws.close(); } catch (e) { } return; }
     if (o.t === 'room') {
+      if (o.v !== PROTOCOL) { disconnect('伺服器版本不相容。'); R.toast('伺服器版本不相容，請更新伺服器和遊戲。', '#FF9A6A'); return; }
+      finishRequest();
       N.room = o.code; N.me = o.you; N.host = o.host; N.members = o.members || []; N.busy = '';
       R.toast(isHost() ? '開好房間了：房號 ' + o.code + '。把房號告訴朋友。' : '加入了 ' + nameOf(N.host) + ' 的房間。', '#7FE0FF');
     } else if (o.t === 'join') {
@@ -75,7 +126,7 @@
     } else if (o.t === 'leave') {
       R.toast(nameOf(o.id) + ' 離開了房間。', '#FFB45A'); N.members = N.members.filter(m => m.id !== o.id); dropRemote(o.id);
     } else if (o.t === 'closed') drop(o.why);
-    else if (o.t === 'err') { N.busy = ''; R.toast(o.msg, '#FF9A6A'); }
+    else if (o.t === 'err') { finishRequest(); N.busy = ''; R.toast(o.msg, '#FF9A6A'); }
     else if (o.t === 'msg') onMsg(o.from, o.d || {});
     refresh();
   };
@@ -91,25 +142,27 @@
   // 房主選好遺跡：房裡的人收到之後自己出發（委託書直接接下）
   const guestStart = d => {
     if (W().run && !W().run.done) { R.toast(nameOf(N.host) + ' 出發去了' + d.name + '，你還在遺跡裡。', '#FFB45A'); return; }
-    pending = d; guestGo = true; lastFloor = null;
+    pending = d; guestGo = true; lastFloor = null; cks.mine = {}; cks.host = {};
     R.toast(nameOf(N.host) + ' 出發去了' + d.name + '，跟上！', '#7FE0FF');
     if (R.closeSheet) try { R.closeSheet(); } catch (e) { }
     const hm = $('hub-modal'); if (hm) hm.hidden = true;
     R.startRun(d.site);
-    let tries = 0; const accept = () => { const b = $('tk-go'); if (b && b.offsetParent) { b.click(); return; } if (++tries < 20 && guestGo) setTimeout(accept, 100); };
+    let tries = 0; const accept = () => { const b = $('tk-go'); if (b && b.offsetParent) { b.click(); return; } if (++tries < 20 && guestGo && pending === d) setTimeout(accept, 100); };
     setTimeout(accept, 0);
-    setTimeout(() => { guestGo = false; }, 6000);
+    setTimeout(() => { if (pending === d) { pending = null; guestGo = false; R.toast('未能跟隨出發，請確認委託條件後重新組隊。'); } }, 6000);
   };
   // 真的開始了（W.run 剛建好、還沒長第一層）：房主記下種子告訴大家；其他人照房主的設定
   const sp0 = R.startParty;
   R.startParty = run => {
+    const result = sp0(run);
     if (N.room && isHost()) {
+      cks.mine = {}; cks.host = {}; lastFloor = null;
       run.coop = { seed: (R.nativeRandom() * 4294967296) >>> 0, n: 0, host: true };
-      N.send({ k: 'run', site: run.site.id, name: run.site.name, seed: run.coop.seed, cfg: { env: run.env, reaction: run.reaction, floors: run.floors } });
+      N.send({ k: 'run', site: run.site.id, name: run.site.name, seed: run.coop.seed, cfg: { env: run.env, reaction: run.reaction, floors: run.floors, tide: run.tide, pact: run.pact } });
     } else if (N.room && pending && pending.site === run.site.id) {
       Object.assign(run, pending.cfg); run.coop = { seed: pending.seed, n: 0, host: false }; pending = null; guestGo = false;
     }
-    return sp0(run);
+    return result;
   };
 
   // ---------- 同一個種子長同一層 ----------
@@ -121,11 +174,12 @@
   // 這一層長得一不一樣（地形和寶箱的位置）：房主的和自己的對不上就在 console 留話，方便查
   const checksum = F => { let h = 2166136261; const T = F.tile && F.tile.T; if (T) for (let i = 0; i < T.length; i++) h = Math.imul(h ^ T[i], 16777619); (F.chests || []).forEach(c => { h = Math.imul(h ^ Math.round((c.x || 0) * 10) ^ Math.round((c.z || 0) * 10) << 8, 16777619); }); return h >>> 0; };
   const cks = { mine: {}, host: {} };
-  const compare = n => { const a = cks.mine[n], b = cks.host[n]; if (a == null || b == null) return; if (a !== b) console.warn('[net] 這一層和房主的不一樣', n, a, b); delete cks.mine[n]; delete cks.host[n]; };
+  const compare = n => { const a = cks.mine[n], b = cks.host[n]; if (a == null || b == null) return; if (a !== b) { console.warn('[net] 這一層和房主的不一樣', n, a, b); N.leave(); R.banner('地圖不同步，已離開連線房間', '請所有人重新整理遊戲後再組隊；這一趟改為單人'); } delete cks.mine[n]; delete cks.host[n]; };
 
   const lf0 = R.loadFloor;
   R.loadFloor = (f, o) => {
     o = o || {}; const run = W().run;
+    if (run && run.coop && !run.coop.solo && !run.coop.host && !o.fresh && !o.netFollow) { R.toast('多人連線：由房主選擇樓層。'); return; }
     clearRemotes();   // 換場景：別人的人物跟著舊場景丟掉，收到位置再畫
     if (run && run.coop && !run.coop.solo) {
       if (run.coop.host) run.coop.n++;
@@ -141,7 +195,7 @@
   };
   const follow = d => {
     const run = coop(); if (!run || run.coop.host || run.coop.seed !== d.rid || run.coop.n >= d.n) return;
-    R.fade(() => { const r2 = coop(); if (!r2 || r2.coop.n >= d.n) return; r2.coop.n = d.n; R.loadFloor(d.f, d.up ? { up: true } : {}); if (d.up) R.banner('跟著房主往回走', '遺跡一直在長：上一層已經不是來的時候的樣子'); });
+    R.fade(() => { const r2 = coop(); if (!r2 || r2.coop.n >= d.n) return; r2.coop.n = d.n; R.loadFloor(d.f, { up: !!d.up, netFollow: true }); if (d.up) R.banner('跟著房主往回走', '遺跡一直在長：上一層已經不是來的時候的樣子'); });
   };
   // 上下樓跟著房主走（從入口走出去可以）
   const de0 = R.descend;
@@ -159,14 +213,17 @@
 
   // ---------- 收到房裡的人的訊息 ----------
   const onMsg = (from, d) => {
-    if (d.k === 'run' && from === N.host) guestStart(d);
-    else if (d.k === 'busy') R.toast(nameOf(N.host) + ' 正在遺跡裡。等房主回到地面，下一趟一起出發。', '#FFB45A');
+    if (!d || typeof d !== 'object' || !N.members.some(m => m.id === from)) return;
+    if (d.k === 'run' && from === N.host && Number.isInteger(d.seed) && R.SITES.some(s => s.id === d.site)) guestStart(d);
+    else if (d.k === 'busy' && from === N.host) R.toast(nameOf(N.host) + ' 正在遺跡裡。等房主回到地面，下一趟一起出發。', '#FFB45A');
     else if (d.k === 'floor' && from === N.host) {
+      const expected = coop() ? coop().coop.seed : pending && pending.seed;
+      if (d.rid !== expected || !Number.isInteger(d.n) || d.n < 1 || !Number.isInteger(d.f) || d.f < 0 || d.f >= (coop() ? coop().floors : pending.cfg.floors)) return;
       lastFloor = d; cks.host[d.n] = d.ck; compare(d.n);
       const run = coop(); if (run && !run.coop.host && run.coop.seed === d.rid) follow(d);
     }
     else if (d.k === 'end' && from === N.host) { const run = coop(); if (run && !run.coop.host && run.coop.seed === d.rid) { run.coop.solo = true; clearRemotes(); R.banner(nameOf(N.host) + ' 回到地面了', '剩下的路自己走：碰回歸水晶就能回去'); } }
-    else if (d.k === 'bye') dropRemote(from);
+    else if (d.k === 'bye' && coop() && d.rid === coop().coop.seed) dropRemote(from);
     else if (d.k === 'p') presence(from, d);
   };
 
@@ -194,7 +251,8 @@
   const dropRemote = id => { const r = remotes.get(id); if (!r) return; if (r.h.g.parent) r.h.g.parent.remove(r.h.g); r.tag.remove(); remotes.delete(id); };
   function clearRemotes() { [...remotes.keys()].forEach(dropRemote); }
   const presence = (from, d) => {
-    const run = coop(); if (!run || d.rid !== run.coop.seed || d.f !== run.floor || !W().scene) { dropRemote(from); return; }
+    const run = coop(); if (!run || d.rid !== run.coop.seed || d.f !== run.floor || d.n !== run.coop.n || !W().scene) { dropRemote(from); return; }
+    if (![d.x, d.z, d.yaw].every(Number.isFinite) || (d.y != null && !Number.isFinite(d.y))) return;
     let r = remotes.get(from); if (!r) { r = makeRemote(from, d); remotes.set(from, r); }
     r.tx = d.x; r.tz = d.z; r.y = d.y || 0; r.yaw = d.yaw; r.sp = d.sp || 0; r.t = 0;
     if (d.a && d.a[2] !== r.seq) { r.seq = d.a[2]; R.swingAnim(r.h, d.a[0], d.a[1]); }
@@ -216,7 +274,7 @@
     const P = W().P; if (!P || !P.h) return;
     if (P.h.atk && P.h.atk !== lastAtk) atkSeq++; lastAtk = P.h.atk;
     sendT -= dt; if (sendT > 0) return; sendT = 0.1;
-    N.send({ k: 'p', rid: run.coop.seed, f: run.floor, x: +P.x.toFixed(2), z: +P.z.toFixed(2), y: +(P.y || 0).toFixed(2), yaw: +P.h.g.rotation.y.toFixed(2), sp: P.still > 0 ? 0 : +(P.speed || 0).toFixed(1), a: P.h.atk ? [P.h.atk.wind, P.h.atk.dur, atkSeq] : null, r: P.h.roll > 0 ? 1 : 0, d: P.dead ? 1 : 0 });
+    N.send({ k: 'p', rid: run.coop.seed, f: run.floor, n: run.coop.n, x: +P.x.toFixed(2), z: +P.z.toFixed(2), y: +(P.y || 0).toFixed(2), yaw: +P.h.g.rotation.y.toFixed(2), sp: P.still > 0 ? 0 : +(P.speed || 0).toFixed(1), a: P.h.atk ? [P.h.atk.wind, P.h.atk.dur, atkSeq] : null, r: P.h.roll > 0 ? 1 : 0, d: P.dead ? 1 : 0 });
   };
 
   // ---------- 公會登記處：多人連線 ----------
@@ -235,7 +293,7 @@
       if (k === 'create') N.create();
       else if (k === 'join') N.join(($('net-code') || {}).value);
       else if (k === 'leave') N.leave();
-      else if (k === 'server') { const v = prompt('連線伺服器的網址（wss://…；空白＝預設）', serverUrl()); if (v == null) return; try { if (v.trim()) localStorage.setItem(LS, v.trim()); else localStorage.removeItem(LS); } catch (e) { } refresh(); }
+      else if (k === 'server') { const v = prompt('連線伺服器的網址（wss://…；空白＝預設）', serverUrl()); if (v == null) return; N.setServer(v); }
     };
   });
   const hub0 = R.hub;
