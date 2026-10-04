@@ -313,7 +313,7 @@
       if (!W().run || W().run !== run || P.dead) return;
       const ox = P.x + Math.sin(a) * (fwd || 0), oz = P.z + Math.cos(a) * (fwd || 0);
       R.fx('swing', ox, 1.1, oz, { a, range, arc: arc || 0.5, width, color: P.ws.legend === 'kasoon' ? '#FFB45A' : '#FFFFFF', dir: o && o.dir, big: o && o.big });
-      const inArc = (x, z, rad) => { const dx = x - ox, dz = z - oz, d = Math.hypot(dx, dz); if (width) { const along = dx * Math.sin(a) + dz * Math.cos(a), side = Math.abs(dx * Math.cos(a) - dz * Math.sin(a)); return along > -0.3 && along < range + rad && side < width + rad; } return d < range + rad && Math.abs(wrap(Math.atan2(dx, dz) - a)) < arc / 2 + 0.2; };
+      const inArc = (x, z, rad) => { const dx = x - ox, dz = z - oz, d = Math.hypot(dx, dz); if (width) { const along = dx * Math.sin(a) + dz * Math.cos(a), side = Math.abs(dx * Math.cos(a) - dz * Math.sin(a)); return along > -(d < rad + 1 ? rad + 0.6 : 0.3) && along < range + rad && side < width + rad; } const close = d < rad + 1; return d < range + rad && Math.abs(wrap(Math.atan2(dx, dz) - a)) < (close ? Math.max(arc / 2 + 0.2, 1.9) : arc / 2 + 0.2); };   // 貼身（作者 2026-10-04：拳師的普攻太近會空掉）：角度放寬到前方 ±110 度
       let hit = 0, crit = false;
       W().enemies.forEach(e => { if (!e.dead && inArc(e.x, e.z, e.def.size * 0.5)) { R.lastCrit = false; R.hurtEnemy(e, dmg, Object.assign({ primary: true }, o)); hit++; crit = crit || R.lastCrit; R.fx('spark', e.x, 0.9 + e.def.size * 0.4, e.z, { a, crit: R.lastCrit }); } });
       W().F.props.forEach(p => { if (p.alive && inArc(p.x, p.z, 0.4)) R.hitProp(p, dmg, true); });
