@@ -45,7 +45,25 @@
     if (!w.run || w.run.done || !sk) { if (el) el.hidden = true; return; }
     if (!el) { const tl = $('r-tl'); if (!tl) return; el = document.createElement('div'); el.id = 'r-race'; el.className = 'glass dungeon-only r-misc'; el.style.cursor = 'pointer'; el.onclick = () => R.toast && R.toast('種族技能「' + sk[1] + '」：' + sk[4]); tl.appendChild(el); }
     el.hidden = false; el.innerHTML = '種族技能 <b>' + sk[1] + '</b>（' + (R.keyName ? R.keyName('race') : 'T') + '）' + (cd > 0 ? '・' + Math.ceil(cd) + ' 秒' : '・<b style="color:#7AE0A0">好了</b>');
+    try { bar(sk); } catch (e) { }
   };
+  // 下面的快捷列也有一格（2026-10-05 作者：種族技能應該也要在底下標示出來）：名字、按鍵、冷卻，好了會亮，點一下也能放
+  const icons = {};
+  const iconOf = ch => { if (icons[ch]) return icons[ch]; const c = document.createElement('canvas'); c.width = c.height = 32; const g = c.getContext('2d'); g.fillStyle = '#3A2A5A'; g.beginPath(); g.moveTo(16, 1); g.lineTo(31, 16); g.lineTo(16, 31); g.lineTo(1, 16); g.closePath(); g.fill(); g.strokeStyle = '#C8A0FF'; g.lineWidth = 2; g.stroke(); g.fillStyle = '#F4E8FF'; g.font = 'bold 15px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ch, 16, 17); return (icons[ch] = c.toDataURL()); };
+  const bar = sk => {
+    const br = $('r-br'); if (!br) return; let b = br.querySelector('[data-h2="race"]');
+    if (!b) { b = document.createElement('button'); b.type = 'button'; b.className = 'act dungeon-only h2-only'; b.dataset.h2 = 'race'; b.innerHTML = '<img class="h2-ic" alt=""><span></span><kbd></kbd><i class="h2-n"></i>'; b.onclick = () => cast(); br.appendChild(b); }
+    const ic = b.querySelector('.h2-ic'), sp = b.querySelector('span'), kb = b.querySelector('kbd'), n = b.querySelector('.h2-n'), key = R.keyName ? R.keyName('race') : 'T', ch = sk[1].charAt(0);
+    if (ic && ic.dataset.k !== ch) { ic.src = iconOf(ch); ic.dataset.k = ch; }
+    if (sp && sp.textContent !== sk[1]) sp.textContent = sk[1];
+    if (kb && kb.textContent !== key) kb.textContent = key;
+    const t = cd > 0 ? Math.ceil(cd) + '秒' : ''; if (n && n.textContent !== t) n.textContent = t;
+    b.title = '種族技能「' + sk[1] + '」（' + key + '，冷卻 ' + CD + ' 秒）：' + sk[4];
+    b.classList.toggle('lit', !(cd > 0)); b.classList.toggle('empty', cd > 0);
+  };
+  const css = document.createElement('style');
+  css.textContent = 'body:not(.touch) #r-br [data-h2="race"]{order:4}';
+  document.head.appendChild(css);
   const lf0 = R.loadFloor; R.loadFloor = (f, o) => { const r = lf0(f, o); if (f === 0 || (W().run && W().run.floor === 0)) cd = 0; return r; };
   // 加成說明：多一行種族技能
   const bt0 = R.raceBonusText;
