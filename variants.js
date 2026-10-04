@@ -6,7 +6,7 @@
 //   淵（高三級以上）：幾乎全黑帶紫、眼睛發紫光、一圈紫色的光邊，身體大兩成。
 // 數值只多一點（生命 +15／30／45%、傷害 +10／20／30%，跑快一點）——分級本來就有加強。
 // 2026-10-04 作者：同種怪物越深層越容易出現變種；變異種只在深層出現，越深外觀越危險——
-//   出現的機率照走到第幾成：淺層一成、最深九成；兇的程度＝分級差＋深度（最深多兩級）。原本固定七成、只看分級。圖鑑不另外列（noDex），打倒的次數算在原本那一種上。
+//   出現的機率、兇的程度照走到第幾成（R.variantAt；淺層沒有、最深全是）。原本固定七成、只看分級。圖鑑不另外列（noDex），打倒的次數算在原本那一種上。
 // 有特別寫法的不變（三連貂、福影童、預言犢、分裂膠、喚群燈、行壁、礦殼的礦脈房……）。
 (function (R) {
   const W = R.W, rnd = Math.random, ART = R.BEAST_ART;
@@ -56,11 +56,21 @@
     }
   });
   R.VARIANTS = VAR;
+  // 照深度（0～1，走到第幾成）決定變種的機率、變成哪一級；gd＝這座遺跡比牠原本的分級高幾級
+  // 2026-10-04 作者：越深越容易出現變種要再極端一點——第一層就遇到理論上深層才會出現的怪物了。
+  //   （原本：第一層就有一成、而且照分級差直接是「淵」。）現在：
+  //   淺層（前三分之一）：沒有變種。中層：兩成到六成，「荒」（遺跡比牠高兩級以上是「獰」）。
+  //   深層：七成到全部，「獰」；最深的一成五、或遺跡比牠高兩級以上是「淵」。圖鑑的遺跡頁（dexruins.js）也照這個。
+  R.variantAt = (dep, gd) => {
+    if (dep < 1 / 3) return { chance: 0, tier: 0 };
+    if (dep < 2 / 3) return { chance: 0.2 + 1.2 * (dep - 1 / 3), tier: gd >= 2 ? 2 : 1 };
+    return { chance: Math.min(1, 0.7 + 0.9 * (dep - 2 / 3)), tier: dep >= 0.85 || gd >= 2 ? 3 : 2 };
+  };
   // 生出來的時候換成變種
   const se = R.spawnEnemy;
   R.spawnEnemy = (id, x, z, room, o) => {
     const run = W.run, h = home[id];
-    if (run && VAR[id] && h && !(o && (o.human || o.role))) { const dep = Math.max(0, Math.min(1, (run.floor || 0) / Math.max(1, ((run.floors || 1) - 1) * (run.depthK && run.depthK < 1 ? run.depthK : 1)))),   /* depth.js 生怪時把 run.floor 換算成舊的層數，總層數也要一起換算 */ diff = Math.min(3, Math.max(0, (run.grade.lv || 1) - h) + Math.floor(dep * 2.5)); if (diff >= 1 && VAR[id][diff] && rnd() < 0.1 + 0.8 * dep) { const e = se(VAR[id][diff], x, z, room, o); if (e) { e.vbase = id; const k = TIER[diff].sc; if (k !== 1 && e.m && e.m.g) e.m.g.scale.multiplyScalar(k); } return e; } }
+    if (run && VAR[id] && h && !(o && (o.human || o.role))) { const dep = Math.max(0, Math.min(1, (run.floor || 0) / Math.max(1, ((run.floors || 1) - 1) * (run.depthK && run.depthK < 1 ? run.depthK : 1)))),   /* depth.js 生怪時把 run.floor 換算成舊的層數，總層數也要一起換算 */ v = R.variantAt(dep, Math.max(0, (run.grade.lv || 1) - h)); let diff = v.tier; while (diff > 0 && !VAR[id][diff]) diff--; if (diff >= 1 && rnd() < v.chance) { const e = se(VAR[id][diff], x, z, room, o); if (e) { e.vbase = id; const k = TIER[diff].sc; if (k !== 1 && e.m && e.m.g) e.m.g.scale.multiplyScalar(k); } return e; } }
     return se(id, x, z, room, o);
   };
   // 打倒的次數也算在原本那一種上（圖鑑、之後的寵物）

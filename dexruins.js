@@ -3,7 +3,7 @@
 //   變異種只在深層出現，外觀越深越危險）
 // - dexui.js 的分頁旁邊多一個「遺跡」。左頁：分級的分頁（哈米莉亞、阿彌勒、摩爾斯、克森特、特殊種）→ 那個分級的遺跡 →
 //   這座遺跡的三列（淺層、中層、深層），每一列是那個深度會遇到的生物（可以左右拖），常見的排前面、標★；
-//   中層、深層換成會出現的變種（荒、獰、淵——照 variants.js：分級差＋深度）。列的顏色是遺跡所在地區的顏色，越往下越暗、越紅。
+//   中層、深層換成會出現的變種（荒、獰、淵——照 variants.js 的 R.variantAt：淺層沒有，越深越多越兇）。列的顏色是遺跡所在地區的顏色，越往下越暗、越紅。
 // - 右頁：沒點生物的時候是遺跡的介紹（地區、分級、層數、環境、領主體、佩特拉核心的樣子）；點了生物是那一隻的大圖、說明、在哪些遺跡出現。
 // - 手機（窄的畫面）：右頁的內容跳出來。
 // 放在 dexui.js、region.js 後面。
@@ -18,9 +18,9 @@
   const colOf = s => { const rg = regionOf(s); return (rg && rg.c) || (R.GRADE_COLOR && R.GRADE_COLOR[s.grade]) || '#8A7A6A'; };
   // 這種生物原本是哪個分級的（變種的「分級差」照這個算）
   const originLv = id => { for (const g of R.GRADES) if ((g.pool || []).includes(id)) return g.lv || 1; return 1; };
-  const tierAt = (id, site, band) => { const g = G(site.grade); if (!g) return 0; const t = Math.min(3, Math.max(0, (g.lv || 1) - originLv(id)) + band); return t && R.ENEMIES[id + '_v' + t] ? t : 0; };
+  const tierAt = (id, site, band) => { const g = G(site.grade); if (!g || !band) return 0; const gd = Math.max(0, (g.lv || 1) - originLv(id)); let t = R.variantAt ? R.variantAt(band === 1 ? 0.5 : 0.75, gd).tier : Math.min(3, gd + band); while (t > 0 && !R.ENEMIES[id + '_v' + t]) t--; return t; };   // variants.js 的 R.variantAt：中層看一半深、深層看四分之三深
   const floorsOf = s => (R.floorsFor ? R.floorsFor(s) : Math.max(2, (G(s.grade) || {}).floors || 5));
-  const BANDS = [['淺層', '變種一成上下'], ['中層', '變種大約一半'], ['深層', '幾乎都是變種']];
+  const BANDS = [['淺層', '沒有變種'], ['中層', '變種兩成到六成'], ['深層', '變種七成到全部，最深處是「淵」']];   // 2026-10-04 作者：越深越容易出現變種，再極端一點
   const bandRange = (s, b) => { const n = floorsOf(s), a = Math.floor(n * b / 3) + 1, z = Math.max(a, Math.floor(n * (b + 1) / 3)); return '第 ' + a + '～' + z + ' 層'; };
   const th = (id, star) => { const e = R.ENEMIES[id], n = kills(id.replace(/_v\d$/, '')), url = icon(id); return '<button type="button" class="dr-th' + (n ? '' : ' dim') + (mon === id ? ' sel' : '') + '" data-drm="' + id + '" title="' + esc(e ? e.name : id) + '">' + (url ? '<img src="' + url + '" alt="" draggable="false">' : '<span>' + esc((e && e.name || '?')[0]) + '</span>') + (star ? '<em>★</em>' : '') + '</button>'; };
   const row = (lab, sub, ids, k, col, stars) => '<div class="dr-row" style="--rc:' + col + ';--k:' + k + '"><div class="dr-lab"><b>' + esc(lab) + '</b><small>' + esc(sub) + '</small></div><div class="dr-strip">' + (ids.length ? ids.map(id => th(id, stars && stars.includes(id.replace(/_v\d$/, '')))).join('') : '<span class="dr-none">（沒有）</span>') + '</div></div>';
