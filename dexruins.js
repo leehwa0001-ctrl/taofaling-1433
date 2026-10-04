@@ -42,11 +42,11 @@
   };
   const special = () => {
     const E = R.ENEMIES, envs = Object.keys(R.ENVS || {});
-    let h = '<p class="note">只在特定的環境、或特別的條件才看得到的。</p>';
+    let h = '';
     envs.forEach((env, i) => { const ids = Object.keys(E).filter(k => E[k].env === env && !E[k].noDex); if (ids.length) h += row(R.ENVS[env].name, '克森特級的' + R.ENVS[env].name + '環境', ids, i * 0.6, ['#D85A2A', '#C8A870', '#2A7A9A', '#7AB8E0'][i] || '#8A7A6A'); });
     const lords = Object.keys(E).filter(k => E[k].boss && /^領主體/.test(E[k].name || '') && !E[k].noDex); h += row('領主體', '克森特級以上', lords, 2.2, '#9A2A3A');
     const etc = ['mimic', 'gaki', 'kudan', 'fukudo'].filter(k => E[k] && !E[k].noDex); if (etc.length) h += row('其他', '偽箱、佩特拉的反應……', etc, 1, '#6A5A7A');
-    return h;
+    return '<p class="note">只在特定的環境、或特別的條件才看得到的。</p><div class="dr-ruin">' + h + '</div>';   // 一起左右捲（同一條滑桿）
   };
   const left = () => {
     const gs = R.GRADES.filter(g => g.pool && g.pool.length && ruins(g.id).length);
@@ -55,7 +55,7 @@
     const s = R.SITES.find(x => x.id === siteId);
     return '<div class="dr-gtabs">' + gs.map(g => '<button type="button" class="dr-gt' + (gtab === g.id ? ' on' : '') + '" data-drg="' + g.id + '" style="--gc:' + ((R.GRADE_COLOR || {})[g.id] || '#8A7A6A') + '">' + esc(g.name) + '</button>').join('') + '<button type="button" class="dr-gt' + (gtab === 'sp' ? ' on' : '') + '" data-drg="sp" style="--gc:#9A6AC8">特殊種</button></div>'
       + (gtab === 'sp' ? special() : '<div class="dr-sites">' + list.map(x => { const rg = regionOf(x); return '<button type="button" class="dr-site' + (x.id === siteId ? ' on' : '') + (x.status === 'lock' ? ' lock' : '') + '" data-drs="' + x.id + '" style="--rc:' + colOf(x) + '"><b>' + esc(x.name) + '</b><small>' + esc(rg ? rg.n : '') + (x.status === 'lock' ? '・還不能進' : '') + '</small></button>'; }).join('') + '</div>'
-        + (s ? '<div class="dr-ruin">' + ruinRows(s) + '</div><p class="note dr-tip">★＝這座遺跡常見的。暗的是還沒打倒過的。列可以左右拖。</p>' : ''));
+        + (s ? '<div class="dr-ruin">' + ruinRows(s) + '</div><p class="note dr-tip">★＝這座遺跡常見的。暗的是還沒打倒過的。可以左右拖（每一列一起動）。</p>' : ''));
   };
   // ---------- 右頁 ----------
   const coreURL = s => { try { const st = R.coreStyleOf && R.coreStyleOf(s), sh = R.beastSheetOf && R.beastSheetOf('petra'); if (!sh) return ''; const src = st && R.recolorCore ? R.recolorCore(sh.c, st) : sh.c, c = document.createElement('canvas'); c.width = sh.fw; c.height = sh.fh; c.getContext('2d').drawImage(src, 0, 0, sh.fw, sh.fh, 0, 0, sh.fw, sh.fh); return c.toDataURL(); } catch (e) { return ''; } };
@@ -88,8 +88,8 @@
     box.querySelectorAll('[data-drg]').forEach(b => { b.onclick = () => { gtab = b.dataset.drg; mon = null; render(host); }; });
     box.querySelectorAll('[data-drs]').forEach(b => { b.onclick = () => { siteId = b.dataset.drs; mon = null; render(host); }; });
     box.querySelectorAll('[data-drm]').forEach(b => { b.onclick = () => { if (b.dataset.drag === '1') return; mon = b.dataset.drm; if (wide()) { render(host); } else popup(host, monInfo(mon)); }; });
-    // 列可以用滑鼠左右拖
-    box.querySelectorAll('.dr-strip').forEach(st => {
+    // 可以用滑鼠左右拖：整塊（每一列）一起動，只有一條滑桿（2026-10-04 作者：圖鑑的滑桿統一成同一個，四條分開挺瞎的）
+    box.querySelectorAll('.dr-ruin').forEach(st => {
       let down = null;
       st.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') return; down = { x: e.clientX, l: st.scrollLeft, moved: false }; });
       st.addEventListener('pointermove', e => { if (!down) return; const dx = e.clientX - down.x; if (Math.abs(dx) > 4) { down.moved = true; st.scrollLeft = down.l - dx; st.classList.add('drag'); } });
@@ -131,11 +131,11 @@
     '.dr-sites{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-bottom:10px}',
     '.dr-site{display:grid;gap:1px;text-align:left;padding:6px 9px;border-radius:8px;border:1px solid var(--line);border-left:4px solid var(--rc);background:rgba(255,255,255,.04);color:inherit;font:inherit;cursor:pointer}',
     '.dr-site b{font-size:13px}.dr-site small{font-size:11px;opacity:.75}.dr-site.on{background:color-mix(in srgb,var(--rc) 22%,transparent);border-color:var(--rc)}.dr-site.lock{opacity:.7}.dr-site.sm{padding:4px 8px}',
-    '.dr-ruin{display:grid;gap:0;border-radius:10px;overflow:hidden;border:1px solid var(--line)}',
+    '.dr-ruin{display:grid;gap:0;border-radius:10px;overflow-x:auto;overflow-y:hidden;border:1px solid var(--line);scrollbar-width:thin;cursor:grab;user-select:none}.dr-ruin.drag{cursor:grabbing}',
     // 越往下越暗、越紅（--k：0 淺 → 3 最深）
-    '.dr-row{display:grid;grid-template-columns:92px 1fr;align-items:center;gap:8px;padding:6px 8px;background:linear-gradient(90deg,color-mix(in srgb,var(--rc) calc(40% - var(--k) * 9%),color-mix(in srgb,#000 calc(100% - var(--k) * 18%),#8A0A14)),color-mix(in srgb,#000 calc(70% - var(--k) * 6%),color-mix(in srgb,var(--rc) 20%,#5A0A10)));border-top:1px solid rgba(0,0,0,.4)}',
-    '.dr-lab{display:grid;gap:1px;line-height:1.2}.dr-lab b{font-size:13.5px;color:#F4E9CD}.dr-lab small{font-size:10px;opacity:.8}',
-    '.dr-strip{display:flex;gap:5px;overflow-x:auto;overflow-y:hidden;padding:2px 0 4px;scrollbar-width:thin;cursor:grab;user-select:none}.dr-strip.drag{cursor:grabbing}',
+    '.dr-row{display:grid;grid-template-columns:92px max-content;min-width:100%;width:max-content;box-sizing:border-box;align-items:center;gap:8px;padding:6px 8px;background:linear-gradient(90deg,color-mix(in srgb,var(--rc) calc(40% - var(--k) * 9%),color-mix(in srgb,#000 calc(100% - var(--k) * 18%),#8A0A14)),color-mix(in srgb,#000 calc(70% - var(--k) * 6%),color-mix(in srgb,var(--rc) 20%,#5A0A10)));border-top:1px solid rgba(0,0,0,.4)}',
+    '.dr-lab{display:grid;gap:1px;line-height:1.2;position:sticky;left:0;z-index:1;align-self:stretch;align-content:center;margin:-6px 0 -6px -8px;padding:6px 6px 6px 8px;background:color-mix(in srgb,var(--rc) calc(32% - var(--k) * 7%),#0C0A0C);box-shadow:6px 0 8px -4px rgba(0,0,0,.6)}.dr-lab b{font-size:13.5px;color:#F4E9CD}.dr-lab small{font-size:10px;opacity:.8}',
+    '.dr-strip{display:flex;gap:5px;padding:2px 0 4px}',
     '.dr-th{position:relative;flex:none;width:46px;height:46px;display:grid;place-items:center;padding:3px;border-radius:7px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.28);cursor:pointer}',
     '.dr-th img{max-width:100%;max-height:100%;image-rendering:pixelated;pointer-events:none}.dr-th.dim img{filter:grayscale(1) brightness(.5)}',
     '.dr-th.sel,.dr-th:hover{border-color:var(--gold,#C9A13A)}.dr-th em{position:absolute;left:2px;top:0;font-style:normal;font-size:10px;color:#FFE08A;text-shadow:0 1px 2px #000}',
