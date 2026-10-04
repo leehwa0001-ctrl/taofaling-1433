@@ -1,5 +1,5 @@
 // 公會的訓練場（2026-10-05 作者：可以在公會新增訓練場，可以自己測試技能）
-// - 公會一樓南牆（出口左邊）立著一個稻草木樁：「公會後院・訓練場」。走過去按空白就進去，出來回到公會一樓。
+// - 公會一樓往二樓的樓梯腳下（西北角，2026-10-05 從南牆出口左邊搬過來）立著一個稻草木樁：「公會後院・訓練場」。走過去按空白就進去，出來回到公會一樓。
 // - 裡面：一片空地、幾個訓練木樁（不動、不還手、打不死）。畫面上方一塊面板：
 //   最近 5 秒的每秒傷害、總傷害、最大的一下、上一招（放技能之後打出去的總傷害）。可以換「1 隻／5 隻一群」、「技能不冷卻（魔力、大招也滿）」。
 // - 不算一趟遺跡：不花時間、不會受傷；裡面用掉的藥水、炸藥、卷軸、錢，練到的技能熟練度、武器熟練度、經驗，出來的時候全部還原（不能拿來練功）。
@@ -8,7 +8,7 @@
 // 放在所有包 R.hurtEnemy、R.loadFloor、R.startRun、R.onPlayerDown 的檔案後面（index.html 裡 net.js 前面）。
 (function (R) {
   const W = () => R.W, S = () => R.S, $ = id => document.getElementById(id), esc = s => R.esc(s);
-  const ID = 'guild-train', DOOR = { x: -4, z: 7.6 };
+  const ID = 'guild-train', DOOR = { x: -11.2, z: -3.4 };   // 2026-10-05 作者：稻草人放在樓梯底下，不然大家不知道訓練場在哪（原本在南牆出口左邊 -4, 7.6）
   const isTrain = run => !!(run && run.site && run.site.id === ID);
   const here = () => { const run = W().run; return isTrain(run) && !run.done ? run : null; };
 
@@ -63,8 +63,16 @@
   const place = () => {
     const w = W(), P = w.P; if (!here() || !P) return;
     dummies.forEach(e => { e.dead = true; if (e.m && e.m.g && e.m.g.parent) e.m.g.parent.remove(e.m.g); }); w.enemies = w.enemies.filter(e => !e.tdummy);
-    const a = Math.PI, fx = Math.sin(a), fz = Math.cos(a), cx = P.x + fx * 4.5, cz = P.z + fz * 4.5;
     const spots = T.n === 1 ? [[0, 0]] : [[0, 0], [1.6, 0.4], [-1.6, 0.4], [0.9, -1.4], [-0.9, -1.4]];
+    // 2026-10-05 作者回報（截圖）：木樁卡在牆裡——原本固定放在前方 4.5 公尺、沒看那裡是不是牆。
+    // 現在：前方、斜前方、兩旁、後面、近一點遠一點輪流試，挑一個每根木樁都站在空地上、跟你之間沒隔著牆的地方。
+    const open = (x, z) => R.isFloor(x, z) && !R.pointBlocked(x, z) && ![[0.6, 0], [-0.6, 0], [0, 0.6], [0, -0.6]].some(([u, v]) => R.pointBlocked(x + u, z + v));
+    const seen = (x, z) => { const n = Math.ceil(Math.hypot(x - P.x, z - P.z) / 0.3); for (let i = 1; i < n; i++) { const k = i / n, px = P.x + (x - P.x) * k, pz = P.z + (z - P.z) * k; if (!R.isFloor(px, pz) || R.pointBlocked(px, pz)) return false; } return true; };
+    let a = Math.PI, cx = P.x, cz = P.z - 4.5, fz = -1;
+    find: for (const dd of [4.5, 3.5, 5.5, 2.8]) for (const da of [0, 0.5, -0.5, 1.2, -1.2, Math.PI / 2, -Math.PI / 2, 2.2, -2.2, Math.PI]) {
+      const aa = Math.PI + da, x0 = P.x + Math.sin(aa) * dd, z0 = P.z + Math.cos(aa) * dd, f = Math.cos(aa) < 0 ? -1 : 1;
+      if (spots.every(([dx, dz]) => open(x0 + dx, z0 + dz * f) && seen(x0 + dx, z0 + dz * f))) { a = aa; cx = x0; cz = z0; fz = f; break find; }
+    }
     dummies = spots.map(([dx, dz]) => {
       const x = cx + dx, z = cz + dz * fz, e = R.spawnEnemy('tdummy', x, z, -1, { quiet: true });
       e.tdummy = 1; e.home = [x, z]; e.hp = e.hpMax = 1e9; e.dmg = 0; e.speed = 0; e.dormant = true; e.aggro = false; e.yaw = 0; return e;
@@ -90,7 +98,7 @@
     w.run = null; w.P = null; w.scene = null; dummies = [];
     restore();
     R.enterTown();
-    let n = 0; const back = () => { const t = W(); if (t.town && t.P && !t.inside) { R.enterInterior('guild', { x: DOOR.x, z: DOOR.z - 1, yaw: 0 }); return; } if (++n < 80) setTimeout(back, 100); };
+    let n = 0; const back = () => { const t = W(); if (t.town && t.P && !t.inside) { R.enterInterior('guild', { x: DOOR.x, z: DOOR.z + 0.8, yaw: 0 }); return; } if (++n < 80) setTimeout(back, 100); };
     setTimeout(back, 100);
   };
   R.trainLeave = leave;
@@ -160,13 +168,13 @@
     return r;
   };
 
-  // ---------- 公會一樓的入口：南牆、出口的左邊 ----------
+  // ---------- 公會一樓的入口：往二樓的樓梯腳下（西北角） ----------
   const pp0 = R.placePeople;
   R.placePeople = (kind, api) => {
     const r = pp0 ? pp0(kind, api) : undefined;
     try {
       if (kind === 'guild' && api && api.ins && api.inter) {
-        const m = R.makeBeast('tdummy'); m.g.position.set(DOOR.x - 1.1, 0, DOOR.z + 0.4); m.g.rotation.y = Math.PI; api.ins.group.add(m.g);
+        const m = R.makeBeast('tdummy'); m.g.position.set(DOOR.x, 0, DOOR.z - 1.2); api.ins.group.add(m.g);   // 往二樓的樓梯（西北角）腳下、樓梯的東邊
         api.inter(DOOR.x, DOOR.z, 1.7, '公會後院・訓練場（打木樁，試試技能）', () => R.trainEnter());
       }
     } catch (e) { console.warn('[training]', e); }
