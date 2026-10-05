@@ -1,4 +1,4 @@
-// 技能圖示改版（作者 2026-10-05：幫我優化技能圖示）
+// 技能圖示改版（作者 2026-10-05：幫我優化技能圖示；同日再調亮）
 // 原本（hud2.js）照技能的「型」只有三十種 16×16 圖示，六百多招共用，劈砍、斬首、撕裂長得一模一樣。現在每一招自己畫一張 24×24：
 // - 底：圓角方塊，顏色照技能自己的顏色（沒有就用職業的顏色），左上亮、右下暗，像一般 RPG 的技能格。
 // - 中間：照技能做的事畫（斬、刺、射、爆、落雷、法陣、增益、治療、盾、衝刺、瞬移、鎖鏈、光束、砲台、波、鉤、跳、召喚、環繞、標記、吸、
@@ -49,12 +49,12 @@
 
   const draw = o => {
     const c = document.createElement('canvas'); c.width = c.height = RES; const x = c.getContext('2d'); x.scale(K, K);
-    const col = o.color, lt = mix(col, '#FFFFFF', 0.55), dk = mix(col, '#000000', 0.55), mid = mix(col, '#FFFFFF', 0.2);
-    // 底
-    const bg = x.createLinearGradient(0, 0, SZ, SZ); bg.addColorStop(0, mix(col, '#1A1420', 0.55)); bg.addColorStop(1, mix(col, '#0A080C', 0.82));
+    const col = o.color, lt = mix(col, '#FFFFFF', 0.72), dk = mix(col, '#000000', 0.38), mid = mix(col, '#FFFFFF', 0.38);
+    // 底（作者 2026-10-05：圖示太暗——底色少摻黑、中間圖案加亮）
+    const bg = x.createLinearGradient(0, 0, SZ, SZ); bg.addColorStop(0, mix(col, '#4A4054', 0.28)); bg.addColorStop(1, mix(col, '#221C2A', 0.48));
     x.fillStyle = bg; x.beginPath(); x.roundRect ? x.roundRect(0.5, 0.5, SZ - 1, SZ - 1, 4) : x.rect(0.5, 0.5, SZ - 1, SZ - 1); x.fill();
-    x.fillStyle = 'rgba(255,255,255,.10)'; x.fillRect(2, 2, SZ - 4, 1); x.fillRect(2, 2, 1, SZ - 4);
-    x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(3, SZ - 3, SZ - 5, 1); x.fillRect(SZ - 3, 3, 1, SZ - 5);
+    x.fillStyle = 'rgba(255,255,255,.22)'; x.fillRect(2, 2, SZ - 4, 1); x.fillRect(2, 2, 1, SZ - 4);
+    x.fillStyle = 'rgba(0,0,0,.22)'; x.fillRect(3, SZ - 3, SZ - 5, 1); x.fillRect(SZ - 3, 3, 1, SZ - 5);
     // 中間的圖：畫在另一張上，描邊再貼回來
     const g = document.createElement('canvas'); g.width = g.height = RES; const y = g.getContext('2d'); y.scale(K, K);
     const P = (a, b, w, h, cc) => { y.fillStyle = cc; y.fillRect(a, b, w, h); };
