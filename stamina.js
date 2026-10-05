@@ -18,7 +18,7 @@
   const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
   const live = () => { const w = W(); return !!(w && w.run && !w.town && w.P && !w.run.done); };
   const trained = () => (R.profLv && R.profLv.stam ? R.profLv.stam() : 0), maxOf = () => MAX + 5 * trained();
-  const init = P => { if (P.stam == null || !P.stamMax) { P.stamMax = maxOf(); P.stamRegen = REGEN * (1 + 0.04 * trained()); P.stam = P.stamMax; } };
+  const init = P => { if (P.stam == null || !P.stamMax) { P.stamMax = maxOf(); P.stamRegen = REGEN * (1 + 0.04 * trained()) * (1 + (P.ttStam || 0)); P.stam = P.stamMax; } };
   let spent = 0;
   const use = (P, v) => { const d = Math.min(P.stam, v); P.stam = Math.max(0, P.stam - v); P.stamT = DELAY; if (P.stam <= 0) P.stamOut = true; spent += d; if (spent >= 15 && R.profGain) { const n = Math.floor(spent / 15); spent -= n * 15; R.profGain('stam', null, n); } };
   let warnT = 0;
@@ -134,7 +134,7 @@
   };
   // 換樓層：盾重新放進新的場景；體力回滿
   const lf0 = R.loadFloor;
-  R.loadFloor = (f, o) => { const r = lf0(f, o), P = W().P; if (shield && shield.parent) shield.parent.remove(shield); if (P) { P.stamMax = maxOf(); P.stamRegen = REGEN * (1 + 0.04 * trained()); P.stam = P.stamMax; P.stamOut = false; P.guard = false; } return r; };
+  R.loadFloor = (f, o) => { const r = lf0(f, o), P = W().P; if (shield && shield.parent) shield.parent.remove(shield); if (P) { P.stamMax = maxOf(); P.stamRegen = REGEN * (1 + 0.04 * trained()) * (1 + (P.ttStam || 0)); P.stam = P.stamMax; P.stamOut = false; P.guard = false; } return r; };
 
   const css = document.createElement('style');
   css.textContent = [

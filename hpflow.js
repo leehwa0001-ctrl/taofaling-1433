@@ -18,6 +18,10 @@
     return k;
   };
 
+  // 天賦「渴血」會扣每秒回血：最少 0（負的會變成扣血）
+  const cp0 = R.calcPlayer;
+  R.calcPlayer = cls => { const P = cp0(cls); if (P && P.regen < 0) P.regen = 0; return P; };
+
   // ---------- 戰鬥中 ----------
   let lastHurt = -1e9;
   const hp0 = R.hurtPlayer;

@@ -24,7 +24,7 @@
   };
   const spent = st => Object.values(sp(st).t).reduce((a, v) => a + v, 0);   // 星改成熟練度：點數只算天賦
   const talSpent = st => Object.values(sp(st).t).reduce((a, v) => a + v, 0);
-  R.spTotal = st => Math.max(0, st.lv) + (st.spBonus || 0);   // 2026-10-04 作者：等級有 50 就有 50 點天賦點（原本是等級 − 1）
+  R.spTotal = st => Math.max(0, st.lv) * 2 + (st.spBonus || 0);   // 2026-10-05 作者：天賦點變多——每級 2 點（天賦樹改成四條道）   // 2026-10-04 作者：等級有 50 就有 50 點天賦點（原本是等級 − 1）
   R.spFree = st => R.spTotal(st) - spent(st);
   const rank = (id, cls) => { const s = S(); if (!s) return 0; const st = stOf(cls), r = (st && st.sp && st.sp.r) || {}; return Math.max(r[id] || 0, /_aw$/.test(id || '') ? r[id.replace(/_aw$/, '')] || 0 : 0); };   // 覺醒版（_aw）沿用原版的星數
   const tal = (id, cls) => { const s = S(); if (!s) return 0; const st = stOf(cls); return (st && st.sp && st.sp.t[id]) || 0; };
@@ -83,7 +83,7 @@
     const s = S(), cls = s.cls, st = stOf(cls), p = sp(st), free = R.spFree(st), ts = talSpent(st), atGuild = where === 'hub', fee = 40 * st.lv;
     const skills = learnedOf(cls);
     host.innerHTML = '<h2>技能點・天賦・' + esc(R.clsName(cls)) + ' Lv ' + st.lv + (st.lv >= R.LV_CAP ? '（滿級）' : '／' + R.LV_CAP) + '</h2>'
-      + '<p class="note">等級幾級就有幾點（每升一級 +1）' + (st.lv >= R.LV_CAP ? '；滿級之後每攢滿一級的經驗再 1 點' : '') + '，用在天賦。可用 <b>' + free + '</b> 點（共 ' + R.spTotal(st) + '，用掉 ' + (R.spTotal(st) - free) + '）。每個武器類別的點數分開算。</p>'
+      + '<p class="note">每升一級 +2 點' + (st.lv >= R.LV_CAP ? '；滿級之後每攢滿一級的經驗再 1 點' : '') + '，用在天賦。可用 <b>' + free + '</b> 點（共 ' + R.spTotal(st) + '，用掉 ' + (R.spTotal(st) - free) + '）。每個武器類別的點數分開算。</p>'
       + '<h3>技能熟練度（最多 ★' + MAXR + '）</h3><p class="note">技能用越多越熟練：每放出去一次 +1，用滿 ' + PROF.join('、') + ' 次各升一星（不用花點數）。每一星：冷卻 −5%；技能書的技能傷害再 +12%（原本的基本技能只縮短冷卻）。</p>'
       + [null, st.adv].filter((v, i) => i === 0 || v).map(adv => { const list = skills.filter(id => { const L = R.SKILL_LIB && R.SKILL_LIB[id], a = L ? L.adv || null : ((R.ADV[cls] || []).some(x => x.skill === id) ? st.adv : null); return a === adv; }); if (!list.length) return ''; const an = adv && (R.ADV[cls] || []).find(x => x.id === adv);
         return '<p class="note"><b>' + esc(adv ? '轉職・' + (an ? an.name : adv) : '基本・' + R.CLASSES[cls].name) + '</b></p><div class="sp-list">' + list.map(id => { const r = p.r[id] || 0, u = p.u[id] || 0, lib = !!(R.SKILL_LIB && R.SKILL_LIB[id]), lo = r ? PROF[r - 1] : 0, hi = PROF[Math.min(r, MAXR - 1)], k = r >= MAXR ? 1 : Math.max(0, Math.min(1, (u - lo) / (hi - lo)));

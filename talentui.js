@@ -48,6 +48,16 @@
       case 'T_rec2': P(6, 2, 4, 12, '#5AD06A'); P(2, 6, 12, 4, '#5AD06A'); P(7, 3, 2, 10, '#BFF0C8'); break;
       case 'T_hp3': ln(8, 15, 8, 7, '#5A9A3A', 1.5); poly([[8, 9], [3, 5], [2, 9]], '#7AC84A'); poly([[8, 7], [13, 3], [14, 7]], '#9AE06A'); circ(8, 5, 1.5, '#FFE08A'); break;
       case 'T_capB2': ring(8, 5, 3, '#FFD27A', 2); P(7, 8, 2, 7, '#FFD27A'); P(3, 9, 10, 2, '#FFD27A'); break;
+      // 2026-10-05 四條道新的格子
+      case 'T_dd': poly([[1, 3], [8, 3], [8, 8], [4.5, 13], [1, 8]], '#9A9EA6'); poly([[8, 3], [15, 3], [15, 8], [11.5, 13], [8, 8]], '#4A7ACA'); P(7.5, 2, 1, 12, '#1A1A1E'); break;
+      case 'T_hp4': heart('#C83A4A', '#FF9AA0'); P(7, 5, 2, 6, '#FFE8E8'); P(5, 7, 6, 2, '#FFE8E8'); break;
+      case 'T_capB3': shield('#3A5A9A', '#C8D0DC'); ln(14, 2, 9, 7, '#FF6A5A', 2); poly([[15, 1], [10, 2.5], [13.5, 6]], '#FF6A5A'); ln(2, 14, 6, 10, '#FFD27A', 1.5); break;
+      case 'T_heal': ring(8, 8, 6, '#6AE08A', 1.5); P(7, 4, 2, 8, '#BFF0C8'); P(4, 7, 8, 2, '#BFF0C8'); break;
+      case 'T_stam': poly([[9, 1], [3, 9], [7.5, 9], [6, 15], [13, 6], [8.5, 6]], '#FFD24A'); P(8, 2, 1, 3, '#FFF0B0'); break;
+      case 'T_heal2': P(2, 5, 3, 7, '#5AD06A'); P(0, 7, 7, 3, '#5AD06A'); P(10, 2, 4, 10, '#7AE08A'); P(7, 5, 10, 4, '#7AE08A'); P(11, 3, 2, 8, '#E0FFE8'); break;
+      case 'T_vx1': poly([[8, 1], [12.5, 9], [3.5, 9]], '#C8203A'); circ(8, 10, 4.5, '#C8203A'); P(6, 8, 2, 3, '#FF8A9A'); break;
+      case 'T_vx2': poly([[6, 1], [10, 8], [2, 8]], '#C8203A'); circ(6, 9, 4, '#C8203A'); heart('#FF6A8A', '#FFD0D8'); break;
+      case 'T_capD2': poly([[8, 3], [12.5, 10], [3.5, 10]], '#A8102A'); circ(8, 11, 4, '#A8102A'); up(5, '#7AE08A'); up(9, '#BFF0C8'); break;
       case 'T_med': ring(8, 6, 6, '#B88AFF', 1.5, 0.5, Math.PI - 0.5); [4, 8, 12].forEach(a => ln(a, 11, a + (a - 8) * 0.25, 13.5, '#B88AFF', 1)); P(7, 3, 2, 2, '#E8D8FF'); break;
       case 'T_mpr': poly([[8, 1.5], [12.5, 9], [3.5, 9]], '#4A8AFF'); circ(8, 10, 4.5, '#4A8AFF'); P(6, 8, 2, 3, '#BFD8FF'); break;
       case 'T_amp': circ(8, 8, 1.8, '#E8D8FF'); ring(8, 8, 4, '#B88AFF', 1.2); ring(8, 8, 6.5, '#8A5AD8', 1.2); break;
@@ -58,8 +68,8 @@
       case 'T_amp2': up(5, '#D8B8FF'); up(9, '#B88AFF'); up(13, '#8A5AD8'); break;
       case 'T_capC2': poly([[1, 8], [8, 3], [15, 8], [8, 13]], '#F0E6C8'); circ(8, 8, 3, '#C88A2A'); circ(8, 8, 1.4, '#1A1A1E'); [[8, 0], [2, 2], [14, 2]].forEach(([a, b]) => ln(8, 3, a, b, '#FFD27A', 1)); break;
       case 'T_xp': star(8, 8.5, 7, '#E8C04A'); star(8, 8.5, 3.5, '#FFF0B0'); break;
-      case 'T_trA1': case 'T_trA2': case 'T_trB1': case 'T_trB2': case 'T_trC1': case 'T_trC2': {   // 增益減益參半：天秤，左邊綠、右邊紅
-        const c = { A: '#FF8A7A', B: '#8AC0FF', C: '#C8A8FF' }[id[4]]; ln(8, 2, 8, 13, '#C8C0B0', 1.5); ln(2, 4, 14, 4, c, 1.5); P(5, 13, 6, 2, '#8A8070');
+      case 'T_trA1': case 'T_trA2': case 'T_trB1': case 'T_trB2': case 'T_trC1': case 'T_trC2': case 'T_trD1': case 'T_trD2': {   // 增益減益參半：天秤，左邊綠、右邊紅
+        const c = { A: '#FF8A7A', B: '#8AC0FF', C: '#C8A8FF', D: '#8AE0A0' }[id[4]]; ln(8, 2, 8, 13, '#C8C0B0', 1.5); ln(2, 4, 14, 4, c, 1.5); P(5, 13, 6, 2, '#8A8070');
         ln(2, 4, 1, 9, '#7AE07A', 1); ln(2, 4, 4, 9, '#7AE07A', 1); P(0, 9, 5, 2, '#7AE07A'); ln(14, 4, 12, 9, '#FF6A5A', 1); ln(14, 4, 15, 9, '#FF6A5A', 1); P(11, 9, 5, 2, '#FF6A5A'); break; }
       default: star(8, 8, 6, '#C8C0B0');
     }
@@ -67,9 +77,9 @@
   };
 
   // ---------- 樹的位置（x：寬度的百分比；y：第幾列） ----------
-  const ROW = 62, XPAD = 8.333;
+  const ROW = 62; let XPAD = 8.333;   // 2026-10-05 四條道：每條道寬 100÷4，分支離中線 1/4
   const layout = T => {
-    const out = [], lines = [], colX = [100 / 6, 50, 500 / 6];
+    const NP = T.PATHS.length, out = [], lines = [], colX = T.PATHS.map((p, i) => (i + 0.5) * 100 / NP); XPAD = 100 / NP / 4;
     // 分支的格數（2026-10-04 多了增益減益參半的一格）：奧義、歷練跟著往下
     const M = Math.max(2, ...T.PATHS.map(p => Math.max(...p.subs.map(s => s.nodes.length)))), capY = 5.45 + M, xpY = capY + 1.1;   // 兩格時：奧義 7.45、歷練 8.55（原本的位置）
     T.ROOT.forEach((n, i) => out.push({ n, x: 50 + (i - (T.ROOT.length - 1) / 2) * 15, y: 0.55, col: '#E8C04A', where: '根基' }));
@@ -94,8 +104,8 @@
   const tree = T => { const t = {}; [T.ROOT, ...T.PATHS.map(p => p.nodes.concat(...p.subs.map(s => s.nodes.concat([s.cap])))), [T.XP]].forEach(a => a.forEach(n => { t[n.id] = n; })); return t; };
   // 奧義只能學一個：學了一個，別的奧義不管分支開了沒都標成 off（外框暗、打 X）
   const capIds = () => (R.TALENT_TREE ? R.TALENT_TREE.PATHS.flatMap(p => p.subs.map(sb => sb.cap.id)) : []);
-  const capTaken = n => { const ids = capIds(); return ids.includes(n.id) && ids.some(id => id !== n.id && R.talentLv(id) > 0); };
-  const stateOf = n => { const v = R.talentLv(n.id), w = R.talentWhy(n.id), full = v >= n.mx; return { v, w, full, cls: (v ? ' on' : '') + (full ? ' full' : '') + (!w && !full ? ' open' : '') + (w && !full ? ' lock' : '') + ((w && w.indexOf('奧義只能學一個') >= 0) || (!v && capTaken(n)) ? ' off' : '') }; };
+  const capTaken = n => capIds().includes(n.id) && !R.talentLv(n.id) && /奧義只能學/.test(R.talentWhy(n.id) || '');   // 奧義的格數用完了（R.talentSlots）
+  const stateOf = n => { const v = R.talentLv(n.id), w = R.talentWhy(n.id), full = v >= n.mx; return { v, w, full, cls: (v ? ' on' : '') + (full ? ' full' : '') + (!w && !full ? ' open' : '') + (w && !full ? ' lock' : '') + ((w && w.indexOf('奧義只能學') >= 0) || (!v && capTaken(n)) ? ' off' : '') }; };
   const skillGroups = () => {
     const cls = S().cls, st = stOf(), list = R.skillsLearned ? R.skillsLearned(cls) : [];
     return [null, st.adv].filter((v, i) => i === 0 || v).map(adv => {
@@ -118,7 +128,7 @@
     const xs = stateOf(T.XP);
     const xp = '<button type="button" class="tu-xp' + xs.cls + (sel && sel.id === T.XP.id ? ' sel' : '') + '" data-tun="' + T.XP.id + '" style="top:' + Math.round(L.xpY * ROW) + 'px"><span>★</span><b>歷練</b><em>' + xs.v + '</em><small>' + esc(T.XP.d) + '／級</small><span>★</span></button>';
     return '<div class="tu-hd"><b>根基</b></div><div class="tu-canvas" style="height:' + (H + 30) + 'px">' + svg + nodes + xp
-      + T.PATHS.map((p, i) => '<span class="tu-pl" style="left:' + [100 / 6, 50, 500 / 6][i] + '%;top:' + Math.round(1.55 * ROW) + 'px;--tc:' + p.c + '">' + esc(p.n) + '</span>' + p.subs.map((s, si) => '<span class="tu-sl" style="left:' + ([100 / 6, 50, 500 / 6][i] + (si ? XPAD : -XPAD)) + '%;top:' + Math.round(4.85 * ROW) + 'px;--tc:' + p.c + '">' + esc(s.n) + '</span>').join('')).join('')
+      + T.PATHS.map((p, i) => '<span class="tu-pl" style="left:' + ((i + 0.5) * 100 / T.PATHS.length) + '%;top:' + Math.round(1.55 * ROW) + 'px;--tc:' + p.c + '">' + esc(p.n) + '</span>' + p.subs.map((s, si) => '<span class="tu-sl" style="left:' + (((i + 0.5) * 100 / T.PATHS.length) + (si ? XPAD : -XPAD)) + '%;top:' + Math.round(4.85 * ROW) + 'px;--tc:' + p.c + '">' + esc(s.n) + '</span>').join('')).join('')
       + '</div>';
   };
   const detailHtml = (T, BY) => {
@@ -142,14 +152,15 @@
     if (!sel || (sel.k === 'tal' && !BY[sel.id]) || (sel.k === 'skill' && !R.SKILLS[sel.id])) { const first = [T.ROOT, ...T.PATHS.map(p => p.nodes)].flat().find(n => !R.talentWhy(n.id) && R.talentLv(n.id) < n.mx); sel = { k: 'tal', id: (first || T.ROOT[0]).id }; }
     const cb = host.querySelector('[data-close]'), row = cb && cb.closest('.row'); if (row) row.remove();
     const used = R.spTotal(st) - free;
-    host.innerHTML = '<div class="tu-root"><div class="tu-head"><h2>技能點・天賦・' + esc(R.clsName(cls)) + ' Lv ' + st.lv + '</h2><span class="tu-pts">可用 <b>' + free + '</b> 點<small>（共 ' + R.spTotal(st) + '，用掉 ' + used + '）</small></span></div>'
+    host.innerHTML = '<div class="tu-root"><div class="tu-head"><h2>技能點・天賦・' + esc(R.clsName(cls)) + ' Lv ' + st.lv + '</h2><span class="tu-pts">可用 <b>' + free + '</b> 點<small>（共 ' + R.spTotal(st) + '，用掉 ' + used + '）</small></span>' + (R.talentSlots ? (R.talentSlots() >= 2 ? '<span class="tu-slot">奧義兩格</span>' : '<button type="button" class="mini gold" data-tuslot' + (free >= 10 ? '' : ' disabled') + ' title="奧義原本只能學一個；花 10 點多開一格（最多兩個）">多開一格奧義（10 點）</button>') : '') + '</div>'
       + '<details class="tu-help"><summary>怎麼點</summary><p class="note">等級幾級就有幾點（每升一級 +1）' + (st.lv >= R.LV_CAP ? '；滿級之後每攢滿一級的經驗再 1 點' : '') + '，全部用在天賦；每個武器類別的點數分開算。技能不花點數：用越多越熟練，每一星冷卻 −5%（技能書的技能傷害再 +12%）。</p>'
-      + '<p class="note">天賦樹：根基投滿 ' + T.NEED_PATH + ' 點開三條道；一條道投滿 ' + T.NEED_SUB + ' 點開它的兩個分支；分支投滿 ' + T.NEED_CAP + ' 點開它的奧義。道和分支都可以點好幾條，<b>奧義只能學一個</b>。學的那個奧義點滿以後，多的點數可以放進最下面的「歷練」。要重新分配，到公會的武器登記那裡。</p></details>'
+      + '<p class="note">天賦樹：根基投滿 ' + T.NEED_PATH + ' 點開四條道；一條道投滿 ' + T.NEED_SUB + ' 點開它的兩個分支；分支投滿 ' + T.NEED_CAP + ' 點開它的奧義。道和分支都可以點好幾條，<b>奧義只能學一個</b>（右上角可以花 10 點多開一格，最多兩個）。學的那個奧義點滿以後，多的點數可以放進最下面的「歷練」。要重新分配，到公會的武器登記那裡。</p></details>'
       + '<div class="tu-cols"><section class="tu-skills">' + skillsHtml() + '</section><section class="tu-tree">' + treeHtml(T) + '</section><section class="tu-side">' + detailHtml(T, BY) + '</section></div></div>';
     if (row) host.appendChild(row);
     const again = () => R.skillPoints(where, true);
     host.querySelectorAll('[data-tun]').forEach(b => { b.onclick = () => { sel = { k: 'tal', id: b.dataset.tun }; again(); }; });
     host.querySelectorAll('[data-tus]').forEach(b => { b.onclick = () => { sel = { k: 'skill', id: b.dataset.tus }; again(); }; });
+    host.querySelectorAll('[data-tuslot]').forEach(b => { b.onclick = () => { if (R.talentBuySlot && R.talentBuySlot()) { R.sfx && R.sfx('levelup'); R.toast && R.toast('奧義多開了一格：可以再學一個奧義。', '#E8C04A'); again(); } }; });
     host.querySelectorAll('[data-tuadd]').forEach(b => { b.onclick = () => { if (R.talentAdd(b.dataset.tuadd)) { R.sfx && R.sfx('pick'); again(); } }; });
   };
   const scrolls = () => [$('hub-sheet'), $('r-sheet'), document.scrollingElement].filter(Boolean).map(el => [el, el.scrollTop]);
@@ -167,9 +178,9 @@
   const css = document.createElement('style');
   css.textContent = [
     '#r-sheet:has(.tu-root),#hub-sheet:has(.tu-root){width:min(1180px,100%);max-height:min(92dvh,900px)}',
-    '.tu-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}.tu-head h2{margin:0}.tu-pts{margin-left:auto;color:var(--dim)}.tu-pts b{font-size:20px;color:var(--gold)}.tu-pts small{margin-left:4px}',
+    '.tu-slot{color:#E8C04A;font-size:12px}.tu-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}.tu-head h2{margin:0}.tu-pts{margin-left:auto;color:var(--dim)}.tu-pts b{font-size:20px;color:var(--gold)}.tu-pts small{margin-left:4px}',
     '.tu-help summary{cursor:pointer;color:var(--dim);font-size:13px;margin:4px 0}',
-    '.tu-cols{display:grid;grid-template-columns:250px minmax(330px,1fr) 250px;gap:10px;align-items:start;margin:8px 0}',
+    '.tu-cols{display:grid;grid-template-columns:230px minmax(440px,1fr) 230px;gap:10px;align-items:start;margin:8px 0}',
     '.tu-cols>section{background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:10px;padding:8px}',
     '.tu-skills h3{margin:0 0 4px}.tu-g{margin:8px 0 4px;font-size:12px;color:var(--dim)}',
     '.tu-sk{display:grid;grid-template-columns:34px 1fr auto;grid-template-rows:auto auto;gap:2px 8px;align-items:center;width:100%;text-align:left;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:5px 7px;margin-bottom:5px;color:inherit;cursor:pointer;font:inherit}',

@@ -6,18 +6,22 @@
 // - 不死身（B2）：受到致命傷時留 1 點生命、3 秒不會受傷；90 秒一次（遺跡崩塌照樣會死）。比不屈、神佑先觸發。
 // - 無念（C1）：放技能有 25% 不進冷卻（頭上跳「無念」）。
 // - 天啟（C2）：技能（不是普攻）的暴擊率 +15%。
+// - 反擊（B3，2026-10-05）：天賦「奧義・反擊」每級把受到的傷害 10% 反彈給打你的遺跡生物（P.ttReflect，點滿 50%）：
+//   吃你的傷害增幅（傷害倍率、技能的強化），無視牠的防禦、減傷。
+// - 2026-10-05：奧義可以學兩個（花 10 點多開一格）→ 點滿的奧義記在 P.ttCaps（一個物件）。
 // 放在 talenttree.js、skillbook.js、unyield.js 後面。
 (function (R) {
   const W = () => R.W, rnd = Math.random;
-  const cap = () => { const P = W().P; return P && W().run ? P.ttCap || null : null; };
+  const caps = () => { const P = W().P; if (!P || !W().run) return null; return P.ttCaps || (P.ttCap ? { [P.ttCap]: 1 } : null); };
+  const has = k => { const c = caps(); return !!(c && c[k]); };
   // ---------- 千刃、斬鐵、天啟 ----------
   const he0 = R.hurtEnemy;
   R.hurtEnemy = (e, raw, o) => {
-    const c = cap(), P = W().P; if (!c || !e || e.dead) return he0(e, raw, o);
-    if (c === 'A2' && e.def && (e.def.elite || e.def.boss)) raw *= 1.25;
-    if (c === 'C2' && !(o && o.primary) && rnd() < 0.15) o = Object.assign({}, o, { crit: true });
+    const c = caps(), P = W().P; if (!c || !e || e.dead) return he0(e, raw, o);
+    if (c.A2 && e.def && (e.def.elite || e.def.boss)) raw *= 1.25;
+    if (c.C2 && !(o && o.primary) && rnd() < 0.15) o = Object.assign({}, o, { crit: true });
     const r = he0(e, raw, o);
-    if (c === 'A1' && o && o.primary && !o.ttEcho) {
+    if (c.A1 && o && o.primary && !o.ttEcho) {
       P.ttN = (P.ttN || 0) + 1;
       if (P.ttN % 5 === 0) { const run = W().run; setTimeout(() => { if (W().run === run && !e.dead) { R.fx && R.fx('slash', e.x, 1.1, e.z, { a: Math.random() * 6, len: 1.6 }); R.num && R.num(e.x, 2.4, e.z, '千刃', 'crit'); R.hurtEnemy(e, raw, Object.assign({}, o, { ttEcho: true })); } }, 90); }
     }
@@ -27,15 +31,27 @@
   let hit = null;
   const hp0 = R.hurtPlayer;
   R.hurtPlayer = (raw, src, o) => {
-    if (cap() === 'B1' && o && o.knock) o = Object.assign({}, o, { knock: 0 });
-    const prev = hit; hit = { raw, src }; try { return hp0(raw, src, o); } finally { hit = prev; }
+    if (has('B1') && o && o.knock) o = Object.assign({}, o, { knock: 0 });
+    const P = W().P, h0 = P ? P.hp + (P.shield || 0) : 0;
+    const prev = hit; hit = { raw, src }; let r; try { r = hp0(raw, src, o); } finally { hit = prev; }
+    try { if (P && P.ttReflect > 0 && src && src.def && !src.dead && !src.ally && src.hp > 0 && !src.invuln) { const took = h0 - (P.hp + (P.shield || 0)); if (took > 0) reflect(P, src, took * P.ttReflect); } } catch (e) { console.warn('[talentcap]', e); }
+    return r;
+  };
+  // 反彈：吃傷害增幅，無視防禦、減傷（直接扣血）；多人連線的鏡像交給 R.hurtEnemy 送給房主
+  const reflect = (P, e, v) => {
+    let m = P.dmgMult || 1; if (P.sb) Object.values(P.sb).forEach(b => { if (b && b.left > 0 && b.dmg) m *= b.dmg; });
+    const dmg = Math.max(1, Math.round(v * m));
+    if (e.mirror) { R.hurtEnemy(e, dmg / (P.dmgMult || 1), { noVamp: true, fromBehind: false }); return; }
+    e.hp -= dmg; e.flash = 0.12; e.aggro = true; e.provoked = true;
+    R.num && R.num(e.x, 1.8 * ((e.def && e.def.size) || 1) + 0.6, e.z, '反擊 ' + dmg, 'crit');
+    if (e.hp <= 0) R.killEnemy(e);
   };
   // ---------- 不死身 ----------
   const pd0 = R.onPlayerDown;
   R.onPlayerDown = (...a) => {
     const w = W(), P = w.P, run = w.run;
     const forced = hit && !hit.src && hit.raw >= 9999;   // 遺跡崩塌
-    if (P && run && !run.done && cap() === 'B2' && hit && !forced && (run.t || 0) >= (run.ttUndying || 0)) {
+    if (P && run && !run.done && has('B2') && hit && !forced && (run.t || 0) >= (run.ttUndying || 0)) {
       run.ttUndying = (run.t || 0) + 90; P.dead = false; P.hp = 1; P.iframe = 3; P.unyGuard = Math.max(P.unyGuard || 0, 3);
       R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 4, color: '#6AB0FF' }); R.fx && R.fx('boom', P.x, 0.6, P.z, { r: 2.2, color: '#9AD8FF' }); R.shake && R.shake(0.4);
       R.banner && R.banner('奧義・不死身', '3 秒內不會受傷——快退開'); R.sfx && R.sfx('levelup');
@@ -48,7 +64,7 @@
   const free = (P, i) => { if (i === 0) P.skillCd = 0; else if (P.skCd) P.skCd[i] = 0; R.num && R.num(P.x, 2.8, P.z, '無念', 'heal'); };
   let busy = false;
   const wrapCast = (f, slotOf) => (...a) => {
-    const P = W().P; if (busy || cap() !== 'C1' || !P) return f(...a);
+    const P = W().P; if (busy || !has('C1') || !P) return f(...a);
     const i = slotOf(a), c0 = cdOf(P, i); busy = true;
     try { return f(...a); } finally { busy = false; if (cdOf(P, i) > c0 + 0.01 && rnd() < 0.25) free(P, i); }
   };
