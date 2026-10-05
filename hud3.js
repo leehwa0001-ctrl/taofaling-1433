@@ -58,7 +58,8 @@
     sel(SK + '.none') + '{display:none!important}',
     sel(SK + '::before') + '{content:attr(data-mp);position:absolute;right:3px;top:2px;font:800 10px/1 system-ui,sans-serif;color:#8FB8FF;text-shadow:0 1px 0 #000,0 0 3px #000;z-index:4}',
     sel(SK + ' .h2-n') + '{left:3px!important;right:auto!important;top:2px!important;bottom:auto!important;transform:none!important;font-size:9px!important;color:#E8C04A!important}',
-    sel(SK + ':not(.lit) .h2-ic') + '{filter:grayscale(.7) brightness(.5)!important}',
+    sel(SK + ':not(.lit) .h2-ic') + '{filter:grayscale(.1) brightness(.97) drop-shadow(0 2px 0 rgba(0,0,0,.7))!important}',   /* 2026-10-05 作者：技能還是太暗——冷卻、魔力不夠的時候只淡一點點（原本灰七成、亮度一半，看起來一片咖啡色） */
+    sel(SK + '.lit .h2-ic') + '{filter:brightness(1.18) saturate(1.2) drop-shadow(0 2px 0 rgba(0,0,0,.7)) drop-shadow(0 0 3px rgba(255,255,255,.25))!important}',
     sel(SK + '.lit') + '{box-shadow:inset 0 0 0 1px var(--cc,#E8C04A),inset 0 0 0 2px #120E0A,inset 0 0 18px color-mix(in srgb,var(--cc,#E8C04A) 40%,transparent),0 0 10px color-mix(in srgb,var(--cc,#E8C04A) 45%,transparent)!important}',
     sel(SK + '.lit::after') + '{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent 40%,rgba(255,255,255,.18) 50%,transparent 60%);background-size:260% 100%;animation:h3shine 3s ease-in-out infinite;z-index:3;pointer-events:none}',
     '@keyframes h3shine{0%{background-position:130% 0}55%,100%{background-position:-60% 0}}',
@@ -104,9 +105,10 @@
       + 'background:radial-gradient(circle,#E8C870 0 1.4px,#2A1E12 1.8px 2.2px,transparent 2.4px) left center/100% 6px no-repeat,'
       + 'radial-gradient(circle,#E8C870 0 1.4px,#2A1E12 1.8px 2.2px,transparent 2.4px) right center/100% 6px no-repeat}',
     // 液體球：固定 84×84，在座裡水平／垂直置中
-    D + '.h2-badge>i,.h2-badge .h2-core{left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;'
+    // （2026-10-05 修正：原本 inset:auto 寫在 left/top 後面，把 left:50%、top:50% 蓋掉了，球被往左上推了半顆——現在 inset 先寫）
+    D + '.h2-badge>i,.h2-badge .h2-core{inset:auto!important;left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;'
       + 'width:84px!important;height:84px!important;margin:0!important;transform:translate(-50%,-50%)!important;'
-      + 'inset:auto!important;border-radius:50%!important;overflow:hidden!important}',
+      + 'border-radius:50%!important;overflow:hidden!important}',
     D + '.h2-badge>i{box-shadow:inset 0 0 0 2px rgba(0,0,0,.55),0 0 0 1px rgba(232,200,112,.25)!important}',
     D + '.h2-badge.hp .h2-ring{background:linear-gradient(to top,#5A080C 0,#C81E24 calc(var(--f,1)*100% - 8%),#F04A4A calc(var(--f,1)*100%),transparent calc(var(--f,1)*100% + 1px))!important}',
     D + '.h2-badge.mp .h2-ring{background:linear-gradient(to top,#08164A 0,#1E4AC8 calc(var(--f,1)*100% - 8%),#4A84F0 calc(var(--f,1)*100%),transparent calc(var(--f,1)*100% + 1px))!important}',

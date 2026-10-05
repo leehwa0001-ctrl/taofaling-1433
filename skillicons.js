@@ -1,4 +1,4 @@
-// 技能圖示改版（作者 2026-10-05：幫我優化技能圖示；同日再調亮；同日再依職業改武器圖示）
+// 技能圖示改版（作者 2026-10-05：幫我優化技能圖示；同日再調亮；同日再依職業改武器圖示；同日再調亮一次、二轉覺醒也照職業）
 // 原本（hud2.js）照技能的「型」只有三十種 16×16 圖示，六百多招共用，劈砍、斬首、撕裂長得一模一樣。現在每一招自己畫一張 24×24：
 // - 底：圓角方塊，顏色照技能自己的顏色（沒有就用職業的顏色），左上亮、右下暗，像一般 RPG 的技能格。
 // - 中間：照技能做的事畫（斬、刺、射、爆、落雷、法陣、增益、治療、盾、衝刺、瞬移、鎖鏈、光束、砲台、波、鉤、跳、召喚、環繞、標記、吸、
@@ -11,7 +11,7 @@
 // 放在 hud2.js、talentui.js 後面。
 (function (R) {
   const SZ = 24, RES = 32, K = RES / SZ, cache = {};   // 畫的座標用 24，實際 32×32（快捷欄顯示 32px，不會糊）
-  const hex = c => { const m = /^#?([0-9a-f]{6})$/i.exec(String(c || '')); const n = m ? parseInt(m[1], 16) : 0xC8C0B0; return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+  const hex = c => { const r = /^rgb\((\d+),(\d+),(\d+)\)$/.exec(String(c || '')); if (r) return [+r[1], +r[2], +r[3]]; const m = /^#?([0-9a-f]{6})$/i.exec(String(c || '')); const n = m ? parseInt(m[1], 16) : 0xC8C0B0; return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
   const mix = (a, b, k) => { const A = hex(a), B = hex(b); return 'rgb(' + A.map((v, i) => Math.round(v + (B[i] - v) * k)).join(',') + ')'; };
   // 技能 → 畫什麼
   const BASE_KIND = { roll: 'dash', volley: 'arrow', whirl: 'spin', fireball: 'fireball', heal: 'heal', flash: 'xslash', charge: 'dash', snipe: 'snipe', element: 'shot', grenade: 'boom', homing: 'shot', trap: 'trap', hamaya: 'arrow', rage: 'rage', combo: 'spin', qijin: 'palm', meteor: 'meteor',
@@ -58,23 +58,30 @@
       // 內修者
       in_breath: 'heal', in_palm: 'palm', in_wave: 'qi', in_iron: 'guard', in_burst: 'nova', qijin: 'palm',
       // 外修者（術士路線，隔空掌用氣／掌）
-      wx_burst: 'nova', wx_palm: 'palm', wx_shell: 'guard'
+      wx_burst: 'nova', wx_palm: 'palm', wx_shell: 'guard',
+      // 二轉、覺醒（2026-10-05 作者：快捷欄上還有長槍、槍的圖——破山拳、寸勁原本畫成光束，看起來像長槍）
+      sp2_monk_0: 'fist', sp2_monk_1: 'kick', sp2_monk_2: 'guard',
+      a2_monk_fistsaint_0: 'fist', a2_monk_fistsaint_1: 'kick', a2_monk_staffmonk_0: 'pole', a2_monk_staffmonk_1: 'pole',
+      a2_monk_inner_0: 'palm', a2_monk_inner_1: 'heal', a2_monk_waixiu_0: 'qi', a2_monk_waixiu_1: 'guard'
     };
-    if (ID_KIND[id]) kind = ID_KIND[id];
-    else if (cls === 'monk') {
-      if (kind === 'thrust' || kind === 'slash' || kind === 'xslash' || kind === 'slashwave') kind = 'fist';
-      else if (kind === 'shot' || kind === 'orb') kind = 'qi';
+    const bid = id.replace(/_aw$/, '');   // 覺醒技跟原本那招同一種圖（外框另外是金的）
+    if (ID_KIND[id] || ID_KIND[bid]) kind = ID_KIND[id] || ID_KIND[bid];
+    else if (cls === 'monk' || (R.S && R.S.cls === 'monk' && !(L && L.cls && L.cls !== 'monk'))) {
+      if (['thrust', 'slash', 'xslash', 'slashwave', 'beam', 'dance', 'pillar', 'spin'].includes(kind)) kind = 'fist';
+      else if (['shot', 'orb', 'arrow', 'snipe', 'wave', 'aura', 'breath'].includes(kind)) kind = 'qi';
     } else if ((cls === 'gunner' || cls === 'archer') && kind === 'thrust') kind = 'beam';
+    // 現在的職業是武術家、快捷欄放的是別的職業的技能（技能書學來的）：一樣不畫長槍、槍、箭，改成拳／氣
+    if (R.S && R.S.cls === 'monk' && !ID_KIND[id] && !ID_KIND[bid]) { if (['thrust', 'beam', 'slash', 'xslash', 'slashwave'].includes(kind)) kind = 'fist'; else if (['shot', 'arrow', 'snipe', 'orb'].includes(kind)) kind = 'qi'; }
     return { kind, color, n: Math.min(5, n), badges: badges.slice(0, 2), tier, key: [kind, color, n, badges.slice(0, 2).join('+'), tier].join('|') };
   };
 
   const draw = o => {
     const c = document.createElement('canvas'); c.width = c.height = RES; const x = c.getContext('2d'); x.scale(K, K);
-    const col = o.color, lt = mix(col, '#FFFFFF', 0.72), dk = mix(col, '#000000', 0.38), mid = mix(col, '#FFFFFF', 0.38);
-    // 底（作者 2026-10-05：圖示太暗——底色少摻黑、中間圖案加亮）
-    const bg = x.createLinearGradient(0, 0, SZ, SZ); bg.addColorStop(0, mix(col, '#4A4054', 0.28)); bg.addColorStop(1, mix(col, '#221C2A', 0.48));
+    const col = mix(o.color, '#FFFFFF', 0.18), lt = mix(o.color, '#FFFFFF', 0.82), dk = mix(o.color, '#000000', 0.3), mid = mix(o.color, '#FFFFFF', 0.5);
+    // 底（作者 2026-10-05：圖示太暗——底色少摻黑、中間圖案加亮；同日第二次：還是太暗，底色再亮、圖案的主色也先摻一點白）
+    const bg = x.createLinearGradient(0, 0, SZ, SZ); bg.addColorStop(0, mix(o.color, '#FFFFFF', 0.1)); bg.addColorStop(0.55, mix(o.color, '#3A3244', 0.3)); bg.addColorStop(1, mix(o.color, '#1E1A26', 0.55));
     x.fillStyle = bg; x.beginPath(); x.roundRect ? x.roundRect(0.5, 0.5, SZ - 1, SZ - 1, 4) : x.rect(0.5, 0.5, SZ - 1, SZ - 1); x.fill();
-    x.fillStyle = 'rgba(255,255,255,.22)'; x.fillRect(2, 2, SZ - 4, 1); x.fillRect(2, 2, 1, SZ - 4);
+    x.fillStyle = 'rgba(255,255,255,.35)'; x.fillRect(2, 2, SZ - 4, 1); x.fillRect(2, 2, 1, SZ - 4);
     x.fillStyle = 'rgba(0,0,0,.22)'; x.fillRect(3, SZ - 3, SZ - 5, 1); x.fillRect(SZ - 3, 3, 1, SZ - 5);
     // 中間的圖：畫在另一張上，描邊再貼回來
     const g = document.createElement('canvas'); g.width = g.height = RES; const y = g.getContext('2d'); y.scale(K, K);
@@ -138,11 +145,13 @@
       case 'frost': [0, 1, 2].forEach(i => { const a = i * Math.PI / 3; ln(12 - Math.cos(a) * 10, 12 - Math.sin(a) * 10, 12 + Math.cos(a) * 10, 12 + Math.sin(a) * 10, '#BFE6FF', 2.5); }); circ(12, 12, 2.5, '#FFFFFF'); break;
       // 武術家：拳、掌、氣、踢、棍（不要長槍／劍）
       case 'fist':
-        // 握拳：拳峰朝右上，指節橫線
-        poly([[6, 14], [8, 8], [14, 6], [18, 8], [19, 14], [17, 18], [8, 18]], lt);
-        poly([[8, 13], [10, 9], [14, 8], [16, 10], [16, 14], [14, 16], [9, 16]], col);
-        ln(9, 11, 15, 10, dk, 1.2); ln(9, 13, 15, 12.5, dk, 1.2); ln(9, 15, 14, 14.5, dk, 1.2);
-        circ(17, 9, 2.2, mid); break;
+        // 正面的拳頭（2026-10-05 再改：原本的太小、看不出是拳頭）——四根指節一排、拇指橫在下面、手腕
+        y.fillStyle = lt; y.beginPath(); y.roundRect ? y.roundRect(4, 5, 16, 14, 4) : y.rect(4, 5, 16, 14); y.fill();
+        P(7, 18, 10, 4, col);
+        [8, 12, 16].forEach(a => ln(a, 6, a, 12.5, dk, 1.2));
+        [6, 10, 14, 18].forEach(a => circ(a, 7.2, 1.3, '#FFFFFF'));
+        poly([[4, 13], [15, 12.5], [15.5, 16], [5, 17.5]], col); ln(5, 13, 15, 12.6, dk, 1);
+        ln(1, 9, 3, 9, mid, 1.2); ln(0.5, 13, 3, 13, mid, 1.2); ln(1, 17, 3, 17, mid, 1.2); break;
       case 'palm':
         // 推掌：掌心朝外＋氣紋
         poly([[7, 20], [5, 12], [7, 6], [12, 4], [17, 6], [19, 12], [17, 20], [12, 18]], lt);
