@@ -2,9 +2,9 @@
 // - x＝身上所有吸血加起來：武器的嗜血、飾品的飲血、種族、技能的強化、狂怒、那一招自己帶的吸血、天賦（P.vampX）。
 //   舊的「吸血 1%」一律換成吸血系數 +20（說明文字一起改）。
 // - 每一次攻擊（同一瞬間打到的算一次）有 √x % 的機率觸發（x＝100 → 10%，最多 50%）。
-// - 觸發時回復：⌈武器吸血乘數 × 技能乘數 × (1＋x÷2000)⌉ × √(打到幾隻) × (1＋恢復量增益)。
+// - 觸發時回復：⌈武器吸血乘數 × 技能乘數 × (1＋x÷2000)⌉ × (1＋√打到幾隻)÷2 × (1＋恢復量增益)。
 //   武器吸血乘數照攻速：長劍 5（＝5×2.3÷攻速）→ 大劍 11.5、戰斧 8.2、刀 4.3、拳套 3.3、步槍 1.3（1～15）。
-//   技能乘數：普攻、技能都是 1（範圍招靠 √隻數 遞減：打 9 隻只回 3 倍）。
+//   技能乘數：普攻、技能都是 1（範圍招照 (1+√隻數)÷2：打 9 隻回 2 倍）。
 //   例：吸血 100 的長劍，普攻一隻 10% 機率回 ⌈5×1×1.05⌉＝6；一次打 9 隻 10% 機率回 18。
 // - 沒有冷卻（作者：拳師的普攻比 0.3 秒還快）。燃燒、毒、地上範圍的持續傷害不算攻擊，不擲。
 // - 回復照樣吃降治療（魔力太濃、重傷、佩特拉的詛咒、條款）。
@@ -31,7 +31,7 @@
   };
   const wMult = P => { const wd = P.item && R.WEAPONS[P.item.base], rate = (wd && wd.rate) || REF_RATE; return Math.max(1, Math.min(15, LONG * REF_RATE / rate)); };
   const amp = P => 1 + (P.recovAmp || 0);
-  const healOf = (P, x, n) => Math.max(1, Math.round(Math.ceil(wMult(P) * (1 + x / PER)) * Math.sqrt(Math.max(1, n)) * amp(P)));
+  const healOf = (P, x, n) => Math.max(1, Math.round(Math.ceil(wMult(P) * (1 + x / PER)) * (1 + Math.sqrt(Math.max(1, n))) / 2 * amp(P)));
   R.vampCoef = coef;
   // 給角色資料、狀態圖示用
   R.vampInfo = (P, extra) => { P = P || W.P; if (!P) return null; const x = coef(P, extra); return { x, chance: Math.min(CAP, Math.sqrt(x) / 100), heal: healOf(P, x, 1), mult: wMult(P) }; };

@@ -6,6 +6,9 @@
 // 放在 fogarc.js 後面。
 (function (R) {
   const W = R.W;
+  // 2026-10-05 作者：迷霧的白框是碰撞框，應該像暴風雪那樣顯示物體外側的輪廓——這些線關掉，
+  //   改由 pixel.js 的深度描邊（霧裡減半）畫出牆、擺設真正的外形。要看回舊的線把 LINES 改 true。
+  const LINES = false;
   let lastF = null;
   const build = F => {
     const t = F.tile; if (!t || !t.T || !F.group) return null;
@@ -30,7 +33,7 @@
   R.updateLights = dt => {
     const r = ul(dt), run = W.run, F = W.F;
     try {
-      const on = !!(run && F && F.fogMin && !(run.site && run.site.outdoor));
+      const on = !!(LINES && run && F && F.fogMin && !(run.site && run.site.outdoor));
       if (F !== lastF) { lastF = F; if (F) F.fogLines = null; }
       if (on && F && !F.fogLines) F.fogLines = build(F) || 'none';
       if (F && F.fogLines && F.fogLines !== 'none') {

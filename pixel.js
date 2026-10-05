@@ -62,7 +62,7 @@
         '  vec3 c = texture2D(tColor, (p + 0.5) / res).rgb;',
         '  float d = dep(p);',
         '  float far = max(max(dep(p + vec2(1.0, 0.0)), dep(p - vec2(1.0, 0.0))), max(dep(p + vec2(0.0, 1.0)), dep(p - vec2(0.0, 1.0))));',
-        '  if (far - d > edge) c *= 1.0 - 0.5 * (fogOn > 0.5 ? 1.0 - fogAt(p) : 1.0);',   // 濃霧（fogarc.js）：霧裡的東西不描邊，不然牆的輪廓會透出來
+        '  if (far - d > edge) c *= 1.0 - 0.5 * (fogOn > 0.5 ? 1.0 - 0.5 * fogAt(p) : 1.0);',   // 濃霧（fogarc.js）：霧裡的東西描邊減半（2026-10-05 作者：迷霧顯示物體外側的輪廓，不是碰撞框）
         '  gl_FragColor = vec4(c, 1.0);',
         '  #include <encodings_fragment>',
         '}'
