@@ -1,8 +1,9 @@
-// 技能圖示改版（作者 2026-10-05：幫我優化技能圖示；同日再調亮）
+// 技能圖示改版（作者 2026-10-05：幫我優化技能圖示；同日再調亮；同日再依職業改武器圖示）
 // 原本（hud2.js）照技能的「型」只有三十種 16×16 圖示，六百多招共用，劈砍、斬首、撕裂長得一模一樣。現在每一招自己畫一張 24×24：
 // - 底：圓角方塊，顏色照技能自己的顏色（沒有就用職業的顏色），左上亮、右下暗，像一般 RPG 的技能格。
 // - 中間：照技能做的事畫（斬、刺、射、爆、落雷、法陣、增益、治療、盾、衝刺、瞬移、鎖鏈、光束、砲台、波、鉤、跳、召喚、環繞、標記、吸、
-//   吸取、風暴、吐息、舞、復活、十字斬、迴旋刃、架勢……），顏色也照技能。
+//   吸取、風暴、吐息、舞、復活、十字斬、迴旋刃、架勢、拳、掌、氣、踢、棍……），顏色也照技能。
+// - 職業覆寫：武術家（拳／掌／氣／踢／棍）不再用長槍、劍弧；槍手直線技改畫光束，不再長槍。
 // - 角落的小徽章：燃燒、冰凍／減速、雷、暈眩、詛咒、吸血、定身、暴擊、隱身、挑釁、貫穿。
 // - 上緣的小點：打幾下（段數、波數、連發）。
 // - 外框：轉職技銀框、二轉技紫框、覺醒技金框＋閃光。
@@ -13,11 +14,11 @@
   const hex = c => { const m = /^#?([0-9a-f]{6})$/i.exec(String(c || '')); const n = m ? parseInt(m[1], 16) : 0xC8C0B0; return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
   const mix = (a, b, k) => { const A = hex(a), B = hex(b); return 'rgb(' + A.map((v, i) => Math.round(v + (B[i] - v) * k)).join(',') + ')'; };
   // 技能 → 畫什麼
-  const BASE_KIND = { roll: 'dash', volley: 'rain', whirl: 'spin', fireball: 'fireball', heal: 'heal', flash: 'xslash', charge: 'dash', snipe: 'snipe', element: 'shot', grenade: 'boom', homing: 'shot', trap: 'trap', hamaya: 'arrow', rage: 'rage', combo: 'spin', qijin: 'nova', meteor: 'meteor',
+  const BASE_KIND = { roll: 'dash', volley: 'arrow', whirl: 'spin', fireball: 'fireball', heal: 'heal', flash: 'xslash', charge: 'dash', snipe: 'snipe', element: 'shot', grenade: 'boom', homing: 'shot', trap: 'trap', hamaya: 'arrow', rage: 'rage', combo: 'spin', qijin: 'palm', meteor: 'meteor',
     flashbang: 'boom', barrage: 'shot', pin: 'arrow', leap: 'jump', quake: 'quake', warcry: 'horn', frostnova: 'frost', chain: 'bolt', smite: 'pillar', ward: 'guard', flurry: 'xslash', parry: 'parry', shieldbash: 'guard', guard: 'guard' };
   const TYPE_KIND = { shots: 'shot', shotx: 'shot', line: 'thrust', at: 'pillar', zone: 'zone', mark: 'mark', dash: 'dash', arc: 'slash', nova: 'nova', pull: 'vortex', blink: 'blink', heal: 'heal', parry: 'parry', drain: 'drain', orbit: 'orbit', reload: 'shot', turret: 'turret', hook: 'hook',
     chainx: 'bolt', wave: 'wave', storm: 'storm', boomer: 'boomer', jumpx: 'jump', beam: 'beam', breath: 'breath', aura: 'aura', xslash: 'xslash', dance: 'dance', pet: 'paw', guard: 'guard', revive: 'revive', infuse: 'infuse', buff: 'buff' };
-  const SHOT_BY_CLS = { archer: 'arrow', gunner: 'shot', mage: 'orb', priest: 'orb', bard: 'note', summoner: 'orb', arraymage: 'orb', scroll: 'scroll', enchanter: 'slashwave' };
+  const SHOT_BY_CLS = { archer: 'arrow', gunner: 'shot', mage: 'orb', priest: 'orb', bard: 'note', summoner: 'orb', arraymage: 'orb', scroll: 'scroll', enchanter: 'slashwave', monk: 'qi' };
   const info = id => {
     const L = R.SKILL_LIB && R.SKILL_LIB[id], sk = R.SKILLS && R.SKILLS[id], cls = (L && L.cls) || (sk && sk.cls) || (R.S && R.S.cls) || 'warrior';
     let type = L ? L.type : null, p = L ? L.p || {} : {};
@@ -44,6 +45,26 @@
     if (p.taunt) badges.push('taunt');
     if (p.pierce) badges.push('pierce');
     const tier = /_aw$/.test(id) ? 'aw' : /^sp2_|^a2_/.test(id) ? 'sp' : L && L.adv ? 'adv' : '';
+    // 依技能 ID／職業改圖：武術家不該出現長槍、劍；槍手直線是光束不是刺
+    const ID_KIND = {
+      // 武術家基礎
+      m_flurry: 'fist', m_step: 'dash', m_palm: 'palm', m_kick: 'kick', m_focus: 'qi', m_counter: 'parry',
+      m_wave: 'qi', m_stomp: 'quake', m_breathe: 'heal', m_meteor: 'kick',
+      m_dragon: 'palm', m_iron: 'guard', m_storm: 'fist', m_leap: 'kick', m_final: 'qi',
+      // 拳聖
+      fs_hundred: 'fist', fs_rising: 'fist', fs_iron: 'guard', fs_tiger: 'fist', fs_thousand: 'fist', fs_heaven: 'fist',
+      // 棍僧
+      sm_wheel: 'pole', sm_vault: 'pole', sm_sweep: 'pole', sm_pole: 'pole', sm_dragon: 'pole', sm_mountain: 'pole',
+      // 內修者
+      in_breath: 'heal', in_palm: 'palm', in_wave: 'qi', in_iron: 'guard', in_burst: 'nova', qijin: 'palm',
+      // 外修者（術士路線，隔空掌用氣／掌）
+      wx_burst: 'nova', wx_palm: 'palm', wx_shell: 'guard'
+    };
+    if (ID_KIND[id]) kind = ID_KIND[id];
+    else if (cls === 'monk') {
+      if (kind === 'thrust' || kind === 'slash' || kind === 'xslash' || kind === 'slashwave') kind = 'fist';
+      else if (kind === 'shot' || kind === 'orb') kind = 'qi';
+    } else if ((cls === 'gunner' || cls === 'archer') && kind === 'thrust') kind = 'beam';
     return { kind, color, n: Math.min(5, n), badges: badges.slice(0, 2), tier, key: [kind, color, n, badges.slice(0, 2).join('+'), tier].join('|') };
   };
 
@@ -115,6 +136,36 @@
       case 'infuse': poly([[12, 1], [15, 9], [23, 12], [15, 15], [12, 23], [9, 15], [1, 12], [9, 9]], lt); circ(12, 12, 3, col); break;
       case 'trap': P(2, 17, 20, 3, '#8A8A92'); for (let i = 0; i < 6; i++) poly([[3 + i * 3.2, 17], [4.6 + i * 3.2, 8], [6.2 + i * 3.2, 17]], '#D8D8E0'); break;
       case 'frost': [0, 1, 2].forEach(i => { const a = i * Math.PI / 3; ln(12 - Math.cos(a) * 10, 12 - Math.sin(a) * 10, 12 + Math.cos(a) * 10, 12 + Math.sin(a) * 10, '#BFE6FF', 2.5); }); circ(12, 12, 2.5, '#FFFFFF'); break;
+      // 武術家：拳、掌、氣、踢、棍（不要長槍／劍）
+      case 'fist':
+        // 握拳：拳峰朝右上，指節橫線
+        poly([[6, 14], [8, 8], [14, 6], [18, 8], [19, 14], [17, 18], [8, 18]], lt);
+        poly([[8, 13], [10, 9], [14, 8], [16, 10], [16, 14], [14, 16], [9, 16]], col);
+        ln(9, 11, 15, 10, dk, 1.2); ln(9, 13, 15, 12.5, dk, 1.2); ln(9, 15, 14, 14.5, dk, 1.2);
+        circ(17, 9, 2.2, mid); break;
+      case 'palm':
+        // 推掌：掌心朝外＋氣紋
+        poly([[7, 20], [5, 12], [7, 6], [12, 4], [17, 6], [19, 12], [17, 20], [12, 18]], lt);
+        poly([[8, 18], [7, 12], [9, 8], [12, 6], [15, 8], [17, 12], [16, 18], [12, 16]], col);
+        circ(12, 12, 2.5, '#FFFFFF');
+        arc(12, 12, 7, -2.2, -0.6, mid, 1.5); arc(12, 12, 9.5, -2.0, -0.8, lt, 1.2); break;
+      case 'qi':
+        // 氣團：漩渦＋外圈光
+        for (let i = 0; i < 3; i++) arc(12, 12, 3 + i * 2.8, i * 1.4, i * 1.4 + 4, i === 1 ? lt : col, 2);
+        circ(12, 12, 2.8, '#FFFFFF'); circ(12, 12, 1.2, col);
+        [0, 2, 4].forEach(i => { const a = i * Math.PI / 3; circ(12 + Math.cos(a) * 9, 12 + Math.sin(a) * 9, 1.4, mid); }); break;
+      case 'kick':
+        // 側踢：大腿＋小腿＋腳掌
+        poly([[4, 16], [8, 8], [12, 6], [14, 10], [10, 14]], lt);
+        poly([[10, 12], [14, 8], [20, 6], [22, 9], [18, 12], [12, 14]], col);
+        poly([[18, 8], [23, 5], [23, 10], [20, 11]], lt);
+        arc(8, 18, 4, -0.5, 2.2, mid, 1.5); break;
+      case 'pole':
+        // 長棍（不是槍頭）：兩端圓頭＋棍身
+        ln(4, 20, 20, 4, mix(col, '#8A6A44', 0.45), 3);
+        ln(4, 20, 20, 4, lt, 1.5);
+        circ(4, 20, 2.2, col); circ(20, 4, 2.2, col);
+        circ(12, 12, 1.6, '#FFFFFF'); break;
       default: star(12, 12, 9, lt); star(12, 12, 5, col);
     }
     // 描邊（1 格深色）
