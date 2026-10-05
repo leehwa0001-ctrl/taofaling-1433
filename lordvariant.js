@@ -74,7 +74,7 @@
       const TH = window.THREE; if (!e.m || !e.m.g || !TH) return;
       e.m.g.scale.multiplyScalar(1.3);
       const sp = e.m.sp; if (sp && sp.mat) { if (sp.mat.color) sp.mat.color.lerp(new TH.Color(col), 0.35); }
-      const ring = new TH.Mesh(new TH.RingGeometry(1.6, 2.1, 32), new TH.MeshBasicMaterial({ color: '#FF2A3A', transparent: true, opacity: 0.55, depthWrite: false, side: TH.DoubleSide }));
+      const ring = new TH.Mesh(new TH.RingGeometry(1.6, 2.1, 32), new TH.MeshBasicMaterial({ color: '#FF2A3A', transparent: true, opacity: 0.55, depthWrite: false, side: TH.DoubleSide, fog: true }));
       ring.rotation.x = -Math.PI / 2; ring.position.y = 0.06; e.m.g.add(ring); e.vRing = ring;
     } catch (err) { }
   };
@@ -119,7 +119,7 @@
     try {
       (w.enemies || []).forEach(e => {
         const v = e.variant; if (!v || e.dead) return;
-        if (e.vRing) e.vRing.material.opacity = 0.35 + 0.25 * Math.sin((w.run.t || 0) * 4);
+        if (e.vRing) { const hide = R.fogHides && R.fogHides(e.x, e.z); e.vRing.visible = !hide; if (!hide) e.vRing.material.opacity = 0.35 + 0.25 * Math.sin((w.run.t || 0) * 4); }
         const f = e.hp / e.hpMax;
         if (v.phase === 1 && f < 0.66) phaseShift(e, 2); else if (v.phase === 2 && f < 0.33) phaseShift(e, 3);
         if (e.vBusy > 0) { e.vBusy -= dt; return; }

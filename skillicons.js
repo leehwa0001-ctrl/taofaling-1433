@@ -24,6 +24,7 @@
     if (type === 'combo' && p.parts && p.parts.length) { const parts = p.parts; p = Object.assign({}, ...parts.map(x => x[1] || {})); type = (parts.find(x => !['buff', 'guard'].includes(x[0])) || parts[0])[0]; }
     let kind = L ? TYPE_KIND[type] || 'star' : BASE_KIND[id] || 'star';
     if (kind === 'shot') kind = SHOT_BY_CLS[cls] || 'shot';
+    if (type === 'heal' && (p.allyShield || p.shield) && !(p.pct > 0) && !(p.allies > 0)) kind = 'guard';
     if (type === 'buff') kind = p.def > 0 ? 'guard' : p.invis ? 'ghost' : p.vamp ? 'fang' : p.speed > 1 && !(p.dmg > 1) ? 'wing' : p.crit && !(p.dmg > 1) ? 'eye' : 'buff';
     if (type === 'arc' && p.arc >= 6) kind = 'spin';
     if (type === 'at' && p.waves > 1) kind = 'meteor';

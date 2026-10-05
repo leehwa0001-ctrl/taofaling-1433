@@ -41,8 +41,8 @@
     e.def = Object.assign({}, e.def, { name: '〔' + list.map(k => AFX[k].n).join('／') + '〕' + base, elite: 1, xp: Math.round((e.def.xp || 5) * (1.6 + 0.4 * list.length)) });
     e.hp *= 1.35; e.hpMax *= 1.35;
     if (e.afx.swift) e.speed *= 1.45;
-    // 腳下的光圈
-    try { const TH = THREE, ring = new TH.Mesh(new TH.RingGeometry(0.55 * (e.def.size || 1), 0.75 * (e.def.size || 1), 20), new TH.MeshBasicMaterial({ color: AFX[list[0]].c, transparent: true, opacity: 0.55, side: TH.DoubleSide, depthWrite: false })); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.05; e.m.g.add(ring); e.afxRing = ring; } catch (err) { }
+    // 腳下的光圈（吃霧：跟名牌一樣，霧裡藏起來，不然 MeshBasic 再亮還是會從霧裡透出來）
+    try { const TH = THREE, ring = new TH.Mesh(new TH.RingGeometry(0.55 * (e.def.size || 1), 0.75 * (e.def.size || 1), 20), new TH.MeshBasicMaterial({ color: AFX[list[0]].c, transparent: true, opacity: 0.55, side: TH.DoubleSide, depthWrite: false, fog: true })); ring.rotation.x = -Math.PI / 2; ring.position.y = 0.05; e.m.g.add(ring); e.afxRing = ring; } catch (err) { }
   };
   R.applyMonAffix = (e, list) => { if (e && !e.afx) apply(e, list || [KEYS[Math.floor(rnd() * KEYS.length)]]); };   // 別的檔案用（ruinvar.js 的寂靜層）
   // ---------- 每一格：迅捷出手快、狂怒、冰霜、閃現、護盾、喚群、毒霧 ----------
@@ -54,7 +54,7 @@
     acc += dt;
     w.enemies.forEach(e => {
       if (!e.afx || e.dead) return; const A = e.afx;
-      if (e.afxRing) { e.afxRing.rotation.z += dt * 1.5; e.afxRing.material.opacity = 0.4 + 0.2 * Math.sin(run.t * 4); }
+      if (e.afxRing) { const hide = R.fogHides && R.fogHides(e.x, e.z); e.afxRing.visible = !hide; if (!hide) { e.afxRing.rotation.z += dt * 1.5; e.afxRing.material.opacity = 0.4 + 0.2 * Math.sin(run.t * 4); } }
       if (!e.aggro || e.dormant) return;
       const d = dist(e, P);
       if (A.swift) e.cd -= dt * 0.4;

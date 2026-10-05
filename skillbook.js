@@ -50,6 +50,7 @@
     ['p_light', '光彈', 'priest', 2, 3, 8, 'shots', { k: 1.4, homing: 3, sp: 20, kind: 'holy' }, '祈禱，射出一發會追蹤的光彈。'],
     ['p_bless', '祝福', 'priest', 4, 14, 16, 'buff', { t: 8, dmg: 1.15, regen: 0.015, color: '#FFE8A0' }, '8 秒內傷害 +15%，每秒回復 1.5% 生命。'],
     ['p_purify', '淨化', 'priest', 5, 10, 14, 'heal', { pct: 0.15, cleanse: 1, nova: { r: 3, k: 0.8, color: '#FFE8A0' } }, '回復 15% 生命、解除變慢和看不清楚，並灼傷身邊的敵人。'],
+    ['p_aegis', '光盾', 'priest', 6, 14, 16, 'heal', { shield: 0.2, allyShield: 0.35, color: '#FFE8A0' }, '祈求光盾：自己得到護盾（最大生命 20%），身邊隊友得到更厚的護盾（最大生命 35%），持續 6 秒。'],
     ['p_judgment', '審判', 'priest', 8, 10, 20, 'at', { range: 10, r: 3, k: 3, delay: 600, stun: 1, fx: 'pillar', color: '#FFE8A0' }, '0.6 秒後在準心處落下審判的光柱，範圍內的敵人暈眩。'],
     ['p_prayer', '群體治療', 'priest', 10, 18, 28, 'heal', { pct: 0.3, allies: 0.3 }, '你和身邊的隊友回復 30% 生命。'],
     ['p_halo', '光環', 'priest', 12, 16, 18, 'zone', { zone: 'sanct', self: 1, r: 3.5, life: 5, k: 0.3 }, '在腳下展開光環 5 秒：站在裡面回復生命，灼傷進來的敵人。'],
