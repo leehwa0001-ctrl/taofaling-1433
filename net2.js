@@ -15,6 +15,7 @@
 // - 訊息都每 0.1 秒打包成一則（伺服器每條連線每秒約 72 則；floor／wantFloor／hd 控制訊息不佔額度）：房主 { k: 'h' }、隊員 { k: 'g' }，都帶 rid（run.coop.seed）、f、n（第幾次換樓層），對不上的丟掉。
 // - 換層加固：生怪／快照訊息限大小分批、dump 錯開送、換層後自動 dump、wantFloor 觸發 dump、隊員換層後重要快照。
 // - 連線優化：換層載入中縮小快照／延後 dump、askNeed 冷卻加長、dump 間隔加長減少突發。
+// - 換層斷線專修：dump 更小包／錯開更開、換層中延後 dump、成為房主立刻推樓層＋dump。
 // 放在 net.js 後面（所有包 R.spawnEnemy、R.hurtEnemy、R.killEnemy、R.updateEnemies、R.allyHit、R.onPlayerDown 的檔案後面）。
 (function (R) {
   const W = () => R.W, N = R.net; if (!N) return;
@@ -80,8 +81,8 @@
   // ---------- 房主：快照、送出去 ----------
   const snapOf = e => [e.nid, Math.round(e.x * 10), Math.round(e.z * 10), Math.round((e.yaw || 0) * 100), Math.max(0, Math.round(e.hp)), Math.round(((e.m && e.m.g && e.m.g.position.y) || 0) * 10),
     (e.under ? 2 : 0) | (e.invuln ? 8 : 0) | (e.dormant ? 16 : 0) | (e.m && e.m.g && e.m.g.visible === false ? 32 : 0)];
-  // 單則訊息壓在 ~24KB 內（伺服器上限 64KB；換層瞬間生怪＋快照容易爆）
-  const MSG_BUDGET = 22000, SPAWN_CHUNK = 28, SNAP_CHUNK = 72, DUMP_CHUNK = 32;
+  // 單則訊息壓在 ~18KB 內（換層瞬間更保守；dump 更小包錯開送，減少被中介／速率丢掉）
+  const MSG_BUDGET = 18000, SPAWN_CHUNK = 20, SNAP_CHUNK = 56, DUMP_CHUNK = 18;
   const fitSend = (msg, to) => {
     let raw = JSON.stringify({ t: 'msg', d: msg, to });
     if (raw.length <= MSG_BUDGET + 64) { N.send(msg, to); return true; }
@@ -94,7 +95,7 @@
     W().enemies.forEach(e => { if (e.dead || e.nid) return; e.nid = ++M.seq; M.map.set(e.nid, e); H.fresh.push(e); const k = hpK(); if (k > 1) { e.hp *= k; e.hpMax *= k; } });
     H.fresh.forEach(e => { if (!e.dead && e.nid) q.s.push(e); }); H.fresh = [];
     // 換層剛載完：先只送一小批生怪，下一幀再繼續，避免一包塞爆被伺服器丟掉
-    const spawnN = busy ? Math.min(8, SPAWN_CHUNK) : SPAWN_CHUNK;
+    const spawnN = busy ? Math.min(6, SPAWN_CHUNK) : SPAWN_CHUNK;
     if (q.s.length) {
       const batch = q.s.splice(0, spawnN).filter(e => !e.dead).map(e => { H.sent.add(e.nid); return info(e); });
       if (batch.length) msg.s = batch;
@@ -134,22 +135,39 @@
       }
     }
   };
-  // dump 錯開送：換層／重連時一次噴好幾包會撞速率上限或塞爆緩衝
+  // dump 錯開送：換層／重連時一次噴好幾包會撞速率上限或塞爆緩衝→斷線感
   let dumpQ = Promise.resolve();
   const dump = (run, to) => {
     const all = [...M.map.values()].filter(e => !e.dead), nAt = run.coop.n, seedAt = run.coop.seed;
     const chunks = [];
-    for (let i = 0; i < all.length || i === 0; i += DUMP_CHUNK) {
-      const part = all.slice(i, i + DUMP_CHUNK);
+    const chunkN = (N.floorBusy && N.floorBusy()) ? Math.min(10, DUMP_CHUNK) : DUMP_CHUNK;
+    for (let i = 0; i < all.length || i === 0; i += chunkN) {
+      const part = all.slice(i, i + chunkN);
       part.forEach(e => H.sent.add(e.nid));
-      chunks.push({ s: part.map(info), last: i + DUMP_CHUNK >= all.length ? 1 : 0 });
+      chunks.push({ s: part.map(info), last: i + chunkN >= all.length ? 1 : 0 });
       if (!all.length) break;
     }
     dumpQ = dumpQ.then(async () => {
+      // 換層載入中：先等主線程鬆開再送，避免和 floor 訊息搶 mag
+      for (let wait = 0; wait < 40 && N.floorBusy && N.floorBusy(); wait++) {
+        await new Promise(ok => setTimeout(ok, 50));
+      }
       for (let i = 0; i < chunks.length; i++) {
         const r2 = host(); if (!r2 || r2.coop.seed !== seedAt || r2.coop.n !== nAt) return;
-        try { N.send(Object.assign({ k: 'hd' }, tag(r2), chunks[i]), to); } catch (e) { }
-        if (i + 1 < chunks.length) await new Promise(ok => setTimeout(ok, 100));
+        const msg = Object.assign({ k: 'hd' }, tag(r2), chunks[i]);
+        // 單包仍太大：再拆半
+        let raw; try { raw = JSON.stringify({ t: 'msg', d: msg, to }); } catch (e) { raw = ''; }
+        if (raw.length > MSG_BUDGET + 64 && chunks[i].s && chunks[i].s.length > 1) {
+          const half = Math.ceil(chunks[i].s.length / 2);
+          const a = chunks[i].s.slice(0, half), b = chunks[i].s.slice(half);
+          try { N.send(Object.assign({ k: 'hd' }, tag(r2), { s: a, last: 0 }), to); } catch (e) { }
+          await new Promise(ok => setTimeout(ok, 120));
+          const r3 = host(); if (!r3 || r3.coop.seed !== seedAt || r3.coop.n !== nAt) return;
+          try { N.send(Object.assign({ k: 'hd' }, tag(r3), { s: b, last: chunks[i].last }), to); } catch (e) { }
+        } else {
+          try { N.send(msg, to); } catch (e) { }
+        }
+        if (i + 1 < chunks.length) await new Promise(ok => setTimeout(ok, 140));
       }
     }).catch(() => { });
   };
@@ -285,7 +303,7 @@
 
   // ---------- 隊員收到房主的 ----------
   let needCool = 0;
-  const askNeed = () => { if (needCool > 0) return; needCool = 2.0; G.need = true; G.needT = Math.min(G.needT, 0.2); };
+  const askNeed = () => { if (needCool > 0) return; needCool = 1.2; G.need = true; G.needT = Math.min(G.needT, 0.15); };
   const applySnap = a => {
     const e = M.map.get(a[0]); if (!e || e.dead) { askNeed(); return; }
     e.tx = a[1] / 10; e.tz = a[2] / 10; e.tyaw = a[3] / 100; if (a[4] > 0) e.hp = Math.max(1, Math.min(e.hpMax || a[4], a[4])); e.ty = a[5] / 10;
@@ -361,10 +379,13 @@
   const promote = run => {
     run.coop.host = true;
     M.map.forEach(e => { e.mirror = false; e.netDie = false; if (e.tx != null) { e.x = e.tx; e.z = e.tz; } });
-    M.seq = Math.max(0, ...M.map.keys()); H.sent = new Set(M.map.keys()); H.last = new Map(); H.fullT = 0; H.fresh = []; H.q = newHQ();
+    M.seq = Math.max(0, ...[...M.map.keys(), 0]); H.sent = new Set(M.map.keys()); H.last = new Map(); H.fullT = 0; H.fresh = []; H.q = newHQ();
     G.standins = []; G.future = [];
     W().enemies.forEach(e => { if (!e.dead && !e.nid) { e.nid = ++M.seq; M.map.set(e.nid, e); H.fresh.push(e); } });
     R.banner && R.banner('你成為房主', '遺跡生物、樓層照你這邊的走');
+    // 立刻推樓層＋dump，避免換房主當下隊員卡在舊狀態／接著換層更容易斷
+    try { if (N.pushFloor) N.pushFloor(); } catch (e) { }
+    try { dump(run); } catch (e) { console.warn('[net2] dump-promote', e); }
   };
   const demote = run => {
     run.coop.host = false;
@@ -395,8 +416,9 @@
       const r2 = host(); if (!r2 || r2.coop.seed !== seedAt || r2.coop.n !== nAt) return;
       try { dump(r2); } catch (e) { console.warn('[net2] dump-floor', e); }
     };
-    setTimeout(once, 700);
-    setTimeout(once, 2000);
+    setTimeout(once, 400);
+    setTimeout(once, 1200);
+    setTimeout(once, 2800);
   };
   N.onRoom = (o, back) => {
     const run = run0(); if (!back || !run) return;

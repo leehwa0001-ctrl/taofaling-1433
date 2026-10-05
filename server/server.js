@@ -5,6 +5,7 @@
 //   房間裡的人全部短暫斷線也不立刻關房——座位到期（或按離開）才關；用戶端會送文字 ping，伺服器回 pong。
 //   'room' 多帶 token（重新連線用）、caps: 1（有這些功能）。協定版本照舊 1433-net-2：舊的遊戲照樣能連。
 //   連線優化（2026-10-05 第三階段）：HOLD 180s、RATE 令牌桶 96/144、控制鍵擴充。
+//   換層斷線專修：RATE 128/192（與 CF 一致）。
 // - 房號：4 個英文字母（去掉容易看錯的 I、O）。
 // - 訊息都是 JSON：
 //   用戶端 → 伺服器：{ t: 'create', name, look }、{ t: 'join', code, name, look }、{ t: 'leave' }、{ t: 'msg', to?, d }
@@ -15,7 +16,7 @@ const http = require('http');
 const { WebSocketServer } = require('ws');
 
 const PORT = +process.env.PORT || 8787, MAX = 4, MAX_BYTES = 96 * 1024;
-const PROTOCOL = '1433-net-2', RATE = 96, BURST = 144, HOLD = 180000;
+const PROTOCOL = '1433-net-2', RATE = 128, BURST = 192, HOLD = 180000;
 const CTRL_K = new Set(['floor', 'run', 'end', 'busy', 'wantFloor', 'hd', 'bye']);
 const LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const rooms = new Map();   // code → { code, host, members: Map(id → client) }
