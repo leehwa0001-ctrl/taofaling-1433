@@ -24,6 +24,7 @@ jobs:
         run: |
           mkdir -p _site
           cp *.js emblem.png flag.webp _site/
+          cp -R assets _site/
           {
             printf '%s\n' '<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body>'
             cat index.html

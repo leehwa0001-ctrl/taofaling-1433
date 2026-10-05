@@ -101,7 +101,8 @@
     const a = bw / bh, tall = a < 1 ? 1 + (1 - a) * 0.7 : 1, dist = Math.hypot(R.CAM.h, R.CAM.back) * (W.cam ? W.cam.zoom : 1) * tall;
     const want = 2 * dist * Math.tan(22 * Math.PI / 180) / PX;
     const s = Math.max(1, Math.round(bh / want)), rw = 2 * Math.ceil(bw / s / 2), rh = 2 * Math.ceil(bh / s / 2);
-    return { bw, bh, s, rw, rh, hw: rw / 2 * PX, hh: rh / 2 * PX };
+    const detail = s >= 2 ? 2 : 1;
+    return { bw, bh, s: s / detail, rw: rw * detail, rh: rh * detail, hw: rw / 2 * PX, hh: rh / 2 * PX };
   };
   // 透視鏡頭（2026-10-04 作者給的截圖「改為這種」——就是第一版的一般透視，不要移軸透視）：
   // placeCam 擺好之後，沿著同一個方向往後退，退到「角色那個距離，畫面一格剛好是一個點陣像素」，視角收窄（預設 26 度）。

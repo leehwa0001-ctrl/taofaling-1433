@@ -74,7 +74,7 @@
     };
   };
   const drawHero = (x, ox, oy, dir, fr, L, pose) => {
-    const p = (a, b, w, h, c) => { if (w <= 0 || h <= 0 || !c) return; x.fillStyle = c; x.fillRect(ox + a, oy + b, w, h); };
+    const p = (a, b, w, h, c) => { if (w <= 0 || h <= 0 || !c) return; x.fillStyle = c; const rect = R.heroPixelRect ? R.heroPixelRect(a, b, w, h, pose === 'sit') : [a, b, w, h]; x.fillRect(ox + rect[0], oy + rect[1], rect[2], rect[3]); };
     const dk = c => shade(c, -0.24), lt = c => shade(c, 0.2);
     const side = dir === 2, back = dir === 1, atk = fr >= 3, sit = pose === 'sit';
     // 近戰的三格：wind 舉起、strike 砍下、follow 收招（遠程武器是 null：維持舉起瞄準）
@@ -612,7 +612,7 @@
     const fw = frames[0].width + 2, fh = frames[0].height + 2, c = cvs(fw * 2, fh * 2), x = c.getContext('2d');
     frames.forEach((f, i) => { x.drawImage(f, i * fw + 1, 1); x.save(); x.translate(i * fw + fw, fh); x.scale(-1, 1); x.drawImage(f, 1, 1); x.restore(); });
     outline(c);
-    return (beastSheets[key] = { c, fw, fh });
+    return (beastSheets[key] = { c: R.detailBeastCanvas ? R.detailBeastCanvas(c) : c, fw, fh });
   };
   R.makeBeastSprite = (id, role) => {
     const sh = beastSheet(id, role), g = new (T().Group)(), sp = billboard(sh.c, 2, 2, sh.fw, sh.fh, 1);
@@ -625,7 +625,7 @@
   };
   // 換一套顏色（同樣大小的圖）
   R.beastVariant = (m, id, role) => { if (!m.isSprite) return; m.sp.t.image = beastSheet(id, role).c; m.sp.t.needsUpdate = true; };
-  R.beastSheetOf = beastSheet;   // 怪物頭上的名牌、圖鑑的小圖示（monlabel.js）
+  R.beastSheetOf = (id, role) => { const sh = beastSheet(id, role); if (sh.c.width === sh.fw * 2) return sh; if (!sh.icon) { const c = cvs(sh.fw * 2, sh.fh * 2); c.getContext('2d').drawImage(sh.c, 0, 0, c.width, c.height); sh.icon = { c, fw: sh.fw, fh: sh.fh }; } return sh.icon; };   // 怪物頭上的名牌、圖鑑的小圖示（monlabel.js）
   R.fadeSprite = (m, a) => { m.sp.mat.transparent = a < 1; m.sp.mat.opacity = a; m.sp.mat.alphaTest = a < 1 ? 0.05 : 0.5; m.sp.mat.depthWrite = a >= 1; };
   R.flashSprite = (m, t) => { m.sp.mat.emissive.setRGB(1, t > 0 ? 0.35 : 1, t > 0 ? 0.3 : 1); m.sp.mat.emissiveIntensity = t > 0 ? 0.9 : 0.22; };
 
