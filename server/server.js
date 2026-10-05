@@ -1,7 +1,8 @@
 // 討伐令 1433：多人連線的伺服器（只轉送訊息，不跑遊戲邏輯）
 // - 一間房最多 4 個人；開房的人是房主（遺跡的樓層、遺跡生物由房主決定）。
 // - 2026-10-05（第二階段）：房主離開或斷線，換下一個人當房主（{ t: 'host', id }），房間不關；所有人都走了才關。
-//   斷線（不是按離開）保留座位 30 秒：其他人收到 { t: 'away', id }；用 { t: 'join', code, rejoin: { id, token } } 連回原本的座位，收到 { t: 'back', id }。
+//   斷線（不是按離開）保留座位 120 秒：其他人收到 { t: 'away', id }；用 { t: 'join', code, rejoin: { id, token } } 連回原本的座位，收到 { t: 'back', id }。
+//   房間裡的人全部短暫斷線也不立刻關房——座位到期（或按離開）才關；用戶端會送文字 ping，伺服器回 pong。
 //   'room' 多帶 token（重新連線用）、caps: 1（有這些功能）。協定版本照舊 1433-net-2：舊的遊戲照樣能連。
 // - 房號：4 個英文字母（去掉容易看錯的 I、O）。
 // - 訊息都是 JSON：
@@ -13,7 +14,7 @@ const http = require('http');
 const { WebSocketServer } = require('ws');
 
 const PORT = +process.env.PORT || 8787, MAX = 4, MAX_BYTES = 64 * 1024;
-const PROTOCOL = '1433-net-2', RATE = 40, HOLD = 30000;   // 每條連線每秒最多 40 則（遊戲每秒送 10 則位置），超過的丟掉
+const PROTOCOL = '1433-net-2', RATE = 48, HOLD = 120000;   // 每條連線每秒最多 48 則；斷線保留座位 120 秒（短暫斷線不關房）
 const LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const rooms = new Map();   // code → { code, host, members: Map(id → client) }
 let nextId = 1;
@@ -35,21 +36,16 @@ const clean = (v, n) => String(v == null ? '' : v).slice(0, n);
 const migrate = r => { const next = [...r.members.values()].find(m => !m.away && m.id !== r.host); if (!next) return false; r.host = next.id; r.members.forEach(m => send(m, { t: 'host', id: next.id })); return true; };
 const leave = (c, why) => {
   const r = c.room; if (!r) return; c.room = null; c.away = 0; r.members.delete(c.id);
-  if (![...r.members.values()].some(m => !m.away)) {   // 沒有人還連著：關房
-    rooms.delete(r.code);
-    r.members.forEach(m => { m.room = null; send(m, { t: 'closed', why: why || '大家都離開了，房間關了。' }); });
-    return;
-  }
+  if (!r.members.size) { rooms.delete(r.code); return; }   // 連「保留中」的座位都沒了才關房
   if (r.host === c.id) migrate(r);
-  r.members.forEach(m => send(m, { t: 'leave', id: c.id }));
+  r.members.forEach(m => { if (!m.away) send(m, { t: 'leave', id: c.id }); });
 };
-// 斷線：保留座位 30 秒（房主的話先換人當房主）
+// 斷線：保留座位 HOLD 毫秒；全房短暫掉線不立刻關（等座位到期）
 const away = c => {
   const r = c.room; if (!r) return;
   c.away = Date.now() + HOLD; c.ws = null;
-  if (![...r.members.values()].some(m => !m.away)) { leave(c, ''); return; }
-  if (r.host === c.id) migrate(r);
-  r.members.forEach(m => { if (m !== c) send(m, { t: 'away', id: c.id }); });
+  if (r.host === c.id) migrate(r);   // 還有人連著才換得成；否則房主位留給重連
+  r.members.forEach(m => { if (m !== c && !m.away) send(m, { t: 'away', id: c.id }); });
   setTimeout(() => { if (c.away && Date.now() >= c.away - 50 && c.room === r) leave(c, ''); }, HOLD + 100);
 };
 
@@ -57,8 +53,10 @@ wss.on('connection', ws => {
   const c = { ws, id: nextId++, name: '', look: null, room: null };
   ws.on('pong', () => { ws.dead = false; });
   ws.on('message', raw => {
+    const txt = typeof raw === 'string' ? raw : raw.toString();
+    if (txt === 'ping') { try { ws.send('pong'); } catch (e) { } ws.dead = false; return; }   // 用戶端心跳（與 CF auto-response 同一字串）
     const now = Date.now(); if (now - (c.rt || 0) > 1000) { c.rt = now; c.rn = 0; } if (++c.rn > RATE) return;
-    let o; try { o = JSON.parse(raw); } catch (e) { return; }
+    let o; try { o = JSON.parse(txt); } catch (e) { return; }
     if (!o || typeof o.t !== 'string') return;
     if (o.t === 'create' || o.t === 'join') {
       if (o.v !== PROTOCOL) return send(c, { t: 'err', msg: '連線版本不同，請重新整理遊戲並更新伺服器。' });
@@ -103,6 +101,6 @@ wss.on('connection', ws => {
 });
 
 // 每 25 秒確認還連著（有些主機的閒置連線一分鐘就會被切掉）
-setInterval(() => { wss.clients.forEach(ws => { if (ws.dead) return ws.terminate(); ws.dead = true; ws.ping(); }); }, 25000);
+setInterval(() => { wss.clients.forEach(ws => { if (ws.dead) return ws.terminate(); ws.dead = true; try { ws.ping(); } catch (e) { } }); }, 15000);
 
 server.listen(PORT, () => console.log('討伐令 1433 連線伺服器：port ' + PORT));

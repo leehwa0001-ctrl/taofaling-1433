@@ -11,7 +11,7 @@
 // 2. 寶箱：誰開都一樣——開了就送出去，別人那邊的同一個寶箱也打開，內容各自抽（掉在自己的畫面上）。
 // 3. 倒下：還有隊友站著的時候，倒下不會馬上結束，躺著等隊友扶（走過去按空白鍵）；45 秒沒人扶、或大家都倒了，才真的倒下。
 // 4. 換房主、斷線：房主離開或斷線，伺服器換下一個人當房主——那個人的鏡像變成自己的遺跡生物，繼續跑；
-//    斷線的人 30 秒內連回來（net.js）就照新房主的資料重來。房主的分頁在背景時，用 Worker 的計時器繼續跑遊戲（瀏覽器在背景不跑畫面）。
+//    斷線的人 120 秒內連回來（net.js）就照新房主的資料重來；重連時房主重送整層快照。房主的分頁在背景時，用 Worker 的計時器繼續跑遊戲（瀏覽器在背景不跑畫面）。
 // - 訊息都每 0.1 秒打包成一則（伺服器每條連線每秒最多 40 則）：房主 { k: 'h' }、隊員 { k: 'g' }，都帶 rid（run.coop.seed）、f、n（第幾次換樓層），對不上的丟掉。
 // 放在 net.js 後面（所有包 R.spawnEnemy、R.hurtEnemy、R.killEnemy、R.updateEnemies、R.allyHit、R.onPlayerDown 的檔案後面）。
 (function (R) {
@@ -319,17 +319,25 @@
   N.onServer2 = o => {
     const run = run0(); if (!run) return;
     if (o.t === 'host') { if (o.id === N.me && !run.coop.host) promote(run); else if (o.id !== N.me && run.coop.host) demote(run); }
-    // 隊友重連：房主重送整層遺跡生物快照（樓層由 net.js pushFloor 處理）
-    if (o.t === 'back' && run.coop.host) { H.fullT = 0; H.last = new Map(); }
+    // 隊友重連：房主立刻 dump 整層 + 重送快照（樓層由 net.js pushFloor 處理）
+    if (o.t === 'back' && run.coop.host) {
+      H.fullT = 0; H.last = new Map();
+      try { dump(run, o.id); } catch (e) { console.warn('[net2] dump-back', e); }
+    }
   };
   N.onRoom = (o, back) => {
     const run = run0(); if (!back || !run) return;
     if (run.coop.host && o.host !== N.me) demote(run);
     else if (!run.coop.host) {
-      G.need = true; G.needT = 0;
-      try { N.send({ k: 'wantFloor', rid: run.coop.seed }, N.host); } catch (e) { }   // 跟房主要目前樓層／n，避免斷線時換層後地圖錯位
+      G.need = true; G.needT = 0; G.orphanT = Math.max(G.orphanT, 3);
+      try { N.send({ k: 'wantFloor', rid: run.coop.seed }, N.host); } catch (e) { }   // 跟房主要目前樓層／n
+      setTimeout(() => {
+        const r2 = run0(); if (!r2 || r2.coop.host || !N.host) return;
+        G.need = true; G.needT = 0;
+        try { N.send({ k: 'wantFloor', rid: r2.coop.seed }, N.host); } catch (e) { }
+      }, 1600);
     }
-    if (run.coop.host) { H.fullT = 0; H.last = new Map(); }
+    if (run.coop.host) { H.fullT = 0; H.last = new Map(); try { dump(run); } catch (e) { } }
   };
   N.onMsg2 = (from, d) => {
     if (!d || typeof d !== 'object') return;

@@ -6,10 +6,10 @@
 //   醒來時從每條連線身上的附件（serializeAttachment：id、名字、外觀、房號、房主）把房間重建回來。
 // - 每條連線每秒最多 40 則訊息（遊戲每秒送 10 則位置），超過的丟掉——免得有人亂送吃光免費額度。
 // - 2026-10-05（第二階段，和 server/server.js 一樣）：房主離開或斷線換下一個人當房主（{ t: 'host', id }），所有人都走了才關房；
-//   斷線保留座位 30 秒（{ t: 'away', id }，用 rejoin: { id, token } 連回來 → { t: 'back', id }）；'room' 多帶 token、caps: 1。
-//   保留的座位記在記憶體（this.away）：物件睡著就沒了（大家都斷線的時候才會睡），到期用 alarm 清掉。
+//   斷線保留座位 120 秒（{ t: 'away', id }，用 rejoin: { id, token } 連回來 → { t: 'back', id }）；'room' 多帶 token、caps: 1。
+//   全房短暫斷線不立刻關房：空房仍留在 this.rooms，座位在 this.away，到期用 alarm 清掉；保留的座位記在記憶體（物件睡著就沒了）。
 // 部署：見 server-cf/README.md（npx wrangler login、npx wrangler deploy）。
-const MAX = 4, MAX_BYTES = 64 * 1024, PROTOCOL = '1433-net-2', RATE = 40, HOLD = 30000;
+const MAX = 4, MAX_BYTES = 64 * 1024, PROTOCOL = '1433-net-2', RATE = 48, HOLD = 120000;
 const LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const clean = (v, n) => String(v == null ? '' : v).slice(0, n);
 
@@ -46,31 +46,49 @@ export class Lobby {
     r.host = next; r.members.forEach(m => { const b = this.att(m); this.setAtt(m, Object.assign(b, { host: next })); this.send(m, { t: 'host', id: next }); });
     return true;
   }
-  // 保留的座位到期：當成離開
+  // 保留的座位到期：當成離開；空房且沒座位才關
   purge() {
     const now = Date.now();
     for (const [k, x] of this.away) {
       if (x.until > now) continue; this.away.delete(k);
-      const r = this.rooms.get(x.code); if (r) r.members.forEach(m => this.send(m, { t: 'leave', id: x.id }));
+      const r = this.rooms.get(x.code); if (!r) continue;
+      r.members.forEach(m => this.send(m, { t: 'leave', id: x.id }));
+      if (r.host === x.id) {
+        if (r.members.size) this.migrate(r);
+        else {
+          const next = [...this.away.values()].find(a => a.code === x.code);
+          if (next) r.host = next.id;
+        }
+      }
+      if (!r.members.size && ![...this.away.values()].some(a => a.code === x.code)) this.rooms.delete(x.code);
     }
   }
   async alarm() { this.load(); this.purge(); if (this.away.size) try { await this.state.storage.setAlarm(Date.now() + 5000); } catch (e) { } }
   newCode() { for (;;) { let s = ''; for (let i = 0; i < 4; i++) s += LETTERS[Math.floor(Math.random() * LETTERS.length)]; if (!this.rooms.has(s)) return s; } }
   roomOf(ws) { const a = this.att(ws); return a.code ? this.rooms.get(a.code) || null : null; }
-  // keep：斷線（不是按離開）——保留座位 30 秒
+  // keep：斷線（不是按離開）——保留座位 HOLD 毫秒；空房也先留著等重連
   leave(ws, why, keep) {
     const a = this.att(ws), r = this.roomOf(ws); if (!r) return;
     r.members.delete(a.id); this.setAtt(ws, Object.assign(a, { code: null, host: null }));
-    if (!r.members.size) {   // 沒有人還連著：關房
-      this.rooms.delete(r.code); for (const [k, x] of this.away) if (x.code === r.code) this.away.delete(k);
-      return;
-    }
-    if (r.host === a.id) this.migrate(r);
     if (keep) {
       this.away.set(r.code + ':' + a.id, { code: r.code, id: a.id, token: a.token, name: a.name, look: a.look, until: Date.now() + HOLD });
+      if (r.host === a.id && r.members.size) this.migrate(r);
       r.members.forEach(m => this.send(m, { t: 'away', id: a.id }));
-      try { this.state.storage.setAlarm(Date.now() + HOLD + 500); } catch (e) { }
-    } else r.members.forEach(m => this.send(m, { t: 'leave', id: a.id }));
+      try { this.state.storage.setAlarm(Date.now() + Math.min(HOLD, 30000) + 500); } catch (e) { }
+      return;
+    }
+    // 按離開：不保留自己的座位；若還有别人連著／保留中就通知，否則關房
+    for (const [k, x] of this.away) if (x.code === r.code && x.id === a.id) this.away.delete(k);
+    const hasAway = [...this.away.values()].some(x => x.code === r.code);
+    if (!r.members.size && !hasAway) { this.rooms.delete(r.code); return; }
+    if (r.host === a.id) {
+      if (r.members.size) this.migrate(r);
+      else {
+        const next = [...this.away.values()].find(x => x.code === r.code);
+        if (next) r.host = next.id;
+      }
+    }
+    r.members.forEach(m => this.send(m, { t: 'leave', id: a.id }));
   }
 
   async fetch() {
