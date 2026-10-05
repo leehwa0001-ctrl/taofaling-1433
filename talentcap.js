@@ -44,6 +44,7 @@
     if (e.mirror) { R.hurtEnemy(e, dmg / (P.dmgMult || 1), { noVamp: true, fromBehind: false }); return; }
     e.hp -= dmg; e.flash = 0.12; e.aggro = true; e.provoked = true;
     R.num && R.num(e.x, 1.8 * ((e.def && e.def.size) || 1) + 0.6, e.z, '反擊 ' + dmg, 'crit');
+    if (R.dmAdd) R.dmAdd(Math.min(dmg, Math.max(0, e.hp + dmg)));   // dmgmeter.js：算進傷害統計
     if (e.hp <= 0) R.killEnemy(e);
   };
   // ---------- 不死身 ----------
