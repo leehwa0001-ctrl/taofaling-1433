@@ -1,7 +1,7 @@
 // 生命的起伏（作者 2026-10-05：坦克站在岩漿池裡跟怪物群毆也不會死、一個大招血就回滿——
 //   讓角色的血量變化更平滑，更難瞬間掉血又大量恢復，營火、泉水這些回血的地方才有用）
 // - 每秒回血（P.regen、德魯伊、回復增益、技能強化的每秒回復、天賦）全部 ×0.3：R.regenMul(P)（run.js、skillbook.js、talenttree.js 用）。
-//   恢復量增益（P.recovAmp，天賦）同時加每秒回血和吸血；滴血重生（P.ttBleed）：每少 1% 生命，恢復量 +0.5%（不是每秒回血）。
+//   恢復量增益（P.recovAmp、滴血重生 P.ttBleed）在 R.healP 一次乘上（藥水、技能、每秒回血、吸血都吃到）；滴血重生：每少 1% 生命，恢復量 +0.5%（不是每秒回血）。
 // - 回復藥：一瓶回生命上限的 25%（原本 35%）；戰鬥中（6 秒內被打過，或 12 公尺內有醒著的遺跡生物）再少 20%（回 20%）。
 //   連續喝會遞減：每喝一瓶下一瓶藥效減半，最多到 1/8；10 秒沒喝恢復一階，連續 30 秒沒喝回到全效。
 // - 遺跡生物打人的傷害全部再 ×0.5（招式的基本傷害；子彈、範圍招都跟著）。
@@ -21,7 +21,8 @@
     }
     return a;
   };
-  R.regenMul = P => REGEN * (1 + R.recovAmpOf(P));
+  // 恢復量%改走 healP 一次乘（藥水、技能、每秒回血、吸血都吃到）；regenMul 只留全局 ×0.3，避免跟 healP 重複乘
+  R.regenMul = P => REGEN;
 
   // 天賦「渴血」會扣每秒回血：最少 0（負的會變成扣血）
   const cp0 = R.calcPlayer;
@@ -43,7 +44,12 @@
   const stacks = () => Math.max(0, potN - Math.floor((now() - potLast) / STEP));
   R.potionState = () => { const s = stacks(); return { stacks: s, mult: Math.pow(0.5, s), next: s ? STEP - ((now() - potLast) % STEP) : 0, fight: inFight() }; };
   const hl0 = R.healP;
-  R.healP = (v, q) => hl0(drinking ? v * drinking : v, q);
+  R.healP = (v, q) => {
+    const P = W.P;
+    let m = drinking || 1;
+    if (P && v > 0) m *= Math.max(0, 1 + R.recovAmpOf(P));   // 滴血重生／癒合等：實際回血量跟著加
+    return hl0(v * m, q);
+  };
   const dr0 = R.drink;
   R.drink = k => {
     const S = R.S, P = W.P;

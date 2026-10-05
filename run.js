@@ -395,7 +395,8 @@
       if (k >= 1) { P.jump = null; P.y = 0; P.air = 0; [P.x, P.z] = R.nearestFloor(P.x, P.z); R.fx('boom', P.x, 0.3, P.z, { r: 3.2, color: '#9AB0D0' }); R.aoe(P.x, P.z, 3.2, P.ws.dmg * 2.2, { kb: 3 }); R.shake(0.4); }
     } else { P.x += mx * sp * dt; P.z += mz * sp * dt; }
     P.still = ml > 0.1 ? 0 : P.still + dt;
-    if (P.adv === 'inner' && P.still > 0.6 && !P.dead) { R.healP(P.hpMax * 0.02 * dt, true); P.mp = Math.min(P.mpMax, P.mp + 3 * dt); }
+    // 內修者站著不動：怒氣在 classcore、魔力在這裡；以前誤把「能量回復」做成每秒回 2% 生命（面板每秒回復是 0 卻還在回血、一移動就停）
+    if (P.adv === 'inner' && P.still > 0.6 && !P.dead) { P.mp = Math.min(P.mpMax, P.mp + 3 * dt); }
     const pinched = R.collide(P, 0.42);
     if (pinched && W.dyn.length && P.iframe <= 0) { R.hurtPlayer(P.hpMax * 0.12, null); P.iframe = 0.5; }   // 被擠壓的牆夾住：很痛，快逃
     P.yaw = sprint && P.moveA != null ? P.moveA : P.aimA;

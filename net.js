@@ -136,7 +136,9 @@
       finishRequest();
       const back = rejoining; rejoining = false;
       N.room = o.code; N.me = o.you; N.host = o.host; N.members = o.members || []; N.busy = ''; N.token = o.token || null; N.caps = o.caps || 0;
+      if (back && coop()) clearRemotes();   // 重連：清掉舊的隊友模型，等位置包／樓層同步後重畫
       R.toast(back ? '重新連上了。' : isHost() ? '開好房間了：房號 ' + o.code + '。把房號告訴朋友。' : '加入了 ' + nameOf(N.host) + ' 的房間。', '#7FE0FF');
+      if (back && isHost() && coop()) pushFloor();   // 房主重連：廣播目前樓層給大家對齊
       if (N.onRoom) try { N.onRoom(o, back); } catch (e) { console.warn('[net]', e); }
     } else if (o.t === 'join') {
       N.members.push(o.member); R.toast(o.member.name + ' 加入了房間。', '#7FE0FF');
@@ -148,7 +150,7 @@
     else if (o.t === 'msg') onMsg(o.from, o.d || {});
     else if (o.t === 'host') { N.host = o.id; R.toast(o.id === N.me ? '房主離開了：現在你是房主。' : nameOf(o.id) + ' 成為房主。', '#7FE0FF'); if (N.onServer2) N.onServer2(o); }
     else if (o.t === 'away') { R.toast(nameOf(o.id) + ' 斷線了：30 秒內連回來就能接著玩……', '#FFB45A'); dropRemote(o.id); if (N.onServer2) N.onServer2(o); }
-    else if (o.t === 'back') { R.toast(nameOf(o.id) + ' 重新連上了。', '#7FE0FF'); if (N.onServer2) N.onServer2(o); }
+    else if (o.t === 'back') { R.toast(nameOf(o.id) + ' 重新連上了。', '#7FE0FF'); if (isHost() && coop()) pushFloor(o.id); if (N.onServer2) N.onServer2(o); }
     refresh();
   };
 
@@ -214,9 +216,24 @@
     }
     return r;
   };
+  function pushFloor(to) {
+    const run = coop(); if (!run || !run.coop.host || !W().F) return;
+    const ck = checksum(W().F); cks.mine[run.coop.n] = ck;
+    const msg = { k: 'floor', rid: run.coop.seed, f: run.floor, up: false, n: run.coop.n, ck };
+    try { if (to) N.send(msg, to); else N.send(msg); } catch (e) { }
+  }
+  N.pushFloor = pushFloor;
   const follow = d => {
-    const run = coop(); if (!run || run.coop.host || run.coop.seed !== d.rid || run.coop.n >= d.n) return;
-    R.fade(() => { const r2 = coop(); if (!r2 || r2.coop.n >= d.n) return; r2.coop.n = d.n; R.loadFloor(d.f, { up: !!d.up, netFollow: true }); if (d.up) R.banner('跟著房主往回走', '遺跡一直在長：上一層已經不是來的時候的樣子'); });
+    const run = coop(); if (!run || run.coop.host || run.coop.seed !== d.rid) return;
+    if (run.coop.n === d.n && run.floor === d.f) return;   // 同一層：checksum 已在收到時比過
+    // 斷線重連後可能比房主超前／落後：一律跟房主的樓層與 n 對齊
+    R.fade(() => {
+      const r2 = coop(); if (!r2 || r2.coop.seed !== d.rid) return;
+      if (r2.coop.n === d.n && r2.floor === d.f) return;
+      r2.coop.n = d.n; R.loadFloor(d.f, { up: !!d.up, netFollow: true });
+      if (d.up) R.banner('跟著房主往回走', '遺跡一直在長：上一層已經不是來的時候的樣子');
+      else R.toast && R.toast('已與房主同步樓層', '#7FE0FF');
+    });
   };
   // 上下樓跟著房主走（從入口走出去可以）
   const de0 = R.descend;
@@ -245,6 +262,7 @@
     }
     else if (d.k === 'end' && from === N.host) { const run = coop(); if (run && !run.coop.host && run.coop.seed === d.rid) { run.coop.solo = true; clearRemotes(); R.banner(nameOf(N.host) + ' 回到地面了', '剩下的路自己走：碰回歸水晶就能回去'); } }
     else if (d.k === 'bye' && coop() && d.rid === coop().coop.seed) dropRemote(from);
+    else if (d.k === 'wantFloor' && isHost() && coop() && d.rid === coop().coop.seed) pushFloor(from);   // 隊員重連：跟房主要目前樓層
     else if (d.k === 'p') presence(from, d);
     else if (N.onMsg2) N.onMsg2(from, d);   // 第二階段（net2.js）
   };
@@ -269,7 +287,12 @@
     if (L.eq && Object.keys(L.eq).length && R.dressHero) R.dressHero(h, L.eq);
     const ring = new TH.Mesh(new TH.TorusGeometry(0.55, 0.06, 4, 20), new TH.MeshBasicMaterial({ color: '#FFD24A' })); ring.rotation.x = Math.PI / 2; ring.position.y = 0.05; h.g.add(ring);
     h.g.position.set(d.x, d.y || 0, d.z); W().scene.add(h.g);
-    return { h, tag: tagEl(m.name || '勇者'), x: d.x, z: d.z, tx: d.x, tz: d.z, y: d.y || 0, yaw: d.yaw || 0, sp: 0, t: 0, seq: d.a ? d.a[2] : 0 };
+    return { h, tag: tagEl(m.name || '勇者'), x: d.x, z: d.z, tx: d.x, tz: d.z, y: d.y || 0, yaw: d.yaw || 0, sp: 0, t: 0, seq: d.a ? d.a[2] : 0, sh: 0, bubble: null };
+  };
+  const ensureBubble = r => {
+    if (r.bubble) return r.bubble;
+    const TH = THREE, m = new TH.Mesh(new TH.SphereGeometry(0.9, 16, 12), new TH.MeshBasicMaterial({ color: '#8AD8FF', transparent: true, opacity: 0.28, depthWrite: false, depthTest: true }));
+    m.renderOrder = 6; m.position.y = 1.05; r.h.g.add(m); r.bubble = m; return m;
   };
   const dropRemote = id => { const r = remotes.get(id); if (!r) return; if (r.h.g.parent) r.h.g.parent.remove(r.h.g); r.tag.remove(); remotes.delete(id); };
   function clearRemotes() { [...remotes.keys()].forEach(dropRemote); }
@@ -278,6 +301,7 @@
     if (![d.x, d.z, d.yaw].every(Number.isFinite) || (d.y != null && !Number.isFinite(d.y))) return;
     let r = remotes.get(from); if (!r) { r = makeRemote(from, d); remotes.set(from, r); }
     r.tx = d.x; r.tz = d.z; r.y = d.y || 0; r.yaw = d.yaw; r.sp = d.sp || 0; r.t = 0;
+    r.sh = Math.max(0, Number.isFinite(+d.sh) ? +d.sh : 0);
     if (d.a && d.a[2] !== r.seq) { r.seq = d.a[2]; R.swingAnim(r.h, d.a[0], d.a[1]); }
     if (d.r && !(r.h.roll > 0) && R.startRoll) R.startRoll(r.h, d.yaw, 0.32);
     if (!!d.d !== !!r.h.down) R.setDown(r.h, !!d.d);
@@ -293,11 +317,13 @@
       r.t += dt; if (r.t > 4) { dropRemote(id); return; }
       r.x += (r.tx - r.x) * k; r.z += (r.tz - r.z) * k;
       r.h.g.position.set(r.x, r.y, r.z); r.h.g.rotation.y = r.yaw; R.animHero(r.h, r.sp, dt, false); placeTag(r);
+      if (r.sh > 0) { const b = ensureBubble(r); b.visible = true; b.material.opacity = 0.2 + 0.18 * Math.min(1, r.sh / Math.max(40, (W().P && W().P.hpMax) || 100)); }
+      else if (r.bubble) r.bubble.visible = false;
     });
     const P = W().P; if (!P || !P.h) return;
     if (P.h.atk && P.h.atk !== lastAtk) atkSeq++; lastAtk = P.h.atk;
     sendT -= dt; if (sendT > 0) return; sendT = 0.1;
-    N.send({ k: 'p', rid: run.coop.seed, f: run.floor, n: run.coop.n, x: +P.x.toFixed(2), z: +P.z.toFixed(2), y: +(P.y || 0).toFixed(2), yaw: +P.h.g.rotation.y.toFixed(2), sp: P.still > 0 ? 0 : +(P.speed || 0).toFixed(1), a: P.h.atk ? [P.h.atk.wind, P.h.atk.dur, atkSeq] : null, r: P.h.roll > 0 ? 1 : 0, d: P.dead ? 1 : 0 });
+    N.send({ k: 'p', rid: run.coop.seed, f: run.floor, n: run.coop.n, x: +P.x.toFixed(2), z: +P.z.toFixed(2), y: +(P.y || 0).toFixed(2), yaw: +P.h.g.rotation.y.toFixed(2), sp: P.still > 0 ? 0 : +(P.speed || 0).toFixed(1), a: P.h.atk ? [P.h.atk.wind, P.h.atk.dur, atkSeq] : null, r: P.h.roll > 0 ? 1 : 0, d: P.dead ? 1 : 0, sh: Math.max(0, Math.round(P.shield || 0)) });
   };
 
   // ---------- 公會登記處：多人連線 ----------

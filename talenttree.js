@@ -131,7 +131,7 @@
   const he0 = R.hurtEnemy;
   R.hurtEnemy = (e, raw, o) => { const P = W().P; return he0(e, P && P.ttPrimary && o && o.primary ? raw * (1 - Math.min(0.6, P.ttPrimary)) : raw, o); };
   const st0 = R.step;
-  R.step = dt => { const r = st0(dt); const P = W().P; if (P && P.ttLowRegen && !P.dead && P.hp > 0 && P.hp < P.hpMax * 0.3) P.hp = Math.min(P.hpMax, P.hp + P.hpMax * P.ttLowRegen * dt * (R.regenMul ? R.regenMul(P) : 1)); return r; };
+  R.step = dt => { const r = st0(dt); const P = W().P; if (P && P.ttLowRegen && !P.dead && P.hp > 0 && P.hp < P.hpMax * 0.3) R.healP(P.hpMax * P.ttLowRegen * dt * (R.regenMul ? R.regenMul(P) : 1), true); return r; };
   // 技能書的技能（skillbook.js 的「型」）：傷害照 P.ttSkill 加
   const TY = R.SKILL_TYPES; let depth = 0;
   if (TY) Object.keys(TY).forEach(k => { const f = TY[k]; TY[k] = (s, P, w, pw) => { const m = !depth && P && P.ttSkill ? 1 + P.ttSkill : 1; depth++; try { return f(s, P, w, pw * m); } finally { depth--; } }; });

@@ -319,11 +319,17 @@
   N.onServer2 = o => {
     const run = run0(); if (!run) return;
     if (o.t === 'host') { if (o.id === N.me && !run.coop.host) promote(run); else if (o.id !== N.me && run.coop.host) demote(run); }
+    // 隊友重連：房主重送整層遺跡生物快照（樓層由 net.js pushFloor 處理）
+    if (o.t === 'back' && run.coop.host) { H.fullT = 0; H.last = new Map(); }
   };
   N.onRoom = (o, back) => {
     const run = run0(); if (!back || !run) return;
     if (run.coop.host && o.host !== N.me) demote(run);
-    else if (!run.coop.host) { G.need = true; G.needT = 0; }
+    else if (!run.coop.host) {
+      G.need = true; G.needT = 0;
+      try { N.send({ k: 'wantFloor', rid: run.coop.seed }, N.host); } catch (e) { }   // 跟房主要目前樓層／n，避免斷線時換層後地圖錯位
+    }
+    if (run.coop.host) { H.fullT = 0; H.last = new Map(); }
   };
   N.onMsg2 = (from, d) => {
     if (!d || typeof d !== 'object') return;

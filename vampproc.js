@@ -44,8 +44,9 @@
     return Number.isFinite(x) ? Math.max(0, x) : 0;
   };
   const wMult = P => { const wd = P.item && R.WEAPONS[P.item.base], rate = (wd && wd.rate) || REF_RATE; return Math.max(1, Math.min(15, LONG * REF_RATE / rate)); };
-  const amp = P => Math.max(0, 1 + (R.recovAmpOf ? R.recovAmpOf(P) : num(P.recovAmp)));   // 含滴血重生的恢復量%
-  const healOf = (P, x, n) => Math.max(1, Math.round(Math.ceil(wMult(P) * (1 + x / PER)) * (1 + Math.sqrt(Math.max(1, n))) / 2 * amp(P)));
+  const amp = P => Math.max(0, 1 + (R.recovAmpOf ? R.recovAmpOf(P) : num(P.recovAmp)));   // 含滴血重生的恢復量%（實際乘在 healP；這裡給顯示用）
+  const baseHeal = (P, x, n) => Math.max(1, Math.round(Math.ceil(wMult(P) * (1 + x / PER)) * (1 + Math.sqrt(Math.max(1, n))) / 2));
+  const healOf = (P, x, n) => Math.max(1, Math.round(baseHeal(P, x, n) * amp(P)));   // 顯示＝實際（healP 會再乘 amp）
   const skMult = x => (1 + Math.min(CAP, Math.sqrt(Math.max(0, x)) / 100)) / 2;   // 技能、大招：必定觸發，回復量＝普攻的回復量 × (1＋回血機率)÷2
   const skHealOf = (P, x, n) => Math.max(1, Math.round(healOf(P, x, n) * skMult(x)));
   R.vampCoef = coef;
@@ -70,9 +71,9 @@
   const resolve = key => () => {
     const g = grp[key]; grp[key] = null; const P = W.P, run = W.run; if (!g || !P || P.dead || !run || run.done) return;
     const x = coef(P, g.skill); if (x <= 0) return;
-    if (key === 'sk') { R.healP(skHealOf(P, x, g.n)); return; }   // 技能、大招：必定觸發，× (1＋回血機率)÷2
+    if (key === 'sk') { R.healP(Math.max(1, Math.round(baseHeal(P, x, g.n) * skMult(x)))); return; }   // 技能、大招：baseHeal（恢復量% 由 healP 乘）
     if (Math.random() >= Math.min(CAP, Math.sqrt(x) / 100)) return;
-    R.healP(healOf(P, x, g.n));
+    R.healP(baseHeal(P, x, g.n));
   };
   const he0 = R.hurtEnemy;
   R.hurtEnemy = (e, raw, o) => {
