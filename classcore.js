@@ -299,7 +299,7 @@
     mikiri(P, src) {
       P._noto = 0; P._iai = this.max(P); P.iframe = Math.max(P.iframe || 0, 0.4); P._mikiriCd = CT + 0.6;
       say(P, '見切', 'crit'); R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 3, color: '#FFFFFF' }); R.shake && R.shake(0.2);
-      R.coreAoe(P.x, P.z, 3, pw(P) * 2.5, { stun: 1 });
+      R.coreAoe(P.x, P.z, 3, pw(P) * 2.5, { stun: 1, reflect: true, noVamp: true });   // 見切反斬：不觸發吸血
       if (adv(P) === 'shadow' && src && src.x != null) { const a = src.yaw || 0, q = R.nearestFloor ? R.nearestFloor(src.x - Math.sin(a) * 1.4, src.z - Math.cos(a) * 1.4) : [src.x, src.z]; R.fx && R.fx('blink', P.x, 1, P.z); P.x = q[0]; P.z = q[1]; P.invis = Math.max(P.invis || 0, 2); }
     },
     onHurt(raw, src, o, P) {
@@ -319,7 +319,7 @@
       const run = W().run; if (!P.guard || !run || P.guardT0 == null || run.t - P.guardT0 > ((R.legOf ? R.legOf(P) : null) === 'lg_vow' ? 0.5 : 0.3) || !src || src.dead) return;
       say(P, '完美格擋', 'crit'); R.fx && R.fx('block', P.x, 1.2, P.z); R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 2, color: '#FFE08A' });
       if (src.st) src.st.stun = Math.max(src.st.stun || 0, 1.5);
-      if (src.hp != null && src.def) R.coreHit(src, pw(P) * 1.5 + (adv(P) === 'templar' ? raw : 0), { kb: 2 });
+      if (src.hp != null && src.def) R.coreHit(src, pw(P) * 1.5 + (adv(P) === 'templar' ? raw : 0), { kb: 2, reflect: true, noVamp: true });   // 盾反擊：不觸發吸血
       if (P.stam != null) P.stam = Math.min(P.stamMax || 100, P.stam + 20);
       if (adv(P) === 'paladin') R.healP(P.hpMax * 0.08);
       P._riposte = CT + 2; return false;

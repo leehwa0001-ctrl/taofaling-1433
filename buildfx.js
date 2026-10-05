@@ -54,7 +54,7 @@
   wrapM('warrior', 'mod', function (f0, e, raw, o, P) {
     const r = f0 ? f0.call(this, e, raw, o, P) : raw;
     if (o.primary && R.legOf(P) === 'lg_wrath' && (P._wrathT || 0) > CT()) e.st.burn = 3;
-    if (o.primary && R.legOf(P) === 'lg_chain' && (P._rage || 0) >= 100 && CT() - (P._chainT || 0) > 0.3) { P._chainT = CT(); R.fx && R.fx('ring', e.x, 0.1, e.z, { r: 2, color: '#E8503A' }); R.coreAoe(e.x, e.z, 2, raw * 0.6, {}); }
+    if (o.primary && !(o.reflect || o.thorns || o.noVamp) && R.legOf(P) === 'lg_chain' && (P._rage || 0) >= 100 && CT() - (P._chainT || 0) > 0.3) { P._chainT = CT(); R.fx && R.fx('ring', e.x, 0.1, e.z, { r: 2, color: '#E8503A' }); R.coreAoe(e.x, e.z, 2, raw * 0.6, {}); }
     return r;
   });
   // 雷鳴法球
@@ -103,7 +103,7 @@
     const P = W().P; if (!P || !e || e.dead || !live()) return he0(e, raw, o);
     if (P._shadeCrit && o && (o.primary || o.crit !== undefined)) { o = Object.assign({}, o, { crit: true }); P._shadeCrit = false; }
     const r = he0(e, raw, o);
-    if (has(P, 'lava') && R.lastCrit && rnd() < 0.2 && CT() - (P._lavaT || 0) > 0.25) { P._lavaT = CT(); R.fx && R.fx('boom', e.x, 0.3, e.z, { r: 2, color: '#FF7A3A' }); (R.coreAoe || R.aoe)(e.x, e.z, 2, raw * 0.8, {}); }
+    if (has(P, 'lava') && !(o && (o.reflect || o.thorns || o.noVamp)) && R.lastCrit && rnd() < 0.2 && CT() - (P._lavaT || 0) > 0.25) { P._lavaT = CT(); R.fx && R.fx('boom', e.x, 0.3, e.z, { r: 2, color: '#FF7A3A' }); (R.coreAoe || R.aoe)(e.x, e.z, 2, raw * 0.8, {}); }
     return r;
   };
   // 守墓人

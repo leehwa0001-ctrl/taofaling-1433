@@ -160,7 +160,7 @@
     const P = R.W.P, b = P && P.raceB;
     if (b && b.immune && o) { o = Object.assign({}, o); if (b.immune.blind) o.blind = 0; if (b.immune.slow) o.slow = 0; }
     const before = P ? P.hp : 0; hp(raw, src, o);
-    if (b && b.thorns && src && src.hp && !src.dead && P && P.hp < before && Math.hypot(src.x - P.x, src.z - P.z) < 2.6) { src.hp -= raw * b.thorns; R.num(src.x, 1.8 * src.def.size + 0.6, src.z, Math.round(raw * b.thorns), 'ally'); if (src.hp <= 0) R.killEnemy(src); }
+    if (b && b.thorns && src && src.hp && !src.dead && P && P.hp < before && Math.hypot(src.x - P.x, src.z - P.z) < 2.6) { R.hurtEnemy(src, raw * b.thorns / Math.max(0.001, P.dmgMult || 1), { thorns: 1, reflect: true, noVamp: true, fromBehind: false }); }
   };
   const ha = R.hurtAlly;
   R.hurtAlly = (a, raw, src) => { const r = R.raceOf(); ha(a, r && r.b.guard ? raw * (1 - r.b.guard) : raw, src); };

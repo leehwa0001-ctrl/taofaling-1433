@@ -41,7 +41,7 @@
       if (P && P.sb && o && o.primary && e && !e.dead) {
         const L = Object.values(P.sb);
         if (L.some(b => b.frost)) { e.st.slow = Math.max(e.st.slow || 0, 1.5); }
-        if (L.some(b => b.shock) && rnd() < 0.35) { const n2 = W().enemies.find(x => x !== e && !x.dead && dist(x, e) < 4); if (n2) { R.fx('spark', n2.x, 1, n2.z, { a: rnd() * 6, crit: true }); he0(n2, raw * 0.6, { primary: false }); } }
+        if (!(o && (o.reflect || o.thorns || o.noVamp)) && L.some(b => b.shock) && rnd() < 0.35) { const n2 = W().enemies.find(x => x !== e && !x.dead && dist(x, e) < 4); if (n2) { R.fx('spark', n2.x, 1, n2.z, { a: rnd() * 6, crit: true }); he0(n2, raw * 0.6, { primary: false }); } }
       }
     } catch (err) { }
     return r;

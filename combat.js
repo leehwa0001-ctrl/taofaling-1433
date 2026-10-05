@@ -57,32 +57,38 @@
     if (P.adv === 'yoto') dmg *= 1 + Math.min(0.6, (P.stacks || 0) / 100);
     if (P.adv === 'shadow' && o.fromBehind !== false) { const back = Math.abs(wrap(angTo(e, P) - e.yaw)) > 2.1; if (back) dmg *= 1.5; }
     if (e.st.curse > 0) dmg *= 1.3;
-    if (e.def.armor) dmg *= 1 - e.def.armor * (1 - (P.pen || 0));   // 穿透：無視一部分護甲
-    let crit = o.crit || Math.random() < (o.critChance != null ? o.critChance : P.ws.crit) || (P.crits > 0 && o.primary);
-    if (P.crits > 0 && o.primary) P.crits--;
+    const isRef = !!(o.reflect || o.thorns);   // 反擊／荊棘：無視護甲、不擲暴擊、不觸發附屬元素（天賦反擊原本直接扣血）
+    if (!isRef && e.def.armor) dmg *= 1 - e.def.armor * (1 - (P.pen || 0));   // 穿透：無視一部分護甲
+    let crit = !!o.crit;
+    if (!crit && !isRef) { crit = Math.random() < (o.critChance != null ? o.critChance : P.ws.crit) || (P.crits > 0 && o.primary); if (P.crits > 0 && o.primary) P.crits--; }
     if (crit) dmg *= P.critMult;
     R.lastCrit = !!crit;
-    if (R.enemyDefend) dmg = R.enemyDefend(e, dmg, o, crit);
+    if (R.enemyDefend && !isRef) dmg = R.enemyDefend(e, dmg, o, crit);
     dmg = Math.max(1, Math.round(dmg));
     e.hp -= dmg; e.flash = 0.12; e.aggro = true; e.provoked = true;
     if (e.dormant && R.wakeRoom) R.wakeRoom(e.room, e);   // 從外面打到房間裡還沒醒的生物：整間都醒過來
-    R.num(e.x, 1.8 * e.def.size + 0.6, e.z, dmg, crit ? 'crit' : '');
+    R.num(e.x, 1.8 * e.def.size + 0.6, e.z, dmg, crit ? 'crit' : (isRef ? 'crit' : ''));
     // 附加效果
     const ws = P.ws;
-    const elem = o.elem || (P.elemShots > 0 && o.primary ? ['fire', 'frost', 'shock'][P.elemShots % 3] : null) || (P.adv === 'magigun' && o.primary && Math.random() < 0.25 ? ['fire', 'frost', 'shock'][Math.floor(Math.random() * 3)] : null);
-    if (o.primary && P.elemShots > 0) P.elemShots--;
-    if (elem === 'fire' || (o.primary && Math.random() < ws.fire) || (P.adv === 'elementalist' && Math.random() < 0.1)) e.st.burn = 3;
-    if (elem === 'frost' || (o.primary && Math.random() < ws.frost) || (P.adv === 'elementalist' && Math.random() < 0.1)) e.st.slow = 2;
-    if (elem === 'shock' || (o.primary && Math.random() < ws.shock)) R.chain(e, dmg * 0.5);
+    if (!isRef) {
+      const elem = o.elem || (P.elemShots > 0 && o.primary ? ['fire', 'frost', 'shock'][P.elemShots % 3] : null) || (P.adv === 'magigun' && o.primary && Math.random() < 0.25 ? ['fire', 'frost', 'shock'][Math.floor(Math.random() * 3)] : null);
+      if (o.primary && P.elemShots > 0) P.elemShots--;
+      if (elem === 'fire' || (o.primary && Math.random() < ws.fire) || (P.adv === 'elementalist' && Math.random() < 0.1)) e.st.burn = 3;
+      if (elem === 'frost' || (o.primary && Math.random() < ws.frost) || (P.adv === 'elementalist' && Math.random() < 0.1)) e.st.slow = 2;
+      if (elem === 'shock' || (o.primary && Math.random() < ws.shock)) R.chain(e, dmg * 0.5);
+      if (o.primary && ws.stun && Math.random() < ws.stun) e.st.stun = 0.8;
+    }
     if (o.stun) e.st.stun = Math.max(e.st.stun, o.stun);
     if (o.root) e.st.root = Math.max(e.st.root, o.root);
     if (o.curse) e.st.curse = Math.max(e.st.curse, o.curse);
-    if (o.primary && ws.stun && Math.random() < ws.stun) e.st.stun = 0.8;
     const kb = (o.kb != null ? o.kb : o.primary ? ws.kb : 0) * (e.def.boss ? 0.15 : 1);
     if (kb) { const a = angTo(P, e); e.kx += Math.sin(a) * kb * 6; e.kz += Math.cos(a) * kb * 6; }
-    if (ws.vamp && o.primary && !R.vampProc) R.healP(dmg * ws.vamp, true);   // vampproc.js 接手：改成每次攻擊有機率回
-    if (P.buff.rage > 0 && !R.vampProc) R.healP(dmg * 0.025, true);
-    if (e.hp <= 0) R.killEnemy(e);
+    if (!isRef && ws.vamp && o.primary && !R.vampProc) R.healP(dmg * ws.vamp, true);   // vampproc.js 接手：改成每次攻擊有機率回
+    if (!isRef && P.buff.rage > 0 && !R.vampProc) R.healP(dmg * 0.025, true);
+    if (e.hp <= 0) {
+      if (isRef) { R._reflectKill = (R._reflectKill || 0) + 1; try { R.killEnemy(e); } finally { R._reflectKill--; } }
+      else R.killEnemy(e);
+    }
     return dmg;
   };
   R.chain = (from, dmg) => {
@@ -240,7 +246,8 @@
   // 範圍傷害
   R.aoe = (x, z, r, dmg, o) => {
     o = o || {}; let n = 0;
-    W().enemies.forEach(e => { if (!e.dead && Math.hypot(e.x - x, e.z - z) < r + e.def.size * 0.5) { R.hurtEnemy(e, dmg, { primary: o.primary, stun: o.stun, root: o.root, curse: o.curse, kb: o.kb, crit: o.crit }); if (o.burn) e.st.burn = 3; n++; } });
+    // 反擊／荊棘旗標要帶下去，不然 R.coreAoe／範圍反傷會被剝掉、又觸發吸血
+    W().enemies.forEach(e => { if (!e.dead && Math.hypot(e.x - x, e.z - z) < r + e.def.size * 0.5) { R.hurtEnemy(e, dmg, { primary: o.primary, stun: o.stun, root: o.root, curse: o.curse, kb: o.kb, crit: o.crit, reflect: o.reflect, thorns: o.thorns, noVamp: o.noVamp, fromBehind: o.fromBehind, vSk: o.vSk }); if (o.burn) e.st.burn = 3; n++; } });
     if (o.props !== false) W().F.props.forEach(p => { if (p.alive && Math.hypot(p.x - x, p.z - z) < r + 0.4) R.hitProp(p, dmg, !o.noAware); });
     return n;
   };

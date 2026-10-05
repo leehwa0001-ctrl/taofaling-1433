@@ -8,7 +8,7 @@
 // - 天啟（C2）：技能（不是普攻）的暴擊率 +15%。
 // - 反擊（B3，2026-10-05）：天賦「奧義・反擊」每級把受到的傷害 10% 反彈給打你的遺跡生物（P.ttReflect，點滿 50%）：
 //   吃你的傷害增幅（傷害倍率、技能的強化），無視牠的防禦、減傷。2026-10-05 作者：反擊太低——每級 20%（點滿 100%），點滿再 ×4、每次反擊附加最大生命 10%。
-//   反擊不觸發吸血、不漲怒氣（直接扣血，不走 R.hurtEnemy；鏡像走 hurtEnemy 時帶 noVamp／reflect）。
+//   反擊不觸發吸血、不漲怒氣（一律走 R.hurtEnemy，帶 noVamp／reflect；combat.js 對 reflect 無視護甲）。
 // - 2026-10-05：奧義可以學兩個（花 10 點多開一格）→ 點滿的奧義記在 P.ttCaps（一個物件）。
 // 放在 talenttree.js、skillbook.js、unyield.js 後面。
 (function (R) {
@@ -38,17 +38,16 @@
     try { if (P && P.ttReflect > 0 && src && src.def && !src.dead && !src.ally && src.hp > 0 && !src.invuln) { const took = h0 - (P.hp + (P.shield || 0)); if (took > 0) reflect(P, src, took * P.ttReflect); } } catch (e) { console.warn('[talentcap]', e); }
     return r;
   };
-  // 反彈：吃傷害增幅，無視防禦、減傷（直接扣血）；多人連線的鏡像交給 R.hurtEnemy 送給房主
+  // 反彈：吃傷害增幅，無視護甲（combat.js 看 o.reflect）；一律走 R.hurtEnemy＋noVamp／reflect，吸血不生效（作者 2026-10-05：直接扣血仍被其他路徑當攻擊）
   const reflect = (P, e, v) => {
     let m = P.dmgMult || 1; const full = has('B3');   // 點滿：×4、再加最大生命 10%（作者 2026-10-05：反擊太低）
     if (full) { m *= 4; v += (P.hpMax || 0) * 0.1; }
     if (P.sb) Object.values(P.sb).forEach(b => { if (b && b.left > 0 && b.dmg) m *= b.dmg; });
     const dmg = Math.max(1, Math.round(v * m));
-    if (e.mirror) { R.hurtEnemy(e, dmg / (P.dmgMult || 1), { noVamp: true, reflect: true, fromBehind: false }); return; }
-    e.hp -= dmg; e.flash = 0.12; e.aggro = true; e.provoked = true;
-    R.num && R.num(e.x, 1.8 * ((e.def && e.def.size) || 1) + 0.6, e.z, '反擊 ' + dmg, 'crit');
-    if (R.dmAdd) R.dmAdd(Math.min(dmg, Math.max(0, e.hp + dmg)));   // dmgmeter.js：算進傷害統計
-    if (e.hp <= 0) R.killEnemy(e);
+    const h0 = e.hp;
+    R.hurtEnemy(e, dmg / Math.max(0.001, P.dmgMult || 1), { noVamp: true, reflect: true, fromBehind: false });
+    const dealt = Math.max(0, h0 - Math.max(0, e.hp));
+    if (dealt > 0) R.num && R.num(e.x, 2.2 * ((e.def && e.def.size) || 1) + 0.4, e.z, '反擊', 'crit');
   };
   // ---------- 不死身 ----------
   const pd0 = R.onPlayerDown;
