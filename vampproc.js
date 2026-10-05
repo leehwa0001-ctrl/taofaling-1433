@@ -1,11 +1,11 @@
-// 吸血（第三版，作者 2026-10-05）：吸血跟攻擊力、生命上限都脫鉤，只看「吸血系數」x（正整數）。
+// 吸血（第三版，作者 2026-10-05；同日晚：系數對回血量幾乎沒感——1＋x÷2000 從 100→200 只多 5%，滴血重生／血之渴望體感為零。回血改走 1＋x÷250）：
 // - x＝身上所有吸血加起來：武器的嗜血、飾品的飲血、種族、技能的強化、狂怒、那一招自己帶的吸血、天賦（P.vampX）。
-//   舊的「吸血 1%」一律換成吸血系數 +20（說明文字一起改）。
+//   舊的「吸血 1%」一律換成吸血系數 +20（說明文字一起改）。把 % 換成系數時仍 ÷2000（1%＝+20）。
 // - 每一次攻擊（同一瞬間打到的算一次）有 √x % 的機率觸發（x＝100 → 10%，最多 50%）。
-// - 觸發時回復：⌈武器吸血乘數 × 技能乘數 × (1＋x÷2000)⌉ × (1＋√打到幾隻)÷2 × (1＋恢復量增益)。
+// - 觸發時回復：⌈武器吸血乘數 × (1＋x÷250)⌉ × (1＋√打到幾隻)÷2 × (1＋恢復量增益)。
 //   武器吸血乘數照攻速：長劍 5（＝5×2.3÷攻速）→ 大劍 11.5、戰斧 8.2、刀 4.3、拳套 3.3、步槍 1.3（1～15）。
-//   技能乘數：普攻、技能都是 1（範圍招照 (1+√隻數)÷2：打 9 隻回 2 倍）。
-//   例：吸血 100 的長劍，普攻一隻 10% 機率回 ⌈5×1×1.05⌉＝6；一次打 9 隻 10% 機率回 18。
+//   例：吸血 100 的長劍，普攻一隻 10% 機率回 ⌈5×1.4⌉＝7；血之渴望 ×2（x＝200）回 ⌈5×1.8⌉＝9；一次打 9 隻再 ×2。
+//   滴血重生把 x 再 ×(1＋少掉生命比例)：生命越低，回血機率與每次回血量都會真的變高。
 // - 沒有冷卻（作者：拳師的普攻比 0.3 秒還快）。燃燒、毒、地上範圍的持續傷害不算攻擊，不擲。
 // - 回復照樣吃降治療（元素混亂、重傷、佩特拉的詛咒、條款）。
 // - 天賦「滴血重生」（P.ttBleed）：每少 1% 生命，吸血系數 +1%。
@@ -20,7 +20,7 @@
 // 放在所有包 R.hurtEnemy 的檔案後面（index.html 最後面附近）。
 (function (R) {
   const W = R.W;
-  const PER = 2000, CAP = 0.5, REF_RATE = 2.3, LONG = 5;
+  const PER = 2000, HEAL_PER = 250, CAP = 0.5, REF_RATE = 2.3, LONG = 5;   // PER：%→系數；HEAL_PER：系數→回血量（作者：2000 太鈍，系數加倍幾乎看不出回血差）
   R.vampProc = true;
   // 遺跡生物、地上範圍的每格結算裡（燃燒、毒、範圍持續傷害）：不擲
   let tick = 0;
@@ -45,7 +45,7 @@
   };
   const wMult = P => { const wd = P.item && R.WEAPONS[P.item.base], rate = (wd && wd.rate) || REF_RATE; return Math.max(1, Math.min(15, LONG * REF_RATE / rate)); };
   const amp = P => Math.max(0, 1 + (R.recovAmpOf ? R.recovAmpOf(P) : num(P.recovAmp)));   // 含滴血重生的恢復量%（實際乘在 healP；這裡給顯示用）
-  const baseHeal = (P, x, n) => Math.max(1, Math.round(Math.ceil(wMult(P) * (1 + x / PER)) * (1 + Math.sqrt(Math.max(1, n))) / 2));
+  const baseHeal = (P, x, n) => Math.max(1, Math.round(Math.ceil(wMult(P) * (1 + x / HEAL_PER)) * (1 + Math.sqrt(Math.max(1, n))) / 2));
   const healOf = (P, x, n) => Math.max(1, Math.round(baseHeal(P, x, n) * amp(P)));   // 顯示＝實際（healP 會再乘 amp）
   const skMult = x => (1 + Math.min(CAP, Math.sqrt(Math.max(0, x)) / 100)) / 2;   // 技能、大招：必定觸發，回復量＝普攻的回復量 × (1＋回血機率)÷2
   const skHealOf = (P, x, n) => Math.max(1, Math.round(healOf(P, x, n) * skMult(x)));

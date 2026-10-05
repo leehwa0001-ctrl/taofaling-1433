@@ -1,7 +1,7 @@
 // 公會的訓練場（2026-10-05 作者：可以在公會新增訓練場，可以自己測試技能）
 // - 公會一樓往二樓的樓梯腳下（西北角，2026-10-05 從南牆出口左邊搬過來）立著一個稻草木樁：「公會後院・訓練場」。走過去按空白就進去，出來回到公會一樓。
 // - 裡面：一片空地、幾個訓練木樁（不動、不還手、打不死）。畫面上方一塊面板：
-//   最近 5 秒的每秒傷害、總傷害、最大的一下、上一招（放技能之後打出去的總傷害）。可以換「1 隻／5 隻一群」、「技能不冷卻（魔力、大招也滿）」。
+//   最近 5 秒的每秒傷害、總傷害、最大的一下、上一招（放技能之後打出去的總傷害）。可以換「1 隻／5 隻一群」、「技能不冷卻（魔力、大招也滿）」、「自身生命 XX%」（測滴血重生等跟血量有關的）。
 // - 不算一趟遺跡：不花時間、不會受傷；裡面用掉的藥水、炸藥、卷軸、錢，練到的技能熟練度、武器熟練度、經驗，出來的時候全部還原（不能拿來練功）。
 // - 場地借狩獵場的分級（R.GRADES 的 hunt）和「戶外」：佩特拉的注意、存檔點、出口的守衛、地形、樓層效果、黑暗這些遺跡的東西都會自己跳過。
 //   hunt.js 的戶外處理（生野獸、考核）看 site.kind，不套到這裡。
@@ -32,22 +32,24 @@
   };
 
   // ---------- 面板 ----------
-  const T = { n: 1, nocd: false, log: [], total: 0, max: 0, hits: 0, last: null, t: 0 };
+  const T = { n: 1, nocd: false, hpPct: 100, log: [], total: 0, max: 0, hits: 0, last: null, t: 0 };
   let panel = null;
   const ensurePanel = () => {
     if (panel) return panel;
     panel = document.createElement('div'); panel.id = 'tr-panel'; panel.hidden = true;
     panel.innerHTML = '<b>公會後院・訓練場</b><div class="tr-num" id="tr-num"></div><div class="tr-row">'
-      + '<button type="button" class="mini" id="tr-n"></button><button type="button" class="mini" id="tr-cd"></button><button type="button" class="mini" id="tr-reset">重置數字</button><button type="button" class="mini gold" id="tr-out">離開訓練場</button></div>';
+      + '<button type="button" class="mini" id="tr-n"></button><button type="button" class="mini" id="tr-cd"></button><button type="button" class="mini" id="tr-hp"></button><button type="button" class="mini" id="tr-reset">重置數字</button><button type="button" class="mini gold" id="tr-out">離開訓練場</button></div>';
     document.body.appendChild(panel);
     $('tr-n').onclick = () => { T.n = T.n === 1 ? 5 : 1; place(); reset(); label(); };
     $('tr-cd').onclick = () => { T.nocd = !T.nocd; label(); };
+    $('tr-hp').onclick = () => { const opts = [100, 75, 50, 25, 10, 1]; T.hpPct = opts[(opts.indexOf(T.hpPct) + 1) % opts.length]; applyHp(); label(); };
     $('tr-reset').onclick = () => { reset(); };
     $('tr-out').onclick = () => leave();
     panel.addEventListener('pointerdown', e => e.stopPropagation());
     return panel;
   };
-  const label = () => { if (!panel) return; $('tr-n').textContent = '木樁：' + (T.n === 1 ? '1 隻' : '5 隻一群'); $('tr-cd').textContent = '技能冷卻：' + (T.nocd ? '不冷卻' : '照常'); };
+  const applyHp = () => { const P = W().P; if (!P || !here()) return; P.hp = Math.max(1, Math.round(P.hpMax * T.hpPct / 100)); };
+  const label = () => { if (!panel) return; $('tr-n').textContent = '木樁：' + (T.n === 1 ? '1 隻' : '5 隻一群'); $('tr-cd').textContent = '技能冷卻：' + (T.nocd ? '不冷卻' : '照常'); $('tr-hp').textContent = '自身生命：' + T.hpPct + '%'; };
   const reset = () => { T.log = []; T.total = 0; T.max = 0; T.hits = 0; T.last = null; show(); };
   const fmt = v => Math.round(v).toLocaleString('en-US');
   const show = () => {
@@ -130,7 +132,7 @@
     const P = w.P, big = F.rooms.slice().sort((a, b) => (b.hx * b.hz || 0) - (a.hx * a.hz || 0))[0];
     if (P && big) { [P.x, P.z] = R.nearestFloor ? R.nearestFloor(big.x, big.z + 2.5) : [big.x, big.z + 2.5]; P.yaw = Math.PI; P.h.g.position.set(P.x, 0, P.z); R.placeCam && R.placeCam(null); }
     const ab = $('r-aware-box'); if (ab) ab.hidden = true;
-    place(); ensurePanel().hidden = false; label(); show();
+    place(); T.hpPct = T.hpPct || 100; ensurePanel().hidden = false; label(); applyHp(); show();
     setTimeout(() => R.banner && R.banner('公會後院・訓練場', '木樁不會還手、打不倒；不花時間，出來時用掉的東西會還你'), 300);
     return r;
   };
@@ -169,7 +171,8 @@
     if (!run || !P) { if (panel && !panel.hidden && !here()) panel.hidden = true; return r; }
     T.t += dt; keep();
     if (T.nocd) { P.skillCd = 0; if (P.skCd) P.skCd = P.skCd.map(() => 0); P.mp = P.mpMax; P.ult = 100; }
-    P.hp = P.hpMax;
+    // 作者 2026-10-05：可把生命鎖在 XX% 測滴血重生等；100% 才鎖滿血（以前每幀回滿，跟血量有關的測不了）
+    applyHp();
     T.log = T.log.filter(x => T.t - x[0] <= 6);
     showT -= dt; if (showT <= 0) { showT = 0.25; show(); }
     return r;
