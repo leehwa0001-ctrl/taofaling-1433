@@ -33,7 +33,9 @@
   R.updateLights = dt => {
     const r = ul(dt), run = W.run, F = W.F;
     try {
-      const on = !!(LINES && run && F && F.fogMin && !(run.site && run.site.outdoor));
+      const fogOn = !!(run && F && F.fogMin && !(run.site && run.site.outdoor)), on = LINES && fogOn;
+      // 生物不描邊（作者 2026-10-05：只顯示地圖物件的外框，敵人太明顯）：濃霧樓層裡生物的材質不寫深度，後製的深度描邊就不會圍著牠們畫
+      (W.enemies || []).forEach(e => { const mt = e.m && e.m.sp && e.m.sp.mat; if (!mt || mt.transparent) return; const want = !fogOn; if (mt.depthWrite !== want) mt.depthWrite = want; });
       if (F !== lastF) { lastF = F; if (F) F.fogLines = null; }
       if (on && F && !F.fogLines) F.fogLines = build(F) || 'none';
       if (F && F.fogLines && F.fogLines !== 'none') {
