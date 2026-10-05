@@ -133,7 +133,7 @@
       P.parryT = 0; P.stance = 0; P.iframe = 0.5;
       R.fx('block', P.x, 1.2, P.z); R.fx('spark', P.x, 1.2, P.z, { a: angTo(P, src), crit: true }); R.num(P.x, 2.6, P.z, '見切', 'crit');
       const tg = dist(src, P) < 5 ? src : R.nearestEnemy(P.x, P.z, 4);
-      if (tg) { P.aimA = angTo(P, tg); R.swingAnim(P.h, 0.02, 0.25); R.melee(P.aimA, Math.max(2.4, dist(tg, P) + 0.5), 1.2, power(P.ws) * 3, 0, 0, 0, { crit: true, kb: 2, primary: false, hs: 1, dir: -1, reflect: true, noVamp: true }); }   // 見切反擊：不觸發吸血
+      if (tg) { P.aimA = angTo(P, tg); R.swingAnim(P.h, 0.02, 0.25); R.melee(P.aimA, Math.max(2.4, dist(tg, P) + 0.5), 1.2, power(P.ws) * 3, 0, 0, 0, R.markNoVamp ? R.markNoVamp({ crit: true, kb: 2, primary: false, hs: 1, dir: -1 }) : { crit: true, kb: 2, primary: false, hs: 1, dir: -1, reflect: true, noVamp: true }); }   // 見切反擊：不觸發吸血
       return;
     }
     if (P && P.buff && P.buff.guard > 0) raw *= 0.6;

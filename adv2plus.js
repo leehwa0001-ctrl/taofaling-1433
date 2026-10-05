@@ -248,7 +248,7 @@
   const ke0 = R.killEnemy;
   R.killEnemy = (e, by) => {
     const was = e && !e.dead, r = ke0(e, by), f = pvOf(), P = W().P;
-    if (was && e.dead && f && P && !(by && by.rival) && !(R._reflectKill > 0)) {
+    if (was && e.dead && f && P && !(by && by.rival) && !(R._reflectKill > 0) && !(R._vampBlock > 0)) {
       if (f.killCd) { P.skillCd = Math.max(0, (P.skillCd || 0) - f.killCd); if (P.skCd) P.skCd = P.skCd.map(c => Math.max(0, (c || 0) - f.killCd)); }
       if (f.killShield) { P.shield = Math.min(P.hpMax * 0.3, Math.max(P.shield || 0, 0) + P.hpMax * f.killShield); if (P.buff) P.buff.shieldT = Math.max(P.buff.shieldT || 0, 6); }
     }

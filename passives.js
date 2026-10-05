@@ -113,7 +113,7 @@
   const ke = R.killEnemy;
   R.killEnemy = (e, by) => {
     const was = e && !e.dead, r = ke(e, by), P = W().P, f = P && P.pv;
-    if (was && e.dead && f && !(by && by.rival) && !(R._reflectKill > 0)) {   // 反擊／荊棘打死的不算擊倒回血（作者：站著反死還靠擊倒回血滿血）
+    if (was && e.dead && f && !(by && by.rival) && !(R._reflectKill > 0) && !(R._vampBlock > 0)) {   // 反擊／荊棘／_vampBlock：不算擊倒回血
       if (f.killHeal) {   // 遞減（作者 2026-10-05）：每次生效，之後的回復少 1%，最多少 50%，換樓層重算
         const fl = (W().run && W().run.floor) || 0; if (P._khFloor !== fl) { P._khFloor = fl; P._khN = 0; }
         R.healP(P.hpMax * f.killHeal * (1 - Math.min(0.5, 0.01 * (P._khN || 0))), true); P._khN = (P._khN || 0) + 1;
@@ -129,7 +129,7 @@
     const P = W().P, f = P && P.pv;
     // 不屈／殉道（fx.last）：真的倒下的時候才算——改在 unyield.js（原本這裡看扣護甲之前的傷害，死不了的攻擊也會觸發）
     const r = hp(raw, src, o);
-    if (f && f.thorns && src && src.def && !src.dead && raw > 0) R.hurtEnemy(src, raw * f.thorns, { thorns: 1, reflect: true, noVamp: true, fromBehind: false });   // 必須走當下的 R.hurtEnemy（含 vampproc）；舊的 he 參考在 vampproc 之前，旗標到不了吸血層
+    if (f && f.thorns && src && src.def && !src.dead && raw > 0) R.hurtEnemy(src, raw * f.thorns, R.markNoVamp ? R.markNoVamp({ thorns: 1, fromBehind: false }) : { thorns: 1, reflect: true, noVamp: true, fromBehind: false });   // 走 markNoVamp 單一閘門
     return r;
   };
   const hl = R.healP;

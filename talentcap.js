@@ -45,7 +45,7 @@
     if (P.sb) Object.values(P.sb).forEach(b => { if (b && b.left > 0 && b.dmg) m *= b.dmg; });
     const dmg = Math.max(1, Math.round(v * m));
     const h0 = e.hp;
-    R.hurtEnemy(e, dmg / Math.max(0.001, P.dmgMult || 1), { noVamp: true, reflect: true, fromBehind: false });
+    R.hurtEnemy(e, dmg / Math.max(0.001, P.dmgMult || 1), R.markNoVamp ? R.markNoVamp({ fromBehind: false }) : { noVamp: true, reflect: true, fromBehind: false });
     const dealt = Math.max(0, h0 - Math.max(0, e.hp));
     if (dealt > 0) R.num && R.num(e.x, 2.2 * ((e.def && e.def.size) || 1) + 0.4, e.z, '反擊', 'crit');
   };

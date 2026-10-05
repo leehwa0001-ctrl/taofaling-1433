@@ -299,7 +299,7 @@
     mikiri(P, src) {
       P._noto = 0; P._iai = this.max(P); P.iframe = Math.max(P.iframe || 0, 0.4); P._mikiriCd = CT + 0.6;
       say(P, '見切', 'crit'); R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 3, color: '#FFFFFF' }); R.shake && R.shake(0.2);
-      R.coreAoe(P.x, P.z, 3, pw(P) * 2.5, { stun: 1, reflect: true, noVamp: true });   // 見切反斬：不觸發吸血
+      R.coreAoe(P.x, P.z, 3, pw(P) * 2.5, R.markNoVamp ? R.markNoVamp({ stun: 1 }) : { stun: 1, reflect: true, noVamp: true });   // 見切反斬：不觸發吸血
       if (adv(P) === 'shadow' && src && src.x != null) { const a = src.yaw || 0, q = R.nearestFloor ? R.nearestFloor(src.x - Math.sin(a) * 1.4, src.z - Math.cos(a) * 1.4) : [src.x, src.z]; R.fx && R.fx('blink', P.x, 1, P.z); P.x = q[0]; P.z = q[1]; P.invis = Math.max(P.invis || 0, 2); }
     },
     onHurt(raw, src, o, P) {
@@ -319,7 +319,7 @@
       const run = W().run; if (!P.guard || !run || P.guardT0 == null || run.t - P.guardT0 > ((R.legOf ? R.legOf(P) : null) === 'lg_vow' ? 0.5 : 0.3) || !src || src.dead) return;
       say(P, '完美格擋', 'crit'); R.fx && R.fx('block', P.x, 1.2, P.z); R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 2, color: '#FFE08A' });
       if (src.st) src.st.stun = Math.max(src.st.stun || 0, 1.5);
-      if (src.hp != null && src.def) R.coreHit(src, pw(P) * 1.5 + (adv(P) === 'templar' ? raw : 0), { kb: 2, reflect: true, noVamp: true });   // 盾反擊：不觸發吸血
+      if (src.hp != null && src.def) R.coreHit(src, pw(P) * 1.5 + (adv(P) === 'templar' ? raw : 0), R.markNoVamp ? R.markNoVamp({ kb: 2 }) : { kb: 2, reflect: true, noVamp: true });   // 盾反擊：不觸發吸血
       if (P.stam != null) P.stam = Math.min(P.stamMax || 100, P.stam + 20);
       if (adv(P) === 'paladin') R.healP(P.hpMax * 0.08);
       P._riposte = CT + 2; return false;
@@ -330,9 +330,9 @@
       if (rip && adv(P) === 'dragoon') {
         const ax = P.aimX != null ? P.aimX : P.x + Math.sin(a) * 6, az = P.aimZ != null ? P.aimZ : P.z + Math.cos(a) * 6, d = Math.min(8, Math.hypot(ax - P.x, az - P.z)), q = R.nearestFloor ? R.nearestFloor(P.x + Math.sin(a) * d, P.z + Math.cos(a) * d) : [ax, az];
         R.fx && R.fx('blink', P.x, 1, P.z); P.x = q[0]; P.z = q[1]; P.iframe = Math.max(P.iframe || 0, 0.4); R.fx && R.fx('boom', P.x, 0.3, P.z, { r: 3.2, color: '#9AD8FF' }); R.shake && R.shake(0.3);
-        R.coreAoe(P.x, P.z, 3.2, pw(P) * 3, { stun: 1, kb: 2 }); P._riposte = 0; say(P, '龍躍', 'crit'); return;
+        R.coreAoe(P.x, P.z, 3.2, pw(P) * 3, R.markNoVamp ? R.markNoVamp({ stun: 1, kb: 2 }) : { stun: 1, kb: 2, reflect: true, noVamp: true }); P._riposte = 0; say(P, '龍躍', 'crit'); return;   // 反制龍躍：不觸發吸血
       }
-      const jd = rip && (R.legOf ? R.legOf(P) : null) === 'lg_judge'; front(P, jd ? 5 : 3.5, jd ? 2.6 : 1.8).forEach(e => R.coreHit(e, pw(P) * (rip ? 3 : 1.2), { stun: jd ? 3 : 1, kb: 2 }));   // 盾往前撞：前方 3.5 公尺都吃到
+      const jd = rip && (R.legOf ? R.legOf(P) : null) === 'lg_judge'; front(P, jd ? 5 : 3.5, jd ? 2.6 : 1.8).forEach(e => R.coreHit(e, pw(P) * (rip ? 3 : 1.2), rip ? (R.markNoVamp ? R.markNoVamp({ stun: jd ? 3 : 1, kb: 2 }) : { stun: jd ? 3 : 1, kb: 2, reflect: true, noVamp: true }) : { stun: jd ? 3 : 1, kb: 2 }));   // 反制盾擊不吸血；一般盾擊照常
       if (R.dash) R.dash(a, 2.4, 0.18, { iframe: true });
       R.fx && R.fx('swing', P.x, 1.1, P.z, { a, range: 3.5, arc: 1.8, color: rip ? '#FFE08A' : '#C9A13A' });
       say(P, rip ? '反制' : '盾擊', rip ? 'crit' : 'heal'); P._riposte = 0;

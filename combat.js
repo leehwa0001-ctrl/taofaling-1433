@@ -57,7 +57,7 @@
     if (P.adv === 'yoto') dmg *= 1 + Math.min(0.6, (P.stacks || 0) / 100);
     if (P.adv === 'shadow' && o.fromBehind !== false) { const back = Math.abs(wrap(angTo(e, P) - e.yaw)) > 2.1; if (back) dmg *= 1.5; }
     if (e.st.curse > 0) dmg *= 1.3;
-    const isRef = !!(o.reflect || o.thorns);   // 反擊／荊棘：無視護甲、不擲暴擊、不觸發附屬元素（天賦反擊原本直接扣血）
+    const isRef = !!(o.reflect || o.thorns || o.noVamp);   // 反擊／荊棘／noVamp：無視護甲、不擲暴擊、不觸發附屬元素、不吸血、擊殺不算擊倒回血
     if (!isRef && e.def.armor) dmg *= 1 - e.def.armor * (1 - (P.pen || 0));   // 穿透：無視一部分護甲
     let crit = !!o.crit;
     if (!crit && !isRef) { crit = Math.random() < (o.critChance != null ? o.critChance : P.ws.crit) || (P.crits > 0 && o.primary); if (P.crits > 0 && o.primary) P.crits--; }
@@ -86,7 +86,8 @@
     if (!isRef && ws.vamp && o.primary && !R.vampProc) R.healP(dmg * ws.vamp, true);   // vampproc.js 接手：改成每次攻擊有機率回
     if (!isRef && P.buff.rage > 0 && !R.vampProc) R.healP(dmg * 0.025, true);
     if (e.hp <= 0) {
-      if (isRef) { R._reflectKill = (R._reflectKill || 0) + 1; try { R.killEnemy(e); } finally { R._reflectKill--; } }
+      // isRef 或吸血層 _vampBlock（巢狀反傷）都不算擊倒回血
+      if (isRef || (R._vampBlock > 0)) { R._reflectKill = (R._reflectKill || 0) + 1; try { R.killEnemy(e); } finally { R._reflectKill--; } }
       else R.killEnemy(e);
     }
     return dmg;
@@ -131,7 +132,7 @@
     if (R.CLASSES[P.cls].shield && src && P.atkHold <= 0) { const fa = Math.abs(wrap(angTo(P, src) - P.yaw)); if (fa < 1) { dmg *= 0.7; R.fx('block', P.x, 1.2, P.z); if (P.adv === 'paladin') R.healP(2, true); } }
     if (P.shield > 0) { const s = Math.min(P.shield, dmg); P.shield -= s; dmg -= s; }
     dmg = Math.round(dmg);
-    if (P.buff.fortress > 0 && src && src.hp) R.hurtEnemy(src, raw * 0.3 / P.dmgMult, { fromBehind: false, reflect: true, noVamp: true });   // 要塞反彈：不算攻擊，不觸發吸血
+    if (P.buff.fortress > 0 && src && src.hp) R.hurtEnemy(src, raw * 0.3 / P.dmgMult, R.markNoVamp ? R.markNoVamp({ fromBehind: false }) : { fromBehind: false, reflect: true, noVamp: true });   // 要塞反彈：不算攻擊，不觸發吸血
     if (dmg <= 0) return;
     P.hp -= dmg; P.iframe = 0.3; P.stumble = 1.2; P.hurtT = 0.25;
     R.num(P.x, 2.2, P.z, dmg, 'hurt');

@@ -77,22 +77,39 @@
     if (Math.random() >= chanceOf(x)) return;
     R.healP(baseHeal(P, x, g.n));
   };
+  // 單一閘門：反擊／荊棘／noVamp／source=reflect 任一成立 → 正規化旗標＋進 _vampBlock 深度
+  // 巢狀傷害（反傷過程中再打出去的）就算漏標也不會進吸血；擊倒回血看 R._vampBlock／R._reflectKill
+  R.isNoVampHit = o => !!(o && (o.noVamp || o.thorns || o.reflect || o.source === 'reflect')) || !!(R._vampBlock > 0);
+  R.markNoVamp = o => { o = o || {}; o.noVamp = true; o.reflect = true; return o; };  // 只強制 noVamp＋reflect；thorns 由呼叫端自己帶
   const he0 = R.hurtEnemy;
   R.hurtEnemy = (e, raw, o) => {
-    const h0 = e && !e.dead ? e.hp : 0, r = he0(e, raw, o);
+    o = o || {};
+    const flagged = !!(o.noVamp || o.thorns || o.reflect || o.source === 'reflect');
+    if (flagged) { o.noVamp = true; o.reflect = true; R._vampBlock = (R._vampBlock || 0) + 1; }
+    const h0 = e && !e.dead ? e.hp : 0;
+    let r;
     try {
-      // 吸血旗標必須在 heal 之前檢查；noVamp／thorns／reflect 任一成立都不回血（作者 2026-10-05：反擊仍吸血——補齊所有反傷路徑）
-      if (!tick && e && h0 > 0 && (e.dead || e.hp < h0) && !(o && (o.noVamp || o.thorns || o.reflect))) {
-        const P = W.P;
-        if (P && !P.dead && W.run && !W.run.done) {
-          const key = sk > 0 || (o && o.vSk) ? 'sk' : 'atk';
-          if (!grp[key]) { grp[key] = { set: new Set(), skill: 0, n: 0 }; queueMicrotask(resolve(key)); }   // 同一瞬間打到的算一次攻擊
-          const g = grp[key];
-          if (!g.set.has(e)) { g.set.add(e); g.n++; }
-          if (R.vampSkill) g.skill = Math.max(g.skill, num(R.vampSkill));
+      r = he0(e, raw, o);
+      try {
+        // 閘門在吸血排程本身：旗標或巢狀 _vampBlock 都不回血（作者 2026-10-05 晚：反擊仍吸血——改成源頭閘門，呼叫端漏標也擋）
+        const nested = (R._vampBlock || 0) > (flagged ? 1 : 0);
+        if (!tick && !flagged && !nested && e && h0 > 0 && (e.dead || e.hp < h0)) {
+          const P = W.P;
+          if (P && !P.dead && W.run && !W.run.done) {
+            const key = sk > 0 || (o && o.vSk) ? 'sk' : 'atk';
+            if (!grp[key]) { grp[key] = { set: new Set(), skill: 0, n: 0 }; queueMicrotask(resolve(key)); }   // 同一瞬間打到的算一次攻擊
+            const g = grp[key];
+            if (!g.set.has(e)) { g.set.add(e); g.n++; }
+            if (R.vampSkill) g.skill = Math.max(g.skill, num(R.vampSkill));
+          }
+        } else if (flagged && e && h0 > 0 && (e.dead || e.hp < h0) && typeof console !== 'undefined' && console.assert) {
+          // 單元式自檢：反擊有造成傷害時，確認這一擊不會進吸血排程
+          console.assert(flagged && (o.noVamp || o.reflect), '[vampproc] reflect/thorns hit must keep noVamp gate');
         }
-      }
-    } catch (err) { console.warn('[vampproc]', err); }
+      } catch (err) { console.warn('[vampproc]', err); }
+    } finally {
+      if (flagged) R._vampBlock = Math.max(0, (R._vampBlock || 1) - 1);
+    }
     return r;
   };
 
