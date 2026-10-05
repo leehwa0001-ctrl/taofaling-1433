@@ -38,8 +38,8 @@
     const fo = (s.furn && s.furn.own) || {}, FU = R.FURNITURE || {};
     sec('家具', Object.keys(fo).filter(k => fo[k] > 0 && FU[k]).map(k => chip(FU[k].name, fo[k])));
     const M = R.MATS || {}, mk = Object.keys(M).filter(k => (s.mats || {})[k] > 0);
-    sec('寶石', mk.filter(k => /^gem_/.test(k)).map(k => chip(M[k].name, s.mats[k], M[k].color)));
-    sec('素材', mk.filter(k => !/^gem_/.test(k)).map(k => chip(M[k].name, s.mats[k], M[k].color)));
+    sec('寶石', mk.filter(k => /^gem_/.test(k)).map(k => R.matChip ? R.matChip(k, s.mats[k]) : chip(M[k].name, s.mats[k], M[k].color)));
+    sec('素材', mk.filter(k => !/^gem_/.test(k)).map(k => R.matChip ? R.matChip(k, s.mats[k]) : chip(M[k].name, s.mats[k], M[k].color)));
     return '<details class="cs-box hs-own"' + (wide() ? ' open' : '') + '><summary>身上的東西</summary>' + (out.length ? out.join('') : '<p class="note">身上什麼都沒有。</p>') + '</details>';
   };
   const stashOwn = body => {
