@@ -15,7 +15,7 @@
   const LET = ['F', 'E', 'D', 'C', 'B', 'A', 'AA', 'S', 'SS', 'SSS', 'X', 'G'], li = l => LET.indexOf(l), OLD = { 'E～D': 'D', 'C～A': 'C', 'AA～SS': 'AA', 'SSS～G': 'SSS' };
   const rangeOf = txt => { const p = String(txt || '').split('～'); if (p.length < 2) return li(p[0]) >= 0 ? [p[0]] : []; const a = li(p[0]), b = li(p[1]); return a < 0 || b < 0 ? [] : LET.slice(a, b + 1); };
   const letterOf = t => OLD[t.letter] || (li(t.letter) >= 0 ? t.letter : (rangeOf(t.letter)[0] || 'F'));
-  const reqMet = () => { const ts = S().tasks || [], done = ts.filter(t => t.avg != null && !t.failed), x = done.filter(t => li(letterOf(t)) >= li('X')).length, rec = ts.filter(t => t.avg != null).slice(-10), avg = rec.length ? rec.reduce((a, t) => a + t.avg, 0) / rec.length : 0; return x >= 2 && avg >= 98; };
+  const reqMet = () => { const ts = S().tasks || [], done = ts.filter(t => t.avg != null && !t.failed), x = done.filter(t => li(letterOf(t)) >= li('X')).length, rec = ts.filter(t => t.avg != null).slice(-10), avg = rec.length ? rec.reduce((a, t) => a + t.avg, 0) / rec.length : 0; return x >= 4 && avg >= 98; /* 2026-10-06 調慢：X 級 2 → 4 件（跟阿特斯階的條件一樣） */ };
   const lv = () => { const s = S(); return s && s.classes && s.classes[s.cls] ? s.classes[s.cls].lv : 1; };
   const K = () => { const s = S(); return s && s.kansait; };
   const atAtlas = r => r && r.dan === 4 && r.tier === 3;

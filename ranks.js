@@ -5,6 +5,7 @@
 //   比範圍最低的高一級，報酬 +15%。接不了的遺跡還是可以「不接委託，自己下去」（guildtask.js），只是沒有報酬。
 //   狩獵場（hunt.js）的考核和狩獵委託不受段位限制。
 // - 升階：任務數量照簡章除以十（無條件進位，S 級以上除以五），成績看最近 10 件的平均。數量是「這一級以上」的任務都算。
+//   （2026-10-06 調慢：件數再拉長、每段最後一階要職業等級，見 REQ 上面的註解。）
 //   討伐段、獵殺段的升階還要「指定討伐」：條件到了，公會下達指定討伐——下一次在委託裡打倒一隻領主體。
 //   金鳳階要「火龍討伐」：在委託裡打倒領主體・熔顎蜥。
 // - 升段：每段最後一階達到條件，再通過「段位考核」（每個月一次）：
@@ -23,12 +24,16 @@
     { name: '近神段', range: ['SS', 'SSS', 'X', 'G'], tiers: ['散心階', '斷心階'], desc: '公會面對世界危機時的底牌之一。由會長親自決定。' }
   ];
   // 每一階「往上」的條件（最後一階＝可以報名段位考核的條件）
+  // 2026-10-06 作者：段位也要很慢升（之後加其他國家、等級拉到 100）——件數約拉長 1.3～2 倍（新人段幾乎不變），
+  // 每段最後一階另外要「職業等級」（lv：所有職業裡最高的那個）。原本：
+  //   新人 [any1/60, F3/60, F8/70]；冒險 [D4/65, D7/65, D8+C3/70, C6/70, C7/80]；
+  //   討伐 [B2, B4, B5+A1, B7+A2, A4+AA1, B10+A6+AA2]（70～75）；獵殺 [A5+AA2+S1/75, A6+AA3+S1/80, S1+SS1/85, S2+SS1/90]；特攻 [SSS1/90, SSS1/95, SSS2+X1/95, X2/98]
   const REQ = [
-    [{ any: 1, avg: 60 }, { F: 3, avg: 60 }, { F: 8, avg: 70 }],
-    [{ D: 4, avg: 65 }, { D: 7, avg: 65 }, { D: 8, C: 3, avg: 70 }, { C: 6, avg: 70 }, { C: 7, avg: 80 }],
-    [{ B: 2, avg: 70, desig: 1 }, { B: 4, avg: 70, desig: 1 }, { B: 5, A: 1, avg: 70, desig: 1 }, { B: 7, A: 2, avg: 75, desig: 1 }, { A: 4, AA: 1, avg: 75, desig: 1 }, { B: 10, A: 6, AA: 2, avg: 75, fire: 1 }],
-    [{ A: 5, AA: 2, S: 1, avg: 75, desig: 1 }, { A: 6, AA: 3, S: 1, avg: 80, desig: 1 }, { S: 1, SS: 1, avg: 85, desig: 1 }, { S: 2, SS: 1, avg: 90 }],
-    [{ SSS: 1, avg: 90 }, { SSS: 1, avg: 95 }, { SSS: 2, X: 1, avg: 95 }, { X: 2, avg: 98 }],
+    [{ any: 1, avg: 60 }, { F: 4, avg: 60 }, { F: 10, avg: 70 }],
+    [{ D: 5, avg: 65 }, { D: 9, avg: 65 }, { D: 12, C: 4, avg: 70 }, { C: 9, avg: 72 }, { C: 12, avg: 80, lv: 22 }],
+    [{ B: 3, avg: 70, desig: 1 }, { B: 6, avg: 72, desig: 1 }, { B: 9, A: 2, avg: 72, desig: 1 }, { B: 12, A: 4, avg: 75, desig: 1 }, { A: 7, AA: 2, avg: 78, desig: 1 }, { B: 16, A: 10, AA: 4, avg: 80, fire: 1, lv: 38 }],
+    [{ A: 8, AA: 4, S: 2, avg: 78, desig: 1 }, { A: 10, AA: 6, S: 3, avg: 82, desig: 1 }, { S: 4, SS: 2, avg: 86, desig: 1 }, { S: 6, SS: 3, avg: 90, lv: 52 }],
+    [{ SSS: 2, avg: 90 }, { SSS: 3, avg: 95 }, { SSS: 5, X: 2, avg: 95 }, { X: 4, avg: 98, lv: 66 }],
     [{ never: 1 }, { never: 1 }]
   ];
   const EXAM = [
@@ -96,9 +101,11 @@
   const letterOfTask = t => OLD[t.letter] || (li(t.letter) >= 0 ? t.letter : (rangeOf(t.letter)[0] || 'F'));
   const countAtLeast = l => done().filter(t => li(letterOfTask(t)) >= li(l)).length;
   const recentAvg = () => { const ts = (S().tasks || []).filter(t => t.avg != null).slice(-10); return ts.length ? Math.round(ts.reduce((a, t) => a + t.avg, 0) / ts.length) : 0; };
+  const topLv = () => { const c = (S() && S().classes) || {}; return Object.values(c).reduce((m, st) => Math.max(m, (st && st.lv) || 1), 1); };
   const reqLines = q => {
     const out = [];
     if (q.never) return [{ ok: false, txt: '由會長決定（遊戲裡還沒開放）' }];
+    if (q.lv) { const l = topLv(); out.push({ ok: l >= q.lv, txt: '職業等級（最高的職業）Lv ' + l + '／' + q.lv }); }
     if (q.any) { const n = done().length; out.push({ ok: n >= q.any, txt: '完成任務 ' + n + '／' + q.any + ' 件' }); }
     LET.forEach(l => { if (q[l]) { const n = countAtLeast(l); out.push({ ok: n >= q[l], txt: l + ' 級以上的任務（更高級的也算）' + n + '／' + q[l] + ' 件' }); } });
     if (q.avg) { const a = recentAvg(); out.push({ ok: a >= q.avg, txt: '最近 10 件的成績平均 ' + a + '%／' + q.avg + '%' }); }
