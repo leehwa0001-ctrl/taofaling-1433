@@ -58,8 +58,10 @@
     sel(SK + '.none') + '{display:none!important}',
     sel(SK + '::before') + '{content:attr(data-mp);position:absolute;right:3px;top:2px;font:800 10px/1 system-ui,sans-serif;color:#8FB8FF;text-shadow:0 1px 0 #000,0 0 3px #000;z-index:4}',
     sel(SK + ' .h2-n') + '{left:3px!important;right:auto!important;top:2px!important;bottom:auto!important;transform:none!important;font-size:9px!important;color:#E8C04A!important}',
-    sel(SK + ':not(.lit) .h2-ic') + '{filter:brightness(1.12) saturate(1.05) drop-shadow(0 2px 0 rgba(0,0,0,.55))!important}',   /* 2026-10-05 作者：職業技能圖要比種族技的菱形一樣亮——拿掉灰階壓暗 */
-    sel(SK + '.lit .h2-ic') + '{filter:brightness(1.38) saturate(1.25) drop-shadow(0 2px 0 rgba(0,0,0,.55)) drop-shadow(0 0 4px rgba(255,255,255,.35))!important}',
+    /* 2026-10-05 作者：技能格要跟炸彈、藥水、背包一樣亮。灰的真正原因是冷卻遮罩（.cd）沒冷卻也整格蓋 62% 黑（index.html 已修）——圖示本身不再額外加亮，跟消耗品同一個濾鏡；魔力不夠整格也不再褪色（只留藍框和字） */
+    sel(SK + ':not(.lit) .h2-ic') + '{filter:drop-shadow(0 2px 0 rgba(0,0,0,.7))!important}',
+    sel(SK + '.lit .h2-ic') + '{filter:brightness(1.08) saturate(1.12) drop-shadow(0 2px 0 rgba(0,0,0,.7)) drop-shadow(0 0 3px rgba(255,255,255,.3))!important}',
+    sel('.act.nomp') + '{filter:none!important}',
     sel(SK + '.lit') + '{box-shadow:inset 0 0 0 1px var(--cc,#E8C04A),inset 0 0 0 2px #120E0A,inset 0 0 18px color-mix(in srgb,var(--cc,#E8C04A) 40%,transparent),0 0 10px color-mix(in srgb,var(--cc,#E8C04A) 45%,transparent)!important}',
     sel(SK + '.lit::after') + '{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent 40%,rgba(255,255,255,.18) 50%,transparent 60%);background-size:260% 100%;animation:h3shine 3s ease-in-out infinite;z-index:3;pointer-events:none}',
     '@keyframes h3shine{0%{background-position:130% 0}55%,100%{background-position:-60% 0}}',

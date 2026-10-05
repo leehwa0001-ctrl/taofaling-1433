@@ -22,7 +22,10 @@
     [['獸人族種', '獸妖族種'], '野性咆哮', 'buff', { t: 8, dmg: 1.2, speed: 1.15, color: '#C8A878' }, '一聲咆哮：8 秒內傷害 +20%、移動 +15%。'],
     [['神魔族'], '魔焰', 'at', { range: 10, r: 3, k: 2, burn: 1, delay: 200, fx: 'boom', color: '#8A2AC8' }, '在準心處點起魔界的火焰。']
   ];
-  const of = id => { const r = id && R.RACES[id]; if (!r) return null; const src = (r.from || '') + '|' + (r.name || ''); return LIST.find(x => x[0].some(k => src.includes(k))) || null; };
+  // 2026-10-05 作者：種族技能不見了——半魔族的 from 寫成「半魔族（吸血魔族種）」，「吸血魔族種」對不上「吸血族種」，半魔族一律沒有種族技能；
+  // 現在對不上的時候把「○○魔族種」當成「○○族種」再找一次（半魔族用原本那一族的種族技能）
+  const find = src => LIST.find(x => x[0].some(k => src.includes(k))) || null;
+  const of = id => { const r = id && R.RACES[id]; if (!r) return null; const src = (r.from || '') + '|' + (r.name || ''); return find(src) || (/魔族種/.test(src) ? find(src.replace(/魔族種/g, '族種')) : null); };
   R.raceSkillOf = of;
   let cd = 0;
   const cast = () => {
@@ -61,8 +64,11 @@
     b.title = '種族技能「' + sk[1] + '」（' + key + '，冷卻 ' + CD + ' 秒）：' + sk[4];
     b.classList.toggle('lit', !(cd > 0)); b.classList.toggle('empty', cd > 0);
   };
+  // 快捷列那一格改跟著畫面更新（R.hudTick）也補一次：R.step 那條包了很多層，不靠它才不會有時候整格沒出來
+  const ht0 = R.hudTick; let hbT = 0;
+  if (ht0) R.hudTick = dt => { ht0(dt); hbT -= dt || 0; if (hbT > 0) return; hbT = 0.25; try { const w = W(), s = S(), sk = s && w.run && !w.run.done && of(s.race); const b = $('r-br') && $('r-br').querySelector('[data-h2="race"]'); if (sk) { bar(sk); const bb = $('r-br').querySelector('[data-h2="race"]'); if (bb && bb.hidden) bb.hidden = false; } else if (b && !b.hidden) b.hidden = true; } catch (e) { } };
   const css = document.createElement('style');
-  css.textContent = 'body:not(.touch) #r-br [data-h2="race"]{order:4}';
+  css.textContent = 'body:not(.touch) #r-br [data-h2="race"]{order:4!important}body:not(.touch) #r-br [data-h2="race"][hidden]{display:none!important}';
   document.head.appendChild(css);
   const lf0 = R.loadFloor; R.loadFloor = (f, o) => { const r = lf0(f, o); if (f === 0 || (W().run && W().run.floor === 0)) cd = 0; return r; };
   // 加成說明：多一行種族技能

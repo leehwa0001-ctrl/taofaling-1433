@@ -79,10 +79,11 @@
     const c = document.createElement('canvas'); c.width = c.height = RES; const x = c.getContext('2d'); x.scale(K, K);
     const col = mix(o.color, '#FFFFFF', 0.18), lt = mix(o.color, '#FFFFFF', 0.82), dk = mix(o.color, '#000000', 0.3), mid = mix(o.color, '#FFFFFF', 0.5);
     // 底（作者 2026-10-05：圖示太暗——底色少摻黑、中間圖案加亮；同日第二次：還是太暗，底色再亮、圖案的主色也先摻一點白）
-    const bg = x.createLinearGradient(0, 0, SZ, SZ); bg.addColorStop(0, mix(o.color, '#FFFFFF', 0.22)); bg.addColorStop(0.55, mix(o.color, '#4A4258', 0.22)); bg.addColorStop(1, mix(o.color, '#2A2434', 0.4));   // 2026-10-05 作者：職業技能圖要比種族技亮
+    // 2026-10-05 晚：快捷欄看起來灰，真正的原因是冷卻遮罩一直蓋著（index.html 的 .act .cd 被後面的規則蓋成整格 62% 黑），不是圖本身暗——遮罩修好後底色退回有深淺的版本，淺色職業（牧師）的圖案才看得清楚
+    const bg = x.createLinearGradient(0, 0, SZ, SZ); bg.addColorStop(0, mix(o.color, '#FFFFFF', 0.1)); bg.addColorStop(0.55, mix(o.color, '#3A3244', 0.3)); bg.addColorStop(1, mix(o.color, '#1E1A26', 0.55));
     x.fillStyle = bg; x.beginPath(); x.roundRect ? x.roundRect(0.5, 0.5, SZ - 1, SZ - 1, 4) : x.rect(0.5, 0.5, SZ - 1, SZ - 1); x.fill();
-    x.fillStyle = 'rgba(255,255,255,.5)'; x.fillRect(2, 2, SZ - 4, 1); x.fillRect(2, 2, 1, SZ - 4);
-    x.fillStyle = 'rgba(0,0,0,.15)'; x.fillRect(3, SZ - 3, SZ - 5, 1); x.fillRect(SZ - 3, 3, 1, SZ - 5);
+    x.fillStyle = 'rgba(255,255,255,.4)'; x.fillRect(2, 2, SZ - 4, 1); x.fillRect(2, 2, 1, SZ - 4);
+    x.fillStyle = 'rgba(0,0,0,.22)'; x.fillRect(3, SZ - 3, SZ - 5, 1); x.fillRect(SZ - 3, 3, 1, SZ - 5);
     // 中間的圖：畫在另一張上，描邊再貼回來
     const g = document.createElement('canvas'); g.width = g.height = RES; const y = g.getContext('2d'); y.scale(K, K);
     const P = (a, b, w, h, cc) => { y.fillStyle = cc; y.fillRect(a, b, w, h); };
