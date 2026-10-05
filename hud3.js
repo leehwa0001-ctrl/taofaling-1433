@@ -1,5 +1,5 @@
 // HUD 再改（作者 2026-10-04：hud 比較像物品欄；不好看，去網路上查）——電腦版
-// 照《暗黑破壞神 III／IV》那種「一整塊有框的面板」做：生命、魔力是嵌在面板兩端金屬座裡的液體球（從下往上漲，不是圓環），
+// 照《暗黑破壞神 III／IV》那種「一整塊有框的面板」做：生命、魔力是嵌在面板兩端長方形金屬座裡的液體球（圓球置中、從下往上漲，不是圓環），
 // 中間一塊石頭和青銅的面板，技能、藥水是嵌在面板裡、同一種斜面的方格；大招是面板正上方鑲著的一顆菱形寶石，光從下往上漲；
 // 經驗是面板下緣一條細細的金線。散在畫面上、形狀不一的零件都收進同一塊面板，看起來才是一套。
 // - 技能格：右上角藍色數字是魔力；沒學會的不顯示；能放的時候內框亮成職業顏色；冷卻照舊（扇形＋秒數）。
@@ -85,17 +85,38 @@
     '.ul-btn.ready{animation:h3ult 1.2s ease-in-out infinite!important}',
     '@keyframes h3ult{50%{box-shadow:inset 0 0 0 1px var(--cc,#E8C04A),inset 0 0 0 3px #120E0A,0 0 0 2px var(--cc,#E8C04A),0 0 22px var(--cc,#E8C04A),0 0 46px color-mix(in srgb,var(--cc,#E8C04A) 50%,transparent)!important}}',
     '.ul-btn.ready .ul-fill{opacity:1}',
-    // ===== 生命、魔力：液體球 =====
-    D + '.h2-badge{width:96px!important;height:96px!important;z-index:2;overflow:hidden;background:#070405!important;box-shadow:0 0 0 3px #120C08,0 0 0 6px #7E6034,0 0 0 7px #2A1E12,0 0 0 9px #050304,0 8px 22px rgba(0,0,0,.75)!important}',
-    D + '#h2-hp{margin:0 -16px 0 0}', D + '#h2-mp{margin:0 0 0 -16px}',
-    D + '.h2-badge>i{inset:0!important}',
+    // ===== 生命、魔力：長方形金屬座＋置中液體球（2026-10-05 作者：圓形沒有置中於長方形寬的部分） =====
+    // 外框：比球略寬的長方金屬座；球用固定圓徑左右置中。四角青銅角碼、上下金線、鉚釘點綴。
+    D + '.h2-badge{width:112px!important;height:100px!important;border-radius:10px!important;z-index:2;overflow:visible!important;'
+      + 'background:linear-gradient(180deg,#3A3026 0%,#1A140E 42%,#0A0806 100%)!important;'
+      + 'box-shadow:inset 0 1px 0 rgba(255,225,170,.22),inset 0 0 0 1px #6E5634,inset 0 0 0 3px #1A130E,inset 0 -10px 18px rgba(0,0,0,.55),0 0 0 2px #050304,0 8px 22px rgba(0,0,0,.75)!important}',
+    D + '#h2-hp{margin:0 -18px 0 0}', D + '#h2-mp{margin:0 0 0 -18px}',
+    // 四角角碼＋上下金線
+    D + '.h2-badge::before{content:"";position:absolute;inset:5px;pointer-events:none;z-index:6;border-radius:6px;'
+      + 'background:linear-gradient(#E8C870,#E8C870) top left/14px 2px no-repeat,linear-gradient(#E8C870,#E8C870) top left/2px 14px no-repeat,'
+      + 'linear-gradient(#E8C870,#E8C870) top right/14px 2px no-repeat,linear-gradient(#E8C870,#E8C870) top right/2px 14px no-repeat,'
+      + 'linear-gradient(#E8C870,#E8C870) bottom left/14px 2px no-repeat,linear-gradient(#E8C870,#E8C870) bottom left/2px 14px no-repeat,'
+      + 'linear-gradient(#E8C870,#E8C870) bottom right/14px 2px no-repeat,linear-gradient(#E8C870,#E8C870) bottom right/2px 14px no-repeat,'
+      + 'linear-gradient(90deg,transparent,#7A5A2A 18%,#E8C870 50%,#7A5A2A 82%,transparent) top center/70% 2px no-repeat,'
+      + 'linear-gradient(90deg,transparent,#5A4428 18%,#B8904A 50%,#5A4428 82%,transparent) bottom center/70% 2px no-repeat}',
+    // 左右鉚釘
+    D + '.h2-badge::after{content:"";position:absolute;left:7px;right:7px;top:50%;height:6px;margin-top:-3px;pointer-events:none;z-index:6;'
+      + 'background:radial-gradient(circle,#E8C870 0 1.4px,#2A1E12 1.8px 2.2px,transparent 2.4px) left center/100% 6px no-repeat,'
+      + 'radial-gradient(circle,#E8C870 0 1.4px,#2A1E12 1.8px 2.2px,transparent 2.4px) right center/100% 6px no-repeat}',
+    // 液體球：固定 84×84，在座裡水平／垂直置中
+    D + '.h2-badge>i,.h2-badge .h2-core{left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;'
+      + 'width:84px!important;height:84px!important;margin:0!important;transform:translate(-50%,-50%)!important;'
+      + 'inset:auto!important;border-radius:50%!important;overflow:hidden!important}',
+    D + '.h2-badge>i{box-shadow:inset 0 0 0 2px rgba(0,0,0,.55),0 0 0 1px rgba(232,200,112,.25)!important}',
     D + '.h2-badge.hp .h2-ring{background:linear-gradient(to top,#5A080C 0,#C81E24 calc(var(--f,1)*100% - 8%),#F04A4A calc(var(--f,1)*100%),transparent calc(var(--f,1)*100% + 1px))!important}',
     D + '.h2-badge.mp .h2-ring{background:linear-gradient(to top,#08164A 0,#1E4AC8 calc(var(--f,1)*100% - 8%),#4A84F0 calc(var(--f,1)*100%),transparent calc(var(--f,1)*100% + 1px))!important}',
     D + '.h2-badge .h2-trail{background:linear-gradient(to top,rgba(255,235,220,.28) calc(var(--t,1)*100%),transparent calc(var(--t,1)*100% + 1px))!important}',
-    D + '.h2-badge .h2-sh{background:conic-gradient(rgba(240,248,255,.9) calc(var(--s,0)*1turn),transparent 0)!important;-webkit-mask:radial-gradient(circle,transparent 44px,#000 45px)!important;mask:radial-gradient(circle,transparent 44px,#000 45px)!important}',
-    D + '.h2-badge .h2-core{inset:0!important;background:radial-gradient(circle at 34% 24%,rgba(255,255,255,.42),rgba(255,255,255,0) 30%),radial-gradient(circle at 50% 50%,rgba(0,0,0,0) 55%,rgba(0,0,0,.55) 100%)!important;box-shadow:none!important}',
+    D + '.h2-badge .h2-sh{background:conic-gradient(rgba(240,248,255,.9) calc(var(--s,0)*1turn),transparent 0)!important;'
+      + '-webkit-mask:radial-gradient(circle,transparent 38px,#000 39px)!important;mask:radial-gradient(circle,transparent 38px,#000 39px)!important;overflow:visible!important}',
+    D + '.h2-badge .h2-core{z-index:3!important;background:radial-gradient(circle at 34% 24%,rgba(255,255,255,.42),rgba(255,255,255,0) 30%),radial-gradient(circle at 50% 50%,rgba(0,0,0,0) 55%,rgba(0,0,0,.55) 100%)!important;box-shadow:none!important;display:grid!important;place-items:center!important}',
     D + '.h2-badge .h2-core img{display:none!important}',
-    D + '.h2-badge .h2-core b{position:static!important;font:900 17px/1 system-ui,sans-serif!important;color:#FFF!important;text-shadow:0 2px 0 #000,0 0 6px #000!important}'
+    D + '.h2-badge .h2-core b{position:static!important;transform:none!important;font:900 17px/1 system-ui,sans-serif!important;color:#FFF!important;text-shadow:0 2px 0 #000,0 0 6px #000!important}',
+    D + '.h2-badge.low{animation:h3low 1s ease-in-out infinite!important}@keyframes h3low{50%{box-shadow:inset 0 1px 0 rgba(255,225,170,.22),inset 0 0 0 1px #C8323A,inset 0 0 0 3px #1A130E,0 0 0 2px #C8323A,0 0 18px #C8323A!important}}'
   ].join('\n');
   document.head.appendChild(css);
 })(window.R);
