@@ -81,7 +81,7 @@
   R.hurtEnemy = (e, raw, o) => {
     const h0 = e && !e.dead ? e.hp : 0, r = he0(e, raw, o);
     try {
-      if (!tick && e && h0 > 0 && (e.dead || e.hp < h0) && !(o && o.noVamp)) {
+      if (!tick && e && h0 > 0 && (e.dead || e.hp < h0) && !(o && (o.noVamp || o.thorns || o.reflect))) {   // 荊棘／反擊／要塞反彈：不觸發吸血（作者 2026-10-05：站岩漿靠反擊殺光還滿血）
         const P = W.P;
         if (P && !P.dead && W.run && !W.run.done) {
           const key = sk > 0 || (o && o.vSk) ? 'sk' : 'atk';

@@ -125,7 +125,7 @@
     if (R.CLASSES[P.cls].shield && src && P.atkHold <= 0) { const fa = Math.abs(wrap(angTo(P, src) - P.yaw)); if (fa < 1) { dmg *= 0.7; R.fx('block', P.x, 1.2, P.z); if (P.adv === 'paladin') R.healP(2, true); } }
     if (P.shield > 0) { const s = Math.min(P.shield, dmg); P.shield -= s; dmg -= s; }
     dmg = Math.round(dmg);
-    if (P.buff.fortress > 0 && src && src.hp) R.hurtEnemy(src, raw * 0.3 / P.dmgMult, { fromBehind: false });
+    if (P.buff.fortress > 0 && src && src.hp) R.hurtEnemy(src, raw * 0.3 / P.dmgMult, { fromBehind: false, reflect: true, noVamp: true });   // 要塞反彈：不算攻擊，不觸發吸血
     if (dmg <= 0) return;
     P.hp -= dmg; P.iframe = 0.3; P.stumble = 1.2; P.hurtT = 0.25;
     R.num(P.x, 2.2, P.z, dmg, 'hurt');

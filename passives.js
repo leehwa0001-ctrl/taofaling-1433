@@ -129,7 +129,7 @@
     const P = W().P, f = P && P.pv;
     // 不屈／殉道（fx.last）：真的倒下的時候才算——改在 unyield.js（原本這裡看扣護甲之前的傷害，死不了的攻擊也會觸發）
     const r = hp(raw, src, o);
-    if (f && f.thorns && src && src.def && !src.dead && raw > 0) he(src, raw * f.thorns, { thorns: 1 });
+    if (f && f.thorns && src && src.def && !src.dead && raw > 0) he(src, raw * f.thorns, { thorns: 1, reflect: true, noVamp: true });   // 荊棘反傷：不觸發吸血
     return r;
   };
   const hl = R.healP;
