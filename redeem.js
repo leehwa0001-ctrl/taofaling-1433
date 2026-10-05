@@ -22,6 +22,7 @@
     { h: '2bezge60id8', raceSelect: 'SSR', name: 'SSR 種族自選券', msg: 'SSR 種族自選券一張放進背包了。到公會的登記處，從 SSR 的種族裡自己挑一族。' },   // 2026-10-04（作者：可以自選 SSR 的序號）
     { h: '28uxjbs55z7', tickets: 1000, name: '種族抽選券 1000 張', msg: '種族抽選券 1000 張放進背包了。到公會的登記處抽種族。' },   // 2026-10-04（作者：1000 張種族序號卷）
     { h: 'qwuh0y9h3p', admin: 1, name: '管理員號', msg: '這個存檔變成管理員號了：錢、素材、裝備、職業等級、轉職、稱號全部都有。倉庫裡有每一種武器、防具。' },   // 2026-10-04（作者：管理員號，什麼東西都有；admin.js）
+    { h: '1yuuo0weyoa', admin: 1, name: '管理員號', msg: '這個存檔變成管理員號了：錢、素材、裝備、職業等級、轉職、稱號全部都有。倉庫裡有每一種武器、防具。' },   // 2026-10-05
   ];
   const cyrb53 = (str, seed = 0) => { let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed; for (let i = 0, ch; i < str.length; i++) { ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); } h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507); h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507); h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909); return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36); };
   const hashOf = s => cyrb53('taofaling1433:' + String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, ''));
