@@ -11,7 +11,7 @@
     ['info', '行動・資訊', /快速移動|委託|地圖|指南|手冊|瓦版|公告|圖鑑|觀光|日誌|隊伍/],
     ['set', '設定', /按鍵|鏡頭|音效|音樂|穿模|設定|畫面|語言/]
   ];
-  const SYS = /^繼續|回到標題|放棄這一趟|^離開/;
+  const SYS = /^繼續|回到標題|放棄這一趟|^直接回程|^離開/;
   const groupOf = b => { const t = b.textContent.trim(); if (SYS.test(t) || /^(tm-x|ps-x|ps-quit|tm-title)$/.test(b.id)) return 'sys'; const g = GROUPS.find(g => g[2].test(t)); return g ? g[0] : 'other'; };
   const tidy = () => {
     const sh = $('r-sheet'); if (!sh) return;

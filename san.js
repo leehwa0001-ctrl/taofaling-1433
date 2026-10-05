@@ -96,5 +96,5 @@
   }, 1000);
   // ---------- 角色總數值 ----------
   const ch0 = R.charSheetHtml;
-  if (ch0) R.charSheetHtml = cls => { const h = ch0(cls), v = get(), t = tier(v); return h.replace('<h4>基本</h4>', '<h4>基本</h4><div class="cs-row"><span>理智（San）</span><b style="color:' + t[2] + '">' + Math.round(v) + '／100</b><small>' + t[1] + (v < 40 ? (v < 20 ? '：遺跡裡傷害 −20%、受到的傷害 +15%' : '：遺跡裡傷害 −10%') : '') + '</small></div>'); };
+  if (ch0) R.charSheetHtml = (cls, opt) => { const h = ch0(cls, opt), v = get(), t = tier(v); return h.replace('<h4>基本</h4>', '<h4>基本</h4><div class="cs-row"><span>理智（San）</span><b style="color:' + t[2] + '">' + Math.round(v) + '／100</b><small>' + t[1] + (v < 40 ? (v < 20 ? '：遺跡裡傷害 −20%、受到的傷害 +15%' : '：遺跡裡傷害 −10%') : '') + '</small></div>'); };
 })(window.R);

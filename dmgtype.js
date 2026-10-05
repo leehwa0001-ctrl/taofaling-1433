@@ -85,10 +85,10 @@
     return L;
   };
   const cs0 = R.charSheetHtml;
-  if (cs0) R.charSheetHtml = cls => {
-    let h = cs0(cls);
+  if (cs0) R.charSheetHtml = (cls, opt) => {   // 2026-10-05：opt（暫停選單的戰鬥中 live）要傳下去，不然顯示的是滿血的計算值
+    let h = cs0(cls, opt);
     try {
-      const P = R.calcPlayer(cls || R.S.cls), n1 = v => (Math.round(v * 10) / 10).toString(), row = (k, v, note) => '<div class="cs-row"><span>' + k + '</span><b>' + v + '</b>' + (note ? '<small>' + note + '</small>' : '') + '</div>';
+      const P = (opt && opt.live && R.W && R.W.P && R.W.run ? R.W.P : R.calcPlayer(cls || R.S.cls)), n1 = v => (Math.round(v * 10) / 10).toString(), row = (k, v, note) => '<div class="cs-row"><span>' + k + '</span><b>' + v + '</b>' + (note ? '<small>' + note + '</small>' : '') + '</div>';
       const mag = P.ws && P.ws.kind === 'magic', pct = v => (v >= 1 ? '+' : '') + Math.round((v - 1) * 100) + '%';
       h = h.replace(row('防禦', n1(P.def || 0)), row('物防', n1(P.def || 0), '降低受到的物理傷害') + row('魔防', n1(P.mdef || 0), '降低受到的魔法傷害'));
       h = h.replace('<h4>攻擊</h4>', '<h4>攻擊</h4>' + row('普攻', mag ? '魔法' : '物理', mag ? '依魔抗計算減傷' : '依護甲計算減傷') + row('技能', R.CLASSES[P.cls] && MAG_CLS[P.cls] ? '魔法' : '物理') + row('物攻', pct(P.patk || 1)) + row('魔攻', pct(P.matk || 1)));

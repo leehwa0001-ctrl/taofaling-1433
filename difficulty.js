@@ -73,7 +73,7 @@
   };
   const pa = (R.W_AFFIX || []).find(a => a.id === 'pen'); if (pa) pa.txt = v => '穿透 ' + v + '%（無視 ' + Math.min(100, v * 2) + '% 護甲、打穿 ' + Math.min(100, Math.round(v * 1.5)) + '% 格擋之類的減傷）';
   const cs0 = R.charSheetHtml;
-  if (cs0) R.charSheetHtml = cls => { const h = cs0(cls); try { const P = R.calcPlayer(cls || R.S.cls), p = P.pen || 0; if (!p) return h; return h.replace('無視 ' + Math.round(p * 100) + '% 護甲', '無視 ' + Math.min(100, Math.round(p * 200)) + '% 護甲、打穿 ' + Math.min(100, Math.round(p * 150)) + '% 減傷'); } catch (e) { return h; } };
+  if (cs0) R.charSheetHtml = (cls, opt) => { const h = cs0(cls, opt); try { const P = (opt && opt.live && R.W && R.W.P && R.W.run ? R.W.P : R.calcPlayer(cls || R.S.cls)), p = P.pen || 0; if (!p) return h; return h.replace('無視 ' + Math.round(p * 100) + '% 護甲', '無視 ' + Math.min(100, Math.round(p * 200)) + '% 護甲、打穿 ' + Math.min(100, Math.round(p * 150)) + '% 減傷'); } catch (e) { return h; } };
   const ed0 = R.enemyDefend;
   if (ed0) R.enemyDefend = (e, dmg, o, crit) => {
     const out = ed0(e, dmg, o, crit), P = W().P, pen = P ? P.pen || 0 : 0;
