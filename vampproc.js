@@ -25,6 +25,7 @@
     if (P.raceB && P.raceB.vamp) v += P.raceB.vamp;
     if (P.sb) for (const k in P.sb) { const b = P.sb[k]; if (b && b.left > 0 && b.vamp) v += b.vamp; }
     if (P.buff && P.buff.rage > 0) v += 0.025;
+    if (P.pv && P.pv.leech) v += P.pv.leech;   // 被動、轉職的吸血（嗜戰、氣血、血怒、妖刀飢渴…）：2% → 系數 +40（作者 2026-10-05：戰士、拳師被動的吸血沒改，還是超級回）
     let x = Math.round((v + (extra || 0)) * PER) + (P.vampX || 0);
     if (P.ttBleed && P.hpMax) x = Math.round(x * (1 + P.ttBleed * Math.max(0, 1 - P.hp / P.hpMax)));
     return Math.max(0, x);
@@ -69,7 +70,8 @@
     .replace(/傷害的 ([\d.]+)% (?:回成|變成)(?:你的)?生命/g, (m, v) => '吸血系數 +' + X(v))
     .replace(/吸血 \+?([\d.]+)%/g, (m, v) => '吸血系數 +' + X(v));
   const fixAll = () => { if (R.SKILLS) Object.values(R.SKILLS).forEach(sk => { if (sk && sk.desc && /生命|吸血/.test(sk.desc)) sk.desc = fix(sk.desc); }); };
-  fixAll(); setTimeout(fixAll, 0);   // 後面才加進來的技能（覺醒、二轉）也改
+  const fixPass = () => { (R.PASSIVE_LIST || []).forEach(p => { if (p && p.desc) p.desc = fix(p.desc); }); Object.values(R.ADV || {}).forEach(L => (L || []).forEach(a => { ['desc', 'p1', 'p2'].forEach(k => { if (a && typeof a[k] === 'string') a[k] = fix(a[k]); }); })); };
+  fixAll(); fixPass(); setTimeout(() => { fixAll(); fixPass(); }, 0);   // 後面才加進來的技能（覺醒、二轉）也改
   R.vampDescFix = fix;
   // 詞綴：嗜血、飲血（數字照舊存 1～3；顯示成系數）
   [[R.W_AFFIX, 'vamp'], [R.ACC_AFFIX, 'leech']].forEach(([L, id]) => { const a = (L || []).find(x => x.id === id); if (a) a.txt = v => '吸血系數 +' + X(v); });

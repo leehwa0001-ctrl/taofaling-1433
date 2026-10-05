@@ -105,7 +105,7 @@
     }
     const d = he(e, raw, o);
     if (f && d > 0 && e) {
-      if (f.leech) R.healP(d * f.leech, true);
+      if (f.leech && !R.vampProc) R.healP(d * f.leech, true);   // vampproc.js 接手：被動的吸血算進吸血系數
       if (o.primary && !e.dead && e.st) { if (f.slow && Math.random() < f.slow) e.st.slow = Math.max(e.st.slow, 2); if (f.stun && Math.random() < f.stun) e.st.stun = Math.max(e.st.stun, 0.8); if (f.burn && Math.random() < f.burn) e.st.burn = Math.max(e.st.burn, 3); }
     }
     return d;
