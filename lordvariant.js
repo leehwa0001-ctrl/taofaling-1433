@@ -188,12 +188,16 @@
         const s = S(), run = W().run; s.mutaGot = s.mutaGot || {}; const first = !s.mutaGot[e.id]; s.mutaGot[e.id] = (s.mutaGot[e.id] || 0) + 1;
         const n = (run.grade.id === 'kaso' ? 3 : 2) + (first ? 2 : 0);
         R.dropMat('mutacore', n, e.x, e.z); R.dropMat('core', 1, e.x + 1, e.z);
-        if (rnd() < 0.15) { const kinds = Object.keys(R.WEAPONS), it = R.makeItem({ kind: 'weapon', base: pick(kinds), ilvl: Math.max(12, (s.classes[s.cls] || {}).lv || 12), rarity: 5 }); if (it) R.dropItem(it, e.x, e.z + 1); }
+        if (rnd() < 0.15) { const kinds = Object.keys(R.WEAPONS), it = R.makeItem({ kind: 'weapon', base: pick(kinds), ilvl: Math.max(12, (s.classes[s.cls] || {}).lv || 12), rarity: 5 }); if (it) { it.muta = e.id; R.dropItem(it, e.x, e.z + 1); } }
         R.banner && R.banner('異變討伐', e.def.name + '倒下了' + (first ? '（第一次：異變核心多 2 個）' : ''));
       }
     } catch (err) { console.warn('[lordvariant]', err); }
     return r;
   };
+  // 異變的紅武：名字前面寫是哪一種領主體的異變（it.muta；直接掉的、管理員倉庫的）
+  const nm0 = R.itemName, il0 = R.itemLines;
+  if (nm0) R.itemName = it => { const n = nm0(it); try { if (it && it.muta && V[it.muta] && it.identified !== false && !it.lord) return '【' + V[it.muta][0] + '】' + n; } catch (e) { } return n; };
+  if (il0) R.itemLines = it => { const L = il0(it); try { if (it && it.muta && V[it.muta] && R.ENEMIES[it.muta]) L.push('異變的領主體「' + R.ENEMIES[it.muta].name.replace(/^領主體・/, '') + '【' + V[it.muta][0] + '】」的紅武'); } catch (e) { } return L; };
   if (R.RECIPES) R.RECIPES.push({ tier: 3, name: '異變（紅武）', get ilvl() { const s = S(); return Math.max(12, s && s.classes && s.classes[s.cls] ? s.classes[s.cls].lv : 12); }, mats: { mutacore: 4, purecry: 2 }, gold: 3000, weights: [0, 0, 0, 0, 0, 1], note: '異變核心做的：一定是神話（紅色）。' });
   // ---------- 兩條血：第一條還在的時候不會倒 ----------
   // 傷害有很多條路（自己打、隊友打、隊員從網路傳來的、燒傷……），最後都會叫 R.killEnemy；所以等所有檔案都讀完，

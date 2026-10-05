@@ -3,7 +3,7 @@
 // - 給的東西：費拉 999 萬、藥水各 999、所有素材（含寶石、新素材）各 999、所有背包、經驗書 99、種族抽選券 9999、
 //   SR／SSR／UR 自選券各 5、炸彈 5、寫好的卷軸 60；所有職業 80 級、轉職（還沒選的給第一條路線）、二次轉職（術士諧鳴、其他覺醒）；
 //   望月瀧教的技能、全部稱號、圖鑑全滿（小同伴也會解鎖）；段位近神段；房子、花園擴到最大；
-//   倉庫：每一種武器、防具、飾品、護符各一件稀有（藍）、史詩（紫）、傳說（金）、神話（紅）、每一件領主專屬裝備。
+//   倉庫：每一種武器、防具、飾品、護符各一件稀有（藍）、史詩（紫）、傳說（金）、神話（紅）、每一件領主專屬裝備（金、紅各一）、每一種異變領主體的紅武。
 //   （2026-10-05 作者：我要紅裝紫裝金裝藍裝——原本只給神話；再跑一次只補倉庫裡還沒有的那幾件，不會重複疊一堆）
 // - 2026-10-05 再補（作者：全部東西都要解鎖）：高級炸彈、爆裂核心、公會賣的共通被動、各分級的攻略次數和卡索級的許可、
 //   每座遺跡的存檔點、觀光章（東鶴、奉主）、動物園的說明牌、每一種家具、二轉的指定試煉全部通過、所有技能熟練度 ★5。
@@ -46,7 +46,10 @@
     const give = (kind, base) => RARS.forEach(r => { if (has(kind, base, r)) return; try { const it = R.makeItem({ kind, base, ilvl, rarity: r, identified: true }); if (it) s.stash.push(it); } catch (e) { } });
     Object.keys(R.WEAPONS).forEach(b => give('weapon', b));
     Object.keys(R.ARMOR).forEach(b => give('armor', b));
-    Object.keys(R.LORD_GEAR || {}).forEach(id => { if (s.stash.some(it => it && it.lord === id)) return; const g = R.LORD_GEAR[id], it = R.makeItem({ kind: 'armor', base: g[1], ilvl, rarity: 4, identified: true }); it.lord = id; s.stash.push(it); });
+    // 領主專屬裝備：傳說（金）、神話（紅）各一件（2026-10-05 作者：管理員解鎖少了領主體的紅武）
+    Object.keys(R.LORD_GEAR || {}).forEach(id => [4, 5].forEach(r => { if (s.stash.some(it => it && it.lord === id && (it.rarity === r || (r === 4 && it.rarity == null)))) return; const g = R.LORD_GEAR[id], it = R.makeItem({ kind: 'armor', base: g[1], ilvl, rarity: r, identified: true }); if (it) { it.lord = id; s.stash.push(it); } }));
+    // 異變的領主體的紅武（lordvariant.js：it.muta＝哪一種領主體的異變）：每一種一把神話武器
+    { const wb = Object.keys(R.WEAPONS); Object.keys(R.LORD_VARIANTS || {}).forEach((id, i) => { if (s.stash.some(it => it && it.muta === id)) return; try { const it = R.makeItem({ kind: 'weapon', base: wb[i % wb.length], ilvl, rarity: 5, identified: true }); if (it) { it.muta = id; s.stash.push(it); } } catch (e) { } }); }
     give('charm', 'charm');
     // 2026-10-05 作者：全部東西都要解鎖——後來加的內容也補上（坎賽特級照設定永遠不開放，不動）
     try {
