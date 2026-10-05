@@ -7,7 +7,8 @@
 // - 無念（C1）：放技能有 25% 不進冷卻（頭上跳「無念」）。
 // - 天啟（C2）：技能（不是普攻）的暴擊率 +15%。
 // - 反擊（B3，2026-10-05）：天賦「奧義・反擊」每級把受到的傷害 10% 反彈給打你的遺跡生物（P.ttReflect，點滿 50%）：
-//   吃你的傷害增幅（傷害倍率、技能的強化），無視牠的防禦、減傷。
+//   吃你的傷害增幅（傷害倍率、技能的強化），無視牠的防禦、減傷。2026-10-05 作者：反擊太低——每級 20%（點滿 100%），點滿再 ×4、每次反擊附加最大生命 10%。
+//   反擊不觸發吸血、不漲怒氣（直接扣血，不走 R.hurtEnemy）。
 // - 2026-10-05：奧義可以學兩個（花 10 點多開一格）→ 點滿的奧義記在 P.ttCaps（一個物件）。
 // 放在 talenttree.js、skillbook.js、unyield.js 後面。
 (function (R) {
@@ -39,7 +40,9 @@
   };
   // 反彈：吃傷害增幅，無視防禦、減傷（直接扣血）；多人連線的鏡像交給 R.hurtEnemy 送給房主
   const reflect = (P, e, v) => {
-    let m = P.dmgMult || 1; if (P.sb) Object.values(P.sb).forEach(b => { if (b && b.left > 0 && b.dmg) m *= b.dmg; });
+    let m = P.dmgMult || 1; const full = has('B3');   // 點滿：×4、再加最大生命 10%（作者 2026-10-05：反擊太低）
+    if (full) { m *= 4; v += (P.hpMax || 0) * 0.1; }
+    if (P.sb) Object.values(P.sb).forEach(b => { if (b && b.left > 0 && b.dmg) m *= b.dmg; });
     const dmg = Math.max(1, Math.round(v * m));
     if (e.mirror) { R.hurtEnemy(e, dmg / (P.dmgMult || 1), { noVamp: true, fromBehind: false }); return; }
     e.hp -= dmg; e.flash = 0.12; e.aggro = true; e.provoked = true;

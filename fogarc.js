@@ -14,6 +14,7 @@
 // - 2026-10-05 作者：迷霧還是太難看到了——扇形外面整片不透明的白，只剩牆的線。
 //   現在：扇形外面的霧最濃七成（看得到地形、遺跡生物的影子，名牌照樣藏起來）；身邊看得清楚的 5→8 公尺、邊緣 1.5→3 公尺慢慢變濃；
 //   扇形 45→60 度（左右各 30 度）。
+// - 2026-10-05 作者：朝向的遠處（約 25 公尺以後）霧也要漸漸變濃——扇形裡 25 公尺開始慢慢變濃，55 公尺到最濃（七成）。
 // 放在 dread.js、ruinvar.js 後面、main.js 前面（包 R.updateLights）。
 (function (R) {
   const CONE = Math.cos(30 * Math.PI / 180), SELF = 8, SOFT = 3, FAR = 60, MAXF = 0.7;   // MAXF：扇形外最濃幾成
@@ -28,7 +29,7 @@
     C.fog_fragment = C.fog_fragment.replace('gl_FragColor.rgb = mix(',
       'if ( fogArc2.w > 0.5 ) {\n\t\tvec2 fd = vFogXZ - fogArc.xy; float fl = length( fd );\n\t\tfloat fc = fl > 0.001 ? dot( fd / fl, fogArc.zw ) : 1.0;\n'
       + '\t\tfloat fs = min( fogArc2.z, fogArc2.y * 0.6 ), fself = smoothstep( fogArc2.y - fs, fogArc2.y, fl ), fcone = 1.0 - smoothstep( fogArc2.x - 0.03, fogArc2.x + 0.03, fc );\n'
-      + '\t\tfogFactor = max( fogFactor, min( fself, fcone ) * ' + MAXF.toFixed(2) + ' );\n\t}\n\tgl_FragColor.rgb = mix(');
+      + '\t\tfloat ffar = smoothstep( 25.0, 55.0, fl );\n\t\tfogFactor = max( fogFactor, max( min( fself, fcone ), ffar ) * ' + MAXF.toFixed(2) + ' );\n\t}\n\tgl_FragColor.rgb = mix(');
     Object.keys(T.ShaderLib).forEach(k => { const u = T.ShaderLib[k].uniforms; if (u && u.fogColor) { u.fogArc = { value: ARC }; u.fogArc2 = { value: ARC2 }; } });
   };
   if (window.THREE) patch();
@@ -44,7 +45,7 @@
     const dx = x - ARC.x, dz = z - ARC.y, l = Math.hypot(dx, dz), c = l > 0.001 ? (dx * ARC.z + dz * ARC.w) / l : 1;
     const ss = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
     const s = Math.min(ARC2.z, ARC2.y * 0.6);
-    return Math.min(ss(ARC2.y - s, ARC2.y, l), 1 - ss(ARC2.x - 0.03, ARC2.x + 0.03, c)) > 0.6;   // 霧最濃只到七成，名牌照「霧的六成深」藏（跟原本一樣的地方）
+    return Math.max(Math.min(ss(ARC2.y - s, ARC2.y, l), 1 - ss(ARC2.x - 0.03, ARC2.x + 0.03, c)), ss(25, 55, l)) > 0.6;   // 霧最濃只到七成，名牌照「霧的六成深」藏（跟原本一樣的地方）
   };
 
   // ---------- 每一格：角色的位置、面向 ----------

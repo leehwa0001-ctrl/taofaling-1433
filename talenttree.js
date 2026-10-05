@@ -42,7 +42,7 @@
       subs: [
         { id: 'wall', n: '鐵壁', d: '減傷、雙防。', nodes: [N('T_tou2', '硬撐', 5, '受到的傷害 −1.5%', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.015 * v; }), N('T_def', '護體', 5, '物防 +3、魔防 +3', (P, v) => { P.def = (P.def || 0) + 3 * v; P.mdef = (P.mdef || 0) + 3 * v; }),
           N('T_trB1', '重甲', 5, '受到的傷害 −4%｜移動 −3%', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.04 * v; P.speed *= 1 - 0.03 * v; }, 1)],
-          cap: N('T_capB3', '奧義・反擊', 5, '受到的傷害 −3%、把受到傷害的 10% 反彈給打你的敵人（吃傷害增幅，無視牠的防禦、減傷）；點滿：反彈一半', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.03 * v; P.ttReflect = 0.1 * v; if (v >= 5) capOn(P, 'B3'); }) },
+          cap: N('T_capB3', '奧義・反擊', 5, '受到的傷害 −3%、每級把受到傷害的 20% 反彈給打你的敵人（吃傷害增幅，無視牠的防禦、減傷）；點滿：全部反彈，傷害再 ×4，每次反擊另外附加你最大生命 10% 的傷害', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.03 * v; P.ttReflect = 0.2 * v; if (v >= 5) capOn(P, 'B3'); }) },
         { id: 'life', n: '體魄', d: '生命值。', nodes: [N('T_hp3', '生機', 5, '生命 +3%、魔防 +1', (P, v) => { P.hpMax = Math.round(P.hpMax * (1 + 0.03 * v)); P.mdef = (P.mdef || 0) + v; }), N('T_hp4', '血氣', 5, '生命 +5%', (P, v) => { P.hpMax = Math.round(P.hpMax * (1 + 0.05 * v)); }),
           N('T_trB2', '苦修', 5, '生命 +8%｜傷害 −3%', (P, v) => { P.hpMax = Math.round(P.hpMax * (1 + 0.08 * v)); P.dmgMult *= 1 - 0.03 * v; }, 1)],
           cap: N('T_capB1', '奧義・不動如山', 5, '受到的傷害 −4%、生命 +5%；點滿：不會被擊退', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.04 * v; P.hpMax = Math.round(P.hpMax * (1 + 0.05 * v)); if (v >= 5) capOn(P, 'B1'); }) }

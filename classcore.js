@@ -129,7 +129,8 @@
     add(P, n) { P._rage = Math.min(100, (P._rage == null ? P.mp : P._rage) + n); P.mp = P._rage; P._rageT = CT; },
     step(dt, P) {
       if (P._rage == null) P._rage = Math.min(P.mp, 100);
-      if (P.mp > P._rage + 1e-6) P.mp = P._rage; else P._rage = P.mp;   // 魔力的自然回復、魔力藥不算：只有怒氣
+      // 魔力的自然回復、魔力藥（2026-10-05 作者：魔力恢復等價轉成怒氣恢復，魔力藥不能變擺設）：多出來的魔力一律換成怒氣
+      if (P.mp > P._rage + 1e-6) { P._rage = Math.min(100, P._rage + (P.mp - P._rage)); P.mp = P._rage; } else P._rage = P.mp;
       if (adv(P) === 'inner' && P.still > 0.5) this.add(P, 8 * dt);
       else if (adv(P) !== 'berserker' && CT - (P._rageT || 0) > 4 && P._rage > 0) { P._rage = Math.max(0, P._rage - 4 * dt); P.mp = P._rage; }
       if (P._mask > 0) P._mask -= dt;
