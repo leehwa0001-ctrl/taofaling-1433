@@ -342,7 +342,7 @@
     if (P.skillCd > 0 || P.dead || P.knockT > 0) return;
     if (P.mp < sk.mp) { R.toast('魔力不夠'); return; }
     P.mp -= sk.mp; P.skillCd = sk.cd * P.skillCdMult;
-    const a = P.aimA, ax = P.aimX, az = P.aimZ, ws = P.ws, base = ws.dmg * (ws.pellets > 1 ? ws.pellets : 1) * (ws.hits || 1) * 1.5;   // 2026-10-04 作者：技能提升到普攻的 3～5 倍——原本＝武器一下（霰彈只算一顆、雙刀只算一刀），現在＝一下普攻×1.5
+    const a = P.aimA, ax = P.aimX, az = P.aimZ, ws = P.ws, base = ws.dmg * (R.multiN ? R.multiN(ws) : (ws.pellets > 1 ? ws.pellets : 1) * (ws.hits || 1)) * 1.5;   // 2026-10-04 作者：技能提升到普攻的 3～5 倍——原本＝武器一下（霰彈只算一顆、雙刀只算一刀），現在＝一下普攻×1.5
     const aimIn = max => { const d = Math.hypot(ax - P.x, az - P.z); const k = d > max ? max / d : 1; return [P.x + (ax - P.x) * k, P.z + (az - P.z) * k]; };
     R.sfx && R.sfx('skill');
     switch (P.skill) {

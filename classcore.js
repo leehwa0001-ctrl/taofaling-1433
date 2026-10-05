@@ -174,7 +174,8 @@
       const m = e._el || (e._el = {}), other = ELS.find(x => x !== el && (m[x] || 0) > CT);
       if (!other) { m[el] = CT + 4; return; }
       delete m[other]; delete m[el];
-      const key = [el, other].sort().join('+'), name = REACT[key], k = (adv(P) === 'elementalist' ? 1.5 : 1) * pw(P);
+      const key = [el, other].sort().join('+'), name = REACT[key], tri = (R.legOf ? R.legOf(P) : null) === 'lg_tri', k = (adv(P) === 'elementalist' ? 1.5 : 1) * (tri ? 1.5 : 1) * pw(P);
+      if (tri) P._el = ELS[(ELS.indexOf(P._el || 'fire') + 1) % 3];   // 三相之杖：反應之後自動換元素
       R.num && R.num(e.x, 2.6, e.z, name, 'crit');
       if (key === 'fire+frost') { R.fx && R.fx('poof', e.x, 1, e.z, { color: '#F0F0F0', n: 18 }); if (!e.dead) R.coreHit(e, k * 1.6, {}); }
       else if (key === 'frost+shock') { R.fx && R.fx('ring', e.x, 0.1, e.z, { r: 2.5, color: '#BFE8FF' }); if (!e.dead) e.st.stun = Math.max(e.st.stun || 0, 1.5); R.coreAoe(e.x, e.z, 2.5, k * 1.0, {}); }
@@ -199,7 +200,7 @@
       if (P.reloadT > 0) {
         if (P._tried) return; P._tried = true;
         const p = 1 - P.reloadT / (ws.reload || 1);
-        if (p >= ZONE[0] && p <= ZONE[1]) { P.reloadT = 0.001; P._perfect = true; say(P, '完美換彈', 'heal'); R.sfx && R.sfx('pick'); }
+        const Z = (R.legOf ? R.legOf(P) : null) === 'lg_receiver' ? [0.35, 0.75] : ZONE; if (p >= Z[0] && p <= Z[1]) { P.reloadT = 0.001; P._perfect = true; say(P, '完美換彈', 'heal'); R.sfx && R.sfx('pick'); }
         else { P.reloadT += 0.5; say(P, '卡彈', 'hurt'); }
         return;
       }
@@ -219,7 +220,7 @@
     onHit(e, d, o, P, killed) { if (killed && o.primary && adv(P) === 'bomber' && (P._ammoT === 'fire')) { R.fx && R.fx('boom', e.x, 0.3, e.z, { r: 2, color: '#FF8A3A' }); R.coreAoe(e.x, e.z, 2, pw(P) * 0.6, {}); } },
     gauge(P) {
       const ws = P.ws || {}, t = P._ammoT || 'normal';
-      if (P.reloadT > 0) return { name: '換彈中', col: '#FFE08A', v: 1 - P.reloadT / (ws.reload || 1), max: 1, text: P._tried ? '' : '抓金色那一格', zone: ZONE, x: P._tried ? '' : '完美換彈' };
+      if (P.reloadT > 0) return { name: '換彈中', col: '#FFE08A', v: 1 - P.reloadT / (ws.reload || 1), max: 1, text: P._tried ? '' : '抓金色那一格', zone: (R.legOf ? R.legOf(P) : null) === 'lg_receiver' ? [0.35, 0.75] : ZONE, x: P._tried ? '' : '完美換彈' };
       return { name: AMMO[t][0], col: AMMO[t][1], text: (P.ammo || 0) + '／' + (ws.mag || 0) + (P._perfect ? '・完美 +25%' : ''), sub: '', x: P.ammo >= (ws.mag || 0) ? '換彈種' : '換彈' };
     }
   };
@@ -236,7 +237,7 @@
       one(0, false);
       if (perfect && adv(P) === 'arcane') { one(0.22, true); one(-0.22, true); }
       if (perfect && adv(P) === 'ranger' && R.addZone) { const ax = P.aimX != null ? P.aimX : P.x + Math.sin(a) * 6, az = P.aimZ != null ? P.aimZ : P.z + Math.cos(a) * 6, q = R.nearestFloor ? R.nearestFloor(ax, az) : [ax, az]; R.addZone({ kind: 'trap', x: q[0], z: q[1], r: 1.1, life: 12, dmg: pw(P) * 1.5 }); }
-      if (perfect) { P._hawk = Math.min(5, (P._hawk || 0) + 1); P._hawkT = CT + 8; say(P, '完美射擊', 'crit'); } else { say(P, '射擊', 'heal'); }
+      if (perfect) { P._hawk = Math.min((R.legOf ? R.legOf(P) : null) === 'lg_hawkking' ? 8 : 5, (P._hawk || 0) + 1); P._hawkT = CT + 8; say(P, '完美射擊', 'crit'); } else { say(P, '射擊', 'heal'); }
       R.sfx && R.sfx('bow'); P.h && (P.h.recoil = 1);
     },
     act(P) {
@@ -256,11 +257,11 @@
       if (o.elem === 'perfect' && adv(P) === 'hama') e._hama = CT + 8;
       return raw * k;
     },
-    afterHurt(took, src, P) { if (P._hawk) { P._hawk = 0; say(P, '鷹眼斷了', 'hurt'); } },
+    afterHurt(took, src, P) { if (P._hawk) { P._hawk = (R.legOf ? R.legOf(P) : null) === 'lg_hawkking' ? Math.floor(P._hawk / 2) : 0; say(P, '鷹眼斷了', 'hurt'); } },
     gauge(P) {
       if (P._draw) { const t = P._draw.t / DRAW; return { name: '拉弓', col: t >= WIN[0] && t <= WIN[1] ? '#FFE08A' : '#9AE07A', v: Math.min(1, t), max: 1, zone: WIN, text: '在金色那一格放', x: '放箭' }; }
       const cd = Math.max(0, (P._drawCd || 0) - CT);
-      return { name: '鷹眼 ' + (P._hawk || 0) + ' 層', v: P._hawk || 0, max: 5, text: '+' + 6 * (P._hawk || 0) + '%', x: cd > 0 ? '冷卻 ' + cd.toFixed(1) : '拉滿弓' };
+      return { name: '鷹眼 ' + (P._hawk || 0) + ' 層', v: P._hawk || 0, max: (R.legOf ? R.legOf(P) : null) === 'lg_hawkking' ? 8 : 5, text: '+' + 6 * (P._hawk || 0) + '%', x: cd > 0 ? '冷卻 ' + cd.toFixed(1) : '拉滿弓' };
     }
   };
 
@@ -306,7 +307,7 @@
     help: P => '格擋：按住 Z 防禦的頭 0.3 秒被打＝完美格擋（不受傷、對方暈 1.5 秒、盾反擊、回 20 體力）。防禦的時候身邊 3.5 公尺的隊友受到的傷害 −40%。X 盾擊往前衝；完美格擋後 2 秒內是「反制」，三倍傷害。'
       + ({ templar: '殿堂騎士：完美格擋把傷害整個彈回去。', paladin: '聖騎士：完美格擋回 8% 生命。', dragoon: '龍騎士：完美格擋後的盾擊變成龍躍（跳到準心處砸下）。' }[adv(P)] || ''),
     onHurt(raw, src, o, P) {
-      const run = W().run; if (!P.guard || !run || P.guardT0 == null || run.t - P.guardT0 > 0.3 || !src || src.dead) return;
+      const run = W().run; if (!P.guard || !run || P.guardT0 == null || run.t - P.guardT0 > ((R.legOf ? R.legOf(P) : null) === 'lg_vow' ? 0.5 : 0.3) || !src || src.dead) return;
       say(P, '完美格擋', 'crit'); R.fx && R.fx('block', P.x, 1.2, P.z); R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 2, color: '#FFE08A' });
       if (src.st) src.st.stun = Math.max(src.st.stun || 0, 1.5);
       if (src.hp != null && src.def) R.coreHit(src, pw(P) * 1.5 + (adv(P) === 'templar' ? raw : 0), { kb: 2 });
@@ -322,7 +323,7 @@
         R.fx && R.fx('blink', P.x, 1, P.z); P.x = q[0]; P.z = q[1]; P.iframe = Math.max(P.iframe || 0, 0.4); R.fx && R.fx('boom', P.x, 0.3, P.z, { r: 3.2, color: '#9AD8FF' }); R.shake && R.shake(0.3);
         R.coreAoe(P.x, P.z, 3.2, pw(P) * 3, { stun: 1, kb: 2 }); P._riposte = 0; say(P, '龍躍', 'crit'); return;
       }
-      front(P, 3.5, 1.8).forEach(e => R.coreHit(e, pw(P) * (rip ? 3 : 1.2), { stun: 1, kb: 2 }));   // 盾往前撞：前方 3.5 公尺都吃到
+      const jd = rip && (R.legOf ? R.legOf(P) : null) === 'lg_judge'; front(P, jd ? 5 : 3.5, jd ? 2.6 : 1.8).forEach(e => R.coreHit(e, pw(P) * (rip ? 3 : 1.2), { stun: jd ? 3 : 1, kb: 2 }));   // 盾往前撞：前方 3.5 公尺都吃到
       if (R.dash) R.dash(a, 2.4, 0.18, { iframe: true });
       R.fx && R.fx('swing', P.x, 1.1, P.z, { a, range: 3.5, arc: 1.8, color: rip ? '#FFE08A' : '#C9A13A' });
       say(P, rip ? '反制' : '盾擊', rip ? 'crit' : 'heal'); P._riposte = 0;
@@ -338,17 +339,17 @@
     name: '連段', col: '#FFB45A',
     help: P => '連段：打中就疊連段，' + (adv(P) === 'fistsaint' ? '3.5' : '2.5') + ' 秒沒打中、或被打掉超過 2% 生命就斷。每 5 段普攻 +1%（最多 +20%）。X（10 段以上）終結技：前方一大掌，連段越多越痛（每 10 段 +1 倍）。'
       + ({ fistsaint: '拳聖：連段上限 150、3.5 秒才斷。', staffmonk: '棍僧：終結技是身邊一圈。', inner: '內修者：站著不動連段不會掉。', waixiu: '外修者：被打的傷害被魔力罩擋下時，連段不會斷。' }[adv(P)] || ''),
-    max: P => (adv(P) === 'fistsaint' ? 150 : 100),
+    max: P => (adv(P) === 'fistsaint' ? 150 : 100) + ((R.legOf ? R.legOf(P) : null) === 'lg_thousand' ? 100 : 0),
     step(dt, P) { const keep = adv(P) === 'inner' && P.still > 0.3, gap = adv(P) === 'fistsaint' ? 3.5 : 2.5; if (!keep && (P._combo || 0) > 0 && CT - (P._comboT || 0) > gap) P._combo = 0; },
     onHit(e, d, o, P) { if (d <= 0 || o.reflect) return; if (!P._cbF || CT - P._cbF > 0.05) { P._cbF = CT; P._combo = Math.min(this.max(P), (P._combo || 0) + 1); } P._comboT = CT; },
     mod(e, raw, o, P) { return o.primary ? raw * (1 + Math.min(0.2, (P._combo || 0) * 0.002)) : raw; },
-    afterHurt(took, src, P) { if (took > P.hpMax * 0.02 && (P._combo || 0) > 0 && !(adv(P) === 'waixiu' && P.shield > 0)) { if (P._combo >= 10) say(P, '連段斷了', 'hurt'); P._combo = 0; } },
+    afterHurt(took, src, P) { if (took > P.hpMax * ((R.legOf ? R.legOf(P) : null) === 'lg_immovable' ? 0.1 : 0.02) && (P._combo || 0) > 0 && !(adv(P) === 'waixiu' && P.shield > 0)) { if (P._combo >= 10) say(P, '連段斷了', 'hurt'); P._combo = 0; } },
     act(P) {
       const c = P._combo || 0; if (c < 10) { toast('連段 10 以上才能放終結技（現在 ' + c + '）'); return; }
       const ring = adv(P) === 'staffmonk', k = pw(P) * 0.8 * (1 + c / 10);
       front(P, ring ? 4 : 3.5, ring ? 6.3 : 1.8).forEach(e => R.coreHit(e, k, { stun: 1, kb: 2 }));
       R.fx && R.fx(ring ? 'ring' : 'swing', P.x, ring ? 0.1 : 1.1, P.z, ring ? { r: 4, color: '#FFB45A' } : { a: P.aimA, range: 3.5, arc: 1.8, color: '#FFB45A' }); R.shake && R.shake(0.25);
-      say(P, '終結 ×' + (1 + c / 10).toFixed(1), 'crit'); P._combo = 0;
+      say(P, '終結 ×' + (1 + c / 10).toFixed(1), 'crit'); P._combo = (R.legOf ? R.legOf(P) : null) === 'lg_thousand' ? Math.floor(c / 2) : 0;
     },
     gauge(P) { const c = P._combo || 0, m = this.max(P); return { name: '連段 ' + c, v: c, max: m, full: c >= m, text: '普攻 +' + Math.min(20, Math.floor(c / 5)) + '%', x: c >= 10 ? '終結技 ×' + (1 + c / 10).toFixed(1) : '' }; }
   };

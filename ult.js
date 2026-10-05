@@ -21,7 +21,7 @@
   // 實測（K＝1、身邊 2.5 公尺的敵人）：槍手 7、弓 20、戰士 14、術士 13、牧師 13、刀客 20、騎士 12、武術家 10、吟遊 12、召喚 2、術陣 9、附魔 6、符卷 5 倍
   const ULT_K = R.ULT_K = { gunner: 1.7, archer: 0.6, warrior: 0.85, mage: 0.95, priest: 0.9, blade: 0.6, knight: 1, monk: 1.2, bard: 1, summoner: 1.7, arraymage: 1.3, enchanter: 1.6, scroll: 1.2 };
   // 調完（30 級實測，身邊 2.5 公尺）：槍手 11、弓 14、戰士 11、術士 12、牧師 11、刀客 10、騎士 11、武術家 14、吟遊 12、術陣 12、附魔 8（＋18 秒附魔）、符卷 8、召喚 5（召喚物各咬各的）；原本 30 級是 13～39 倍
-  R.ultBase = P => { const ws = P.ws || {}; return (ws.dmg || 10) * (ws.pellets > 1 ? ws.pellets : 1) * (ws.hits || 1) * (ULT_K[P.cls] || 1); };
+  R.ultBase = P => { const ws = P.ws || {}; return (ws.dmg || 10) * (R.multiN ? R.multiN(ws) : (ws.pellets > 1 ? ws.pellets : 1) * (ws.hits || 1)) * (ULT_K[P.cls] || 1); };
   const base = P => R.ultBase(P), meter = P => (P.ws ? P.ws.dmg : 10) * (P.dmgMult || 1);   // 量表照舊
   // 職業的光（data.js 的職業顏色有幾個太暗，HUD 和大招用亮一點的）
   const GLOW = R.CLASS_GLOW = { gunner: '#7AB8FF', archer: '#8AE07A', warrior: '#FF8A5A', mage: '#B88AFF', priest: '#FFE08A', blade: '#9AD8FF', knight: '#FFC85A' };

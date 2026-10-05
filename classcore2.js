@@ -30,7 +30,7 @@
     add(P, n) { P._faith = Math.min(100, (P._faith || 0) + n); },
     onCast(P, i, id, sk) { const L = R.SKILL_LIB && R.SKILL_LIB[id]; if (L && (L.type === 'heal' || L.type === 'buff' || L.type === 'revive')) this.add(P, 12); },
     act(P) {
-      if ((P._faith || 0) < 100) { toast('信仰要滿（現在 ' + Math.floor(P._faith || 0) + '）'); return; }
+      const need = (R.legOf ? R.legOf(P) : null) === 'lg_saint' ? 70 : 100; if ((P._faith || 0) < need) { toast('信仰要 ' + need + '（現在 ' + Math.floor(P._faith || 0) + '）'); return; }
       P._faith = 0; P._miracle = true; try { R.healP(P.hpMax * 0.3); } finally { P._miracle = false; }   // 神蹟自己的補血不算信仰 P.slowT = 0; P.blindT = 0; if (P.dbf) Object.keys(P.dbf).forEach(k => { P.dbf[k] = 0; });
       W().allies && W().allies.forEach(a => { if (a.downed) { if (adv(P) === 'bishop') { a.downed = false; a.hp = a.hpMax * 0.4; } return; } a.hp = Math.min(a.hpMax, a.hp + a.hpMax * 0.3); });
       R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 5, color: '#FFE8A0' }); R.fx && R.fx('pillar', P.x, 0, P.z, { color: '#FFE8A0' }); R.shake && R.shake(0.25);
@@ -39,7 +39,7 @@
       if (adv(P) === 'shinkan') P.buff.kekkai = Math.max(P.buff.kekkai || 0, 6);
       say(P, '神蹟', 'heal');
     },
-    gauge(P) { const f = P._faith || 0; return { v: f, max: 100, full: f >= 100, sub: '補血、祝福攢信仰', x: f >= 100 ? '神蹟' : '' }; }
+    gauge(P) { const f = P._faith || 0, need = (R.legOf ? R.legOf(P) : null) === 'lg_saint' ? 70 : 100; return { v: f, max: 100, full: f >= need, sub: '補血、祝福攢信仰', x: f >= need ? '神蹟' : '' }; }
   };
   const hl0 = R.healP;
   R.healP = (v, q) => {
@@ -47,7 +47,7 @@
     const h0 = P.hp, r = hl0(v, q), got = Math.max(0, P.hp - h0);
     if (!P._miracle) CORE.priest.add(P, got / P.hpMax * 100);
     const over = v - got;
-    if (v >= P.hpMax * 0.02 && over > 1 && CT() - (P._overT || 0) > 0.5) { const e = nearest(P, 10); if (e) { P._overT = CT(); R.fx && R.fx('bolt', P.x, 1.4, P.z, { to: e }); R.coreHit(e, over * 2, {}); } }
+    if (v >= P.hpMax * 0.02 && over > 1 && CT() - (P._overT || 0) > 0.5) { const n = (R.legOf ? R.legOf(P) : null) === 'lg_mercy' ? 3 : 1, L2 = (W().enemies || []).filter(x => !x.dead && !x.under && dist(x, P) < 10).sort((a, b) => dist(a, P) - dist(b, P)).slice(0, n); if (L2.length) P._overT = CT(); L2.forEach(e => { R.fx && R.fx('bolt', P.x, 1.4, P.z, { to: e }); R.coreHit(e, over * 2, {}); }); }
     return r;
   };
 
@@ -69,10 +69,10 @@
     onCast(P, i) {
       P._notes = ((P._notes || '') + KEY[i]).slice(-3);
       const s = known(P).find(x => x.seq === P._notes); if (!s) return;
-      P._notes = ''; this.play(P, s);
+      P._notes = (R.legOf ? R.legOf(P) : null) === 'lg_echo' ? s.seq.slice(-1) : ''; this.play(P, s);
     },
     play(P, s) {
-      const heal = adv(P) === 'aria' ? 1.5 : 1, hit = adv(P) === 'drummer' ? 1.5 : 1, tk = adv(P) === 'serane' ? 2 : 1;
+      const all = (R.legOf ? R.legOf(P) : null) === 'lg_allsong' ? 1.5 : 1, heal = (adv(P) === 'aria' ? 1.5 : 1) * all, hit = (adv(P) === 'drummer' ? 1.5 : 1) * all, tk = adv(P) === 'serane' ? 2 : 1;
       R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 4, color: '#FFB8E0' }); say(P, '♪ ' + s.n, 'heal');
       if (s.n === '進行曲') buff(P, 'march', { t: 8 * tk, speed: 1.2, dmg: 1.1, color: '#FFB8E0' });
       else if (s.n === '安魂曲') { R.healP(P.hpMax * 0.15 * heal); allies().forEach(a => { a.hp = Math.min(a.hpMax, a.hp + a.hpMax * 0.15 * heal); }); }
@@ -99,8 +99,9 @@
     act(P) {
       const need = adv(P) === 'shikigami' ? 30 : 50, pets = (R.PETS || []).filter(p => !p.gone && p.left > 0);
       if (!pets.length) { toast('沒有召喚物可以獻祭'); return; }
-      if ((P._obs || 0) < need) { toast('執念要 ' + need + '（現在 ' + Math.floor(P._obs || 0) + '）'); return; }
-      P._obs -= need;
+      const bell = (R.legOf ? R.legOf(P) : null) === 'lg_bell'; if (bell) { if ((P._bellCd || 0) > CT()) { toast('執念之鈴還在冷卻（' + Math.ceil(P._bellCd - CT()) + ' 秒）'); return; } P._bellCd = CT() + 10; }
+      else if ((P._obs || 0) < need) { toast('執念要 ' + need + '（現在 ' + Math.floor(P._obs || 0) + '）'); return; }
+      if (!bell) P._obs -= need;
       pets.forEach(p => { R.fx && R.fx('boom', p.x, 0.4, p.z, { r: 2.5, color: '#B8E07A' }); R.coreAoe(p.x, p.z, 2.5, pw(P) * 2.2, { kb: 1.5 }); p.left = 0; if (adv(P) === 'medium') R.healP(P.hpMax * 0.04); });
       R.shake && R.shake(0.25); say(P, '獻祭 ×' + pets.length, 'crit');
     },
@@ -131,6 +132,7 @@
     point(P, x, z) {
       const L = (P._pts || []).filter(p => CT() - p.t < ptLife(P)); L.push({ x, z, t: CT() }); P._pts = L;
       R.fx && R.fx('ring', x, 0.1, z, { r: 1, color: '#7AC8E8' });
+      if ((R.legOf ? R.legOf(P) : null) === 'lg_compass') for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) { const a = L[i], b = L[j]; if (Math.hypot(a.x - b.x, a.z - b.z) <= 8) { this.close(P, [a, b, { x: (a.x + b.x) / 2 + (b.z - a.z) * 0.4, z: (a.z + b.z) / 2 - (b.x - a.x) * 0.4, t: CT() }]); P._pts = L.filter(p => p !== a && p !== b); return; } }
       for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) for (let k = j + 1; k < L.length; k++) {
         const a = L[i], b = L[j], c = L[k]; if (Math.hypot(a.x - b.x, a.z - b.z) > 11 || Math.hypot(a.x - c.x, a.z - c.z) > 11 || Math.hypot(b.x - c.x, b.z - c.z) > 11) continue;
         this.close(P, [a, b, c]); P._pts = L.filter(p => p !== a && p !== b && p !== c); return;
@@ -145,6 +147,7 @@
       R.coreAoe(cx, cz, r, pw(P) * 3.5 * (big ? 1.3 : 1), {});
       if (adv(P) === 'warder') { P.shield = Math.max(P.shield || 0, P.hpMax * 0.15); P.buff.shieldT = Math.max(P.buff.shieldT || 0, 6); }
       R.num && R.num(cx, 2.6, cz, '閉環', 'crit');
+      if ((R.legOf ? R.legOf(P) : null) === 'lg_chaindisc') setTimeout(() => { P._pts = (P._pts || []).concat([{ x: cx, z: cz, t: CT() }]); }, 0);   // 連鎖陣盤：中心留一個點
     },
     aimPt(P, range) { const ax = P.aimX != null ? P.aimX : P.x + Math.sin(P.aimA) * 6, az = P.aimZ != null ? P.aimZ : P.z + Math.cos(P.aimA) * 6, d = Math.hypot(ax - P.x, az - P.z), k = d > range ? range / d : 1; return [P.x + (ax - P.x) * k, P.z + (az - P.z) * k]; },
     onCast(P, i, id) { const L = R.SKILL_LIB && R.SKILL_LIB[id]; if (!(L && ['at', 'zone', 'storm', 'mark'].includes(L.type)) && i !== 0) return; const [x, z] = this.aimPt(P, (L && L.p && L.p.range) || 10); this.point(P, x, z); },
@@ -162,7 +165,7 @@
     mod(e, raw, o, P) {
       if ((e._sunder || 0) > CT()) raw *= 1.2;
       if (o.primary && !o.reflect) {
-        P._runeCh = Math.min(100, (P._runeCh || 0) + (adv(P) === 'runesmith' ? 6 : 4));
+        P._runeCh = Math.min(100, (P._runeCh || 0) + (adv(P) === 'runesmith' ? 6 : 4) * ((R.legOf ? R.legOf(P) : null) === 'lg_quickrune' ? 2 : 1));
         const r = P._rune || 'flame';
         if (r === 'flame' && rnd() < 0.2) e.st.burn = 3;
         if (r === 'frost') e.st.slow = Math.max(e.st.slow || 0, 1.5);
@@ -172,7 +175,7 @@
     },
     release(P) {
       const ch = P._runeCh || 0; P._runeCh = 0; if (ch < 20) return;
-      const r = P._rune, k = pw(P) * (adv(P) === 'runesmith' ? 1.5 : 1), sund = adv(P) === 'entian', hitList = [];
+      const r = P._rune, k = pw(P) * (adv(P) === 'runesmith' ? 1.5 : 1) * ((R.legOf ? R.legOf(P) : null) === 'lg_trirune' ? 1.8 : 1), sund = adv(P) === 'entian', hitList = [];
       const hitAt = (x, z, rad, dmg, o) => (W().enemies || []).forEach(e => { if (!e.dead && Math.hypot(e.x - x, e.z - z) < rad + e.def.size * 0.5) { R.coreHit(e, dmg, o || {}); hitList.push(e); } });
       if (r === 'flame') { const x = P.x + Math.sin(P.aimA) * 2.5, z = P.z + Math.cos(P.aimA) * 2.5; R.fx && R.fx('boom', x, 0.4, z, { r: 2.8, color: '#FF7A3A' }); hitAt(x, z, 2.8, k * ch / 25); hitList.forEach(e => { e.st.burn = 3; }); }
       else if (r === 'frost') { R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 3.5, color: '#9AD8FF' }); hitAt(P.x, P.z, 3.5, k * ch / 40); hitList.forEach(e => { e.st.root = Math.max(e.st.root || 0, 2); }); }
@@ -193,17 +196,17 @@
     onCast(P, i, id) {
       if (!id || P._echoing) return;
       const L = (P._chain || []).filter(x => CT() - x[1] < 6 && x[0] !== id); L.push([id, CT()]); P._chain = L;
-      const need = adv(P) === 'noxa' ? 2 : 3; if (new Set(L.map(x => x[0])).size < need) return;
-      P._chain = [];
+      const need = adv(P) === 'noxa' || P._brushNext ? 2 : 3; if (new Set(L.map(x => x[0])).size < need) return;
+      P._chain = []; P._brushNext = (R.legOf ? R.legOf(P) : null) === 'lg_brush' && !P._brushNext;
       const lib = R.SKILL_LIB && R.SKILL_LIB[id], T = R.SKILL_TYPES; if (!lib || !T || !T[lib.type]) return;
       say(P, '連鎖', 'crit');
       setTimeout(() => { const w = W(); if (!w.run || w.run.done || !w.P || w.P.dead) return; P._echoing = true; try { const s = Object.assign({ _id: id + ':echo' }, lib.p, adv(P) === 'sealer' ? { stun: Math.max((lib.p && lib.p.stun) || 0, 0.8) } : {}); T[lib.type](s, w.P, w, pw(w.P)); } catch (e) { } finally { P._echoing = false; } }, 250);
     },
     act(P) {
-      const need = adv(P) === 'scribe' ? 2 : 3, S = R.S, have = (S && S.scrolls) || 0;
+      const endless = (R.legOf ? R.legOf(P) : null) === 'lg_endless', need = endless ? 1 : adv(P) === 'scribe' ? 2 : 3, S = R.S, have = (S && S.scrolls) || 0;
       if ((P._unrollCd || 0) > CT()) { toast('展卷還在冷卻（' + Math.ceil(P._unrollCd - CT()) + ' 秒）'); return; }
       if (have < need) { toast('寫好的卷軸不夠（要 ' + need + ' 張，現在 ' + have + '）'); return; }
-      S.scrolls = have - need; P._unrollCd = CT() + 30; P.skillCd = 0; if (P.skCd) P.skCd = P.skCd.map(() => 0);
+      S.scrolls = have - need; P._unrollCd = CT() + (endless ? 15 : 30); P.skillCd = 0; if (P.skCd) P.skCd = P.skCd.map(() => 0);
       R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 3, color: '#E8C878' }); say(P, '展卷', 'heal');
     },
     gauge(P) { const L = (P._chain || []).filter(x => CT() - x[1] < 6), need = adv(P) === 'noxa' ? 2 : 3, cd = Math.max(0, (P._unrollCd || 0) - CT()); return { name: '連鎖 ' + L.length + '／' + need, v: L.length, max: need, text: '卷軸 ' + ((R.S && R.S.scrolls) || 0) + ' 張', sub: '6 秒內放不同的技能', x: cd > 0 ? '展卷 ' + Math.ceil(cd) + ' 秒' : '展卷' }; }
