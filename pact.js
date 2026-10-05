@@ -46,6 +46,7 @@
     ['full_amile', '滿注・阿彌勒', '全部條款最高級，走完阿彌勒級遺跡', '傷害 +3%', { dmg: 0.03 }],
     ['full_mors', '滿注・摩爾斯', '全部條款最高級，走完摩爾斯級遺跡', '傷害 +4%、生命 +3%', { dmg: 0.04, hp: 0.03 }],
     ['full_kesent', '滿注・克森特', '全部條款最高級，走完克森特級遺跡', '傷害 +5%、生命 +5%', { dmg: 0.05, hp: 0.05 }],
+    ['full_kaso', '滿注・卡索', '全部條款最高級，走完卡索級遺跡', '傷害 +6%、生命 +6%、暴擊率 +2%', { dmg: 0.06, hp: 0.06, crit: 0.02 }],
     ['perfect', '完美委託', '一件任務的五軌成績每一項都 95% 以上', '委託報酬 +5%', { pay: 0.05 }],
     ['model', '模範勇者', '十件以上的任務、成績總平均 90% 以上', '經驗值 +6%', { xp: 0.06 }]
   ];
@@ -77,14 +78,20 @@
   const sr0 = R.startRun;
   R.startRun = id => {
     const r = sr0(id), run = W().run;
-    if (run && !run.pact) {   // 不接委託也可以開條款（2026-10-04 作者：段位太高接不了低階任務，不接任務就開不了條款，要全條款的稱號拿不到）
-      const sel = Object.assign({}, pact().sel); if ((S().party || []).length) delete sel.solo;
-      const pts = ptsOf(sel);
-      if (pts) {
-        run.pact = { sel, pts };
-        if (sel.time && run.task) run.task.limitH = Math.ceil(run.task.limitH / 2);
-        if (sel.more && run.task && run.task.kind === 'hunt') run.task.need = Math.round(run.task.need * 1.5);
-        setTimeout(() => R.toast && R.toast('加注條款 ' + pts + ' 點：' + Object.keys(sel).map(k => T[k][1]).join('、'), '#FF9A6A'), 4200);
+    const ready = R._pactReady === id; if (ready) R._pactReady = null;
+    // 不接委託也可以開條款（2026-10-04 作者：段位太高接不了低階任務，不接任務就開不了條款，要全條款的稱號拿不到）
+    // 卡索級以前跳過委託書會默默套用上次的條款；現在一定要在委託書上確認過（R._pactReady）才套用，避免沒 UI 就帶舊選項進去
+    if (run && !run.pact) {
+      const kasoSilent = run.site && run.site.grade === 'kaso' && !ready;
+      if (!kasoSilent) {
+        const sel = Object.assign({}, pact().sel); if ((S().party || []).length) delete sel.solo;
+        const pts = ptsOf(sel);
+        if (pts) {
+          run.pact = { sel, pts };
+          if (sel.time && run.task) run.task.limitH = Math.ceil(run.task.limitH / 2);
+          if (sel.more && run.task && run.task.kind === 'hunt') run.task.need = Math.round(run.task.need * 1.5);
+          setTimeout(() => R.toast && R.toast('加注條款 ' + pts + ' 點：' + Object.keys(sel).map(k => T[k][1]).join('、'), '#FF9A6A'), 4200);
+        }
       }
     }
     return r;
@@ -201,7 +208,7 @@
     const p = pact(), name = R.titleName(); const info = card.querySelector('div'); if (info && name) { const el = document.createElement('small'); el.className = 'tag'; el.textContent = '稱號：' + name; info.insertBefore(el, info.children[1] || null); }
     const box = document.createElement('div'); box.className = 'ft-box';
     { const bs = Object.values(p.best || {}); if (bs.some(v => v >= 10)) award('ten'); if (bs.some(v => v >= 20)) award('twenty'); }   // 2026-10-04 條件放寬以前的紀錄：補發
-    box.innerHTML = '<h3>稱號（' + Object.keys(p.got).length + '／' + TITLES.length + '）</h3><p class="note">一次戴一個稱號。加注條款的最高紀錄（委託做到六成以上回來，或走完遺跡）：' + (['amile', 'mors', 'kesent'].map(g => R.gradeById(g).name + ' ' + (p.best[g] || 0) + ' 點' + ((p.bestFull || {})[g] ? '（走完 ' + p.bestFull[g] + ' 點）' : '')).join('・')) + '（滿注 ' + MAXPTS + ' 點；滿注的稱號要走完）</p><div class="ft-list">'
+    box.innerHTML = '<h3>稱號（' + Object.keys(p.got).length + '／' + TITLES.length + '）</h3><p class="note">一次戴一個稱號。加注條款的最高紀錄（委託做到六成以上回來，或走完遺跡）：' + (['amile', 'mors', 'kesent', 'kaso'].map(g => R.gradeById(g).name + ' ' + (p.best[g] || 0) + ' 點' + ((p.bestFull || {})[g] ? '（走完 ' + p.bestFull[g] + ' 點）' : '')).join('・')) + '（滿注 ' + MAXPTS + ' 點；滿注的稱號要走完）</p><div class="ft-list">'
       + TITLES.map(([id, n, how, bonus]) => { const got = p.got[id]; return '<div class="ft-row' + (got ? '' : ' locked') + '"><b>' + (got ? esc(n) : '？？？') + '</b><small>' + esc(how) + '・' + esc(bonus) + '</small>' + (got ? (p.title === id ? '<span class="tag">戴著</span>' : '<button type="button" class="mini" data-title="' + id + '">戴上</button>') : '') + '</div>'; }).join('') + '</div>';
     const after = body.querySelector('.ft-box') || card; after.after(box);
     box.querySelectorAll('[data-title]').forEach(b => { b.onclick = () => { p.title = b.dataset.title; R.save(); R.hub(); }; });

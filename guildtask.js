@@ -41,7 +41,7 @@
     const s = S(), site = R.SITES.find(x => x.id === id);
     if (okId === id) { okId = null; return sr0(id); }
     if (!site || (site.kind !== 'ruin' && site.kind !== 'hunt') || !s) return sr0(id);   // hunt：湯山村後山的狩獵場（hunt.js）
-    if (s.banUntil > s.day || site.id === 'kanko' || site.grade === 'kaso') return sr0(id);   // 停權（punish.js 會說明）、觀光的動物園、卡索級的特別討伐令（kaso.js）不用這張委託書
+    if (s.banUntil > s.day || site.id === 'kanko') return sr0(id);   // 停權（punish.js 會說明）、觀光的動物園不用這張委託書；卡索級特別討伐令也走委託書（可勾加注條款）
     // 多人連線：隊員跟房主出發時不要卡住委託書視窗（net.js 設 R.net.guestFollow）
     // 以前自動點 tk-go，但手上有委託時只有 tk-cont／tk-free／tk-drop，點不到就卡死。
     // 用 setTimeout(0) 再進 startRun，跟手動按按鈕一樣走外層包裝（同步巢狀會讓 free／cont 旗標讀不到）。
@@ -65,7 +65,7 @@
       if (held.siteId === id) {
         const m = modal('<p class="kicker">公會討伐令・手上的委託</p><h2>' + esc(site.name) + '</h2><p>這座遺跡的委託還在手上：' + esc(R.heldLine(held)) + '。</p><p class="note">可以再下去繼續做；回公會分館的登記處繳交，才結算五軌成績、付委託報酬（已經扣住 ' + (held.pay || 0) + ' 費拉）。</p>',
           '<div class="row"><button type="button" class="btn pri" id="tk-cont">繼續委託，出發</button><button type="button" class="btn" id="tk-free">不接委託，自己下去</button><button type="button" class="btn" id="tk-no">再想想</button></div>');
-        $('tk-no').onclick = m.close; $('tk-cont').onclick = () => { m.close(); go('cont'); }; $('tk-free').onclick = () => { m.close(); go('free'); };
+        $('tk-no').onclick = m.close; $('tk-cont').onclick = () => { m.close(); R._pactReady = id; go('cont'); }; $('tk-free').onclick = () => { m.close(); R._pactReady = id; go('free'); };
         return;
       }
       const m = modal('<p class="kicker">公會討伐令</p><h2>' + esc(site.name) + '</h2><p>手上還有「' + esc(held.site) + '」的委託沒繳交（' + esc(R.heldLine(held)) + '）。一次只能接一張委託。</p><p class="note">先回公會分館的登記處繳交；或是放棄那張委託（記為失敗、沒有報酬）再接這一張。也可以不接委託，自己下去。</p>',
@@ -81,8 +81,8 @@
       '<div class="row"><button type="button" class="btn pri" id="tk-go">接下委託，出發</button><button type="button" class="btn" id="tk-free" title="沒有委託報酬、不打成績、沒有時限">不接委託，自己下去</button><button type="button" class="btn" id="tk-no">再想想</button></div>');
     R.taskExtras.forEach(x => x.bind && x.bind(m.box, site, sp));
     $('tk-no').onclick = m.close;
-    $('tk-go').onclick = () => { m.close(); okId = id; R.startRun(id); };
-    $('tk-free').onclick = () => { m.close(); okId = id; freeId = id; R.startRun(id); };
+    $('tk-go').onclick = () => { m.close(); okId = id; R._pactReady = id; R.startRun(id); };
+    $('tk-free').onclick = () => { m.close(); okId = id; freeId = id; R._pactReady = id; R.startRun(id); };
   };
   // 真的出發了：記下委託
   const sr1 = R.startRun;
