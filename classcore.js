@@ -94,10 +94,10 @@
 
   // ---------- 職業量表 ----------
   const css = document.createElement('style');
-  css.textContent = '#core-g{position:fixed;z-index:6;width:206px;padding:4px 7px 5px;border-radius:7px;background:rgba(16,12,20,.86);border:1px solid var(--cc,#6A5A70);color:#EDE6DA;font-size:11.5px;pointer-events:auto;cursor:help}'
+  css.textContent = '#core-g{position:fixed;z-index:6;width:236px;padding:4px 7px 5px;border-radius:7px;background:rgba(16,12,20,.86);border:1px solid var(--cc,#6A5A70);color:#EDE6DA;font-size:11.5px;pointer-events:auto;cursor:help}'
     + '#core-g .cg-h{display:flex;justify-content:space-between;gap:6px}#core-g .cg-h b{color:var(--cc);font-size:12px}#core-g .cg-h span{color:#C8C0B0;font-variant-numeric:tabular-nums}'
     + '#core-g .cg-bar{position:relative;height:7px;margin-top:3px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}#core-g .cg-bar i{position:absolute;left:0;top:0;bottom:0;background:var(--cc)}#core-g .cg-bar em{position:absolute;top:0;bottom:0;background:rgba(255,230,140,.55)}'
-    + '#core-g .cg-x{margin-top:3px;color:#A89CA8;font-size:10.5px;display:flex;justify-content:space-between;gap:6px}#core-g .cg-x b{color:#FFE08A;font-weight:600}#core-g.full{box-shadow:0 0 10px -2px var(--cc)}';
+    + '#core-g .cg-x{margin-top:3px;color:#A89CA8;font-size:10.5px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:1px 12px}#core-g .cg-x span,#core-g .cg-x b{white-space:nowrap}#core-g .cg-x b{color:#FFE08A;font-weight:600}#core-g.full{box-shadow:0 0 10px -2px var(--cc)}';
   document.head.appendChild(css);
   let g = null;
   const render = () => {
