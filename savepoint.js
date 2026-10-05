@@ -1,8 +1,11 @@
 // 遺跡的存檔點（作者 2026-10-04：5 層或每 8 層有個存檔點）——每 5 層一個。
 // - 第 5、10、15……層的入口房間有一塊公會的記錄碑（發藍光的石柱）。走過去按空白鍵「記下這一層」：
-//   存在 R.S.waypoints[遺跡 id]（記最深的那一層）。
+//   存在 R.S.waypoints[遺跡 id]（記最深的那一層）、R.S.waypointList[遺跡 id]＝記過的每一層。
 // - 下一次進同一座遺跡，入口那一層（第 0 層休息區，沒有的話是第 1 層）多一個「存檔點：直接到第 N 層」，一下子就到記下的那一層。
 //   委託照算（巡查的層數、時間從那裡開始算）；觀光遺跡、狩獵場沒有。
+// - 2026-10-05 作者：打倒領主體後記錄當前深度，該深度「以淺」的存檔點（含目前這一層）全部可用——
+//   中間忘了按記錄碑也不會卡。R.unlockSaveDepth(遺跡 id, 畫面層數, run) 給 lordfloor.js 用。
+// - 從存檔點傳送：R.loadFloor(f, { warp: 1 })，委託板的「運送補給」不把傳送算進去。
 // 放在 restfloor.js、ruinvar.js 後面。
 (function (R) {
   const W = () => R.W, S = () => R.S, EVERY = 5;
@@ -13,6 +16,17 @@
   const wp = () => { const s = S(); s.waypoints = s.waypoints || {}; return s.waypoints; };
   // 記過的每一層（2026-10-04 作者：存檔點可以選擇紀錄過的層數）。R.S.waypointList[遺跡 id] = [5, 10, 15……]；以前只記最深那一層的存檔也算進去
   const wl = id => { const s = S(); s.waypointList = s.waypointList || {}; const L = s.waypointList[id] = s.waypointList[id] || []; const b = wp()[id]; if (b && !L.includes(b)) L.push(b); L.sort((a, c) => a - c); return L; };
+  // 記到 depth（畫面「第幾層」）：目前這一層 + 該深度以淺的所有存檔點間隔層（每 saveEvery 一層）都可用
+  R.unlockSaveDepth = (id, depth, run) => {
+    if (!id || !(depth > 0)) return [];
+    const every = (run && R.saveEvery) ? R.saveEvery(run) : EVERY, m = wp(), L = wl(id), added = [];
+    const add = n => { if (n >= 3 && !L.includes(n)) { L.push(n); added.push(n); } };
+    if (every > 0) for (let n = every; n <= depth; n += every) add(n);
+    add(depth); L.sort((a, c) => a - c);
+    if (depth > (m[id] || 0)) m[id] = depth;
+    if (added.length) R.save && R.save();
+    return added;
+  };
   const free = (x, z) => { const F = W().F, t = F && F.tile; if (t) { const tx = t.tX(x), tz = t.tZ(z); for (let dz = -1; dz <= 1; dz++) for (let dx = -1; dx <= 1; dx++) if (t.T[t.id(tx + dx, tz + dz)] !== 1) return false; } return !(R.pointBlocked && R.pointBlocked(x, z)); };
   const placeNear = (r, prefer) => { for (const [dx, dz] of prefer) { const x = r.x + dx, z = r.z + dz; if (free(x, z)) return [x, z]; } return R.roomPoint ? R.roomPoint(r, {}) : [r.x, r.z]; };
   const SPOTS = [[-3.6, -2.4], [3.6, -2.4], [-3.6, 2.6], [3.6, 2.6], [0, -3.4], [-5, 0], [5, 0], [0, 3.6]];
@@ -57,7 +71,7 @@
       + '<div class="row sp-list">' + list.slice().reverse().map((n, i) => '<button type="button" class="btn' + (i ? '' : ' pri') + '" data-spgo="' + n + '">第 ' + n + ' 層</button>').join('') + '</div>',
       '<div class="row"><button type="button" class="btn" id="sp-no">從頭走</button></div>');
     document.getElementById('sp-no').onclick = R.closeSheet;
-    document.querySelectorAll('[data-spgo]').forEach(b => { b.onclick = () => { const n = +b.dataset.spgo, f = floorOf(run, n); R.closeSheet(); if (R.stairBusy && R.stairBusy()) return; R.fade(() => { R.loadFloor(f); R.banner(R.floorLabel ? R.floorLabel(W().run) : '第 ' + n + ' 層', '從存檔點過來了'); }); }; });
+    document.querySelectorAll('[data-spgo]').forEach(b => { b.onclick = () => { const n = +b.dataset.spgo, f = floorOf(run, n); R.closeSheet(); if (R.stairBusy && R.stairBusy()) return; R.fade(() => { R.loadFloor(f, { warp: 1 }); R.banner(R.floorLabel ? R.floorLabel(W().run) : '第 ' + n + ' 層', '從存檔點過來了'); }); }; });
   };
   const ni0 = R.nearestInteract;
   R.nearestInteract = () => {

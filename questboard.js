@@ -1,7 +1,7 @@
 // 公會的委託板（2026-10-04 作者：升段改輕鬆一點，不然目前太肝了——改任務就可以了：像是攻略至 XX 層、殺死 XX 隻指定怪物
 // （完成兩倍數量算完成任務兩次？），可以同時接取很多任務，然後一起完成）
 // - 公會登記處多一塊「委託板」：每天換一批小委託，可以同時接 5 張，一趟遺跡一起做，回登記處一起繳交。
-//   攻略：「到某座遺跡的第 N 層」；討伐：「打倒指定的遺跡生物 N 隻」（在那個分級以上的遺跡打倒的才算）；採集：「帶回某種素材 N 個」（回到地面才算）。
+//   運送補給：「移動至某座遺跡的第 N 層」（自己走到那一層；存檔點傳送不算，至少約 4～5 層的路程）；討伐：「打倒指定的遺跡生物 N 隻」（在那個分級以上的遺跡打倒的才算）；採集：「帶回某種素材 N 個」（回到地面才算）。
 // - 討伐做到兩倍算兩件、三倍算三件（最多三件）。每一件都登錄到勇者證（五軌：完成度 100、效率看幾天內繳交、創傷和環境 85、反饋隔天），
 //   照委託的分級算進升階的件數（ranks.js）。分級照段位發（和討伐令一樣，ranks.js 的 R.taskSpec）。
 // - 原本的討伐令（guildtask.js，一次一張、五軌嚴查）照舊；兩種可以一起做。
@@ -15,7 +15,7 @@
   const clamp = v => Math.max(1, Math.min(100, Math.round(v)));
   const quests = () => { const s = S(); s.quests = s.quests || []; return s.quests; };
   const monName = id => (R.ENEMIES[id] ? R.ENEMIES[id].name : id), matName = id => (R.MATS[id] ? R.MATS[id].name : id);
-  const text = q => q.kind === 'floor' ? '攻略「' + q.site + '」到第 ' + q.need + ' 層' : q.kind === 'kill' ? '討伐「' + monName(q.mon) + '」' + q.need + ' 隻（' + R.gradeById(q.grade).name + '以上的遺跡' + (R.monSites ? R.monSites(q.mon, q.grade) : '') + '）' : '採集「' + matName(q.mat) + '」' + q.need + ' 個（帶回地面）';
+  const text = q => q.kind === 'floor' ? '移動至「' + q.site + '」第 ' + q.need + ' 層運送補給' : q.kind === 'kill' ? '討伐「' + monName(q.mon) + '」' + q.need + ' 隻（' + R.gradeById(q.grade).name + '以上的遺跡' + (R.monSites ? R.monSites(q.mon, q.grade) : '') + '）' : '採集「' + matName(q.mat) + '」' + q.need + ' 個（帶回地面）';
   const times = q => q.kind === 'kill' ? Math.min(CAP, Math.floor(q.prog / q.need)) : (q.prog >= q.need ? 1 : 0);
   const cap = q => q.kind === 'kill' ? q.need * CAP : q.need;
 
@@ -25,7 +25,7 @@
   const make = (list, out) => {
     const rnd = Math.random, pick = a => a[Math.floor(rnd() * a.length)];
     list.slice().sort(() => rnd() - 0.5).slice(0, 3).forEach(({ s: site, sp }) => {
-      const fl = R.floorsFor ? R.floorsFor(site) : 5, n = Math.max(2, Math.min(fl, Math.round(fl * (0.4 + rnd() * 0.4))));
+      const fl = R.floorsFor ? R.floorsFor(site) : 5, n = Math.max(Math.min(5, fl), Math.min(fl, Math.round(fl * (0.4 + rnd() * 0.4))));   /* 至少約 4～5 層：老手不能傳到底層就交 */
       out.push({ kind: 'floor', siteId: site.id, site: site.name, grade: site.grade, letter: sp.letter, need: n });
     });
     const gs = [...new Set(list.map(x => x.s.grade))].filter(g => g !== 'hamilia');   // 哈米莉亞級的遺跡生物不主動打人：不出討伐
@@ -63,7 +63,15 @@
   const lf0 = R.loadFloor;
   R.loadFloor = (f, o) => {
     const r = lf0(f, o);
-    try { const run = W().run, qs = S() && S().quests; if (qs && qs.length && ruinRun(run)) { const n = run.f0 ? f : f + 1; qs.forEach(q => { if (q.kind === 'floor' && q.siteId === run.site.id && n > q.prog) { const b = q.prog; q.prog = Math.min(q.need, n); told(q, b); } }); } } catch (err) { console.warn('[questboard]', err); }
+    try {
+      // 存檔點傳送／跟著房主傳送：不算「走過去運送補給」（老手不能傳到底層就交）
+      if (o && o.warp) return r;
+      const run = W().run, qs = S() && S().quests;
+      if (qs && qs.length && ruinRun(run)) {
+        const n = run.f0 ? f : f + 1;
+        qs.forEach(q => { if (q.kind === 'floor' && q.siteId === run.site.id && n > q.prog) { const b = q.prog; q.prog = Math.min(q.need, n); told(q, b); } });
+      }
+    } catch (err) { console.warn('[questboard]', err); }
     return r;
   };
   const ex0 = R.extract;
@@ -81,7 +89,7 @@
     if (!run || run.done || !qs.length) { if (el) el.hidden = true; return; }
     if (!el) { const tl = $('r-tl'); if (!tl) return; el = document.createElement('div'); el.id = 'r-qb'; el.className = 'glass dungeon-only r-misc'; tl.appendChild(el); }
     el.hidden = false;
-    el.innerHTML = qs.map(q => '<span>' + (q.kind === 'floor' ? '攻略 第 <b>' + q.prog + '／' + q.need + '</b> 層' : q.kind === 'kill' ? esc(monName(q.mon)) + ' <b>' + q.prog + '／' + q.need + '</b>' + (q.prog >= q.need * 2 ? '（×' + times(q) + '）' : '') : esc(matName(q.mat)) + ' <b>' + q.prog + '／' + q.need + '</b>（帶回）') + '</span>').join('');
+    el.innerHTML = qs.map(q => '<span>' + (q.kind === 'floor' ? '補給 第 <b>' + q.prog + '／' + q.need + '</b> 層' : q.kind === 'kill' ? esc(monName(q.mon)) + ' <b>' + q.prog + '／' + q.need + '</b>' + (q.prog >= q.need * 2 ? '（×' + times(q) + '）' : '') : esc(matName(q.mat)) + ' <b>' + q.prog + '／' + q.need + '</b>（帶回）') + '</span>').join('');
   };
 
   // ---------- 繳交：每一件登錄到勇者證 ----------
@@ -95,10 +103,10 @@
   };
   const box = () => {
     const s = S(), qs = quests(), off = offers(), full = qs.length >= MAXQ, ready = qs.filter(q => times(q) > 0);
-    const line = q => '<div class="ft-row qb-row"><b>' + esc(q.letter) + ' 級・' + esc(text(q)) + '</b><small>' + (q.kind === 'floor' ? '走到第 ' + q.prog + '／' + q.need + ' 層' : q.prog + '／' + q.need + (q.kind === 'kill' && times(q) > 1 ? '（' + times(q) + ' 倍，算 ' + times(q) + ' 件）' : '')) + '・報酬 ' + q.pay + ' 費拉' + (q.kind === 'kill' ? '／件' : '') + '</small>'
+    const line = q => '<div class="ft-row qb-row"><b>' + esc(q.letter) + ' 級・' + esc(text(q)) + '</b><small>' + (q.kind === 'floor' ? '走到第 ' + q.prog + '／' + q.need + ' 層（存檔點傳送不算）' : q.prog + '／' + q.need + (q.kind === 'kill' && times(q) > 1 ? '（' + times(q) + ' 倍，算 ' + times(q) + ' 件）' : '')) + '・報酬 ' + q.pay + ' 費拉' + (q.kind === 'kill' ? '／件' : '') + '</small>'
       + '<div class="row">' + (times(q) ? '<button type="button" class="btn gold" data-qbin="' + q.qid + '">繳交（' + times(q) + ' 件・' + q.pay * times(q) + ' 費拉）</button>' : '') + '<button type="button" class="mini" data-qbdrop="' + q.qid + '">放棄</button></div></div>';
     const offer = q => '<div class="ft-row qb-row"><b>' + esc(q.letter) + ' 級・' + esc(text(q)) + '</b><small>報酬 ' + q.pay + ' 費拉' + (q.kind === 'kill' ? '／件（做到兩倍算兩件，最多三件）' : '') + '</small><div class="row"><button type="button" class="btn" data-qbtake="' + q.oid + '"' + (full ? ' disabled' : '') + '>接下</button></div></div>';
-    return '<h3>委託板</h3><p class="note">小委託可以同時接 ' + MAXQ + ' 張，一趟遺跡一起做，回這裡一起繳交；每一件都登錄到勇者證、算進升階的件數。討伐做到兩倍算兩件（最多三件）。委託板每天換一批。</p>'
+    return '<h3>委託板</h3><p class="note">小委託可以同時接 ' + MAXQ + ' 張，一趟遺跡一起做，回這裡一起繳交；每一件都登錄到勇者證、算進升階的件數。討伐做到兩倍算兩件（最多三件）。運送補給要自己走過去（存檔點傳送不算），目標大約 4～5 層以上。委託板每天換一批。</p>'
       + (qs.length ? '<p><b>手上的（' + qs.length + '／' + MAXQ + '）</b>' + (ready.length > 1 ? ' <button type="button" class="btn gold" id="qb-all">全部繳交（' + ready.reduce((a, q) => a + times(q), 0) + ' 件）</button>' : '') + '</p><div class="ft-list">' + qs.map(line).join('') + '</div>' : '')
       + '<p><b>今天的委託</b></p>' + (off.length ? '<div class="ft-list">' + off.map(offer).join('') + '</div>' : '<p class="note">今天沒有你的段位能接的委託。</p>');
   };

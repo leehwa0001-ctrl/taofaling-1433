@@ -1,7 +1,7 @@
 // 領主體的樓層（2026-10-04 作者：克森特級裡領主級太常出現，應該每 3～5 層出現一隻；也許可以參考第 20 章的內容——場地的部分）
 // - 有領主體的遺跡（克森特級、卡索級）：每 3～5 層才有一隻（原本 dungeon.js 單數層一間、lords.js 每層再加一到兩間）。
 // - 照《第 20 章》：領主體守在通往樓層通道的路上；牠倒下之前，樓層通道被牠的力量封著。
-//   打倒以後，那一區照舊放金寶箱，這一層也變成存檔點（下次可以從這一層開始）。
+//   打倒以後，那一區照舊放金寶箱；記下當前深度，該深度以淺的存檔點（含這一層）全部可用——中間忘了按碑也不會卡。
 // - 領主區佈置成城堡的大廳：兩側一排柱子（可以躲在後面）、地上的金色邊線、中間的舞池、頭上的水晶吊燈。
 // - 新的領主體「棘背狼」（第 20 章的黑色巨狼）：背上、肚子都是刺——近戰打牠會被刺傷；毛又硬又尖，細碎的攻擊（比你平常一下弱很多的）只剩四成；
 //   怕火（火屬性 ×2，燒起來以後受到的傷害 +30%）；會預判，看到投射物飛過來會往旁邊一跳；越打越兇（每 12 秒移動、傷害 +8%，最多 +60%）；
@@ -52,11 +52,17 @@
     try {
       if (F && F.lordGate && !F.lordGate.down && e && /^領主體/.test(e.def.name || '')) {
         F.lordGate.down = true;
-        // 這一層記成存檔點（savepoint.js 的 R.S.waypointList）
-        const s = S(), id = run.site.id, n = run.f0 ? run.floor : run.floor + 1;
-        s.waypoints = s.waypoints || {}; s.waypointList = s.waypointList || {}; const L = s.waypointList[id] = s.waypointList[id] || [];
-        if (!L.includes(n)) { L.push(n); L.sort((a, b) => a - b); } if (n > (s.waypoints[id] || 0)) s.waypoints[id] = n; R.save && R.save();
-        setTimeout(() => { if (W().F === F) R.banner && R.banner('通往下一層的路打開了', '這一層記成了存檔點（第 ' + n + ' 層）'); }, 2600);
+        // 記下當前深度：這一層 + 以淺的存檔點全部可用（savepoint.js 的 R.unlockSaveDepth）
+        const id = run.site.id, n = run.f0 ? run.floor : run.floor + 1;
+        const added = R.unlockSaveDepth ? R.unlockSaveDepth(id, n, run) : [];
+        const shallow = (S().waypointList && S().waypointList[id] || []).filter(x => x <= n);
+        setTimeout(() => {
+          if (W().F !== F) return;
+          const extra = shallow.filter(x => x !== n);
+          R.banner && R.banner('通往下一層的路打開了', extra.length
+            ? ('第 ' + n + ' 層記成存檔點；第 ' + extra.join('、') + ' 層的存檔點也一併可用')
+            : ('這一層記成了存檔點（第 ' + n + ' 層）'));
+        }, 2600);
       }
     } catch (err) { console.warn('[lordfloor]', err); }
     return r;

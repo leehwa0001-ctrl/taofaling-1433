@@ -211,7 +211,7 @@
     const r = lf0(f, o);
     if (run && run.coop && !run.coop.solo && W().F) {
       const ck = checksum(W().F); cks.mine[run.coop.n] = ck; if (!run.coop.host) compare(run.coop.n);
-      if (run.coop.host) N.send({ k: 'floor', rid: run.coop.seed, f, up: !!o.up, n: run.coop.n, ck });
+      if (run.coop.host) N.send({ k: 'floor', rid: run.coop.seed, f, up: !!o.up, warp: !!o.warp, n: run.coop.n, ck });
       else if (o.fresh && lastFloor && lastFloor.rid === run.coop.seed && lastFloor.n > 1) setTimeout(() => follow(lastFloor), 300);   // 房主已經往下走了：追上去
     }
     return r;
@@ -230,7 +230,7 @@
     R.fade(() => {
       const r2 = coop(); if (!r2 || r2.coop.seed !== d.rid) return;
       if (r2.coop.n === d.n && r2.floor === d.f) return;
-      r2.coop.n = d.n; R.loadFloor(d.f, { up: !!d.up, netFollow: true });
+      r2.coop.n = d.n; R.loadFloor(d.f, { up: !!d.up, warp: !!d.warp, netFollow: true });
       if (d.up) R.banner('跟著房主往回走', '遺跡一直在長：上一層已經不是來的時候的樣子');
       else R.toast && R.toast('已與房主同步樓層', '#7FE0FF');
     });
