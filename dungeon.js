@@ -8,6 +8,8 @@
   const rint = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
   const rnd = (a, b) => a + Math.random() * (b - a);
   const pick = a => a[Math.floor(Math.random() * a.length)];
+  // 可重現的洗牌（勿用 sort+Math.random：跨瀏覽器比較次數不同，同種子也會長出不同地圖）
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const x = a[i]; a[i] = a[j]; a[j] = x; } return a; };
   const DIRS = [[0, -1, 'n'], [1, 0, 'e'], [0, 1, 's'], [-1, 0, 'w']];
   const N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
   const hash = (x, z) => { const s = Math.sin(x * 127.1 + z * 311.7) * 43758.5453; return s - Math.floor(s); };
@@ -95,7 +97,7 @@
     // 大廳：有些房間往旁邊空著的格子長出去，變成跨兩格的大空間（高塔型的塔室不長）
     if (run.type !== 'tower') {
       const taken = new Set(), nBig = n >= 8 ? 2 : 1;
-      rooms.filter(r => r.type === 'fight' || r.type === 'trap' || r.type === 'ore').sort(() => Math.random() - 0.5).slice(0, nBig).forEach(r => {
+      shuffle(rooms.filter(r => r.type === 'fight' || r.type === 'trap' || r.type === 'ore')).slice(0, nBig).forEach(r => {
         const free = DIRS.filter(d => { const k = K(r.gx + d[0], r.gy + d[1]); return !at.has(k) && !taken.has(k); }); if (!free.length) return;
         const d = pick(free); taken.add(K(r.gx + d[0], r.gy + d[1])); r.big = 1;
         if (d[0]) { r.x += d[0] * CW / 2; r.hx = CW / 2 + rnd(10, 13); r.hz = rnd(10.5, 13); } else { r.z += d[1] * CH / 2; r.hz = CH / 2 + rnd(8, 10.5); r.hx = rnd(12, 15.5); }
@@ -405,7 +407,7 @@
     // --- 目目連：牆上朝房間那一面的眼睛 ---
     const eyeSpots = [];
     walls.forEach(k => { const [tx, tz] = kxz(k); N4.forEach(([dx, dz]) => { const m = id(tx + dx, tz + dz); if (is(tx + dx, tz + dz, FLOOR) && RM[m] >= 0) eyeSpots.push({ x: cX(tx) + dx * (TS / 2 + 0.06), z: cZ(tz) + dz * (TS / 2 + 0.06), rot: Math.atan2(dx, dz) }); }); });
-    eyeSpots.sort(() => Math.random() - 0.5).slice(0, Math.min(36, Math.ceil(eyeSpots.length * 0.12))).forEach(e => F.eyes.push(e));
+    shuffle(eyeSpots).slice(0, Math.min(36, Math.ceil(eyeSpots.length * 0.12))).forEach(e => F.eyes.push(e));
     const eyeMat = new TH.MeshBasicMaterial({ color: '#F4E9DC' }), irisMat = new TH.MeshBasicMaterial({ color: '#8A1A2A' });
     F.eyes.forEach(e => {
       const g2 = new TH.Group(); const white = new TH.Mesh(new TH.SphereGeometry(0.34, 10, 6), eyeMat); white.scale.set(1.5, 1, 0.3); g2.add(white);
@@ -528,7 +530,7 @@
     const spikeGeo = new TH.ConeGeometry(0.17, 0.62, 4), plateGeo = new TH.BoxGeometry(TS - 0.3, 0.06, TS - 0.3);
     const spikes = (r, dense) => {
       const ok = r.tiles.filter(k => { const [tx, tz] = kxz(k), x = cX(tx), z = cZ(tz); if (Math.hypot(x - r.x, z - r.z) < 2.5) return false; if (r.doors.some(d => { const [a, b] = kxz(d); return Math.hypot(cX(a) - x, cZ(b) - z) < 3.2; })) return false; if (!freeAt(x, z, 0.9)) return false; return dense ? (tx + tz) % 3 === 0 : true; });
-      (dense ? ok : ok.sort(() => Math.random() - 0.5).slice(0, rint(2, 4))).forEach(k => {
+      (dense ? ok : shuffle(ok).slice(0, rint(2, 4))).forEach(k => {
         const [tx, tz] = kxz(k), x = cX(tx), z = cZ(tz), g2 = new TH.Group();
         const plate = new TH.Mesh(plateGeo, new TH.MeshLambertMaterial({ color: '#3A3A40' })); plate.position.y = 0.03; plate.receiveShadow = true; g2.add(plate);
         const sp = new TH.Group(); [[-0.45, -0.45], [0.45, -0.45], [-0.45, 0.45], [0.45, 0.45], [0, 0]].forEach(([a, b]) => { const c = new TH.Mesh(spikeGeo, lam('#B8C0C8')); c.position.set(a, 0.31, b); sp.add(c); }); sp.position.y = -0.7; g2.add(sp);
@@ -707,7 +709,7 @@
       const pg = new TH.BufferGeometry(); pg.setAttribute('position', new TH.BufferAttribute(arr, 3));
       const pixOn = !!(R.pixelOn && R.pixelOn()), pm = new TH.PointsMaterial({ color: { dust: th.light, snow: '#F4F8FF', ember: '#FF9A3A', sand: '#E8D0A0', bubble: '#9AE0FF' }[kind], size: pixOn ? (kind === 'dust' ? 1 : 2) : kind === 'dust' ? 0.06 : 0.11, sizeAttenuation: !pixOn, transparent: true, opacity: kind === 'dust' ? 0.45 : 0.85, depthWrite: false });
       const pts = new TH.Points(pg, pm); pts.frustumCulled = false; group.add(pts); F.motes = { pts, kind, arr, NP }; }
-    F.eyes.sort(() => Math.random() - 0.5);
+    shuffle(F.eyes);
     F.cut = new Map();
     scene.add(group);
     F.group = group;

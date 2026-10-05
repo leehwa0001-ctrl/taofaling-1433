@@ -10,6 +10,7 @@
 //   換層加固：載入前後 ping、樓層訊息重送、校驗失敗先重同步再踢人、wantFloor 順便 dump。
 //   連線優化：出站優先佇列（控制訊息立刻送、位置／狀態合併）、無 pong 主動重連、換層時暫緩位置包。
 //   換層斷線專修（2026-10-05）：換層中不因校驗／無 pong 踢人；載入保活更密；換層中斷線靜默重連；dump／樓層訊息更穩。
+//   房主權威地圖（2026-10-05）：房主推 fd 樓層資料；隊友套用、不再各自長出不同地圖；校驗不一致強制套用房主圖。
 (function (R) {
   const W = () => R.W, S = () => R.S, $ = id => document.getElementById(id), esc = s => R.esc(s);
   const PROD = 'wss://taofaling-1433.1433.workers.dev';   // Cloudflare（server-cf/，2026-10-05 上線）
@@ -44,7 +45,7 @@
   N.isHost = isHost; N.inRoom = () => !!N.room;
   const raw = o => { if (N.ws && N.ws.readyState === 1) try { N.ws.send(JSON.stringify(o)); } catch (e) { } };
   // 出站優先：控制訊息立刻送；位置／狀態合併最新一則；戰鬥訊息排隊，避免換層瞬間塞爆
-  const CTRL_K = new Set(['floor', 'run', 'end', 'busy', 'wantFloor', 'hd', 'bye']);
+  const CTRL_K = new Set(['floor', 'run', 'end', 'busy', 'wantFloor', 'hd', 'bye', 'fd']);
   const HIGH_K = new Set(['h', 'g', 'hd', 'rv', 'aid', 'ch']);
   let outP = null, outPs = null, outQ = [], outTimer = null, outBurst = 0, outBurstAt = 0;
   const flushOut = () => {
@@ -248,7 +249,7 @@
     outP = null; outPs = null; outQ = []; if (outTimer) { clearTimeout(outTimer); outTimer = null; }
     if (floorGraceTimer) { clearTimeout(floorGraceTimer); floorGraceTimer = null; } floorBusy = false;
     clearRemotes(); const run = W().run; if (run && run.coop) run.coop.solo = true;
-    pending = null; lastFloor = null; guestGo = false; cks.mine = {}; cks.host = {};
+    pending = null; lastFloor = null; guestGo = false; cks.mine = {}; cks.host = {}; Object.keys(hostLayouts).forEach(k => delete hostLayouts[k]); Object.keys(fdBuf).forEach(k => delete fdBuf[k]); pendingHostLayout = null;
     if (had && why) R.toast(why, '#FFB45A');
     refresh();
   };
@@ -265,9 +266,9 @@
       if (!(back && wasQuiet)) R.toast(back ? '重新連上了。' : isHost() ? '開好房間了：房號 ' + o.code + '。把房號告訴朋友。' : '加入了 ' + nameOf(N.host) + ' 的房間。', '#7FE0FF');
       else console.info('[net] 換層中靜默重連成功');
       if (back && isHost() && coop()) {
-        pushFloor();
-        setTimeout(() => { try { if (isHost() && coop()) pushFloor(); } catch (e) { } }, 800);
-        setTimeout(() => { try { if (isHost() && coop()) { pushFloor(); if (N.onWantFloor) N.onWantFloor(null); } } catch (e) { } }, 2000);
+        pushFloor(); pushFloorDump();
+        setTimeout(() => { try { if (isHost() && coop()) { pushFloor(); pushFloorDump(); } } catch (e) { } }, 800);
+        setTimeout(() => { try { if (isHost() && coop()) { pushFloor(); pushFloorDump(); if (N.onWantFloor) N.onWantFloor(null); } } catch (e) { } }, 2000);
       }
       if (back && !isHost() && coop()) {
         try { N.send({ k: 'wantFloor', rid: coop().coop.seed }, N.host); } catch (e) { }
@@ -285,7 +286,7 @@
     else if (o.t === 'msg') onMsg(o.from, o.d || {});
     else if (o.t === 'host') { N.host = o.id; R.toast(o.id === N.me ? '房主離開了：現在你是房主。' : nameOf(o.id) + ' 成為房主。', '#7FE0FF'); if (N.onServer2) N.onServer2(o); }
     else if (o.t === 'away') { R.toast(nameOf(o.id) + ' 斷線了：3 分鐘內連回來就能接著玩……', '#FFB45A'); dropRemote(o.id); if (N.onServer2) N.onServer2(o); }
-    else if (o.t === 'back') { R.toast(nameOf(o.id) + ' 重新連上了。', '#7FE0FF'); if (isHost() && coop()) pushFloor(o.id); if (N.onServer2) N.onServer2(o); }
+    else if (o.t === 'back') { R.toast(nameOf(o.id) + ' 重新連上了。', '#7FE0FF'); if (isHost() && coop()) { pushFloor(o.id); pushFloorDump(o.id); } if (N.onServer2) N.onServer2(o); }
     refresh();
   };
 
@@ -320,7 +321,7 @@
   R.startParty = run => {
     const result = sp0(run);
     if (N.room && isHost()) {
-      cks.mine = {}; cks.host = {}; lastFloor = null;
+      cks.mine = {}; cks.host = {}; lastFloor = null; Object.keys(hostLayouts).forEach(k => delete hostLayouts[k]); Object.keys(fdBuf).forEach(k => delete fdBuf[k]); pendingHostLayout = null;
       run.coop = { seed: (R.nativeRandom() * 4294967296) >>> 0, n: 0, host: true };
       N.send({ k: 'run', site: run.site.id, name: run.site.name, seed: run.coop.seed, cfg: { env: run.env, reaction: run.reaction, floors: run.floors, tide: run.tide, pact: run.pact } });
     } else if (N.room && pending && pending.site === run.site.id) {
@@ -329,39 +330,166 @@
     return result;
   };
 
-  // ---------- 同一個種子長同一層 ----------
+  // ---------- 房主權威地圖（種子只當備援；隊友必須套用房主樓層資料） ----------
+  // 根因：genFloor／buildFloor 裡曾用 sort(() => Math.random()-0.5)，跨瀏覽器比較次數不同，同種子也會長出不同地形。
+  // 做法：房主打包 rooms＋tile 陣列（fd）推給全房；隊員 loadFloor 優先 unpack，校驗不一致則強制套用房主圖。
   const seedOf = (run, salt) => (run.coop.seed ^ Math.imul(run.coop.n + 1, 0x9E3779B1) ^ Math.imul(salt, 0x85EBCA77)) >>> 0;
+  const b64enc = buf => {
+    const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
+    let s = '';
+    for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, Math.min(i + 0x8000, u8.length)));
+    return btoa(s);
+  };
+  const b64dec = (s, Ctor) => {
+    const bin = atob(s), u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    return Ctor ? new Ctor(u8.buffer) : u8;
+  };
+  const packLayout = (run, F) => {
+    const t = F.tile; if (!t || !t.T) return null;
+    const rooms = (F.rooms || []).map(r => ({
+      i: r.i, gx: r.gx, gy: r.gy, links: Object.assign({}, r.links || {}), type: r.type, dist: r.dist,
+      hx: r.hx, hz: r.hz, shape: r.shape, seed: r.seed, x: r.x, z: r.z, w: r.w, h: r.h,
+      cleared: !!r.cleared, visited: !!r.visited,
+      big: r.big || undefined, nest: r.nest || undefined, traps: r.traps || undefined, inner: r.inner || undefined
+    }));
+    return {
+      rid: run.coop.seed, n: run.coop.n, f: F.f, last: !!F.last,
+      rooms, links: (F.links || []).map(L => ({ a: L.a, b: L.b, dir: L.dir, bridge: L.bridge ? 1 : undefined })),
+      X0: t.X0, Z0: t.Z0, nx: t.nx, nz: t.nz, TS: t.TS,
+      T: b64enc(t.T), RM: b64enc(t.RM), CR: b64enc(t.CR),
+      chests: (F.chests || []).map(c => ({ x: +c.x.toFixed(2), z: +c.z.toFixed(2), tier: c.tier|0, room: c.room|0 })),
+      ck: checksum(F)
+    };
+  };
+  const restoreRoomTiles = F => {
+    const t = F.tile, FLOOR = (R.TILE && R.TILE.FLOOR) || 1, N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    const { nx, T: TT, RM, id } = t, N = nx * t.nz;
+    F.rooms.forEach(r => { r.tiles = []; });
+    for (let k = 0; k < N; k++) { const ri = RM[k]; if (ri >= 0 && F.rooms[ri]) F.rooms[ri].tiles.push(k); }
+    F.rooms.forEach(r => {
+      const doors = new Set();
+      (r.tiles || []).forEach(k => {
+        const tx = k % nx, tz = (k - tx) / nx;
+        N4.forEach(([dx, dz]) => { const m = id(tx + dx, tz + dz); if (TT[m] === FLOOR && RM[m] < 0) doors.add(m); });
+      });
+      r.doors = [...doors];
+    });
+  };
+  const unpackLayout = p => {
+    const T = b64dec(p.T), RM = b64dec(p.RM, Int16Array), CR = b64dec(p.CR, Int16Array);
+    const { X0, Z0, nx, nz, TS } = p;
+    const id = (tx, tz) => tz * nx + tx;
+    const tX = x => Math.floor((x - X0) / TS), tZ = z => Math.floor((z - Z0) / TS);
+    const cX = tx => X0 + (tx + 0.5) * TS, cZ = tz => Z0 + (tz + 0.5) * TS;
+    const rooms = (p.rooms || []).map(r => Object.assign({}, r, { links: Object.assign({}, r.links || {}), tiles: [], doors: [] }));
+    const F = {
+      f: p.f, last: !!p.last, rooms,
+      links: (p.links || []).map(L => ({ a: L.a, b: L.b, dir: L.dir, bridge: !!L.bridge })),
+      tile: { X0, Z0, nx, nz, TS, T, RM, CR, id, tX, tZ, cX, cZ }
+    };
+    restoreRoomTiles(F);
+    return F;
+  };
+  const snapChests = (F, packed) => {
+    if (!F || !packed || !packed.chests || !packed.chests.length) return;
+    const list = F.chests || [];
+    packed.chests.forEach((hc, i) => {
+      const c = list[i]; if (!c) return;
+      c.x = hc.x; c.z = hc.z;
+      if (c.mesh) c.mesh.position.set(hc.x, 0, hc.z);
+      if (c.col) { c.col.x0 = hc.x - 0.8; c.col.x1 = hc.x + 0.8; c.col.z0 = hc.z - 0.55; c.col.z1 = hc.z + 0.55; }
+    });
+  };
+  let pendingHostLayout = null;   // 下一次 genFloor 強制用這份（隊員）
+  const hostLayouts = {};         // n → packed
+  const fdBuf = {};               // key → { tot, parts[] }
+  const FD_CHUNK = 28000;
+  let dumpQ = Promise.resolve();
+  const pushFloorDump = to => {
+    const run = coop(); if (!run || !run.coop.host || !W().F) return;
+    const packed = packLayout(run, W().F); if (!packed) return;
+    let raw; try { raw = JSON.stringify(packed); } catch (e) { console.warn('[net] packLayout', e); return; }
+    const tot = Math.max(1, Math.ceil(raw.length / FD_CHUNK));
+    const nAt = run.coop.n, seedAt = run.coop.seed, fAt = run.floor;
+    dumpQ = dumpQ.then(async () => {
+      for (let wait = 0; wait < 40 && floorBusy; wait++) await new Promise(ok => setTimeout(ok, 40));
+      for (let i = 0; i < tot; i++) {
+        const r2 = coop(); if (!r2 || !r2.coop.host || r2.coop.seed !== seedAt || r2.coop.n !== nAt) return;
+        try {
+          N.send({ k: 'fd', rid: seedAt, n: nAt, f: fAt, i, tot, s: raw.slice(i * FD_CHUNK, (i + 1) * FD_CHUNK) }, to);
+        } catch (e) { }
+        if (i + 1 < tot) await new Promise(ok => setTimeout(ok, 80));
+      }
+    }).catch(() => { });
+  };
+  N.pushFloorDump = pushFloorDump;
   const gf0 = R.genFloor;
-  R.genFloor = (run, f) => run && run.coop ? R.withSeed(seedOf(run, 1), () => gf0(run, f)) : gf0(run, f);
+  R.genFloor = (run, f) => {
+    if (run && run.coop && !run.coop.host && pendingHostLayout && pendingHostLayout.n === run.coop.n && pendingHostLayout.f === f) {
+      const L = pendingHostLayout; pendingHostLayout = null;
+      try { return unpackLayout(L); } catch (e) { console.warn('[net] unpackLayout', e); }
+    }
+    return run && run.coop ? R.withSeed(seedOf(run, 1), () => gf0(run, f)) : gf0(run, f);
+  };
   const bf0 = R.buildFloor;
   R.buildFloor = (sc, run, F) => run && run.coop ? R.withSeed(seedOf(run, 2), () => bf0(sc, run, F)) : bf0(sc, run, F);
-  // 這一層長得一不一樣（地形和寶箱的位置）：房主的和自己的對不上就在 console 留話，方便查
+  // 這一層長得一不一樣（地形和寶箱的位置）
   const checksum = F => { let h = 2166136261; const T = F.tile && F.tile.T; if (T) for (let i = 0; i < T.length; i++) h = Math.imul(h ^ T[i], 16777619); (F.chests || []).forEach(c => { h = Math.imul(h ^ Math.round((c.x || 0) * 10) ^ Math.round((c.z || 0) * 10) << 8, 16777619); }); return h >>> 0; };
-  const cks = { mine: {}, host: {} }, ckBad = {};   // n → 連續校驗失敗次數（換層瞬間偶發不一致：先重同步，不要立刻踢人）
+  const cks = { mine: {}, host: {} }, ckBad = {};
   const keepAlive = () => { try { if (N.ws && N.ws.readyState === 1) N.ws.send('ping'); } catch (e) { } };
+  const forceApplyHost = L => {
+    const run = coop(); if (!run || run.coop.host || !L || L.rid !== run.coop.seed) return;
+    if (floorBusy) { setTimeout(() => { try { forceApplyHost(L); } catch (e) { } }, 400); return; }
+    console.info('[net] 強制套用房主地圖', L.n, L.f, L.ck);
+    markFloorBusy(true); keepAlive();
+    R.fade(() => {
+      keepAlive();
+      const r2 = coop(); if (!r2 || r2.coop.seed !== L.rid) { endFloorBusySoon(800); return; }
+      pendingHostLayout = L;
+      r2.coop.n = L.n;
+      R.loadFloor(L.f, { netFollow: true, hostForce: true });
+      try { snapChests(W().F, L); } catch (e) { }
+      const ck = W().F && checksum(W().F); if (ck != null) { cks.mine[L.n] = ck; cks.host[L.n] = L.ck; if (ck === L.ck) { delete ckBad[L.n]; delete cks.mine[L.n]; delete cks.host[L.n]; } }
+      R.toast && R.toast('已套用房主地圖', '#7FE0FF');
+    });
+  };
   const compare = n => {
     const a = cks.mine[n], b = cks.host[n]; if (a == null || b == null) return;
     if (a === b) { delete ckBad[n]; delete cks.mine[n]; delete cks.host[n]; return; }
-    // 換層／重連中：永不踢人，只重同步（換層斷線主因：假陽性 leave）
-    if (floorBusy || rejoining) {
-      console.warn('[net] 校驗暫緩（換層／重連）', n, a, b);
-      try {
-        if (isHost()) { pushFloor(); if (N.onWantFloor) N.onWantFloor(null); }
-        else if (N.host) { N.send({ k: 'wantFloor', rid: coop() && coop().coop.seed }, N.host); }
-      } catch (e) { }
-      delete cks.mine[n]; delete cks.host[n];
-      return;
-    }
+    console.warn('[net] 這一層和房主的不一樣', n, a, b);
     ckBad[n] = (ckBad[n] || 0) + 1;
-    console.warn('[net] 這一層和房主的不一樣', n, a, b, 'times', ckBad[n]);
-    // 軟錯誤：一直重同步，不再 leave（換層後殘影也常誤判）
-    if (ckBad[n] === 1 || ckBad[n] === 3) R.toast && R.toast('地圖校驗不一致，正在重新同步……', '#FFB45A');
+    if (ckBad[n] === 1 || ckBad[n] === 3) R.toast && R.toast('地圖不一致，正在套用房主地圖……', '#FFB45A');
     try {
-      if (isHost()) { pushFloor(); if (N.onWantFloor) N.onWantFloor(null); }
-      else if (N.host) { N.send({ k: 'wantFloor', rid: coop() && coop().coop.seed }, N.host); }
+      if (isHost()) { pushFloor(); pushFloorDump(); if (N.onWantFloor) N.onWantFloor(null); }
+      else {
+        const L = hostLayouts[n];
+        if (L && (L.ck === b || b == null)) forceApplyHost(L);
+        else if (N.host) N.send({ k: 'wantFloor', rid: coop() && coop().coop.seed }, N.host);
+      }
     } catch (e) { }
     delete cks.mine[n]; delete cks.host[n];
-    if (ckBad[n] >= 8) delete ckBad[n];   // 計數歸零，繼續玩、繼續同步
+    if (ckBad[n] >= 8) delete ckBad[n];
+  };
+  const onFloorDump = d => {
+    if (!Number.isInteger(d.n) || !Number.isInteger(d.i) || !Number.isInteger(d.tot) || d.tot < 1 || d.tot > 64 || typeof d.s !== 'string') return;
+    const key = d.rid + ':' + d.n;
+    let buf = fdBuf[key]; if (!buf || buf.tot !== d.tot) buf = fdBuf[key] = { tot: d.tot, parts: [] };
+    buf.parts[d.i] = d.s;
+    if (buf.parts.length < d.tot) return;
+    for (let i = 0; i < d.tot; i++) if (typeof buf.parts[i] !== 'string') return;
+    let packed; try { packed = JSON.parse(buf.parts.join('')); } catch (e) { console.warn('[net] fd parse', e); delete fdBuf[key]; return; }
+    delete fdBuf[key];
+    if (!packed || packed.rid !== d.rid || packed.n !== d.n) return;
+    hostLayouts[d.n] = packed;
+    // 只留最近幾層，避免佔記憶體
+    Object.keys(hostLayouts).map(Number).filter(n => n < d.n - 2).forEach(n => delete hostLayouts[n]);
+    const run = coop();
+    if (run && !run.coop.host && run.coop.seed === packed.rid) {
+      const localCk = W().F && run.coop.n === packed.n && run.floor === packed.f ? checksum(W().F) : null;
+      if (localCk == null || localCk !== packed.ck) forceApplyHost(packed);
+      else { cks.mine[packed.n] = localCk; cks.host[packed.n] = packed.ck; delete ckBad[packed.n]; delete cks.mine[packed.n]; delete cks.host[packed.n]; }
+    }
   };
 
   // floorBusy 宣告在上方（出站佇列／心跳會用到）
@@ -370,18 +498,21 @@
   const lf0 = R.loadFloor;
   R.loadFloor = (f, o) => {
     o = o || {}; const run = W().run;
-    if (run && run.coop && !run.coop.solo && !run.coop.host && !o.fresh && !o.netFollow) { R.toast('多人連線：由房主選擇樓層。'); return; }
+    if (run && run.coop && !run.coop.solo && !run.coop.host && !o.fresh && !o.netFollow && !o.hostForce) { R.toast('多人連線：由房主選擇樓層。'); return; }
     clearRemotes();   // 換場景：別人的人物跟著舊場景丟掉，收到位置再畫
     if (run && run.coop && !run.coop.solo) {
       if (run.coop.host) run.coop.n++;
       else if (o.fresh) run.coop.n = 1;
     }
-    // 換層會卡住主線程數百毫秒～數秒：先連打 ping 保活；載入中 Worker 繼續 ping；載完再補
+    // 隊員：若已有房主這一層的 dump，強制用它長圖（不要自己重新 gen）
+    if (run && run.coop && !run.coop.solo && !run.coop.host) {
+      const L = hostLayouts[run.coop.n];
+      if (L && L.rid === run.coop.seed && L.f === f) pendingHostLayout = L;
+    }
     const coopNow = run && run.coop && !run.coop.solo;
     if (coopNow) {
       markFloorBusy(true); keepAlive(); keepAlive();
       try { if (N.ws && N.ws.readyState === 1) N.ws.send('ping'); } catch (e) { }
-      // 換層前 socket 已死：靜默重連，載完後再要樓層／dump
       if (N.room && N.token && N.caps && (!N.ws || N.ws.readyState !== 1) && !rejoining) {
         silentRejoin = true; try { rejoin(); } catch (e) { }
       }
@@ -392,37 +523,38 @@
       if (coopNow) {
         keepAlive(); keepAlive();
         try { if (N.ws && N.ws.readyState === 1) N.ws.send('ping'); } catch (e) { }
-        // 載完後寬限 2.5 秒：校驗／dump／重送仍算換層中
         endFloorBusySoon(2500);
-        // 載完發現斷了：靜默重連（座位還在）
         if (N.room && N.token && N.caps && (!N.ws || N.ws.readyState !== 1) && !rejoining) {
           silentRejoin = true; try { rejoin(); } catch (e) { }
         }
       }
     }
     if (run && run.coop && !run.coop.solo && W().F) {
+      // 隊員：若這次是用房主 layout 長的，把寶箱位置也對齊
+      const used = hostLayouts[run.coop.n];
+      if (!run.coop.host && used && used.rid === run.coop.seed && used.f === run.floor) {
+        try { snapChests(W().F, used); } catch (e) { }
+      }
       const ck = checksum(W().F); cks.mine[run.coop.n] = ck; if (!run.coop.host) compare(run.coop.n);
       if (run.coop.host) {
         const msg = { k: 'floor', rid: run.coop.seed, f, up: !!o.up, warp: !!o.warp, n: run.coop.n, ck };
         try { N.send(msg); } catch (e) { }
-        // 換層瞬間訊息容易被擠掉：稍後再推樓層；dump 只做一次（等隊員 loadFloor 對上 n）
         const nAt = run.coop.n, seedAt = run.coop.seed;
         setTimeout(() => {
           const r2 = coop(); if (!r2 || !r2.coop.host || r2.coop.seed !== seedAt || r2.coop.n !== nAt || !W().F) return;
-          pushFloor();
+          pushFloor(); pushFloorDump();
           if (N.onFloorReady) try { N.onFloorReady(); } catch (e) { }
         }, 300);
         setTimeout(() => {
           const r2 = coop(); if (!r2 || !r2.coop.host || r2.coop.seed !== seedAt || r2.coop.n !== nAt || !W().F) return;
-          pushFloor();
-        }, 900);
+          pushFloor(); pushFloorDump();
+        }, 1000);
         setTimeout(() => {
           const r2 = coop(); if (!r2 || !r2.coop.host || r2.coop.seed !== seedAt || r2.coop.n !== nAt || !W().F) return;
           pushFloor();
         }, 2200);
-      } else if (o.fresh && lastFloor && lastFloor.rid === run.coop.seed && lastFloor.n > 1) setTimeout(() => follow(lastFloor), 300);   // 房主已經往下走了：追上去
+      } else if (o.fresh && lastFloor && lastFloor.rid === run.coop.seed && lastFloor.n > 1) setTimeout(() => follow(lastFloor), 300);
       else if (!run.coop.host && o.netFollow) {
-        // 跟完樓層：跟房主要整層快照（避免只收到 floor、怪還沒過來）
         const seedAt = run.coop.seed;
         const ask = () => { const r2 = coop(); if (!r2 || r2.coop.host || r2.coop.seed !== seedAt || !N.host) return; try { N.send({ k: 'wantFloor', rid: seedAt }, N.host); } catch (e) { } };
         setTimeout(ask, 200);
@@ -441,8 +573,12 @@
   N.pushFloor = pushFloor;
   const follow = d => {
     const run = coop(); if (!run || run.coop.host || run.coop.seed !== d.rid) return;
-    if (run.coop.n === d.n && run.floor === d.f) return;   // 同一層：checksum 已在收到時比過
-    // 合併快速連續的 floor（換層重送）：只跟最後一則，避免疊 fade 卡死／斷線
+    if (run.coop.n === d.n && run.floor === d.f) {
+      // 已在同一層：若有房主 dump 且校驗不對，強制套用
+      const L = hostLayouts[d.n];
+      if (L && L.ck != null && W().F && checksum(W().F) !== L.ck) forceApplyHost(L);
+      return;
+    }
     followPend = d;
     if (followTimer) return;
     followTimer = setTimeout(() => {
@@ -453,6 +589,8 @@
         keepAlive();
         const r2 = coop(); if (!r2 || r2.coop.seed !== d2.rid) return;
         if (r2.coop.n === d2.n && r2.floor === d2.f) return;
+        const L = hostLayouts[d2.n];
+        if (L && L.rid === d2.rid && L.f === d2.f) pendingHostLayout = L;
         r2.coop.n = d2.n; R.loadFloor(d2.f, { up: !!d2.up, warp: !!d2.warp, netFollow: true });
         if (d2.up) R.banner('跟著房主往回走', '遺跡一直在長：上一層已經不是來的時候的樣子');
         else R.toast && R.toast('已與房主同步樓層', '#7FE0FF');
@@ -484,10 +622,16 @@
       lastFloor = d; cks.host[d.n] = d.ck; compare(d.n);
       const run = coop(); if (run && !run.coop.host && run.coop.seed === d.rid) follow(d);
     }
+    else if (d.k === 'fd' && from === N.host) {
+      const expected = coop() ? coop().coop.seed : pending && pending.seed;
+      if (d.rid !== expected) return;
+      onFloorDump(d);
+    }
     else if (d.k === 'end' && from === N.host) { const run = coop(); if (run && !run.coop.host && run.coop.seed === d.rid) { run.coop.solo = true; clearRemotes(); R.banner(nameOf(N.host) + ' 回到地面了', '剩下的路自己走：碰回歸水晶就能回去'); } }
     else if (d.k === 'bye' && coop() && d.rid === coop().coop.seed) dropRemote(from);
     else if (d.k === 'wantFloor' && isHost() && coop() && d.rid === coop().coop.seed) {
-      pushFloor(from);   // 隊員重連／換層後：跟房主要目前樓層
+      pushFloor(from);
+      pushFloorDump(from);   // 地圖資料（房主權威）
       if (N.onWantFloor) try { N.onWantFloor(from); } catch (e) { }   // net2：順便 dump 整層遺跡生物
     }
     else if (d.k === 'p') presence(from, d);

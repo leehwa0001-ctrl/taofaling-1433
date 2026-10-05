@@ -385,6 +385,7 @@
     R.banner && R.banner('你成為房主', '遺跡生物、樓層照你這邊的走');
     // 立刻推樓層＋dump，避免換房主當下隊員卡在舊狀態／接著換層更容易斷
     try { if (N.pushFloor) N.pushFloor(); } catch (e) { }
+    try { if (N.pushFloorDump) N.pushFloorDump(); } catch (e) { }
     try { dump(run); } catch (e) { console.warn('[net2] dump-promote', e); }
   };
   const demote = run => {

@@ -17,7 +17,7 @@ const { WebSocketServer } = require('ws');
 
 const PORT = +process.env.PORT || 8787, MAX = 4, MAX_BYTES = 96 * 1024;
 const PROTOCOL = '1433-net-2', RATE = 128, BURST = 192, HOLD = 180000;
-const CTRL_K = new Set(['floor', 'run', 'end', 'busy', 'wantFloor', 'hd', 'bye']);
+const CTRL_K = new Set(['floor', 'run', 'end', 'busy', 'wantFloor', 'hd', 'bye', 'fd']);
 const LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const rooms = new Map();   // code → { code, host, members: Map(id → client) }
 let nextId = 1, dropN = 0, dropLog = 0;

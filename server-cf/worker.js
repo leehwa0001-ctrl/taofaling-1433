@@ -11,10 +11,11 @@
 //   座位／空房主資訊寫進 Durable Object storage，物件睡著醒來也不丟。
 //   連線優化（2026-10-05 第三階段）：HOLD 180s、RATE 令牌桶 96/144、控制鍵擴充、座位持久化。
 //   換層斷線專修：RATE 128/192；控制鍵含 hd；超大訊息不關連線只丟包；hibernation 保活不變。
+//   房主權威地圖：控制鍵含 fd（樓層地形 dump），不佔速率額度。
 // 部署：見 server-cf/README.md（npx wrangler login、npx wrangler deploy）。
 const MAX = 4, MAX_BYTES = 96 * 1024, PROTOCOL = '1433-net-2';
 const RATE = 128, BURST = 192, HOLD = 180000;
-const CTRL_K = new Set(['floor', 'run', 'end', 'busy', 'wantFloor', 'hd', 'bye']);
+const CTRL_K = new Set(['floor', 'run', 'end', 'busy', 'wantFloor', 'hd', 'bye', 'fd']);
 const LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const clean = (v, n) => String(v == null ? '' : v).slice(0, n);
 
