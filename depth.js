@@ -1,7 +1,8 @@
 // 遺跡的層數：更多、每座不一樣（2026-10-04 回饋：樓層深度太少、太固定；分迷宮型、城邦型……可以用來做變化；
 // 存檔點可以跟著樓層數平衡——層數少的 3 層一個、多的 8 層一個，層數少的每層之間難度差比較大；有存檔點的話 40～50 層也沒問題）
 // - 層數照分級給一個範圍，每座遺跡固定（照遺跡的 id 決定，下次來還是一樣深）：
-//   哈米莉亞 4～7、阿彌勒 8～16、摩爾斯 14～28、克森特 30～60、卡索 60～100（最多 100 層）；高塔型 ×1.35、迷宮型 ×0.65、浮島型 ×0.85。
+//   哈米莉亞 4～7、阿彌勒 8～16、摩爾斯 14～28、克森特 30～60、卡索 70～100（最多 100 層）；高塔型 ×1.35、迷宮型 ×0.65、浮島型 ×0.85。
+//   2026-10-05 作者：卡索級應該都要在 70～100 層左右——卡索級（坎賽特級同）不吃形式倍率（原本封鎖海域是浮島型 ×0.85，只剩 56 層），結果一律夾在 70～100。
 //   觀光遺跡、狩獵場照舊。
 // - 難度照「走到第幾成」算：遺跡生物的強度、寶箱的等級，用「換算回原本層數」的那一層（run.depthK）——
 //   最上層到最深處的難度幅度和原本一樣；層數少的每一層差比較多，層數多的慢慢變強。
@@ -11,13 +12,16 @@
 (function (R) {
   const W = () => R.W;
   // 2026-10-04 作者：遺跡最多可以到 100 層、後面的分級每 20 層一個存檔點，其他遺跡也加深（50、60 層沒問題）
-  const RANGE = { hamilia: [4, 7], amile: [8, 16], mors: [14, 28], kesent: [30, 60], kaso: [60, 100], kansait: [60, 100] }, MAXF = 100;
+  const RANGE = { hamilia: [4, 7], amile: [8, 16], mors: [14, 28], kesent: [30, 60], kaso: [70, 100], kansait: [70, 100] }, MAXF = 100;
+  const NOTYPE = { kaso: 1, kansait: 1 };   // 不吃形式倍率、夾在範圍內
   const TYPEK = { tower: 1.35, city: 1, maze: 0.65, tomb: 1, island: 0.85 };
   const hash = s => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967296; };
   const oldFloors = site => { const g = R.gradeById(site.grade), t = R.TYPES[site.type]; return Math.max(2, ((g && g.floors) || 2) + (t ? t.floors : 0)); };
   R.floorsFor = site => {
     const g = R.gradeById(site.grade); if (!g || !RANGE[g.id] || site.id === 'kanko' || site.kind === 'hunt' || site.outdoor) return oldFloors(site);
-    const [a, b] = RANGE[g.id], n = Math.round((a + (b - a) * hash(site.id)) * (TYPEK[site.type] || 1));
+    const [a, b] = RANGE[g.id];
+    if (NOTYPE[g.id]) return Math.max(a, Math.min(b, MAXF, Math.round(a + (b - a) * hash(site.id))));
+    const n = Math.round((a + (b - a) * hash(site.id)) * (TYPEK[site.type] || 1));
     return Math.max(Math.max(2, Math.round(a * 0.65)), Math.min(MAXF, Math.round(b * 1.3), n));
   };
   // 克森特級每 10 層、卡索級以上每 20 層（2026-10-04 作者：每 20 層一個是後面的等級；克森特級怎麼沒有存檔點）
