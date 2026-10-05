@@ -102,10 +102,10 @@
       + 'linear-gradient(#E8C870,#E8C870) bottom right/14px 2px no-repeat,linear-gradient(#E8C870,#E8C870) bottom right/2px 14px no-repeat,'
       + 'linear-gradient(90deg,transparent,#7A5A2A 18%,#E8C870 50%,#7A5A2A 82%,transparent) top center/70% 2px no-repeat,'
       + 'linear-gradient(90deg,transparent,#5A4428 18%,#B8904A 50%,#5A4428 82%,transparent) bottom center/70% 2px no-repeat}',
-    // 左右鉚釘
+    // 左右鉚釘（2026-10-05：原本 background-size 100% 讓金點畫在球心、蓋住生命／魔力數字——改成左右各 6×6）
     D + '.h2-badge::after{content:"";position:absolute;left:7px;right:7px;top:50%;height:6px;margin-top:-3px;pointer-events:none;z-index:6;'
-      + 'background:radial-gradient(circle,#E8C870 0 1.4px,#2A1E12 1.8px 2.2px,transparent 2.4px) left center/100% 6px no-repeat,'
-      + 'radial-gradient(circle,#E8C870 0 1.4px,#2A1E12 1.8px 2.2px,transparent 2.4px) right center/100% 6px no-repeat}',
+      + 'background:radial-gradient(circle,#E8C870 0 1.4px,#2A1E12 1.8px 2.2px,transparent 2.4px) left center/6px 6px no-repeat,'
+      + 'radial-gradient(circle,#E8C870 0 1.4px,#2A1E12 1.8px 2.2px,transparent 2.4px) right center/6px 6px no-repeat}',
     // 液體球：固定 84×84，在座裡水平／垂直置中
     // （2026-10-05 修正：原本 inset:auto 寫在 left/top 後面，把 left:50%、top:50% 蓋掉了，球被往左上推了半顆——現在 inset 先寫）
     D + '.h2-badge>i,.h2-badge .h2-core{inset:auto!important;left:50%!important;top:50%!important;right:auto!important;bottom:auto!important;'
