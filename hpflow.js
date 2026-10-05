@@ -1,22 +1,27 @@
 // 生命的起伏（作者 2026-10-05：坦克站在岩漿池裡跟怪物群毆也不會死、一個大招血就回滿——
 //   讓角色的血量變化更平滑，更難瞬間掉血又大量恢復，營火、泉水這些回血的地方才有用）
 // - 每秒回血（P.regen、德魯伊、回復增益、技能強化的每秒回復、天賦）全部 ×0.3：R.regenMul(P)（run.js、skillbook.js、talenttree.js 用）。
-//   恢復量增益（P.recovAmp，天賦）同時加每秒回血和吸血；滴血重生（P.ttBleed）：每少 1% 生命，每秒回血 +0.5%。
-// - 回復藥：一瓶回生命上限的 25%（原本 35%）；戰鬥中（6 秒內被打過，或 12 公尺內有醒著的遺跡生物）再少 60%（只回 10%）。
+//   恢復量增益（P.recovAmp，天賦）同時加每秒回血和吸血；滴血重生（P.ttBleed）：每少 1% 生命，恢復量 +0.5%（不是每秒回血）。
+// - 回復藥：一瓶回生命上限的 25%（原本 35%）；戰鬥中（6 秒內被打過，或 12 公尺內有醒著的遺跡生物）再少 20%（回 20%）。
 //   連續喝會遞減：每喝一瓶下一瓶藥效減半，最多到 1/8；10 秒沒喝恢復一階，連續 30 秒沒喝回到全效。
 // - 遺跡生物打人的傷害全部再 ×0.5（招式的基本傷害；子彈、範圍招都跟著）。
 // 放在 run.js（R.drink）、pact.js／promote2.js（包 R.drink）、所有包 R.spawnEnemy 的檔案（dmgfloor.js、kasoplus.js、lordvariant.js）後面。
 (function (R) {
   const W = R.W;
-  const REGEN = 0.3, POT = 0.25, POT_OLD = 0.35, FIGHT = 0.4, STEP = 10, MAXN = 3, MON = 0.5;
+  const REGEN = 0.3, POT = 0.25, POT_OLD = 0.35, FIGHT = 0.8, STEP = 10, MAXN = 3, MON = 0.5;   // 戰鬥中 ×0.8 → 回 20%（原本 ×0.4 → 10%）
   const now = () => performance.now() / 1000;
 
-  // ---------- 每秒回血 ----------
-  R.regenMul = P => {
-    let k = REGEN * (1 + ((P && P.recovAmp) || 0));
-    if (P && P.ttBleed && P.hpMax) k *= 1 + 0.5 * P.ttBleed * Math.max(0, 1 - P.hp / P.hpMax);
-    return k;
+  // ---------- 恢復量／每秒回血 ----------
+  // 滴血重生改加恢復量%（每少 1% 生命 +0.5%×點數比例），不再另外乘每秒回血
+  R.recovAmpOf = P => {
+    let a = (P && P.recovAmp) || 0;
+    if (P && P.ttBleed && P.hpMax) {
+      const hp = Number.isFinite(P.hp) ? P.hp : P.hpMax;
+      a += 0.5 * P.ttBleed * Math.max(0, Math.min(1, 1 - hp / P.hpMax));
+    }
+    return a;
   };
+  R.regenMul = P => REGEN * (1 + R.recovAmpOf(P));
 
   // 天賦「渴血」會扣每秒回血：最少 0（負的會變成扣血）
   const cp0 = R.calcPlayer;
@@ -48,7 +53,7 @@
     try { dr0(k); } finally { drinking = 0; }
     if (S.potions.hp < n0) {
       potN = Math.min(MAXN, s + 1); potLast = now();
-      if (s || fight) R.toast && R.toast('回復藥的效果：' + [fight ? '戰鬥中 ×0.4' : '', s ? '連續喝 ×1/' + Math.pow(2, s) : ''].filter(Boolean).join('、'), '#FF9A8A');
+      if (s || fight) R.toast && R.toast('回復藥的效果：' + [fight ? '戰鬥中 ×0.8' : '', s ? '連續喝 ×1/' + Math.pow(2, s) : ''].filter(Boolean).join('、'), '#FF9A8A');
     }
   };
 

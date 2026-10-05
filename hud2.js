@@ -127,7 +127,7 @@
     'body:not(.touch) #r-br .act{width:56px;height:56px;border-radius:4px;background:linear-gradient(#2E2620,#1E1814);border:2px solid #3E342C;box-shadow:inset 2px 2px 0 rgba(255,255,255,.06),inset -2px -2px 0 rgba(0,0,0,.45);padding:0;display:block;font-size:0;transition:border-color .15s,box-shadow .15s,filter .15s}',
     'body:not(.touch) #r-br .act.big{width:64px;height:64px}body:not(.touch) #r-br .act.touch-only{display:none}',
     'body:not(.touch) #r-br [data-tact="skill"]{order:1}body:not(.touch) #r-br [data-tact="skill2"]{order:2}body:not(.touch) #r-br [data-tact="skill3"]{order:3}body:not(.touch) #r-br [data-tact="skill4"],body:not(.touch) #r-br [data-tact="skill5"]{order:3}body:not(.touch) #r-br [data-tact="dodge"]{order:4;margin-right:8px}body:not(.touch) #r-br [data-tact="hp"]{order:5}body:not(.touch) #r-br [data-h2="mp"]{order:6;margin-right:8px}body:not(.touch) #r-br [data-tact="bag"]{order:7}body:not(.touch) #r-br [data-tact="order"]{order:8}',
-    'body:not(.touch) #r-br .h2-ic{position:absolute;left:50%;top:44%;width:32px;height:32px;transform:translate(-50%,-50%);image-rendering:pixelated;filter:brightness(.88) saturate(.9);transition:filter .15s}',
+    'body:not(.touch) #r-br .h2-ic{position:absolute;left:50%;top:44%;width:32px;height:32px;transform:translate(-50%,-50%);image-rendering:pixelated;filter:brightness(1.08) saturate(1.05);transition:filter .15s}',
     'body:not(.touch) #r-br .act.big .h2-ic{width:40px;height:40px}',
     'body:not(.touch) #r-br .act kbd{position:absolute;left:2px;top:1px;font-size:9.5px;line-height:1.2;padding:0 3px;border:0;background:rgba(0,0,0,.55);color:#C8C0B0;max-width:52px;overflow:hidden;white-space:nowrap;z-index:4}',
     'body:not(.touch) #r-br .act>span:not(.cd):not(.bh-sec){position:absolute;left:0;right:0;bottom:1px;font-size:10px;line-height:1.15;color:#E8E0C8;text-align:center;white-space:nowrap;overflow:hidden;text-shadow:0 1px 2px #000;z-index:4}',
@@ -135,7 +135,7 @@
     'body:not(.touch) #r-br .act .bh-sec{font-size:17px}',
     // 亮起來：金框＋發光；冷卻中、沒藥：暗
     'body:not(.touch) #r-br .act.lit{border-color:#E8C04A;box-shadow:inset 0 0 10px rgba(232,192,74,.35),0 0 10px rgba(232,192,74,.45)}',
-    'body:not(.touch) #r-br .act.lit .h2-ic{filter:brightness(1.12) saturate(1.08)}',
+    'body:not(.touch) #r-br .act.lit .h2-ic{filter:brightness(1.28) saturate(1.15)}',
     'body:not(.touch) #r-br .act.nomp{border-color:#3A6ACF!important;box-shadow:inset 0 0 10px rgba(58,106,207,.4)}',
     'body:not(.touch) #r-br .act.nomp::after{bottom:auto;top:2px;right:2px;left:auto;font-size:9px;z-index:5}',
     'body:not(.touch) #r-br .act.empty .h2-n{color:#E86A6A}',

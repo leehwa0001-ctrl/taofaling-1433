@@ -3,7 +3,7 @@
 // - 每一格：像素小圖示、框的顏色＝那個狀態的顏色；過掉的時間用順時針變暗的扇形表示，右下角寫剩幾秒。
 // - 滑鼠放上去：名字、效果（照實際的數字算，覺醒放大過的也對）、還剩多久。
 // - 顯示的東西：吃的東西（當天的加成）、技能的強化（P.sb）、戰吼／防禦／回復／旋風／要塞／狂怒／結界（P.buff）、護盾、
-//   隱身、挑釁、架勢；壞的：緩速、看不見、破防／虛弱／重傷（debuff.js 的 P.dbf）、佩特拉的詛咒、元素混亂（克森特級以上）；天賦「滴血重生」（P.ttBleed）。
+//   隱身、挑釁、架勢；壞的：緩速、看不見、破防／虛弱／重傷（debuff.js 的 P.dbf）、佩特拉的詛咒、元素混亂（克森特級以上）；天賦「滴血重生」（P.ttBleed：生命越低恢復量%越高）。
 // - battlehud.js 原本左下角的文字狀態列（#bh-st）改成不顯示，由這裡取代。
 // 放在 battlehud.js、debuff.js、enchinfuse.js 後面。
 (function (R) {
@@ -75,6 +75,7 @@
     if (b.def) L.push('受到的傷害 ' + (b.def > 0 ? '−' : '+') + PCT(b.def));
     if (b.speed && b.speed !== 1) L.push('移動 ' + (b.speed > 1 ? '+' : '−') + PCT(b.speed - 1));
     if (b.vamp) L.push('吸血系數 +' + Math.round(b.vamp * 2000));
+    if (b.vampMul) L.push('吸血系數 ×' + b.vampMul + '（普攻、技能、大招的吸血都算）');
     if (b.regen) L.push('每秒回復 ' + (Math.round(b.regen * 1000) / 10) + '% 生命');
     if (b.pen) L.push('穿透 +' + PCT(b.pen));
     if (b.echo) L.push('普攻有 ' + PCT(b.echo) + ' 的機率多打一下');
@@ -83,10 +84,12 @@
     if (b.invis) L.push('隱身（遺跡生物看不到你）');
     return L;
   };
-  const sbIcon = b => b.infuse ? 'spark' : b.invis ? 'ghost' : b.taunt ? 'alert' : b.def > 0 ? 'shield' : b.burn ? 'flame' : b.dmg > 1 ? 'sword' : b.crit ? 'crit' : b.speed > 1 ? 'speed' : b.vamp ? 'drop' : b.regen ? 'heart' : b.pen ? 'spear' : b.echo ? 'swords' : 'star';
+  const sbIcon = b => b.infuse ? 'spark' : b.invis ? 'ghost' : b.taunt ? 'alert' : b.def > 0 ? 'shield' : b.burn ? 'flame' : b.dmg > 1 ? 'sword' : b.crit ? 'crit' : b.speed > 1 ? 'speed' : (b.vamp || b.vampMul) ? 'drop' : b.regen ? 'heart' : b.pen ? 'spear' : b.echo ? 'swords' : 'star';
   const sbName = (k, b) => {
     if (b.infuse) return '魔力灌注';
-    const id = String(k).split(':')[0], sk = R.SKILLS && R.SKILLS[id];
+    const id = String(k).split(':')[0];
+    if (id === 'race') { const rs = R.raceSkillOf && R.S && R.raceSkillOf(R.S.race); if (rs) return rs[1]; return '種族技能'; }
+    const sk = R.SKILLS && R.SKILLS[id];
     if (sk) return sk.name + (/:zone$/.test(k) ? '（範圍裡）' : '');
     if (/^ult/.test(k)) return '大招的強化';
     return '強化';
@@ -124,15 +127,15 @@
     const g = run.grade || {}, aura = run.done || (run.site && run.site.outdoor) ? 0 : R.healAura ? R.healAura(run) : g.id === 'kaso' ? 0.5 : (g.lv || 0) >= 4 ? 0.25 : 0;
     if (aura) add('aura', '元素混亂', 'lessheal', '#FF8AA0', ['傷口長不好：受到的治療 −' + PCT(aura) + '（回復藥、技能、每秒回血、吸血都算）'], null, null, true, (g.name || '這個分級') + '的遺跡裡一直都有');
     const ps = R.potionState && R.potionState(); if (ps && ps.stacks) add('pot', '藥效遞減', 'drop', '#FF8A6A', ['連續喝回復藥：下一瓶只有 1/' + Math.pow(2, ps.stacks) + ' 的效果', '10 秒沒喝恢復一階，30 秒回到全效'], ps.next, 10, true);
-    if (ps && ps.fight) add('fight', '戰鬥中', 'swords', '#E8A06A', ['回復藥只有四成的效果', '6 秒沒被打、身邊沒有醒著的遺跡生物就脫離'], null, null, true, '脫離戰鬥才會消失');
-    // 天賦・滴血重生：點了就一直亮，數字照目前少掉的生命算
+    if (ps && ps.fight) add('fight', '戰鬥中', 'swords', '#E8A06A', ['回復藥只有八成的效果（回生命上限 20%）', '6 秒沒被打、身邊沒有醒著的遺跡生物就脫離'], null, null, true, '脫離戰鬥才會消失');
+    // 天賦・滴血重生：點了就一直亮，數字照目前少掉的生命算（加的是恢復量%，不是每秒回血）
     if (P.ttBleed > 0 && P.hpMax > 0) {
       const hp = Number.isFinite(P.hp) ? P.hp : P.hpMax, miss = Math.max(0, Math.min(1, 1 - hp / P.hpMax));
-      const vampPct = Math.round(P.ttBleed * miss * 1000) / 10, regenPct = Math.round(0.5 * P.ttBleed * miss * 1000) / 10, missPct = Math.round(miss * 100);
+      const vampPct = Math.round(P.ttBleed * miss * 1000) / 10, recovPct = Math.round(0.5 * P.ttBleed * miss * 1000) / 10, missPct = Math.round(miss * 100);
       add('ttBleed', '滴血重生', 'bleed', '#E85A6A', [
-        '生命越低，吸血和每秒回血越高',
-        '目前少 ' + missPct + '% 生命：吸血系數 +' + vampPct + '%、每秒回血 +' + regenPct + '%',
-        '點滿時：每少 1% 生命，吸血系數 +1%、每秒回血 +0.5%'
+        '生命越低，吸血系數和恢復量越高',
+        '目前少 ' + missPct + '% 生命：吸血系數 +' + vampPct + '%、恢復量 +' + recovPct + '%',
+        '點滿時：每少 1% 生命，吸血系數 +1%、恢復量 +0.5%（每秒回血、吸血都算）'
       ], null, null, false, '天賦・恢復奧義');
     }
     return out;
