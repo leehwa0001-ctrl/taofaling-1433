@@ -138,7 +138,7 @@
     ['in_wave', '氣浪', 'monk', 11, 10, 14, 'wave', { n: 5, step: 1.8, r: 1.6, k: 1.1, kb: 2, gap: 70, fx: 'ring', color: '#FFD27A' }, '把內勁打進地面，氣浪一路推出去。', 'inner'],
     ['in_breath', '龜息', 'monk', 18, 20, 0, 'heal', { pct: 0.3, mp: 0.3 }, '閉氣調息：回復 30% 生命、30% 魔力。', 'inner'],
     ['in_iron', '鐵骨功', 'monk', 21, 18, 12, 'buff', { t: 10, def: 0.35, dmg: 1.1, color: '#FFD27A' }, '把魔力質注進骨頭：10 秒內受到的傷害 −35%、傷害 +10%。', 'inner'],
-    ['in_burst', '內勁爆發', 'monk', 24, 16, 22, 'nova', { r: 4, k: 3, kb: 4, color: '#FFD27A' }, '把積在體內的魔力一口氣爆開。', 'inner'],
+    ['in_burst', '內勁爆發', 'monk', 24, 16, 22, 'nova', { r: 4.5, k: 2.2, kb: 4, stun: 1.2, waves: 2, gap: 350, color: '#FFD27A' }, '把積在體內的魔力一口氣爆開：周圍的敵人被震退、暈眩，隔一下再爆第二波。', 'inner'],
     // 鬼武者（戰士）
     ['on_blood', '鬼血', 'warrior', 18, 16, 12, 'buff', { t: 8, dmg: 1.3, vamp: 0.03, color: '#C83A3A' }, '鬼面的惡意吸著血：8 秒內傷害 +30%、吸血 3%。', 'onimusha'],
     ['on_cleave', '鬼哭斬', 'warrior', 21, 10, 16, 'arc', { range: 3.8, arc: 3.6, k: 2.8, kb: 2, stun: 0.6 }, '戴著鬼面橫掃一刀，周圍的敵人嚇得愣住。', 'onimusha'],

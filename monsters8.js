@@ -72,7 +72,7 @@
     dmg = ed0 ? ed0(e, dmg, o, crit) : dmg; if (!e || !e.afx) return dmg;
     if (e.afx.armored && !crit) dmg *= 0.6;
     if (e.shieldT > 0) { dmg *= 0.1; if (rnd() < 0.3) R.num && R.num(e.x, 2, e.z, '護盾', ''); }
-    if (e.afx.thorns) { const P = W().P, run = W().run; if (P && !P.dead && run && (e.thT || 0) < run.t) { e.thT = run.t + 0.35; R.hurtPlayer(Math.max(1, dmg * 0.12), e); } }
+    if (e.afx.thorns) { const P = W().P, run = W().run; if (P && !P.dead && run && (e.thT || 0) < run.t) { e.thT = run.t + 0.35; R.hurtPlayer(Math.max(1, dmg * 0.05), e); } }
     return dmg;
   };
   // ---------- 吸血 ----------
