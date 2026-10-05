@@ -341,7 +341,7 @@
   R.step = dt => {
     step0(dt);
     const w = W(), P = w.P; if (!P || !P.sb || !w.run || w.paused) return;
-    Object.keys(P.sb).forEach(k => { const b = P.sb[k]; b.left -= dt; if (b.regen) R.healP(P.hpMax * b.regen * dt, true); if (b.left <= 0) { if (b.spd) P.speed /= b.spd; delete P.sb[k]; } });
+    Object.keys(P.sb).forEach(k => { const b = P.sb[k]; b.left -= dt; if (b.regen) R.healP(P.hpMax * b.regen * dt * (R.regenMul ? R.regenMul(P) : 1), true); if (b.left <= 0) { if (b.spd) P.speed /= b.spd; delete P.sb[k]; } });
   };
   // 換樓層：強化跟著帶下去（時間照算）；回到地面就清掉
   const er0 = R.endRun;

@@ -1,6 +1,6 @@
 // 遺跡生物的破防、虛弱、重傷；克森特級以上治療變少
 // （2026-10-05 作者：克森特級以上，可能會有降治療和降回血、吸血的效果；怪物可以有破防或讓玩家降攻擊的手段）
-// - 克森特級以上（魔力太濃，傷口長不好）：受到的治療（回復藥、技能、每秒回血、吸血全部算）−40%（克森特級）／−60%（卡索級）。
+// - 克森特級以上（魔力太濃，傷口長不好）：受到的治療（回復藥、技能、每秒回血、吸血全部算）−25%（克森特級）／−50%（卡索級）。
 //   （2026-10-05 作者：降治療的效果加強——原本 −25%／−40%，重傷原本 6 秒 −60%）
 // - 遺跡生物打中你的時候可能帶一種狀態（摩爾斯級以上）：
 //   破防（6 秒：受到的傷害 +25%）、虛弱（6 秒：打出去的傷害 −25%）、重傷（8 秒：受到的治療再 −80%）。
@@ -21,7 +21,8 @@
   const baseId = id => String(id || '').replace(/_v\d+$/, '');
   const kindOf = e => { const id = baseId(e.id); if (FIX[id]) return FIX[id]; if (e.def && (e.def.elite || e.def.boss)) return ['armor', 'atk', 'heal'][Math.floor(rnd() * 3)]; return [null, 'armor', 'atk', 'heal', null][hash(id) % 5]; };
   const lv = run => (run && run.grade && run.grade.lv) || 0;
-  const auraOf = run => (!run || run.done ? 0 : run.grade && run.grade.id === 'kaso' ? 0.6 : lv(run) >= 4 ? 0.4 : 0);
+  const auraOf = run => (!run || run.done ? 0 : run.grade && run.grade.id === 'kaso' ? 0.5 : lv(run) >= 4 ? 0.25 : 0);   // 2026-10-05 作者：稍微削弱（原本卡索 −60%、克森特 −40%）；跟重傷、詛咒、條款相乘
+  R.healAura = auraOf;
   const D = P => P.dbf || (P.dbf = {});
   const on = (P, k) => !!(P && P.dbf && P.dbf[k] > 0);
   R.playerDebuff = (k, t) => { const P = W().P; if (!P || P.dead || !KIND[k]) return; const was = on(P, k); D(P)[k] = Math.max(D(P)[k] || 0, t || KIND[k].t); if (!was) R.num && R.num(P.x, 2.8, P.z, KIND[k].n + '！', 'crit'); };

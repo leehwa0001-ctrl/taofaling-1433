@@ -73,7 +73,7 @@
     if (b.crit) L.push('暴擊率 +' + PCT(b.crit));
     if (b.def) L.push('受到的傷害 ' + (b.def > 0 ? '−' : '+') + PCT(b.def));
     if (b.speed && b.speed !== 1) L.push('移動 ' + (b.speed > 1 ? '+' : '−') + PCT(b.speed - 1));
-    if (b.vamp) L.push('吸血 +' + (Math.round(b.vamp * 1000) / 10) + '%（每次攻擊回復的機率 +' + Math.round(b.vamp * 500) + '%）');
+    if (b.vamp) L.push('吸血系數 +' + Math.round(b.vamp * 2000));
     if (b.regen) L.push('每秒回復 ' + (Math.round(b.regen * 1000) / 10) + '% 生命');
     if (b.pen) L.push('穿透 +' + PCT(b.pen));
     if (b.echo) L.push('普攻有 ' + PCT(b.echo) + ' 的機率多打一下');
@@ -120,8 +120,10 @@
     if (P.blindT > 0) add('blind', '看不見', 'blind', '#C8B898', ['視野變窄、畫面變暗'], P.blindT, null, true);
     const dbf = P.dbf || {}; Object.keys(DBF).forEach(k => { if (dbf[k] > 0) { const d = DBF[k]; add('d:' + k, d[0], d[1], d[2], d[3], dbf[k], k === 'heal' ? 8 : 6, true); } });
     if (P.petraCurse > 0) add('curse', '佩特拉的詛咒', 'eye', '#C86AE8', ['被斷尾吞掉、吐到別層', '生命、魔力的回復減半'], P.petraCurse, 90, true);
-    const g = run.grade || {}, aura = run.done || (run.site && run.site.outdoor) ? 0 : g.id === 'kaso' ? 0.6 : (g.lv || 0) >= 4 ? 0.4 : 0;
+    const g = run.grade || {}, aura = run.done || (run.site && run.site.outdoor) ? 0 : R.healAura ? R.healAura(run) : g.id === 'kaso' ? 0.5 : (g.lv || 0) >= 4 ? 0.25 : 0;
     if (aura) add('aura', '魔力太濃', 'lessheal', '#FF8AA0', ['傷口長不好：受到的治療 −' + PCT(aura) + '（回復藥、技能、每秒回血、吸血都算）'], null, null, true, (g.name || '這個分級') + '的遺跡裡一直都有');
+    const ps = R.potionState && R.potionState(); if (ps && ps.stacks) add('pot', '藥效遞減', 'drop', '#FF8A6A', ['連續喝回復藥：下一瓶只有 1/' + Math.pow(2, ps.stacks) + ' 的效果', '10 秒沒喝恢復一階，30 秒回到全效'], ps.next, 10, true);
+    if (ps && ps.fight) add('fight', '戰鬥中', 'swords', '#E8A06A', ['回復藥只有四成的效果', '6 秒沒被打、身邊沒有醒著的遺跡生物就脫離'], null, null, true, '脫離戰鬥才會消失');
     return out;
   };
 

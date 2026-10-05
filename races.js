@@ -72,7 +72,7 @@
     if (b.speed) out.push('移動 ' + (b.speed > 0 ? '+' : '') + PCT(b.speed)); if (b.dmg) out.push('傷害 +' + PCT(b.dmg)); if (b.melee) out.push('近戰傷害 +' + PCT(b.melee));
     if (b.magic) out.push('法術傷害 +' + PCT(b.magic)); if (b.crit) out.push('暴擊率 +' + PCT(b.crit)); if (b.critMult) out.push('暴擊傷害 +' + PCT(b.critMult));
     if (b.dodge) out.push('翻滾冷卻 −' + PCT(b.dodge)); if (b.skillCd) out.push('技能冷卻 −' + PCT(b.skillCd)); if (b.regen) out.push('每秒回復生命 ' + b.regen);
-    if (b.calm) out.push('佩特拉的注意 −' + PCT(b.calm)); if (b.xp) out.push('經驗值 +' + PCT(b.xp)); if (b.vamp) out.push('吸血 ' + Math.round(b.vamp * 1000) / 10 + '%');
+    if (b.calm) out.push('佩特拉的注意 −' + PCT(b.calm)); if (b.xp) out.push('經驗值 +' + PCT(b.xp)); if (b.vamp) out.push('吸血系數 +' + Math.round(b.vamp * 2000));   // vampproc.js：吸血 1% ＝ 系數 20
     if (b.ignite) out.push(PCT(b.ignite) + ' 機率點燃'); if (b.thorns) out.push('貼身反傷 ' + PCT(b.thorns)); if (b.guard) out.push('隊友受到的傷害 −' + PCT(b.guard));
     if (b.night) out.push('晚上出發的遺跡傷害 +' + PCT(b.night)); if (b.back) out.push('從背後打傷害 +' + PCT(b.back)); if (b.ore) out.push('掘礦多一塊的機率 ' + PCT(b.ore));
     if (b.crystal) out.push('魔力水晶 +' + PCT(b.crystal)); if (b.immune) out.push('不怕' + Object.keys(b.immune).map(k => ({ blind: '砂幕', slow: '寒氣減速', burn: '燃燒' })[k]).join('、'));

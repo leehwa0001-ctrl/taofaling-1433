@@ -360,8 +360,8 @@
     if (P.reloadT > 0) { P.reloadT -= dt; if (P.reloadT <= 0) { P.reloadT = 0; P.ammo = P.ws.mag; } }
     if (!P.dead) {
       P.mp = Math.min(P.mpMax, P.mp + dt * ((P.cls === 'mage' || P.cls === 'priest' ? 3.5 : 2) + (P.mpRegen || 0)));   // 回魔詞綴   // 魔力回得慢：技能要省著用
-      if (P.regen) R.healP(P.regen * dt, true);
-      if (P.adv === 'druid' || P.buff.regen > 0) R.healP(P.hpMax * (P.buff.regen > 0 ? 0.03 : 0.01) * dt, true);
+      if (P.regen) R.healP(P.regen * dt * (R.regenMul ? R.regenMul(P) : 1), true);   // hpflow.js：每秒回血 ×0.3
+      if (P.adv === 'druid' || P.buff.regen > 0) R.healP(P.hpMax * (P.buff.regen > 0 ? 0.03 : 0.01) * dt * (R.regenMul ? R.regenMul(P) : 1), true);
     }
     // 瞄準（滑鼠射線打在地面上；觸控用右搖桿）
     // 按鍵與搖桿都是「畫面方向」：轉了視角之後，W 仍然是畫面的上方

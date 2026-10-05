@@ -4,7 +4,7 @@
 //   結晶（到處是可以掘的魔晶礦）、崩落（天花板一直掉石頭，看地上的圈）、魔力潮（技能冷卻 −30%，遺跡生物傷害 +15%）、迷途（小地圖看不到）。
 // 二、特別的房間：最後一層以外、分區六個以上的樓層，一半有一間：
 //   祭壇（三選一的祝福，有的是交換條件，這一趟有效）、行商（別的勇者擺攤，賣藥水和一件裝備，貴）、
-//   泉水（一次回滿生命魔力）、試煉之間（門關上，撐過三波，給金寶箱）。
+//   泉水（一次回復一半的生命魔力；2026-10-05 原本回滿）、試煉之間（門關上，撐過三波，給金寶箱）。
 //   另外第 2 層以後的寶箱有一成是「偽箱」：打開的瞬間咬上來，打倒了寶箱裡的東西照拿。
 // 狩獵場、觀光遺跡沒有；哈米莉亞級只有不危險的狀態（濃霧、寶藏、結晶），沒有試煉之間和偽箱。
 // 放在 restfloor.js、monsters8.js 後面。
@@ -121,8 +121,8 @@
   };
   const spring = s => {
     if (s.used) { R.toast('泉水已經乾了。'); return; }
-    const P = W().P; s.used = true; P.hp = P.hpMax; P.mp = P.mpMax; if (P.st) Object.keys(P.st).forEach(k => { P.st[k] = 0; }); P.slowT = 0; P.blindT = 0;
-    s.a.w.material.opacity = 0.2; s.a.L.intensity = 0.2; R.fx('ring', P.x, 0.1, P.z, { r: 2, color: '#7AC8FF' }); R.toast('喝了泉水：生命、魔力回滿。', '#7AC8FF'); R.sfx && R.sfx('drink');
+    const P = W().P; s.used = true; P.hp = Math.min(P.hpMax, P.hp + P.hpMax * 0.5); P.mp = Math.min(P.mpMax, P.mp + P.mpMax * 0.5);   /* 2026-10-05 作者：泉水回一半，不是回滿 */ if (P.st) Object.keys(P.st).forEach(k => { P.st[k] = 0; }); P.slowT = 0; P.blindT = 0;
+    s.a.w.material.opacity = 0.2; s.a.L.intensity = 0.2; R.fx('ring', P.x, 0.1, P.z, { r: 2, color: '#7AC8FF' }); R.toast('喝了泉水：生命、魔力回復一半。', '#7AC8FF'); R.sfx && R.sfx('drink');
   };
   const merchant = s => {
     const run = W().run, lv = run.grade.lv || 1, st = S();
