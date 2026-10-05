@@ -11,6 +11,8 @@
 //   → 遺跡生物（同一個捲動框、一條滑桿，裡面分「小怪」「領主」「變體」三段：小怪＋環境才有的、領主體、荒／獰／淵各一列）
 //   → 佩特拉核心（一張卡片，點了右頁是核心自己的介紹：這一帶的長相、在哪裡能不能打、注意和五種反應）
 //   → 場地效果（這座遺跡的環境、會抽到的樓層效果；點了右頁是詳細說明，用 hudinfo.js 的 R.FIELD_INFO、R.FLOOR_MOD_MORE）。
+// - 2026-10-05 作者：圖鑑沒有記載領主變體——克森特級以上的遺跡，「領主」那一段多一列「異變」（這座遺跡的領主體會變成的樣子，
+//   遇過才亮）；特殊種分頁也有。點了右頁在生物介紹下面寫異變的說明（lordvariant.js 的 R.lordVariantDex）。
 // 放在 dexui.js、region.js 後面。
 (function (R) {
   const $ = id => document.getElementById(id), esc = s => R.esc(s);
@@ -65,6 +67,9 @@
     // 領主
     const L = lordsOf(s);
     h += sec('領主') + (L.length ? row('領主體', '每 3～5 層一隻', L, 2, col) : '<div class="dr-row" style="--rc:' + col + ';--k:2"><div class="dr-lab"><b>領主體</b><small>沒有</small></div><div class="dr-strip"><span class="dr-none">' + esc(G(s.grade).name) + '的遺跡沒有領主體（克森特級起才有）。</span></div></div>');
+    // 異變（領主變體）：克森特級以上（lordvariant.js：克森特級 25%、卡索級 45%）
+    const g = G(s.grade), mut = L.filter(id => R.LORD_VARIANTS && R.LORD_VARIANTS[id]);
+    if (mut.length && g && (g.id === 'kaso' || (g.lv || 0) >= 4)) h += lvRow(mut, g.id === 'kaso' ? '45%' : '25%', col);
     // 變體：中層、深層會變成哪一種
     const byT = { 1: [], 2: [], 3: [] }, where = { 1: new Set(), 2: new Set(), 3: new Set() };
     minions.forEach(id => [1, 2].forEach(b => { const t = tierAt(id, s, b); if (t) { if (!byT[t].includes(id + '_v' + t)) byT[t].push(id + '_v' + t); where[t].add(b); } }));
@@ -72,6 +77,9 @@
     h += sec('變體') + (vr.length ? vr.join('') : '<div class="dr-row" style="--rc:' + col + ';--k:1"><div class="dr-lab"><b>變體</b><small>沒有</small></div><div class="dr-strip"><span class="dr-none">這座遺跡的生物不會變種。</span></div></div>');
     return h;
   };
+  // 異變的領主體一列：小頭像帶異變的顏色，遇過才亮，點了看本體的介紹（下面有異變那一段）
+  const lvTh = id => { const e = R.ENEMIES[id], v = R.LORD_VARIANTS[id], ok = R.lordVariantSeen && R.lordVariantSeen(id), url = icon(id); return '<button type="button" class="dr-th lv-mut' + (ok ? '' : ' dim') + (mon === id ? ' sel' : '') + '" data-drm="' + id + '" style="--lvc:' + v[1] + '" title="' + esc(e.name + '【' + (ok ? v[0] : '？？？') + '】') + '">' + (url ? '<img src="' + url + '" alt="" draggable="false">' : '<span>' + esc(e.name[0]) + '</span>') + '</button>'; };
+  const lvRow = (ids, ch, col) => '<div class="dr-row" style="--rc:' + col + ';--k:2.6"><div class="dr-lab"><b>異變</b><small>' + (ch ? '領主體的 ' + ch + '・兩條血' : '克森特級以上・兩條血') + '</small></div><div class="dr-strip">' + ids.map(lvTh).join('') + '</div></div>';
   const vnote = () => '<p class="note dr-tip">變體：' + [1, 2, 3].map(t => '「' + VT[t][0] + '」' + VT[t][1].replace('｜', '，')).join('；') + '。打倒的次數算在原本那一種上。</p>';
   const coreCard = s => {
     const cu = coreURL(s), rg = regionOf(s);
@@ -96,6 +104,7 @@
     let h = '';
     envs.forEach((env, i) => { const ids = Object.keys(E).filter(k => E[k].env === env && !E[k].noDex); if (ids.length) h += row(R.ENVS[env].name, '克森特級的' + R.ENVS[env].name + '環境', ids, i * 0.6, ['#D85A2A', '#C8A870', '#2A7A9A', '#7AB8E0'][i] || '#8A7A6A'); });
     const lords = Object.keys(E).filter(k => E[k].boss && /^領主體/.test(E[k].name || '') && !E[k].noDex); h += row('領主體', '克森特級以上', lords, 2.2, '#9A2A3A');
+    const muts = lords.filter(id => R.LORD_VARIANTS && R.LORD_VARIANTS[id]); if (muts.length) h += lvRow(muts, '', '#9A2A3A');
     const etc = ['mimic', 'gaki', 'kudan', 'fukudo'].filter(k => E[k] && !E[k].noDex); if (etc.length) h += row('其他', '偽箱、佩特拉的反應……', etc, 1, '#6A5A7A');
     return '<p class="note">只在特定的環境、或特別的條件才看得到的。</p><div class="dr-ruin">' + h + '</div>';   // 一起左右捲（同一條滑桿）
   };
@@ -153,6 +162,7 @@
     return '<div class="dx-banner">' + esc(e.name) + '</div><div class="dx-portrait' + (n ? '' : ' unseen') + '" style="--bg:#3A3046">' + (url ? '<img src="' + url + '" alt="">' : '') + '</div>'
       + '<p>' + esc(e.desc || (R.ENEMIES[base] && R.ENEMIES[base].desc) || '') + '</p>'
       + (R.dexStats ? R.dexStats(id) : '') + '<p class="note">' + (n ? '打倒過 ' + n + ' 隻（包括變種）' : '還沒打倒過') + '</p>'
+      + (R.lordVariantDex ? R.lordVariantDex(base) : '')
       + (where.length ? '<h4 class="dx-h">出現的遺跡</h4><div class="dr-where">' + where.map(s => '<button type="button" class="dr-site sm" data-drgo="' + s.id + '" style="--rc:' + colOf(s) + '"><b>' + esc(s.name) + '</b><small>' + esc(G(s.grade).name) + ((R.siteMain ? R.siteMain(s) : []).includes(base) ? '・常見' : '') + '</small></button>').join('') + '</div>' : '')
       + back;
   };

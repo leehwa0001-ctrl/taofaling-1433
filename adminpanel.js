@@ -91,7 +91,7 @@
     on('adm-gold', () => { s.gold += 1000000; R.save(); toast('費拉 +100 萬', '#E8C04A'); });
     on('adm-mats', () => { Object.keys(R.MATS).forEach(m => { s.mats[m] = Math.max(s.mats[m] || 0, 999); }); R.save(); toast('素材全部 999', '#E8C04A'); });
     on('adm-kit', () => { s.potions.hp = Math.max(s.potions.hp || 0, 999); s.potions.mp = Math.max(s.potions.mp || 0, 999); Object.values(R.BOMB_TYPES || {}).forEach(b => { s[b.key] = Math.max(s[b.key] || 0, b.max || 5); }); s.scrolls = Math.max(s.scrolls || 0, 60); R.save(); toast('藥水、炸藥、卷軸補滿', '#E8C04A'); });
-    on('adm-all', () => { R.makeAdmin && R.makeAdmin(); toast('全部解鎖又跑了一次（倉庫多了一套裝備）', '#E8C04A'); });
+    on('adm-all', () => { R.makeAdmin && R.makeAdmin(); toast('全部解鎖又跑了一次（倉庫補上還沒有的藍、紫、金、紅裝）', '#E8C04A'); });
     on('adm-go', () => { const id = $('adm-site').value; if (!id) return; close(); s.kasoAuth = s.kasoAuth || (s.day || 0) + 1; R.startRun(id); });
     on('adm-floor-go', () => { const run = W().run, n = Math.max(1, Math.min(run.floors, +$('adm-floor').value || 1)); close(); R.fade ? R.fade(() => R.loadFloor(n - 1, { netFollow: true })) : R.loadFloor(n - 1, { netFollow: true }); });
     on('adm-clear', () => { W().enemies.forEach(e => { if (!e.dead) R.killEnemy(e); }); toast('這一層的遺跡生物都倒了', '#7FE0FF'); });

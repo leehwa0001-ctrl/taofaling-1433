@@ -5,6 +5,8 @@
 // - 荒、獰、淵的變種不另外列一格，收在本體的詳細資料裡。
 // - 2026-10-04 作者找的參考圖（像一本書：左頁照地區分段的小頭像、右頁是點到的那一隻：名字、帶背景的大立繪、數值、說明、打倒過幾隻）：
 //   寬的畫面改成左右兩頁，點小頭像直接在右頁顯示（變種列在下面）；窄的畫面（手機）照舊跳出卡片。左頁底下是收集的進度。
+// - 2026-10-05 作者：圖鑑沒有記載領主變體——領主體分頁多一段「異變的領主體」（lordvariant.js 的 R.LORD_VARIANTS），
+//   遇過的才亮、打倒過寫次數；點了右頁（手機跳出來的卡片）在本體的資料下面寫異變的名號、跟本體差在哪、兩條血、兩個形態的新招。
 // 放在 main.js 前面就好（看 #cards 的變化，不包任何函式）。
 (function (R) {
   const $ = id => document.getElementById(id), esc = s => R.esc(s);
@@ -31,12 +33,16 @@
     const grid = list => '<div class="dx-grid">' + list.map(b => { const n = kills([b].concat(variantsOf(b))), e = R.ENEMIES[b]; return '<button type="button" class="dx-th' + (n ? '' : ' dim') + '" data-dx="' + b + '" title="' + esc(e.name) + '">' + thumb(b) + (n ? '<i>' + n + '</i>' : '') + '</button>'; }).join('') + '</div>';
     const body = list => SECTIONS.map(([sid, nm]) => { const l = list.filter(b => sectionOf(b) === sid); return l.length ? '<h3 class="dx-h">' + esc(nm) + '<small>' + l.length + ' 種</small></h3>' + grid(l) : ''; }).join('');
     const seen = l => l.filter(b => kills([b].concat(variantsOf(b)))).length;
+    // 異變的領主體（lordvariant.js）：遇過才亮，數字是打倒過的次數
+    const LV = R.LORD_VARIANTS || {}, muts = lords.filter(b => LV[b]), lvSeen = b => !!(R.lordVariantSeen && R.lordVariantSeen(b));
+    const mutGrid = () => muts.length ? '<h3 class="dx-h">異變的領主體<small>遇見過 ' + muts.filter(lvSeen).length + '／' + muts.length + '・克森特級以上才會出現</small></h3><div class="dx-grid">' + muts.map(b => { const ok = lvSeen(b), k = R.lordVariantKills ? R.lordVariantKills(b) : 0, e = R.ENEMIES[b]; return '<button type="button" class="dx-th lv-mut' + (ok ? '' : ' dim') + '" data-dx="' + b + '" data-dxmut="1" style="--lvc:' + LV[b][1] + '" title="' + esc(e.name + '【' + (ok ? LV[b][0] : '？？？') + '】') + '">' + thumb(b) + (k ? '<i>' + k + '</i>' : '') + '</button>'; }).join('') + '</div>' : '';
+    const lvDex = id => (R.lordVariantDex ? R.lordVariantDex(id) : '');
     host.dataset.dexui = '1';
     const all = mobs.concat(lords), got = seen(all);
     host.innerHTML = '<div class="dx-book"><div class="dx-page dx-left"><div class="dx-tabs"><button type="button" class="dx-tab' + (tab === 'mob' ? ' on' : '') + '" data-dxtab="mob">遺跡生物 <small>' + seen(mobs) + '／' + mobs.length + '</small></button>'
       + '<button type="button" class="dx-tab' + (tab === 'lord' ? ' on' : '') + '" data-dxtab="lord">領主體 <small>' + seen(lords) + '／' + lords.length + '</small></button></div>'
       + '<p class="note dx-note">點小頭像看完整的資料。數字是打倒過的隻數（包括荒、獰、淵）；暗的是還沒打倒過的。</p>'
-      + (tab === 'mob' ? body(mobs) + (extra.length ? '<h3 class="dx-h">不是敵人</h3><div class="dx-grid"><button type="button" class="dx-th" data-dxextra="0" title="牆瞳"><span class="dx-ch" style="background:#EDE0D6;color:#3A2E2A">瞳</span></button></div>' : '') : body(lords))
+      + (tab === 'mob' ? body(mobs) + (extra.length ? '<h3 class="dx-h">不是敵人</h3><div class="dx-grid"><button type="button" class="dx-th" data-dxextra="0" title="牆瞳"><span class="dx-ch" style="background:#EDE0D6;color:#3A2E2A">瞳</span></button></div>' : '') : body(lords) + mutGrid())
       + '<p class="dx-count">已記錄 <b>' + got + '</b>／' + all.length + '</p></div><div class="dx-page dx-right" id="dx-detail"></div></div>';
     // 右頁：點到的那一隻（名字、帶背景的大立繪、原本那張卡片的數值和說明、變種）
     const detail = id => {
@@ -46,10 +52,15 @@
       const bg = (e.env && R.ENVS && R.ENVS[e.env] && R.ENVS[e.env].floor) || (th && th.floor) || '#3A3046', url = R.beastIconURL ? R.beastIconURL(id, 6) : '', n = kills([id].concat(variantsOf(id)));
       pane.innerHTML = '<div class="dx-banner">' + esc(e.name) + '</div><div class="dx-portrait' + (n ? '' : ' unseen') + '" style="--bg:' + bg + '">' + (url ? '<img src="' + url + '" alt="">' : '<span class="dx-ch" style="background:' + (e.color || '#5A4A6A') + '">' + esc(e.name.split('・').pop()[0]) + '</span>') + '</div>'
         + '<div class="dx-card">' + card[id] + '</div>'   /* 打倒過幾隻：卡片的數值列裡就有（monlabel.js 的 R.dexStats） */
-        + (variantsOf(id).length ? '<h4 class="dx-h">分級變種</h4><div class="dx-vlist">' + variantsOf(id).map(v => { const ve = R.ENEMIES[v], k = R.S && R.S.dexKills ? R.S.dexKills[v] || 0 : 0; return '<div class="dx-var' + (k ? '' : ' dim') + '">' + thumb(v) + '<span>' + esc(ve.name) + '<small>' + (k ? '打倒 ' + k : '還沒打倒過') + '</small></span></div>'; }).join('') + '</div>' : '');
+        + (variantsOf(id).length ? '<h4 class="dx-h">分級變種</h4><div class="dx-vlist">' + variantsOf(id).map(v => { const ve = R.ENEMIES[v], k = R.S && R.S.dexKills ? R.S.dexKills[v] || 0 : 0; return '<div class="dx-var' + (k ? '' : ' dim') + '">' + thumb(v) + '<span>' + esc(ve.name) + '<small>' + (k ? '打倒 ' + k : '還沒打倒過') + '</small></span></div>'; }).join('') + '</div>' : '')
+        + lvDex(id);
     };
     host.querySelectorAll('[data-dxtab]').forEach(b => { b.onclick = () => { tab = b.dataset.dxtab; build(host, cardsHtml, ids); }; });
-    host.querySelectorAll('[data-dx]').forEach(b => { b.onclick = () => { const id = b.dataset.dx; if (wide()) detail(id); else open([card[id]].concat(variantsOf(id).map(vcard)), []); }; });
+    host.querySelectorAll('[data-dx]').forEach(b => { b.onclick = () => {
+      const id = b.dataset.dx, lv = lvDex(id);
+      if (wide()) { detail(id); const x = b.dataset.dxmut && $('dx-detail') && $('dx-detail').querySelector('.lv-dex'); if (x) x.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+      else { open([card[id] + (lv ? '<div class="dx-lvwrap">' + lv + '</div>' : '')].concat(variantsOf(id).map(vcard)), []); const x = b.dataset.dxmut && document.querySelector('#dx-modal .lv-dex'); if (x) x.scrollIntoView({ block: 'nearest' }); }
+    }; });
     if (wide()) { const list = tab === 'mob' ? mobs : lords; detail(list.includes(sel) ? sel : (list.find(b => kills([b].concat(variantsOf(b)))) || list[0])); }
     host.querySelectorAll('[data-dxextra]').forEach(b => { b.onclick = () => open([extra[+b.dataset.dxextra]], []); });
   };
