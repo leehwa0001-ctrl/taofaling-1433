@@ -198,10 +198,16 @@
     R.toast(nameOf(N.host) + ' 出發去了' + d.name + '，跟上！', '#7FE0FF');
     if (R.closeSheet) try { R.closeSheet(); } catch (e) { }
     const hm = $('hub-modal'); if (hm) hm.hidden = true;
-    R.startRun(d.site);
-    let tries = 0; const accept = () => { const b = $('tk-go'), fb = $('tk-free'); if (b && b.offsetParent && !b.disabled) { b.click(); return; } if (b && b.offsetParent && b.disabled && fb && !fb.disabled) { fb.click(); return; }   /* 接不了這張委託（段位、分級）：不接委託跟著下去（2026-10-05 作者：連線的朋友要算） */ if (++tries < 20 && guestGo && pending === d) setTimeout(accept, 100); };
+    N.guestFollow = true;   // guildtask.js：跳過／自動處理委託書，避免手上有委託時卡在沒有 tk-go 的視窗
+    try { R.startRun(d.site); } finally { N.guestFollow = false; }
+    // 後備：若仍跳出委託書（舊路徑／段位限制），點繼續／接下／不接（不要點放棄）
+    let tries = 0; const accept = () => {
+      const click = id => { const b = $(id); if (b && b.offsetParent && !b.disabled) { b.click(); return true; } return false; };
+      if (click('tk-cont') || click('tk-go') || click('tk-free')) return;
+      if (++tries < 30 && guestGo && pending === d) setTimeout(accept, 100);
+    };
     setTimeout(accept, 0);
-    setTimeout(() => { if (pending === d) { pending = null; guestGo = false; R.toast('未能跟隨出發，請確認委託條件後重新組隊。'); } }, 6000);
+    setTimeout(() => { if (pending === d) { pending = null; guestGo = false; N.guestFollow = false; const hm2 = $('hub-modal'); if (hm2) hm2.hidden = true; if (R.closeSheet) try { R.closeSheet(); } catch (e) { } R.toast('未能跟隨出發，請確認委託條件後重新組隊。'); } }, 6000);
   };
   // 真的開始了（W.run 剛建好、還沒長第一層）：房主記下種子告訴大家；其他人照房主的設定
   const sp0 = R.startParty;
@@ -369,8 +375,9 @@
 
   // ---------- 公會登記處：多人連線 ----------
   const box = () => {
-    const url = serverUrl();
+    const url = serverUrl(), held = S() && S().heldTask;
     let h = '<h3>多人連線（測試中）</h3><p class="note">最多四個人一起下同一趟遺跡。房主在委託告示板選遺跡出發，房裡的人會跟著進去；上下樓跟著房主走。現在是第一階段：看得到彼此，遺跡生物、寶箱、掉落還是各算各的。</p>';
+    if (held) h += '<div class="ft-box" style="margin:8px 0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)"><p><b>手上的委託</b>：' + esc(held.letter) + ' 級・' + esc(held.site) + '（' + esc(R.heldLine ? R.heldLine(held) : '') + '）</p><p class="note">跟房出發不會卡死，也不會自動放棄——同座遺跡會繼續這張；別座則這一趟不接委託、原委託保留。要結算或丟掉可按下面，或滾到上方「手上的委託」。</p><div class="row"><button type="button" class="btn gold" data-net="turnin">繳交委託（領 ' + (held.pay || 0) + ' 費拉）</button><button type="button" class="btn" data-net="dropquest">放棄這張委託</button></div></div>';
     if (N.busy) h += '<p class="note">' + esc(N.busy) + '</p>';
     if (!N.room) h += '<div class="row"><button type="button" class="btn pri" data-net="create">開房</button><input id="net-code" maxlength="4" placeholder="房號" autocomplete="off" style="width:5.5em;text-transform:uppercase;letter-spacing:.15em"><button type="button" class="btn" data-net="join">加入</button></div>';
     else h += '<p>房號 <b style="font-size:1.5em;letter-spacing:.2em">' + esc(N.room) + '</b>　' + (isHost() ? '你是房主' : '房主：' + esc(nameOf(N.host))) + '</p><ul class="loot">' + N.members.map(m => '<li>' + esc(m.name) + (m.look && R.CLASSES[m.look.cls] ? '・' + esc(R.CLASSES[m.look.cls].name) : '') + (m.id === N.host ? '（房主）' : '') + (m.id === N.me ? '（你）' : '') + '</li>').join('') + '</ul><div class="row"><button type="button" class="btn" data-net="leave">離開房間</button></div>';
@@ -384,6 +391,8 @@
       else if (k === 'join') N.join(($('net-code') || {}).value);
       else if (k === 'leave') N.leave();
       else if (k === 'server') { const v = prompt('連線伺服器的網址（wss://…；空白＝預設）', serverUrl()); if (v == null) return; N.setServer(v); }
+      else if (k === 'turnin') { if (!S() || !S().heldTask) return; const t0 = R.turnInTask && R.turnInTask(); if (t0) R.toast && R.toast('繳交了「' + t0.site + '」的委託。成績明天以後登錄到勇者證。', '#E8C04A'); R.hub && R.hub(); }
+      else if (k === 'dropquest') { if (!S() || !S().heldTask) return; if (!confirm('放棄這張委託？會記為失敗，扣住的報酬也拿不到。')) return; R.dropHeldTask && R.dropHeldTask(); R.hub && R.hub(); }
     };
   });
   const hub0 = R.hub;

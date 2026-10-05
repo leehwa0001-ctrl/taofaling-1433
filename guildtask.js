@@ -42,6 +42,23 @@
     if (okId === id) { okId = null; return sr0(id); }
     if (!site || (site.kind !== 'ruin' && site.kind !== 'hunt') || !s) return sr0(id);   // hunt：湯山村後山的狩獵場（hunt.js）
     if (s.banUntil > s.day || site.id === 'kanko' || site.grade === 'kaso') return sr0(id);   // 停權（punish.js 會說明）、觀光的動物園、卡索級的特別討伐令（kaso.js）不用這張委託書
+    // 多人連線：隊員跟房主出發時不要卡住委託書視窗（net.js 設 R.net.guestFollow）
+    // 以前自動點 tk-go，但手上有委託時只有 tk-cont／tk-free／tk-drop，點不到就卡死。
+    // 用 setTimeout(0) 再進 startRun，跟手動按按鈕一樣走外層包裝（同步巢狀會讓 free／cont 旗標讀不到）。
+    if (R.net && R.net.guestFollow) {
+      const held0 = s.heldTask, blocked = !!(R.taskSpec(site) || {}).blocked;
+      R.net.guestFollow = false;
+      const same = !!(held0 && site.kind === 'ruin' && held0.siteId === id);
+      const other = !!(held0 && site.kind === 'ruin' && held0.siteId !== id);
+      okId = id; if (same) contId = id; else if (other || blocked) freeId = id;   // 段位不符：跟以前點 tk-free 一樣不接委託跟上
+      setTimeout(() => {
+        R.startRun(id);
+        if (same) R.toast && R.toast('跟上隊友，並繼續手上的委託。', '#7FE0FF');
+        else if (other) R.toast && R.toast('手上還有「' + held0.site + '」的委託：這一趟不接委託跟上隊友（原委託保留，可回公會繳交或放棄）。', '#FFB45A');
+        else if (blocked) R.toast && R.toast('段位接不了這張委託：不接委託跟上隊友。', '#FFB45A');
+      }, 0);
+      return;
+    }
     const held = s.heldTask;
     if (held && site.kind === 'ruin') {
       const go = (mode) => { okId = id; if (mode === 'free') freeId = id; if (mode === 'cont') contId = id; R.startRun(id); };
@@ -178,7 +195,7 @@
     const ts = (s.tasks || []), done = ts.filter(x => x.avg != null), wait = ts.length - done.length, avg = R.taskAverage();
     if (s.heldTask) {
       const h = s.heldTask, tb = document.createElement('div'); tb.className = 'ft-box ti-box';
-      tb.innerHTML = '<h3>繳交委託</h3><p><b>' + esc(h.letter) + ' 級・' + esc(h.site) + '</b>：' + esc(R.heldLine(h)) + '</p><p class="note">繳交之後，專員照五軌制打分數（隔天登錄到勇者證）；委託報酬 <b>' + (h.pay || 0) + '</b> 費拉現在付。還沒做完的話，也可以再下去繼續。</p>'
+      tb.innerHTML = '<h3>手上的委託（可自行繳交或放棄）</h3><p><b>' + esc(h.letter) + ' 級・' + esc(h.site) + '</b>：' + esc(R.heldLine(h)) + '</p><p class="note">進度夠了就按「繳交委託」結算五軌成績並領報酬 <b>' + (h.pay || 0) + '</b> 費拉；還沒做完可再下同一座遺跡繼續。不想做了按「放棄這張委託」（記為失敗、報酬拿不到）。多人連線跟上隊友時不會自動放棄——原委託會留著，可之後再回這裡處理。</p>'
         + '<div class="row"><button type="button" class="btn gold" id="ti-go">繳交委託（領 ' + (h.pay || 0) + ' 費拉）</button><button type="button" class="btn" id="ti-drop">放棄這張委託</button></div>';
       card.after(tb);
       tb.querySelector('#ti-go').onclick = () => { const t0 = R.turnInTask(); R.hub(t, f); if (t0) R.toast && R.toast('繳交了「' + t0.site + '」的委託。成績明天以後登錄到勇者證。', '#E8C04A'); };
