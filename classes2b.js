@@ -13,15 +13,16 @@
     if (!ids.length || !R.ENEMIES[ids[0]]) ids = ['okuriinu'];
     for (let k = 0; k < n; k++) {
       const id = ids[Math.floor(rnd() * ids.length)], m = R.makeBeast(id), a = (P.aimA || 0) + (k - (n - 1) / 2) * 0.9;
-      const pet = { x: P.x + Math.sin(a) * 1.4, z: P.z + Math.cos(a) * 1.4, t: rnd(), cd: 0, left: (s.t || 12) * (P.petLife || 1) };
+      const pet = { x: P.x + Math.sin(a) * 1.4, z: P.z + Math.cos(a) * 1.4, t: rnd(), cd: 0, left: (s.t || 12) * (P.petLife || 1) }; (R.PETS = R.PETS || []).push(pet);   // classcore2.js：獻祭、集火用
       if (R.nearestFloor) { const q = R.nearestFloor(pet.x, pet.z); pet.x = q[0]; pet.z = q[1]; }
       const g = m.g; if (s.scale) g.scale.setScalar(s.scale); g.position.set(pet.x, 0, pet.z); w.scene.add(g);
       R.fx('poof', pet.x, 0.6, pet.z, { color: s.color || '#C8A878', n: 14 });
       w.dyn.push(dt => {
-        if (W().run !== run || P.dead) { w.scene.remove(g); return false; }
+        if (W().run !== run || P.dead) { pet.gone = true; w.scene.remove(g); return false; }
         pet.left -= dt; pet.t += dt; pet.cd -= dt;
-        if (pet.left <= 0) { R.fx('poof', pet.x, 0.6, pet.z, { color: s.color || '#C8A878', n: 12 }); w.scene.remove(g); return false; }
+        if (pet.left <= 0) { pet.gone = true; R.fx('poof', pet.x, 0.6, pet.z, { color: s.color || '#C8A878', n: 12 }); w.scene.remove(g); return false; }
         let tg = null, bd = 1e9; w.enemies.forEach(e => { if (e.dead || e.under || e.invuln) return; const d = dist(e, pet); if (d < bd && dist(e, P) < 15) { bd = d; tg = e; } });
+        if (R.petFocus && !R.petFocus.dead && !R.petFocus.under && dist(R.petFocus, P) < 18) tg = R.petFocus;   // classcore2.js：集火你最後打的那一隻
         const goal = tg || { x: P.x - Math.sin(P.aimA || 0) * 1.6, z: P.z - Math.cos(P.aimA || 0) * 1.6 }, dx = goal.x - pet.x, dz = goal.z - pet.z, d = Math.hypot(dx, dz), reach = tg ? 0.9 + tg.def.size * 0.45 : 1.2;
         let moving = false;
         if (d > reach) { const sp = Math.min((s.speed || 6.5) * dt, d - reach); pet.x += dx / d * sp; pet.z += dz / d * sp; if (R.collide) R.collide(pet, 0.35); moving = true; }
