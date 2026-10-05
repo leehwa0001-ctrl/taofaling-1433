@@ -14,13 +14,16 @@
 // - 2026-10-05 作者：圖鑑沒有記載領主變體——克森特級以上的遺跡，「領主」那一段多一列「異變」（這座遺跡的領主體會變成的樣子，
 //   遇過才亮）；特殊種分頁也有。點了右頁在生物介紹下面寫異變的說明（lordvariant.js 的 R.lordVariantDex）。
 // - 2026-10-05 作者大改：最上層的大分頁換成「總覽、哈米莉亞級、阿彌勒級、摩爾斯級、克森特級、卡索級」（dexui.js），
-//   選分級 → 那個分級的遺跡（總覽是全部）→ 點一座遺跡，再分三個小分頁：
+//   選分級 → 那個分級的遺跡 → 點一座遺跡，再分三個小分頁：
 //   「小怪」：這座遺跡會遇到的一般生物；每一種是一直欄，本體在上、荒／獰／淵在正下方（只列這座遺跡會出現的；中間缺一級就空一格，同一列一定是同一級；
 //            順序固定：常見的★在前、精英在後，其他照生物池原本的順序）。
 //            環境才有的生物直接併進來，不再另外一類「環境生物」；偽箱、福影童、預言犢、填隙肉芽另一段「偶爾出現」。
 //   「領主體」：這座遺跡會出現的領主體——不是只在深層：第 3～5 層起每隔 3～5 層一隻；這座遺跡專屬／最常見的排前面。異變放在本體正下方。
 //   「遺跡詳情」：遺跡的介紹、分層、佩特拉核心（這一帶的長相）、場地效果（環境、樓層效果、分級的效果）。
 //   原本的「特殊種」分頁拿掉（環境的生物、領主體都歸到各自的遺跡）。
+// - 2026-10-05 作者：總覽不要先列遺跡——總覽直接三個小分頁（小怪／領主體／遺跡詳情）：
+//   小怪＝全部遺跡的全部小怪（不分難度），變種一樣排在本體正下方；領主體＝全部領主體；
+//   遺跡詳情＝各個分級的詳細情報＋東鶴有哪些那一級的遺跡。分級分頁（哈米莉亞～卡索）照舊：選分級→選遺跡→三個小分頁。
 // 放在 dexui.js、region.js 後面。
 (function (R) {
   const $ = id => document.getElementById(id), esc = s => R.esc(s);
@@ -101,11 +104,76 @@
 
   // ---------- 左頁 ----------
   const siteBtn = x => { const rg = regionOf(x), lock = x.status === 'lock' || x.status === 'forbidden'; return '<button type="button" class="dr-site' + (x.id === siteId ? ' on' : '') + (lock ? ' lock' : '') + '" data-drs="' + x.id + '" style="--rc:' + colOf(x) + '"><b>' + esc(x.name) + '</b><small>' + esc(G(x.grade).name) + (rg ? '・' + esc(rg.n) : '') + (x.status === 'forbidden' ? '・公會禁止進入' : x.status === 'lock' ? '・還不能進' : '') + '</small></button>'; };
+  const SUBS = [['mob', '小怪'], ['lord', '領主體'], ['info', '遺跡詳情']];
   const siteList = () => {
     const list = ruins(gtab);
-    if (gtab !== 'all') return '<p class="note dr-tip">點一座遺跡，看裡面的小怪、領主體和遺跡的詳情。</p><div class="dr-sites">' + list.map(siteBtn).join('') + '</div>';
-    return '<p class="note dr-tip">全部的遺跡（照分級）。點一座遺跡，看裡面的小怪、領主體和遺跡的詳情。</p>'
-      + ORDER.map(gid => { const l = list.filter(x => x.grade === gid); return l.length ? '<h4 class="dr-h" style="--gc:' + gcol(gid) + '">' + esc(G(gid).name) + '<small>' + l.length + ' 座</small></h4><div class="dr-sites">' + l.map(siteBtn).join('') + '</div>' : ''; }).join('');
+    return '<p class="note dr-tip">點一座遺跡，看裡面的小怪、領主體和遺跡的詳情。</p><div class="dr-sites">' + list.map(siteBtn).join('') + '</div>';
+  };
+  // ---------- 總覽：不分難度，直接列全部小怪／領主體；遺跡詳情＝分級情報＋東鶴的遺跡 ----------
+  const allMobs = () => {
+    const seen = new Set(), list = [], main = new Set(), env = new Set(), rare = new Set();
+    ORDER.forEach(gid => ruins(gid).forEach(s => {
+      const m = mobsOf(s);
+      m.list.forEach(id => { if (!seen.has(id)) { seen.add(id); list.push(id); } });
+      m.main.forEach(id => main.add(id)); m.env.forEach(id => env.add(id));
+      RARE(s).forEach(id => rare.add(id));
+    }));
+    return { list, main: [...main], env: [...env], rare: [...rare].filter(id => E()[id]) };
+  };
+  const tiersAtAll = id => {
+    const out = {};
+    ORDER.forEach(gid => ruins(gid).forEach(s => {
+      const T = tiersAt(id, s);
+      Object.keys(T).forEach(t => { (out[t] = out[t] || new Set()); T[t].forEach(b => out[t].add(b)); });
+    }));
+    return out;
+  };
+  const allLords = () => {
+    const seen = new Set(), out = [];
+    ORDER.forEach(gid => ruins(gid).forEach(s => {
+      lordsOf(s).forEach(([id, why]) => { if (!seen.has(id)) { seen.add(id); out.push([id, G(s.grade).name + (why && why !== '可能出現' ? '・' + why : ''), s.grade]); } });
+    }));
+    return out;
+  };
+  const allMobTab = () => {
+    const { list, main, env, rare } = allMobs(), T = {}, used = new Set();
+    list.forEach(id => { T[id] = tiersAtAll(id); Object.keys(T[id]).forEach(t => used.add(+t)); });
+    const rows = [1, 2, 3].filter(t => used.has(t));
+    const col = id => '<div class="dr-col">' + th(id, { n: kills(id), star: main.includes(id), tag: env.includes(id) ? envName(E()[id].env) : E()[id].elite ? '精英' : '' })
+      + rows.filter(t => rows.some(u => u >= t && T[id][u])).map(t => { const v = T[id][t] && varOf(id, t); return v ? th(v, { tag: VT[t][0], cls: 'dr-v dr-v' + t, title: E()[v].name + '・' + [...T[id][t]].sort().map(b => BANDS[b][0]).join('、') + '出現' }) : '<span class="dr-th dr-empty" aria-hidden="true"></span>'; }).join('') + '</div>';
+    return '<p class="note dr-tip">總覽・全部小怪 ' + list.length + ' 種（不分難度）・★＝至少一座遺跡常見・數字含變種・暗的是還沒打倒過的。' + (rows.length ? '每一欄上面是本體，正下方是荒／獰／淵（只要任何一座遺跡會出現就列）。' : '') + '</p>'
+      + '<div class="dr-cols">' + list.map(col).join('') + '</div>'
+      + (rows.length ? '<p class="note dr-tip">' + rows.map(t => '「' + VT[t][0] + '」' + VT[t][1].replace('｜', '，')).join('；') + '。中層起才會出現，越深越多。</p>' : '')
+      + (rare.length ? '<h4 class="dr-h">偶爾出現<small>每座遺跡都可能</small></h4><div class="dr-strip wrap">' + rare.map(id => '<div class="dr-rare">' + th(id) + '<small>' + esc(E()[id].name) + '<br>' + esc(RARE_NOTE[id] || '') + '</small></div>').join('') + '</div>' : '');
+  };
+  const allLordTab = () => {
+    const L = allLords();
+    if (!L.length) return '<p class="note dr-tip">還沒有記載的領主體（克森特級起才有）。</p>';
+    const card = ([id, why, gid]) => { const e = E()[id], g = G(gid), ch = g && g.id === 'kaso' ? '45%' : (g && (g.lv || 0) >= 4 ? '25%' : ''), mut = ch && R.LORD_VARIANTS && R.LORD_VARIANTS[id];
+      return '<div class="dr-lord"><div class="dr-col">' + th(id, { n: killsOf(id), star: why.indexOf('專屬') >= 0 || why.indexOf('最常見') >= 0 }) + (mut ? lvTh(id, ch) : '') + '</div><div class="dr-lt"><b>' + esc(e.name.replace(/^領主體・/, '')) + '</b><small>' + esc(why) + '</small>' + (mut ? '<small class="dr-mt" style="--lvc:' + R.LORD_VARIANTS[id][1] + '">下面是異變（' + ch + '・兩條血）</small>' : '') + '</div></div>'; };
+    return '<p class="note dr-tip">總覽・全部領主體 ' + L.length + ' 種。領主體不是只在深層：第 3～5 層起每隔 3～5 層有一隻。異變放在本體正下方（遇過才亮）。</p>'
+      + '<div class="dr-lords">' + L.map(card).join('') + '</div>';
+  };
+  const allInfoTab = () => {
+    return '<p class="note dr-tip">各個分級的詳細情報，以及東鶴目前有哪些那一級的遺跡（點了跳到那座遺跡的圖鑑）。</p>'
+      + ORDER.map(gid => {
+        const g = G(gid); if (!g) return '';
+        const dh = ruins(gid).filter(s => s.map === 'donghe');
+        const all = ruins(gid);
+        return '<div class="dr-ginfo" style="--gc:' + gcol(gid) + '"><h4 class="dr-h" style="--gc:' + gcol(gid) + '">' + esc(g.name) + '<small>' + esc(g.letter || '') + '・' + esc(g.zone || '') + (g.floors ? '・約 ' + g.floors + ' 層' : '') + '</small></h4>'
+          + '<p>' + esc(g.desc || g.locked || '') + '</p>'
+          + (g.locked && g.desc ? '<p class="note">' + esc(g.locked) + '</p>' : '')
+          + '<p class="note"><b>東鶴的遺跡</b>' + (dh.length ? '（' + dh.length + ' 座）' : '：東鶴目前沒有這一級的遺跡。') + '</p>'
+          + (dh.length ? '<div class="dr-sites">' + dh.map(siteBtn).join('') + '</div>' : '')
+          + (all.length && all.length !== dh.length ? '<p class="note">全國一共 ' + all.length + ' 座這一級的遺跡（要看其他地區的，到上面「' + esc(g.name) + '」分頁）。</p>' : '')
+          + '</div>';
+      }).join('');
+  };
+  const overviewPage = () => {
+    const M = allMobs().list.length, L = allLords().length;
+    return '<div class="dr-head" style="--rc:#C9A13A"><div><b>遺跡圖鑑・總覽</b><small>不分難度・全部一起看</small></div></div>'
+      + '<div class="dr-subs">' + SUBS.map(([k, n]) => '<button type="button" class="dr-sub' + (sub === k ? ' on' : '') + '" data-drsub="' + k + '">' + n + (k === 'mob' ? '<small>' + M + '</small>' : k === 'lord' ? '<small>' + L + '</small>' : '') + '</button>').join('') + '</div>'
+      + '<div class="dr-subbody">' + (sub === 'lord' ? allLordTab() : sub === 'info' ? allInfoTab() : allMobTab()) + '</div>';
   };
   // 小怪：一欄一種，本體在上、荒／獰／淵在正下方
   const mobTab = s => {
@@ -161,7 +229,6 @@
       + '<p>' + esc(s.desc || '') + '</p>' + (rg ? '<p class="note"><b>' + esc(rg.n) + '</b>：' + esc(rg.d || '') + '</p>' : '') + (t && t.desc ? '<p class="note">' + esc(t.name) + '：' + esc(t.desc) + '</p>' : '') + '</div>'
       + fields(s) + coreCard(s) + layers(s);
   };
-  const SUBS = [['mob', '小怪'], ['lord', '領主體'], ['info', '遺跡詳情']];
   const ruinPage = s => {
     const rg = regionOf(s), L = lordsOf(s).length, M = mobsOf(s).list.length;
     return '<div class="dr-head" style="--rc:' + colOf(s) + '"><button type="button" class="btn dr-back" data-drup="1">‹ ' + esc(gtab === 'all' ? '全部的遺跡' : G(gtab).name + '的遺跡') + '</button><div><b>' + esc(s.name) + '</b><small>' + esc(G(s.grade).name) + (rg ? '・' + esc(rg.n) : '') + '</small></div></div>'
@@ -176,6 +243,7 @@
     if (gtab !== 'all' && !G(gtab)) gtab = 'all';
     const s = siteId && R.SITES.find(x => x.id === siteId);
     if (s && !(isRuin(s) && (gtab === 'all' || s.grade === gtab))) siteId = null;
+    if (gtab === 'all') { siteId = null; return overviewPage() + progress(); }   // 總覽：直接三個小分頁，不先列遺跡
     return (siteId ? ruinPage(s) : siteList()) + progress();
   };
   // ---------- 右頁 ----------
@@ -189,7 +257,7 @@
       + '</div><p class="note">點左邊的小頭像看那一隻的介紹；「遺跡詳情」裡有佩特拉核心和場地效果。</p>';
   };
   const gradeInfo = gid => {
-    if (gid === 'all') return '<div class="dx-banner">遺跡圖鑑・總覽</div><p>上面的分頁照分級分：哈米莉亞級、阿彌勒級、摩爾斯級是保留區，克森特級起是討伐區。</p><p class="note">選一座遺跡，再看「小怪」「領主體」「遺跡詳情」。變種（荒、獰、淵）在小怪那一頁，排在本體的正下方。</p>';
+    if (gid === 'all') return '<div class="dx-banner">遺跡圖鑑・總覽</div><p>總覽直接看全部小怪、全部領主體；「遺跡詳情」是各個分級的情報，以及東鶴有哪些那一級的遺跡。</p><p class="note">哈米莉亞～卡索級的分頁照舊：選分級 → 選遺跡 → 小怪／領主體／遺跡詳情。變種（荒、獰、淵）排在本體正下方。</p>';
     const g = G(gid); return '<div class="dx-banner">' + esc(g.name) + '</div><p><b>' + esc(g.letter || '') + '</b>・' + esc(g.zone || '') + '</p><p>' + esc(g.desc || g.locked || '') + '</p>' + (gid === 'kaso' && g.locked ? '<p class="note">' + esc(g.locked) + '</p>' : '');
   };
   const ul = l => '<ul class="dr-ul">' + l.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>';
@@ -241,7 +309,7 @@
     host.querySelectorAll('[data-dxg]').forEach(b => { b.classList.toggle('on', b.dataset.dxg === gtab); b.onclick = () => { gtab = b.dataset.dxg; siteId = null; mon = null; pick = null; render(host); }; });
     const s = siteId && R.SITES.find(x => x.id === siteId);
     if (wide() && rp) { rp.innerHTML = mon && E()[mon] ? monInfo(mon) : s && pick === 'core' ? coreInfo(s) : s && pick ? fieldInfo(pick) : s ? ruinInfo(s) : gradeInfo(gtab); rp.scrollTop = 0; bindRight(host, rp); }
-    body.querySelectorAll('[data-drs]').forEach(b => { b.onclick = () => { siteId = b.dataset.drs; sub = 'mob'; mon = null; pick = null; render(host); }; });
+    body.querySelectorAll('[data-drs]').forEach(b => { b.onclick = () => { if (gtab === 'all') goSite(host, b.dataset.drs); else { siteId = b.dataset.drs; sub = 'mob'; mon = null; pick = null; render(host); } }; });
     body.querySelectorAll('[data-drup]').forEach(b => { b.onclick = () => { siteId = null; mon = null; pick = null; render(host); }; });
     body.querySelectorAll('[data-drsub]').forEach(b => { b.onclick = () => { sub = b.dataset.drsub; mon = null; pick = null; render(host); }; });
     body.querySelectorAll('[data-drk],[data-drf]').forEach(b => { b.onclick = () => { mon = null; pick = b.dataset.drk ? 'core' : b.dataset.drf; if (wide()) render(host); else if (s) popup(host, pick === 'core' ? coreInfo(s) : fieldInfo(pick)); }; });
@@ -313,7 +381,8 @@
     '.dr-strip.wrap{flex-wrap:wrap;gap:8px}.dr-rare{display:flex;align-items:center;gap:6px;font-size:11.5px;min-width:150px}.dr-rare small{opacity:.85;line-height:1.3}',
     '.dr-lords{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px}',
     '.dr-lord{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.04)}.dr-lt{display:grid;gap:2px;font-size:12px}.dr-lt b{font-size:13.5px}.dr-lt small{opacity:.8;font-size:11px}.dr-lt .dr-mt{color:var(--lvc);opacity:1}',
-    '.dr-sites+.dr-h,.dr-tip+.dr-h{margin-top:10px}'
+    '.dr-sites+.dr-h,.dr-tip+.dr-h{margin-top:10px}',
+    '.dr-ginfo{margin:0 0 14px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);border-left:4px solid var(--gc);background:rgba(255,255,255,.03)}.dr-ginfo p{margin:6px 0;font-size:12.5px;line-height:1.45}'
   ].join('\n');
   document.head.appendChild(css);
 })(window.R);

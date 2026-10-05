@@ -3,6 +3,7 @@
 // - 原本的技能（combat.js 的 R.useSkill、skills.js 的十四個）照舊；新技能用下面的幾種「型」組出來（射擊、範圍、落點、直線、揮砍、衝刺、瞬移、強化、治療……）。
 // - 存在 R.S.loadout[職業] = [第一格, 第二格, 第三格]（null＝預設）。
 // - 說法照設定的施法派別：槍手是科技派（刻了咒文的魔力鋼彈頭）、術士念咒文、牧師祈禱、神官用結界和祓。
+// - 2026-10-05 作者：每一格技能卡片顯示技能圖示（R.skillIconURL）。
 (function (R) {
   const W = () => R.W, $ = id => document.getElementById(id), esc = s => R.esc(s);
   const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
@@ -377,7 +378,12 @@
           + got.map(id => card(id, true)).join('') + list.filter(id => !known(cls, st, id)).map(id => card(id, false)).join('') + '</div></details>';
       }).join('');
     };
-    const card = (id, ok) => { const sk = R.SKILLS[id], at = lo.indexOf(id), s = info(id); return '<button type="button" class="recipe sb-card' + (at >= 0 ? ' on' : '') + (ok ? '' : ' lock') + '" data-sk="' + id + '"' + (ok ? '' : ' disabled') + '><b>' + esc(sk.name) + (s.adv ? ' <small class="sb-adv">' + esc(R.ADV[cls].find(a => a.id === s.adv).name) + '</small>' : '') + (at >= 0 ? ' <small class="sb-at">裝在「' + keys[at] + '」</small>' : '') + '</b><small>' + (R.skillTag && R.skillTag(id) ? esc(R.skillTag(id)) + '・' : '') + '冷卻 ' + sk.cd + ' 秒・魔力 ' + sk.mp + (ok ? '' : '・' + esc(req(id))) + '</small><span>' + esc(sk.desc) + '</span></button>'; };
+    const card = (id, ok) => { const sk = R.SKILLS[id], at = lo.indexOf(id), s = info(id), ic = R.skillIconURL && R.skillIconURL(id);
+      return '<button type="button" class="recipe sb-card' + (at >= 0 ? ' on' : '') + (ok ? '' : ' lock') + '" data-sk="' + id + '"' + (ok ? '' : ' disabled') + '>'
+        + (ic ? '<img class="sb-ico" src="' + ic + '" alt="" draggable="false">' : '<span class="sb-ico sb-ico-empty" aria-hidden="true"></span>')
+        + '<b>' + esc(sk.name) + (s.adv ? ' <small class="sb-adv">' + esc(R.ADV[cls].find(a => a.id === s.adv).name) + '</small>' : '') + (at >= 0 ? ' <small class="sb-at">裝在「' + keys[at] + '」</small>' : '') + '</b>'
+        + '<small>' + (R.skillTag && R.skillTag(id) ? esc(R.skillTag(id)) + '・' : '') + '冷卻 ' + sk.cd + ' 秒・魔力 ' + sk.mp + (ok ? '' : '・' + esc(req(id))) + '</small>'
+        + '<span>' + esc(sk.desc) + '</span></button>'; };
     host.innerHTML = '<h2>技能書・' + esc(R.clsName(cls)) + ' Lv ' + st.lv + '</h2><p class="note">每一格技能都可以換。先點上面的一格，再點下面學會的技能。第二到第五格在職業等級 ' + R.SKILL_UNLOCK.slice(1).join('、') + ' 打開。進了遺跡就不能換。</p>'
       + '<div class="row sb-slots">' + Array.from({ length: NSLOT() }, (_, i) => i).map(i => { const open = i === 0 || st.lv >= R.SKILL_UNLOCK[i]; return '<button type="button" class="btn' + (pickSlot === i ? ' pri' : '') + '" data-slot="' + i + '"' + (open ? '' : ' disabled') + '>' + keys[i] + '：' + (open ? esc(R.SKILLS[lo[i]].name) : 'Lv ' + R.SKILL_UNLOCK[i] + ' 打開') + '</button>'; }).join('') + '<button type="button" class="btn" data-reset="1">恢復預設</button></div>'
       + '<p class="note">學會 ' + learned.length + '／' + ids.length + ' 種。依轉職路線分類，可展開各區查看學習條件。</p>' + groups(ids)
@@ -409,4 +415,11 @@
     const b = document.createElement('button'); b.type = 'button'; b.className = 'btn pri'; b.textContent = '技能書：換「' + R.clsName(R.S.cls) + '」的技能'; b.onclick = () => R.skillBook('hub');
     const p = document.createElement('div'); p.className = 'row'; p.appendChild(b); h.after(p);
   };
+
+  const css = document.createElement('style');
+  css.textContent = '.sb-card{display:grid;grid-template-columns:44px 1fr;column-gap:10px;row-gap:2px;align-items:start}'
+    + '.sb-card .sb-ico{grid-row:1/span 3;width:44px;height:44px;image-rendering:pixelated;border-radius:6px;align-self:center;background:rgba(0,0,0,.2)}'
+    + '.sb-card .sb-ico-empty{display:block;border:1px dashed var(--line)}'
+    + '.sb-card b,.sb-card small,.sb-card span{grid-column:2;min-width:0}';
+  document.head.appendChild(css);
 })(window.R);
