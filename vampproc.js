@@ -1,7 +1,8 @@
 // 吸血（第三版，作者 2026-10-05；同日晚：系數對回血量幾乎沒感——1＋x÷2000 從 100→200 只多 5%，滴血重生／血之渴望體感為零。回血改走 1＋x÷250）：
 // - x＝身上所有吸血加起來：武器的嗜血、飾品的飲血、種族、技能的強化、狂怒、那一招自己帶的吸血、天賦（P.vampX）。
 //   舊的「吸血 1%」一律換成吸血系數 +20（說明文字一起改）。把 % 換成系數時仍 ÷2000（1%＝+20）。
-// - 每一次攻擊（同一瞬間打到的算一次）有 √x % 的機率觸發（x＝100 → 10%，最多 50%）。
+// - 每一次攻擊（同一瞬間打到的算一次）有 x÷(x＋250) 的機率觸發（x＝100 → 28.6%、250 → 50%、400 → 61.5%，越高越接近 100%）。
+//   （作者 2026-10-05 晚：原本是 √x %、最多 50%，改成 x÷(x＋250)。）
 // - 觸發時回復：⌈武器吸血乘數 × (1＋x÷250)⌉ × (1＋√打到幾隻)÷2 × (1＋恢復量增益)。
 //   武器吸血乘數照攻速：長劍 5（＝5×2.3÷攻速）→ 大劍 11.5、戰斧 8.2、刀 4.3、拳套 3.3、步槍 1.3（1～15）。
 //   例：吸血 100 的長劍，普攻一隻 10% 機率回 ⌈5×1.4⌉＝7；血之渴望 ×2（x＝200）回 ⌈5×1.8⌉＝9；一次打 9 隻再 ×2。
@@ -11,8 +12,8 @@
 // - 天賦「滴血重生」（P.ttBleed）：每少 1% 生命，吸血系數 +1%。
 // - 技能書／種族強化的 vampMul：吸血系數再 ×N（吸血族「血之渴望」×2）。
 // - 原本「照傷害的幾 % 回」的地方（combat.js、races.js、skillbook.js、skillbook2.js）看到 R.vampProc 就不回了。
-// - 技能、大招（2026-10-05 作者）：不擲機率，每一次必定回，但回復量＝普攻的回復量 × (1＋回血機率)÷2（x＝100 → ×0.55、x＝400 → ×0.6，最多 ×0.75）。
-//   （作者同日：先改成普攻恢復×回血概率，太少；再改成普攻恢復×(1＋回血概率)÷2。最早是 × √x÷20。）
+// - 技能、大招（2026-10-05 作者）：不擲機率，每一次必定回，但回復量＝普攻的回復量 × 回血機率 ÷2（x＝100 → ×0.143、x＝250 → ×0.25、x＝400 → ×0.308，最多接近 ×0.5）。
+//   （作者同日：先改成普攻恢復×回血概率，太少；再改成×(1＋回血概率)÷2，配上 1＋x÷250 的回血量太誇張；最後改成 × 回血機率 ÷2，機率也換成 x÷(x＋250)。最早是 × √x÷20。）
 //   普攻一秒好幾下，沒中還好；技能、大招放得少，沒觸發很尷尬。
 //   「技能」＝在 R.useSkill／R.castSlot／R.castUlt／R.castRaceSkill 裡面打到的，包括那一招排的 setTimeout（連段、延遲爆炸）
 //   和那一招射出去的子彈（R.fire 標 vSk，combat.js 打到時帶 o.vSk）。同一瞬間技能、普攻打到的分開算。
@@ -20,7 +21,7 @@
 // 放在所有包 R.hurtEnemy 的檔案後面（index.html 最後面附近）。
 (function (R) {
   const W = R.W;
-  const PER = 2000, HEAL_PER = 250, CAP = 0.5, REF_RATE = 2.3, LONG = 5;   // PER：%→系數；HEAL_PER：系數→回血量（作者：2000 太鈍，系數加倍幾乎看不出回血差）
+  const PER = 2000, HEAL_PER = 250, CH_K = 250, REF_RATE = 2.3, LONG = 5;   // PER：%→系數；HEAL_PER：系數→回血量（作者：2000 太鈍，系數加倍幾乎看不出回血差）
   R.vampProc = true;
   // 遺跡生物、地上範圍的每格結算裡（燃燒、毒、範圍持續傷害）：不擲
   let tick = 0;
@@ -47,11 +48,12 @@
   const amp = P => Math.max(0, 1 + (R.recovAmpOf ? R.recovAmpOf(P) : num(P.recovAmp)));   // 含滴血重生的恢復量%（實際乘在 healP；這裡給顯示用）
   const baseHeal = (P, x, n) => Math.max(1, Math.round(Math.ceil(wMult(P) * (1 + x / HEAL_PER)) * (1 + Math.sqrt(Math.max(1, n))) / 2));
   const healOf = (P, x, n) => Math.max(1, Math.round(baseHeal(P, x, n) * amp(P)));   // 顯示＝實際（healP 會再乘 amp）
-  const skMult = x => (1 + Math.min(CAP, Math.sqrt(Math.max(0, x)) / 100)) / 2;   // 技能、大招：必定觸發，回復量＝普攻的回復量 × (1＋回血機率)÷2
+  const chanceOf = x => { x = Math.max(0, num(x)); return x > 0 ? x / (x + CH_K) : 0; };   // 回血機率＝系數÷(系數＋250)
+  const skMult = x => chanceOf(x) / 2;   // 技能、大招：必定觸發，回復量＝普攻的回復量 × 回血機率 ÷2
   const skHealOf = (P, x, n) => Math.max(1, Math.round(healOf(P, x, n) * skMult(x)));
   R.vampCoef = coef;
   // 給角色資料、狀態圖示用
-  R.vampInfo = (P, extra) => { P = P || W.P; if (!P) return null; const x = coef(P, extra); return { x, chance: Math.min(CAP, Math.sqrt(x) / 100), heal: healOf(P, x, 1), mult: wMult(P), skHeal: x > 0 ? skHealOf(P, x, 1) : 0, skMult: skMult(x) }; };
+  R.vampInfo = (P, extra) => { P = P || W.P; if (!P) return null; const x = coef(P, extra); return { x, chance: chanceOf(x), heal: healOf(P, x, 1), mult: wMult(P), skHeal: x > 0 ? skHealOf(P, x, 1) : 0, skMult: skMult(x) }; };
   R.vampLine = P => { const i = R.vampInfo(P); return i && i.x > 0 ? '系數 ' + i.x + '（普攻每次 ' + (Math.round(i.chance * 1000) / 10) + '% 機率回 ' + i.heal + ' 生命；技能、大招每次必定回 ' + i.skHeal + '；武器乘數 ' + (Math.round(i.mult * 10) / 10) + '）' : ''; };
 
   // ---------- 技能、大招的範圍：施放當下＋那一招排的 setTimeout＋那一招射出去的子彈 ----------
@@ -72,7 +74,7 @@
     const g = grp[key]; grp[key] = null; const P = W.P, run = W.run; if (!g || !P || P.dead || !run || run.done) return;
     const x = coef(P, g.skill); if (x <= 0) return;
     if (key === 'sk') { R.healP(Math.max(1, Math.round(baseHeal(P, x, g.n) * skMult(x)))); return; }   // 技能、大招：baseHeal（恢復量% 由 healP 乘）
-    if (Math.random() >= Math.min(CAP, Math.sqrt(x) / 100)) return;
+    if (Math.random() >= chanceOf(x)) return;
     R.healP(baseHeal(P, x, g.n));
   };
   const he0 = R.hurtEnemy;
