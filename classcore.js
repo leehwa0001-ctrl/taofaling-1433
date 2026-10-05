@@ -97,7 +97,7 @@
   css.textContent = '#core-g{position:fixed;z-index:6;width:236px;padding:4px 7px 5px;border-radius:7px;background:rgba(16,12,20,.86);border:1px solid var(--cc,#6A5A70);color:#EDE6DA;font-size:11.5px;pointer-events:auto;cursor:help}'
     + '#core-g .cg-h{display:flex;justify-content:space-between;gap:6px}#core-g .cg-h b{color:var(--cc);font-size:12px}#core-g .cg-h span{color:#C8C0B0;font-variant-numeric:tabular-nums}'
     + '#core-g .cg-bar{position:relative;height:7px;margin-top:3px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden}#core-g .cg-bar i{position:absolute;left:0;top:0;bottom:0;background:var(--cc)}#core-g .cg-bar em{position:absolute;top:0;bottom:0;background:rgba(255,230,140,.55)}'
-    + '#core-g .cg-x{margin-top:3px;color:#A89CA8;font-size:10.5px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:1px 12px}#core-g .cg-x span,#core-g .cg-x b{white-space:nowrap}#core-g .cg-x b{color:#FFE08A;font-weight:600}#core-g.full{box-shadow:0 0 10px -2px var(--cc)}';
+    + '#core-g .cg-x{margin-top:3px;color:#A89CA8;font-size:10.5px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:1px 12px}#core-g .cg-x span,#core-g .cg-x b{white-space:nowrap}#core-g .cg-x b{color:#FFE08A;font-weight:600;margin-left:auto}#core-g.full{box-shadow:0 0 10px -2px var(--cc)}';
   document.head.appendChild(css);
   let g = null;
   const render = () => {
@@ -106,8 +106,16 @@
     if (!c || !c.gauge) { g.hidden = true; return; }
     const hp = $('h2-hp'), r0 = hp && hp.getBoundingClientRect();
     if (!r0 || !r0.width) { g.hidden = true; return; }
-    const bl = $('r-bl'), r1 = bl && bl.getBoundingClientRect(), top = r1 && r1.height && r1.right > r0.left ? Math.min(r0.top, r1.top) : r0.top;   // 左下的角色卡比較高的話放在它上面
-    g.hidden = false; g.style.left = Math.max(6, Math.round(Math.min(r0.left - 4, r1 && r1.height ? r1.left : 1e9))) + 'px'; g.style.bottom = Math.round(innerHeight - top + 6) + 'px';
+    const bl = $('r-bl'), r1 = bl && bl.getBoundingClientRect();
+    g.hidden = false;
+    const left = Math.max(6, Math.round(Math.min(r0.left - 4, r1 && r1.height ? r1.left : 1e9))), gw = g.offsetWidth || 236;
+    // 2026-10-05 作者：量表還是黏在角色卡上——以前只看「角色卡有沒有碰到生命球」才決定要不要往上放，
+    // 但量表本身是對齊角色卡的左邊放的，窄螢幕角色卡縮成 178px 碰不到生命球，量表就被放在生命球的高度、壓住角色卡的上半。
+    // 改成：用量表自己會佔的左右範圍，去比對生命球、角色卡、隊友列（貼在角色卡上面那條），碰得到的都要放在它們上面，再留 8px 空隙。
+    const pt = $('r-party'), r2 = pt && !pt.hidden && pt.classList.contains('hf-dock') ? pt.getBoundingClientRect() : null;
+    let top = r0.top;
+    [r1, r2].forEach(r => { if (r && r.height && r.left < left + gw && r.right > left) top = Math.min(top, r.top); });
+    g.style.left = left + 'px'; g.style.bottom = Math.round(innerHeight - top + 8) + 'px';
     const s = c.gauge(P) || {}, col = s.col || c.col || '#C8A86A';
     g.style.setProperty('--cc', col); g.classList.toggle('full', !!s.full);
     const tip = (c.help ? c.help(P) : '') || '';
