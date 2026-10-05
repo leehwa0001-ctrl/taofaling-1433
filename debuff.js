@@ -1,6 +1,6 @@
 // 遺跡生物的破防、虛弱、重傷；克森特級以上治療變少
 // （2026-10-05 作者：克森特級以上，可能會有降治療和降回血、吸血的效果；怪物可以有破防或讓玩家降攻擊的手段）
-// - 克森特級以上（魔力太濃，傷口長不好）：受到的治療（回復藥、技能、每秒回血、吸血全部算）−25%（克森特級）／−50%（卡索級）。
+// - 克森特級以上（元素混亂，傷口長不好）：受到的治療（回復藥、技能、每秒回血、吸血全部算）−25%（克森特級）／−50%（卡索級）。
 //   （2026-10-05 作者：降治療的效果加強——原本 −25%／−40%，重傷原本 6 秒 −60%）
 // - 遺跡生物打中你的時候可能帶一種狀態（摩爾斯級以上）：
 //   破防（6 秒：受到的傷害 +25%）、虛弱（6 秒：打出去的傷害 −25%）、重傷（8 秒：受到的治療再 −50%；2026-10-05 作者：−80% 太誇張）。
@@ -57,7 +57,7 @@
     const w = W(), P = w.P, run = w.run, el = $('r-dbf'); const a = auraOf(run), list = P && P.dbf ? Object.keys(KIND).filter(k => P.dbf[k] > 0) : [];
     if (!run || run.done || !P || (!a && !list.length)) { if (el) el.hidden = true; return; }
     const c = chip(); if (!c) return; c.hidden = false;
-    const h = list.map(k => '<b style="color:' + KIND[k].c + '">' + KIND[k].n + ' ' + Math.ceil(P.dbf[k]) + '</b>').join('　') + (a ? (list.length ? '　' : '') + '<span style="opacity:.75">魔力太濃：治療 −' + Math.round(a * 100) + '%</span>' : '');
+    const h = list.map(k => '<b style="color:' + KIND[k].c + '">' + KIND[k].n + ' ' + Math.ceil(P.dbf[k]) + '</b>').join('　') + (a ? (list.length ? '　' : '') + '<span style="opacity:.75">元素混亂：治療 −' + Math.round(a * 100) + '%</span>' : '');
     if (c.dataset.h !== h) { c.dataset.h = h; c.innerHTML = h; c.title = list.map(k => KIND[k].n + '：' + KIND[k].d).concat(a ? ['克森特級以上：受到的治療、回血、吸血 −' + Math.round(a * 100) + '%'] : []).join('\n'); }
   };
   const st0 = R.step;
