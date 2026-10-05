@@ -214,7 +214,7 @@
             s.hit.add(e);
             if (s.kind === 'fire' || s.splash) { R.explode(s); break; }
             const extra = s.kind === 'hama' && (e.id === 'chochin' || e.id === 'onibi') ? 99 : 1;
-            if (s.ally) R.allyHit(e, s.dmg * extra, s.by); else R.hurtEnemy(e, s.dmg * extra, { primary: s.primary, elem: s.elem, crit: s.crit, root: s.root, stun: s.stun });
+            if (s.ally) R.allyHit(e, s.dmg * extra, s.by); else R.hurtEnemy(e, s.dmg * extra, { primary: s.primary, elem: s.elem, crit: s.crit, root: s.root, stun: s.stun, vSk: s.vSk });   // vSk：技能、大招射出去的（vampproc.js 吸血必定觸發）
             if (s.pierce-- <= 0) { R.killShot(s); break; }
           }
         }

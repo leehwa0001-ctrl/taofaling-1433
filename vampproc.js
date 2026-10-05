@@ -7,9 +7,14 @@
 //   技能乘數：普攻、技能都是 1（範圍招照 (1+√隻數)÷2：打 9 隻回 2 倍）。
 //   例：吸血 100 的長劍，普攻一隻 10% 機率回 ⌈5×1×1.05⌉＝6；一次打 9 隻 10% 機率回 18。
 // - 沒有冷卻（作者：拳師的普攻比 0.3 秒還快）。燃燒、毒、地上範圍的持續傷害不算攻擊，不擲。
-// - 回復照樣吃降治療（魔力太濃、重傷、佩特拉的詛咒、條款）。
+// - 回復照樣吃降治療（元素混亂、重傷、佩特拉的詛咒、條款）。
 // - 天賦「滴血重生」（P.ttBleed）：每少 1% 生命，吸血系數 +1%。
 // - 原本「照傷害的幾 % 回」的地方（combat.js、races.js、skillbook.js、skillbook2.js）看到 R.vampProc 就不回了。
+// - 技能、大招（2026-10-05 作者）：不擲機率，每一次必定回，但回復量再 × √x÷20（x＝100 → ×0.5、x＝400 → ×1）。
+//   普攻一秒好幾下，沒中還好；技能、大招放得少，沒觸發很尷尬。
+//   「技能」＝在 R.useSkill／R.castSlot／R.castUlt／R.castRaceSkill 裡面打到的，包括那一招排的 setTimeout（連段、延遲爆炸）
+//   和那一招射出去的子彈（R.fire 標 vSk，combat.js 打到時帶 o.vSk）。同一瞬間技能、普攻打到的分開算。
+// - 角色資料那頁的計算用 R.calcPlayer 算出來的 P（沒有 P.hp）：滴血重生算「少掉多少生命」時以前變 NaN，顯示成 NaN；沒有 P.hp 當滿血。
 // 放在所有包 R.hurtEnemy 的檔案後面（index.html 最後面附近）。
 (function (R) {
   const W = R.W;
@@ -19,29 +24,46 @@
   let tick = 0;
   ['updateEnemies', 'updateZones'].forEach(name => { const f0 = R[name]; if (!f0) return; R[name] = (...a) => { tick++; try { return f0(...a); } finally { tick--; } }; });
 
+  const num = v => (Number.isFinite(+v) ? +v : 0);
   // 吸血系數（整數）
   const coef = (P, extra) => {
-    let v = (P.ws && P.ws.vamp) || 0;
-    if (P.raceB && P.raceB.vamp) v += P.raceB.vamp;
-    if (P.sb) for (const k in P.sb) { const b = P.sb[k]; if (b && b.left > 0 && b.vamp) v += b.vamp; }
+    let v = num(P.ws && P.ws.vamp);
+    if (P.raceB && P.raceB.vamp) v += num(P.raceB.vamp);
+    if (P.sb) for (const k in P.sb) { const b = P.sb[k]; if (b && b.left > 0 && b.vamp) v += num(b.vamp); }
     if (P.buff && P.buff.rage > 0) v += 0.025;
-    if (P.pv && P.pv.leech) v += P.pv.leech;   // 被動、轉職的吸血（嗜戰、氣血、血怒、妖刀飢渴…）：2% → 系數 +40（作者 2026-10-05：戰士、拳師被動的吸血沒改，還是超級回）
-    let x = Math.round((v + (extra || 0)) * PER) + (P.vampX || 0);
-    if (P.ttBleed && P.hpMax) x = Math.round(x * (1 + P.ttBleed * Math.max(0, 1 - P.hp / P.hpMax)));
-    return Math.max(0, x);
+    if (P.pv && P.pv.leech) v += num(P.pv.leech);   // 被動、轉職的吸血（嗜戰、氣血、血怒、妖刀飢渴…）：2% → 系數 +40（作者 2026-10-05：戰士、拳師被動的吸血沒改，還是超級回）
+    let x = Math.round((num(v) + num(extra)) * PER) + num(P.vampX);
+    if (P.ttBleed && P.hpMax > 0) { const hp = Number.isFinite(P.hp) ? P.hp : P.hpMax; x = Math.round(x * (1 + num(P.ttBleed) * Math.max(0, Math.min(1, 1 - hp / P.hpMax)))); }   // 角色資料頁的 P 沒有 hp：當滿血
+    return Number.isFinite(x) ? Math.max(0, x) : 0;
   };
   const wMult = P => { const wd = P.item && R.WEAPONS[P.item.base], rate = (wd && wd.rate) || REF_RATE; return Math.max(1, Math.min(15, LONG * REF_RATE / rate)); };
-  const amp = P => 1 + (P.recovAmp || 0);
+  const amp = P => Math.max(0, 1 + num(P.recovAmp));
   const healOf = (P, x, n) => Math.max(1, Math.round(Math.ceil(wMult(P) * (1 + x / PER)) * (1 + Math.sqrt(Math.max(1, n))) / 2 * amp(P)));
+  const skMult = x => Math.sqrt(Math.max(0, x)) / 20;   // 技能、大招：必定觸發，回復量 × √x÷20
+  const skHealOf = (P, x, n) => Math.max(1, Math.round(healOf(P, x, n) * skMult(x)));
   R.vampCoef = coef;
   // 給角色資料、狀態圖示用
-  R.vampInfo = (P, extra) => { P = P || W.P; if (!P) return null; const x = coef(P, extra); return { x, chance: Math.min(CAP, Math.sqrt(x) / 100), heal: healOf(P, x, 1), mult: wMult(P) }; };
-  R.vampLine = P => { const i = R.vampInfo(P); return i && i.x > 0 ? '系數 ' + i.x + '（每次攻擊 ' + (Math.round(i.chance * 1000) / 10) + '% 機率回 ' + i.heal + ' 生命；武器乘數 ' + (Math.round(i.mult * 10) / 10) + '）' : ''; };
+  R.vampInfo = (P, extra) => { P = P || W.P; if (!P) return null; const x = coef(P, extra); return { x, chance: Math.min(CAP, Math.sqrt(x) / 100), heal: healOf(P, x, 1), mult: wMult(P), skHeal: x > 0 ? skHealOf(P, x, 1) : 0, skMult: skMult(x) }; };
+  R.vampLine = P => { const i = R.vampInfo(P); return i && i.x > 0 ? '系數 ' + i.x + '（普攻每次 ' + (Math.round(i.chance * 1000) / 10) + '% 機率回 ' + i.heal + ' 生命；技能、大招每次必定回 ' + i.skHeal + '；武器乘數 ' + (Math.round(i.mult * 10) / 10) + '）' : ''; };
 
-  let grp = null;
-  const resolve = () => {
-    const g = grp; grp = null; const P = W.P, run = W.run; if (!g || !P || P.dead || !run || run.done) return;
+  // ---------- 技能、大招的範圍：施放當下＋那一招排的 setTimeout＋那一招射出去的子彈 ----------
+  let sk = 0;
+  const inSk = f => function (...a) { sk++; try { return f.apply(this, a); } finally { sk--; } };
+  const st0 = window.setTimeout;
+  window.setTimeout = function (f, ms, ...a) { return st0.call(window, sk > 0 && typeof f === 'function' ? inSk(f) : f, ms, ...a); };
+  ['useSkill', 'castSlot', 'castUlt', 'castRaceSkill'].forEach(name => { const f0 = R[name]; if (typeof f0 === 'function') R[name] = inSk(f0); });
+  const fi0 = R.fire;
+  if (fi0) R.fire = o => fi0(sk > 0 && o && o.owner === 'p' ? Object.assign({}, o, { vSk: 1 }) : o);
+  const ex0 = R.explode;
+  if (ex0) R.explode = s => (s && s.vSk && !sk ? inSk(ex0)(s) : ex0(s));
+  R.vampInSkill = () => sk > 0;
+
+  // 同一瞬間打到的算一次攻擊；普攻（含其他）和技能、大招分兩組
+  const grp = { atk: null, sk: null };
+  const resolve = key => () => {
+    const g = grp[key]; grp[key] = null; const P = W.P, run = W.run; if (!g || !P || P.dead || !run || run.done) return;
     const x = coef(P, g.skill); if (x <= 0) return;
+    if (key === 'sk') { R.healP(skHealOf(P, x, g.n)); return; }   // 技能、大招：必定觸發，× √x÷20
     if (Math.random() >= Math.min(CAP, Math.sqrt(x) / 100)) return;
     R.healP(healOf(P, x, g.n));
   };
@@ -52,9 +74,11 @@
       if (!tick && e && h0 > 0 && (e.dead || e.hp < h0) && !(o && o.noVamp)) {
         const P = W.P;
         if (P && !P.dead && W.run && !W.run.done) {
-          if (!grp) { grp = { set: new Set(), skill: 0, n: 0 }; queueMicrotask(resolve); }   // 同一瞬間打到的算一次攻擊
-          if (!grp.set.has(e)) { grp.set.add(e); grp.n++; }
-          if (R.vampSkill) grp.skill = Math.max(grp.skill, R.vampSkill);
+          const key = sk > 0 || (o && o.vSk) ? 'sk' : 'atk';
+          if (!grp[key]) { grp[key] = { set: new Set(), skill: 0, n: 0 }; queueMicrotask(resolve(key)); }   // 同一瞬間打到的算一次攻擊
+          const g = grp[key];
+          if (!g.set.has(e)) { g.set.add(e); g.n++; }
+          if (R.vampSkill) g.skill = Math.max(g.skill, num(R.vampSkill));
         }
       }
     } catch (err) { console.warn('[vampproc]', err); }

@@ -5,7 +5,7 @@
 (function (R) {
   const S = () => R.S, esc = s => R.esc(s);
   const pct = v => (v >= 0 ? '+' : '') + Math.round(v * 100) + '%';
-  const n1 = v => (Math.round(v * 10) / 10).toString();
+  const n1 = v => (Number.isFinite(+v) ? Math.round(v * 10) / 10 : 0).toString();   // 算不出來（NaN）就寫 0，不要顯示 NaN
   const row = (k, v, note) => '<div class="cs-row"><span>' + esc(k) + '</span><b>' + v + '</b>' + (note ? '<small>' + esc(note) + '</small>' : '') + '</div>';
   R.charSheetHtml = cls => {
     const s = S(); cls = cls || s.cls; let P; try { P = R.calcPlayer(cls); } catch (e) { return ''; }
@@ -17,7 +17,7 @@
       + (P.str != null ? row('力量', P.str, P.tooHeavy ? '護具太重：移動、翻滾變慢' : '') : '') + (P.weightDrag ? row('武器重量', '−' + Math.round(P.weightDrag * 100) + '% 移動') : '') + '</div>';
     h += '<div class="cs-sec"><h4>攻擊</h4>' + row('武器', esc(P.item ? R.itemName(P.item) : '（沒有）')) + row('每一下', n1(hit) + ((ws.pellets || 1) > 1 ? ' × ' + ws.pellets : '') + ((w.hits || 1) > 1 ? ' × ' + w.hits : ''), '傷害倍率 ' + pct((P.dmgMult || 1) - 1))
       + row('攻擊速度', n1(ws.rate || 0) + ' 次／秒') + row('估計每秒傷害', Math.round(dps), '含暴擊的平均') + row('暴擊率', Math.round(crit * 100) + '%') + row('暴擊傷害', '×' + n1(cm))
-      + (() => { const vi = R.vampInfo ? R.vampInfo(P) : null; if (vi) return row('吸血係數', vi.x) + (vi.x > 0 ? row('回血機率', n1(vi.chance * 100) + '%', '每次攻擊（同一瞬間打到的算一次）') + row('每次回血', vi.heal, '打一隻；一次打到多隻 ×(1＋√隻數)÷2') : ''); return ws.vamp ? row('吸血', Math.round(ws.vamp * 1000) / 10 + '%') : ''; })() + (elem ? row('屬性', elem) : '') + (ws.pierce ? row('穿透', ws.pierce) : '') + (ws.range ? row('攻擊距離', (ws.range0 ? pct(ws.range / ws.range0 - 1) + '（' : '') + n1(ws.range) + ' 公尺' + (ws.range0 ? '）' : ''), ws.range0 ? '比武器原本的 ' + n1(ws.range0) + ' 公尺' : '') : '')
+      + (() => { const vi = R.vampInfo ? R.vampInfo(P) : null; if (vi) return row('吸血係數', vi.x) + (vi.x > 0 ? row('回血機率', n1(vi.chance * 100) + '%', '每次攻擊（同一瞬間打到的算一次）') + row('每次回血', vi.heal, '普攻打一隻；一次打到多隻 ×(1＋√隻數)÷2') + (vi.skHeal ? row('技能／大招回血', vi.skHeal, '必定觸發：普攻的回血量 ×√系數÷20（×' + (Math.round(vi.skMult * 100) / 100) + '）') : '') : ''); return ws.vamp ? row('吸血', Math.round(ws.vamp * 1000) / 10 + '%') : ''; })() + (elem ? row('屬性', elem) : '') + (ws.pierce ? row('穿透', ws.pierce) : '') + (ws.range ? row('攻擊距離', (ws.range0 ? pct(ws.range / ws.range0 - 1) + '（' : '') + n1(ws.range) + ' 公尺' + (ws.range0 ? '）' : ''), ws.range0 ? '比武器原本的 ' + n1(ws.range0) + ' 公尺' : '') : '')
       + (ws.arc && w.arc ? row('攻擊範圍', pct(ws.arc / w.arc - 1) + '（揮砍 ' + Math.round(ws.arc * 180 / Math.PI) + '°）', '比武器原本的 ' + Math.round(w.arc * 180 / Math.PI) + '°') : '') + '</div>';
     h += '<div class="cs-sec"><h4>防守・其他</h4>' + row('翻滾冷卻', n1(P.dodgeCdMax || 0) + ' 秒') + (P.haste != null ? row('技能急速', '+' + Math.round(P.haste), '冷卻 ' + pct((P.skillCdMult || 1) - 1)) : row('技能冷卻', pct((P.skillCdMult || 1) - 1))) + row('每秒回復', n1(P.regen || 0) + ' 生命') + (P.mpRegen ? row('回魔', '每秒 +' + n1(P.mpRegen) + ' 魔力') : '') + (P.pen ? row('穿透', '無視 ' + Math.round(P.pen * 100) + '% 護甲') : '')
       + row('佩特拉的注意', P.calm ? '上升慢 ' + Math.round(P.calm * 100) + '%' : '照常') + (P.greed ? row('撿錢', pct(P.greed)) : '') + ((P.accGuard || P.talGuard) ? row('受到的傷害', '−' + Math.round(((P.accGuard || 0) + (P.talGuard || 0)) * 100) + '%') : '')
