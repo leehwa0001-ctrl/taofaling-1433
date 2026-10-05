@@ -19,6 +19,7 @@
     const run = crun(); if (!run) { if (stats.size) stats.clear(); return; }
     hook();
     sendT -= dt; if (sendT > 0) return; sendT = 0.5;
+    if (N().floorBusy && N().floorBusy()) return;   // 換層中暫緩狀態包，留給控制／戰鬥
     const P = W().P, S = R.S; if (!P || !S) return;
     const st = S.classes && S.classes[S.cls] || {};
     const db = P.dbf ? Object.keys(P.dbf).filter(k => P.dbf[k] > 0).map(k => [k, Math.ceil(P.dbf[k])]) : [];
@@ -40,10 +41,10 @@
   // ---------- 隊友欄 ----------
   const mates = () => {
     const n = N(), t = now();
-    return (n.members || []).filter(m => m.id !== n.me && stats.has(m.id) && t - stats.get(m.id).t < 15000).map(m => {
+    return (n.members || []).filter(m => m.id !== n.me && stats.has(m.id) && t - stats.get(m.id).t < 20000).map(m => {
       const s = stats.get(m.id), r = n.remotes && n.remotes.get(m.id), adv = s.adv && R.ADV && R.ADV[s.cls] ? R.ADV[s.cls].find(a => a.id === s.adv) : null;
       const down = s.dn || !!(r && r.h && r.h.down);
-      return { name: m.name || '隊友', cls: s.cls, m: { lv: s.lv }, hp: down ? 0 : s.hp, hpMax: s.hm, downed: down, h: r && r.h, net: m.id, s, advName: adv ? adv.name : null, stale: t - s.t > 4000 };
+      return { name: m.name || '隊友', cls: s.cls, m: { lv: s.lv }, hp: down ? 0 : s.hp, hpMax: s.hm, downed: down, h: r && r.h, net: m.id, s, advName: adv ? adv.name : null, stale: t - s.t > 6000 };
     });
   };
   const decorate = (n0, list) => {

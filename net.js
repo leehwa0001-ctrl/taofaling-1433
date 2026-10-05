@@ -6,15 +6,18 @@
 // - 看得到彼此：位置、方向、出手、翻滾、倒下（每秒 10 次）；頭上有名字。
 // - 第一階段還沒做：遺跡生物、寶箱、掉落各算各的（第二階段改成房主決定遺跡生物）。
 // - 第二階段（net2.js）：遺跡生物、寶箱、倒下都同步；這個檔多了：別人的位置表 N.remotes、不認得的訊息交給 N.onMsg2／N.onServer2、
-//   斷線 120 秒內自動重新連線回原本的座位（指數退避；伺服器有 caps 才會）、房主換人（伺服器送 { t: 'host', id }）；用戶端每 12 秒送 ping 保活。
+//   斷線 180 秒內自動重新連線回原本的座位（指數退避；伺服器有 caps 才會）、房主換人（伺服器送 { t: 'host', id }）；用戶端心跳＋Worker 保活（換層卡住主線程也能 ping）。
 //   換層加固：載入前後 ping、樓層訊息重送、校驗失敗先重同步再踢人、wantFloor 順便 dump。
+//   連線優化：出站優先佇列（控制訊息立刻送、位置／狀態合併）、無 pong 主動重連、換層時暫緩位置包。
 (function (R) {
   const W = () => R.W, S = () => R.S, $ = id => document.getElementById(id), esc = s => R.esc(s);
   const PROD = 'wss://taofaling-1433.1433.workers.dev';   // Cloudflare（server-cf/，2026-10-05 上線）
   const LS = 'tf-net-server';
   const PROTOCOL = '1433-net-2';
-  const HOLD_MS = 120000;   // 與伺服器座位保留時間一致（短暫斷線 2 分鐘內可重連）
-  const BEAT_MS = 12000;    // 用戶端心跳：送文字 ping（CF／Node 都回 pong；換層卡住主線程時也盡量保活）
+  const HOLD_MS = 180000;   // 與伺服器座位保留時間一致（短暫斷線 3 分鐘內可重連）
+  const BEAT_MS = 8000;     // 用戶端心跳：送文字 ping（CF／Node 都回 pong）
+  const BEAT_BUSY_MS = 3000;// 換層載入中加快心跳
+  const PONG_DEAD_MS = 45000; // 太久沒收到 pong：主動斷線走重連
   // https://… 也收（Render 給的網址是 https）：換成 wss://
   const wsOf = u => String(u || '').trim().replace(/^http(s?):\/\//, 'ws$1://').replace(/\/+$/, '');
   const serverUrl = () => wsOf(serverUrl0());
@@ -24,11 +27,43 @@
   };
 
   const N = R.net = { ws: null, room: null, me: null, host: null, members: [], busy: '' };
+  let floorBusy = false;
   const isHost = () => !!N.room && N.me === N.host;
   const nameOf = id => { const m = N.members.find(x => x.id === id); return m ? m.name : '有人'; };
   N.isHost = isHost; N.inRoom = () => !!N.room;
-  const raw = o => { if (N.ws && N.ws.readyState === 1) N.ws.send(JSON.stringify(o)); };
-  N.send = (d, to) => raw({ t: 'msg', d, to });
+  const raw = o => { if (N.ws && N.ws.readyState === 1) try { N.ws.send(JSON.stringify(o)); } catch (e) { } };
+  // 出站優先：控制訊息立刻送；位置／狀態合併最新一則；戰鬥訊息排隊，避免換層瞬間塞爆
+  const CTRL_K = new Set(['floor', 'run', 'end', 'busy', 'wantFloor', 'hd', 'bye']);
+  const HIGH_K = new Set(['h', 'g', 'hd', 'rv', 'aid', 'ch']);
+  let outP = null, outPs = null, outQ = [], outTimer = null, outBurst = 0, outBurstAt = 0;
+  const flushOut = () => {
+    outTimer = null;
+    if (!N.ws || N.ws.readyState !== 1) { outP = null; outPs = null; outQ = []; return; }
+    const busy = floorBusy;
+    const now = Date.now();
+    if (now - outBurstAt > 1000) { outBurst = 0; outBurstAt = now; }
+    // 每秒最多送 ~40 則非控制包（伺服器令牌桶 96；留給戰鬥／控制）
+    const budget = 40;
+    if (outP && !busy) { raw({ t: 'msg', d: outP }); outP = null; outBurst++; }
+    if (outPs && !busy && outBurst < budget) { raw({ t: 'msg', d: outPs }); outPs = null; outBurst++; }
+    while (outQ.length && outBurst < budget) {
+      const item = outQ.shift();
+      raw({ t: 'msg', d: item.d, to: item.to });
+      outBurst++;
+    }
+    if (outQ.length || outP || outPs) outTimer = setTimeout(flushOut, 50);
+  };
+  const scheduleOut = () => { if (!outTimer) outTimer = setTimeout(flushOut, 0); };
+  N.send = (d, to) => {
+    if (!d || typeof d !== 'object' || typeof d.k !== 'string') return;
+    if (CTRL_K.has(d.k)) { raw({ t: 'msg', d, to }); return; }   // 控制：立刻
+    if (d.k === 'p' && to == null) { if (floorBusy) return; outP = d; scheduleOut(); return; }
+    if (d.k === 'ps' && to == null) { if (floorBusy) return; outPs = d; scheduleOut(); return; }
+    const pri = HIGH_K.has(d.k) ? 1 : 0;
+    if (pri) outQ.unshift({ d, to }); else outQ.push({ d, to });
+    if (outQ.length > 80) outQ.length = 80;   // 防爆：丟掉最舊的一般包
+    scheduleOut();
+  };
   const coop = () => { const run = W().run; return run && run.coop && !run.coop.solo && !run.done ? run : null; };
 
   // 自己的名片：名字、職業、武器、長相、身上的護甲（別人畫你用）
@@ -41,15 +76,36 @@
 
   // ---------- 連線 ----------
   // 一次只允許一個開房／加入請求；舊 socket 的事件不能動到新連線。
-  let connecting = null, cancelConnect = null, request = null, requestTimer = null, rejoining = false, beatTimer = null, rejoinAttempt = 0;
+  let connecting = null, cancelConnect = null, request = null, requestTimer = null, rejoining = false, beatTimer = null, beatWorker = null, rejoinAttempt = 0, lastPongAt = 0;
   const finishRequest = () => { request = null; clearTimeout(requestTimer); requestTimer = null; };
-  const stopBeat = () => { if (beatTimer) { clearInterval(beatTimer); beatTimer = null; } };
+  const stopBeat = () => {
+    if (beatTimer) { clearTimeout(beatTimer); beatTimer = null; }
+    if (beatWorker) { try { beatWorker.terminate(); } catch (e) { } beatWorker = null; }
+  };
+  const doPing = () => {
+    const ws = N.ws; if (!ws || ws.readyState !== 1) return;
+    try { ws.send('ping'); } catch (e) { }
+    // 太久沒 pong：主動關掉走重連（比乾等閒置切斷乾淨）
+    if (N.room && lastPongAt && Date.now() - lastPongAt > PONG_DEAD_MS && !rejoining) {
+      try { ws.close(); } catch (e) { }
+    }
+  };
   const startBeat = () => {
     stopBeat();
-    beatTimer = setInterval(() => {
-      const ws = N.ws; if (!ws || ws.readyState !== 1) return;
-      try { ws.send('ping'); } catch (e) { }
-    }, BEAT_MS);
+    lastPongAt = Date.now();
+    const schedule = () => {
+      beatTimer = setTimeout(() => {
+        beatTimer = null; doPing();
+        if (N.ws && N.ws.readyState === 1) schedule();
+      }, floorBusy ? BEAT_BUSY_MS : BEAT_MS);
+    };
+    schedule();
+    // Worker：換層卡住主線程時仍能 ping（和 net2 背景 ticker 同思路）
+    try {
+      const url = URL.createObjectURL(new Blob(['setInterval(function(){postMessage(0)},3500)'], { type: 'text/javascript' }));
+      beatWorker = new Worker(url);
+      beatWorker.onmessage = () => { if (N.room) doPing(); };
+    } catch (e) { }
   };
   const disconnect = why => {
     const ws = N.ws; N.ws = null; stopBeat();
@@ -87,7 +143,7 @@
     };
     ws.onmessage = ev => {
       if (N.ws !== ws) return;
-      if (ev.data === 'pong' || ev.data === 'ping') return;   // 心跳，不當 JSON
+      if (ev.data === 'pong' || ev.data === 'ping') { lastPongAt = Date.now(); return; }   // 心跳，不當 JSON
       let o; try { o = JSON.parse(ev.data); } catch (e) { return; }
       if (o && typeof o === 'object' && !Array.isArray(o)) onServer(o);
     };
@@ -112,7 +168,7 @@
     if (rejoining) return;
     const code = N.room, me = N.me, token = N.token, t0 = Date.now();
     rejoining = true; rejoinAttempt = 0; N.busy = '重新連線中……'; refresh();
-    R.toast('和伺服器斷線了：重新連線中（2 分鐘內）……', '#FFB45A'); if (N.onAway) try { N.onAway(true); } catch (e) { }
+    R.toast('和伺服器斷線了：重新連線中（3 分鐘內）……', '#FFB45A'); if (N.onAway) try { N.onAway(true); } catch (e) { }
     const delayOf = n => Math.min(8000, Math.round(500 * Math.pow(1.7, Math.max(0, n))));   // 0.5s → ~8s
     const once = () => {
       if (!rejoining || N.room !== code || N.token !== token) return;
@@ -148,6 +204,7 @@
   const drop = why => {
     const had = !!N.room; finishRequest(); rejoining = false; rejoinAttempt = 0; stopBeat(); N.token = null; if (N.onDrop) try { N.onDrop(why); } catch (e) { }
     N.room = null; N.me = null; N.host = null; N.members = []; N.busy = '';
+    outP = null; outPs = null; outQ = []; if (outTimer) { clearTimeout(outTimer); outTimer = null; }
     clearRemotes(); const run = W().run; if (run && run.coop) run.coop.solo = true;
     pending = null; lastFloor = null; guestGo = false; cks.mine = {}; cks.host = {};
     if (had && why) R.toast(why, '#FFB45A');
@@ -164,10 +221,15 @@
       N.room = o.code; N.me = o.you; N.host = o.host; N.members = o.members || []; N.busy = ''; N.token = o.token || null; N.caps = o.caps || 0;
       if (back && coop()) clearRemotes();   // 重連：清掉舊的隊友模型，等位置包／樓層同步後重畫
       R.toast(back ? '重新連上了。' : isHost() ? '開好房間了：房號 ' + o.code + '。把房號告訴朋友。' : '加入了 ' + nameOf(N.host) + ' 的房間。', '#7FE0FF');
-      if (back && isHost() && coop()) { pushFloor(); setTimeout(() => { try { if (isHost() && coop()) pushFloor(); } catch (e) { } }, 1200); }
+      if (back && isHost() && coop()) {
+        pushFloor();
+        setTimeout(() => { try { if (isHost() && coop()) pushFloor(); } catch (e) { } }, 800);
+        setTimeout(() => { try { if (isHost() && coop()) { pushFloor(); if (N.onWantFloor) N.onWantFloor(null); } } catch (e) { } }, 2000);
+      }
       if (back && !isHost() && coop()) {
         try { N.send({ k: 'wantFloor', rid: coop().coop.seed }, N.host); } catch (e) { }
-        setTimeout(() => { try { const r = coop(); if (r && !r.coop.host && N.host) N.send({ k: 'wantFloor', rid: r.coop.seed }, N.host); } catch (e) { } }, 1500);
+        setTimeout(() => { try { const r = coop(); if (r && !r.coop.host && N.host) N.send({ k: 'wantFloor', rid: r.coop.seed }, N.host); } catch (e) { } }, 900);
+        setTimeout(() => { try { const r = coop(); if (r && !r.coop.host && N.host) N.send({ k: 'wantFloor', rid: r.coop.seed }, N.host); } catch (e) { } }, 2400);
       }
       if (N.onRoom) try { N.onRoom(o, back); } catch (e) { console.warn('[net]', e); }
     } else if (o.t === 'join') {
@@ -179,7 +241,7 @@
     else if (o.t === 'err') { finishRequest(); N.busy = ''; if (rejoining) { rejoining = false; drop('重新連線失敗（' + o.msg + '），這一趟變回一個人。'); } else R.toast(o.msg, '#FF9A6A'); }
     else if (o.t === 'msg') onMsg(o.from, o.d || {});
     else if (o.t === 'host') { N.host = o.id; R.toast(o.id === N.me ? '房主離開了：現在你是房主。' : nameOf(o.id) + ' 成為房主。', '#7FE0FF'); if (N.onServer2) N.onServer2(o); }
-    else if (o.t === 'away') { R.toast(nameOf(o.id) + ' 斷線了：2 分鐘內連回來就能接著玩……', '#FFB45A'); dropRemote(o.id); if (N.onServer2) N.onServer2(o); }
+    else if (o.t === 'away') { R.toast(nameOf(o.id) + ' 斷線了：3 分鐘內連回來就能接著玩……', '#FFB45A'); dropRemote(o.id); if (N.onServer2) N.onServer2(o); }
     else if (o.t === 'back') { R.toast(nameOf(o.id) + ' 重新連上了。', '#7FE0FF'); if (isHost() && coop()) pushFloor(o.id); if (N.onServer2) N.onServer2(o); }
     refresh();
   };
@@ -237,11 +299,21 @@
   const compare = n => {
     const a = cks.mine[n], b = cks.host[n]; if (a == null || b == null) return;
     if (a === b) { delete ckBad[n]; delete cks.mine[n]; delete cks.host[n]; return; }
+    // 換層載入中：只記一次、先要重同步，不要累計到踢人
+    if (floorBusy) {
+      console.warn('[net] 校驗暫緩（換層中）', n, a, b);
+      try {
+        if (isHost()) { pushFloor(); if (N.onWantFloor) N.onWantFloor(null); }
+        else if (N.host) { N.send({ k: 'wantFloor', rid: coop() && coop().coop.seed }, N.host); }
+      } catch (e) { }
+      delete cks.mine[n]; delete cks.host[n];
+      return;
+    }
     ckBad[n] = (ckBad[n] || 0) + 1;
     console.warn('[net] 這一層和房主的不一樣', n, a, b, 'times', ckBad[n]);
-    // 第一次：跟房主要樓層／快照再對一次；連續兩次才離開（避免換層瞬間假陽性斷線）
-    if (ckBad[n] < 2) {
-      R.toast && R.toast('地圖校驗不一致，正在重新同步……', '#FFB45A');
+    // 前兩次：跟房主要樓層／快照再對；連續三次才離開（減少假陽性）
+    if (ckBad[n] < 3) {
+      if (ckBad[n] === 1) R.toast && R.toast('地圖校驗不一致，正在重新同步……', '#FFB45A');
       try {
         if (isHost()) { pushFloor(); if (N.onWantFloor) N.onWantFloor(null); }
         else if (N.host) { N.send({ k: 'wantFloor', rid: coop() && coop().coop.seed }, N.host); }
@@ -253,7 +325,8 @@
     N.leave(); R.banner('地圖不同步，已離開連線房間', '請所有人重新整理遊戲後再組隊；這一趟改為單人');
   };
 
-  let floorBusy = false, followPend = null, followTimer = null;
+  // floorBusy 宣告在上方（出站佇列／心跳會用到）
+  let followPend = null, followTimer = null;
   N.floorBusy = () => floorBusy;
   const lf0 = R.loadFloor;
   R.loadFloor = (f, o) => {
@@ -266,10 +339,16 @@
     }
     // 換層會卡住主線程數百毫秒～數秒：先送 ping 保活，載完再送一次，避免 CF／中介把連線當閒置切掉
     const coopNow = run && run.coop && !run.coop.solo;
-    if (coopNow) { floorBusy = true; keepAlive(); }
+    if (coopNow) { floorBusy = true; keepAlive(); doPing(); }
     let r;
     try { r = lf0(f, o); }
-    finally { if (coopNow) { keepAlive(); floorBusy = false; } }
+    finally {
+      if (coopNow) {
+        keepAlive(); doPing(); floorBusy = false;
+        // 載完立刻把佇列裡的位置／戰鬥包送出去
+        scheduleOut();
+      }
+    }
     if (run && run.coop && !run.coop.solo && W().F) {
       const ck = checksum(W().F); cks.mine[run.coop.n] = ck; if (!run.coop.host) compare(run.coop.n);
       if (run.coop.host) {

@@ -1,9 +1,10 @@
 // 討伐令 1433：多人連線的伺服器（只轉送訊息，不跑遊戲邏輯）
 // - 一間房最多 4 個人；開房的人是房主（遺跡的樓層、遺跡生物由房主決定）。
 // - 2026-10-05（第二階段）：房主離開或斷線，換下一個人當房主（{ t: 'host', id }），房間不關；所有人都走了才關。
-//   斷線（不是按離開）保留座位 120 秒：其他人收到 { t: 'away', id }；用 { t: 'join', code, rejoin: { id, token } } 連回原本的座位，收到 { t: 'back', id }。
+//   斷線（不是按離開）保留座位 180 秒：其他人收到 { t: 'away', id }；用 { t: 'join', code, rejoin: { id, token } } 連回原本的座位，收到 { t: 'back', id }。
 //   房間裡的人全部短暫斷線也不立刻關房——座位到期（或按離開）才關；用戶端會送文字 ping，伺服器回 pong。
 //   'room' 多帶 token（重新連線用）、caps: 1（有這些功能）。協定版本照舊 1433-net-2：舊的遊戲照樣能連。
+//   連線優化（2026-10-05 第三階段）：HOLD 180s、RATE 令牌桶 96/144、控制鍵擴充。
 // - 房號：4 個英文字母（去掉容易看錯的 I、O）。
 // - 訊息都是 JSON：
 //   用戶端 → 伺服器：{ t: 'create', name, look }、{ t: 'join', code, name, look }、{ t: 'leave' }、{ t: 'msg', to?, d }
@@ -14,10 +15,11 @@ const http = require('http');
 const { WebSocketServer } = require('ws');
 
 const PORT = +process.env.PORT || 8787, MAX = 4, MAX_BYTES = 96 * 1024;
-const PROTOCOL = '1433-net-2', RATE = 72, HOLD = 120000;   // 每條連線每秒最多 72 則；斷線保留座位 120 秒；換層控制訊息不佔額度
+const PROTOCOL = '1433-net-2', RATE = 96, BURST = 144, HOLD = 180000;
+const CTRL_K = new Set(['floor', 'run', 'end', 'busy', 'wantFloor', 'hd', 'bye']);
 const LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const rooms = new Map();   // code → { code, host, members: Map(id → client) }
-let nextId = 1;
+let nextId = 1, dropN = 0, dropLog = 0;
 
 const server = http.createServer((req, res) => {
   res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8', 'access-control-allow-origin': '*' });
@@ -31,6 +33,18 @@ const roomInfo = (r, c) => ({ t: 'room', v: PROTOCOL, code: r.code, you: c.id, h
 const newToken = () => Math.random().toString(36).slice(2, 12);
 const newCode = () => { for (;;) { let s = ''; for (let i = 0; i < 4; i++) s += LETTERS[Math.floor(Math.random() * LETTERS.length)]; if (!rooms.has(s)) return s; } };
 const clean = (v, n) => String(v == null ? '' : v).slice(0, n);
+const takeRate = c => {
+  const now = Date.now();
+  if (!c.rtTokens) { c.rtTokens = BURST; c.rtAt = now; }
+  const elapsed = (now - c.rtAt) / 1000;
+  if (elapsed > 0) { c.rtTokens = Math.min(BURST, c.rtTokens + elapsed * RATE); c.rtAt = now; }
+  if (c.rtTokens < 1) {
+    dropN++;
+    if (now - dropLog > 30000) { dropLog = now; console.log('[net] rate-drop', dropN); dropN = 0; }
+    return false;
+  }
+  c.rtTokens -= 1; return true;
+};
 
 // 換房主：下一個還連著的人
 const migrate = r => { const next = [...r.members.values()].find(m => !m.away && m.id !== r.host); if (!next) return false; r.host = next.id; r.members.forEach(m => send(m, { t: 'host', id: next.id })); return true; };
@@ -57,8 +71,8 @@ wss.on('connection', ws => {
     if (txt === 'ping') { try { ws.send('pong'); } catch (e) { } ws.dead = false; return; }   // 用戶端心跳（與 CF auto-response 同一字串）
     let o; try { o = JSON.parse(txt); } catch (e) { return; }
     if (!o || typeof o.t !== 'string') return;
-    const ctrl = o.t === 'msg' && o.d && typeof o.d.k === 'string' && ['floor', 'run', 'end', 'busy', 'wantFloor', 'hd'].includes(o.d.k);
-    if (!ctrl) { const now = Date.now(); if (now - (c.rt || 0) > 1000) { c.rt = now; c.rn = 0; } if (++c.rn > RATE) return; }
+    const ctrl = o.t === 'msg' && o.d && typeof o.d.k === 'string' && CTRL_K.has(o.d.k);
+    if (!ctrl && !takeRate(c)) return;
     if (o.t === 'create' || o.t === 'join') {
       if (o.v !== PROTOCOL) return send(c, { t: 'err', msg: '連線版本不同，請重新整理遊戲並更新伺服器。' });
       // 先驗證目的房間，失敗時保留原房；重複開房／加入同房也不拆房。
@@ -101,7 +115,7 @@ wss.on('connection', ws => {
   ws.on('error', () => {});
 });
 
-// 每 25 秒確認還連著（有些主機的閒置連線一分鐘就會被切掉）
+// 每 15 秒確認還連著（有些主機的閒置連線一分鐘就會被切掉）
 setInterval(() => { wss.clients.forEach(ws => { if (ws.dead) return ws.terminate(); ws.dead = true; try { ws.ping(); } catch (e) { } }); }, 15000);
 
 server.listen(PORT, () => console.log('討伐令 1433 連線伺服器：port ' + PORT));
