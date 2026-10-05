@@ -99,8 +99,8 @@
     const S = R.S, slots = [['r-skill', 0], ['r-skill2', 1], ['r-skill3', 2], ['r-skill4', 3], ['r-skill5', 4]];
     slots.forEach(([id, i]) => {
       const b = $(id); if (!b) return; const sid = R.slotSkill ? R.slotSkill(P, i) : (i ? null : P.skill), sk = sid && R.SKILLS[sid];
-      const cd = i === 0 ? P.skillCd : (P.skCd && P.skCd[i]) || 0, ic = b.querySelector('.h2-ic'), k = iconFor(sid);
-      if (ic && ic.dataset.k !== k) { ic.dataset.k = k; ic.src = icon(k); }
+      const cd = i === 0 ? P.skillCd : (P.skCd && P.skCd[i]) || 0, ic = b.querySelector('.h2-ic'), k = 'sk:' + (sid || '');
+      if (ic && ic.dataset.k !== k) { ic.dataset.k = k; ic.src = sid && R.skillIconURL ? R.skillIconURL(sid) : icon(iconFor(sid)); }   // skillicons.js：每一招自己的圖示
       b.classList.toggle('lit', !!sk && cd <= 0.05 && P.mp >= sk.mp && !P.dead);
       const r = sid && R.skillRank ? R.skillRank(sid) : 0, n = b.querySelector('.h2-n'); if (n) { const t = r ? '★' + r : ''; if (n.textContent !== t) n.textContent = t; }
     });
