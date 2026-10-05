@@ -10,7 +10,8 @@
 // - 回復照樣吃降治療（元素混亂、重傷、佩特拉的詛咒、條款）。
 // - 天賦「滴血重生」（P.ttBleed）：每少 1% 生命，吸血系數 +1%。
 // - 原本「照傷害的幾 % 回」的地方（combat.js、races.js、skillbook.js、skillbook2.js）看到 R.vampProc 就不回了。
-// - 技能、大招（2026-10-05 作者）：不擲機率，每一次必定回，但回復量再 × √x÷20（x＝100 → ×0.5、x＝400 → ×1）。
+// - 技能、大招（2026-10-05 作者）：不擲機率，每一次必定回，但回復量＝普攻的回復量 × 回血機率（x＝100 → ×0.1、x＝400 → ×0.2，最多 ×0.5）。
+//   （作者同日：吸血的技能恢復固定改成普攻恢復×回血概率；原本是 × √x÷20。）
 //   普攻一秒好幾下，沒中還好；技能、大招放得少，沒觸發很尷尬。
 //   「技能」＝在 R.useSkill／R.castSlot／R.castUlt／R.castRaceSkill 裡面打到的，包括那一招排的 setTimeout（連段、延遲爆炸）
 //   和那一招射出去的子彈（R.fire 標 vSk，combat.js 打到時帶 o.vSk）。同一瞬間技能、普攻打到的分開算。
@@ -39,7 +40,7 @@
   const wMult = P => { const wd = P.item && R.WEAPONS[P.item.base], rate = (wd && wd.rate) || REF_RATE; return Math.max(1, Math.min(15, LONG * REF_RATE / rate)); };
   const amp = P => Math.max(0, 1 + num(P.recovAmp));
   const healOf = (P, x, n) => Math.max(1, Math.round(Math.ceil(wMult(P) * (1 + x / PER)) * (1 + Math.sqrt(Math.max(1, n))) / 2 * amp(P)));
-  const skMult = x => Math.sqrt(Math.max(0, x)) / 20;   // 技能、大招：必定觸發，回復量 × √x÷20
+  const skMult = x => Math.min(CAP, Math.sqrt(Math.max(0, x)) / 100);   // 技能、大招：必定觸發，回復量＝普攻的回復量 × 回血機率
   const skHealOf = (P, x, n) => Math.max(1, Math.round(healOf(P, x, n) * skMult(x)));
   R.vampCoef = coef;
   // 給角色資料、狀態圖示用
@@ -63,7 +64,7 @@
   const resolve = key => () => {
     const g = grp[key]; grp[key] = null; const P = W.P, run = W.run; if (!g || !P || P.dead || !run || run.done) return;
     const x = coef(P, g.skill); if (x <= 0) return;
-    if (key === 'sk') { R.healP(skHealOf(P, x, g.n)); return; }   // 技能、大招：必定觸發，× √x÷20
+    if (key === 'sk') { R.healP(skHealOf(P, x, g.n)); return; }   // 技能、大招：必定觸發，× 回血機率
     if (Math.random() >= Math.min(CAP, Math.sqrt(x) / 100)) return;
     R.healP(healOf(P, x, g.n));
   };
