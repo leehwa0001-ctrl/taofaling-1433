@@ -4,7 +4,7 @@
 // - 每一次攻擊（同一瞬間打到的算一次）有 x÷(x＋250) 的機率觸發（x＝100 → 28.6%、250 → 50%、400 → 61.5%，越高越接近 100%）。
 //   （作者 2026-10-05 晚：原本是 √x %、最多 50%，改成 x÷(x＋250)。）
 // - 觸發時回復：⌈武器吸血乘數 × (1＋x÷250)⌉ × (1＋√打到幾隻)÷2 × (1＋恢復量增益)。
-//   武器吸血乘數照攻速：長劍 5（＝5×2.3÷攻速）→ 大劍 11.5、戰斧 8.2、刀 4.3、拳套 3.3、步槍 1.3（1～15）。
+//   武器吸血乘數照攻速：長劍 5（＝5×2.3÷攻速）→ 大劍 11.5、戰斧 8.2、刀 4.3、步槍 1.3（1～15）；拳套／鐵爪再 ×0.25（原本約 3.3／3.6 → 約 1）。
 //   例：吸血 100 的長劍，普攻一隻 10% 機率回 ⌈5×1.4⌉＝7；血之渴望 ×2（x＝200）回 ⌈5×1.8⌉＝9；一次打 9 隻再 ×2。
 //   滴血重生把 x 再 ×(1＋少掉生命比例)：生命越低，回血機率與每次回血量都會真的變高。
 // - 沒有冷卻（作者：拳師的普攻比 0.3 秒還快）。燃燒、毒、地上範圍的持續傷害不算攻擊，不擲。
@@ -44,7 +44,7 @@
     if (mul !== 1) x = Math.round(x * mul);
     return Number.isFinite(x) ? Math.max(0, x) : 0;
   };
-  const wMult = P => { const wd = P.item && R.WEAPONS[P.item.base], rate = (wd && wd.rate) || REF_RATE; return Math.max(1, Math.min(15, LONG * REF_RATE / rate)); };
+  const wMult = P => { const wd = P.item && R.WEAPONS[P.item.base], rate = (wd && wd.rate) || REF_RATE, base = P.item && P.item.base; let m = LONG * REF_RATE / rate; if (base === 'gauntlet' || base === 'claws') m *= 0.25; return Math.max(1, Math.min(15, m)); };   // 作者：拳套／鐵爪攻速太快，武器吸血乘數改成原本的 1/4
   const amp = P => Math.max(0, 1 + (R.recovAmpOf ? R.recovAmpOf(P) : num(P.recovAmp)));   // 含滴血重生的恢復量%（實際乘在 healP；這裡給顯示用）
   const baseHeal = (P, x, n) => Math.max(1, Math.round(Math.ceil(wMult(P) * (1 + x / HEAL_PER)) * (1 + Math.sqrt(Math.max(1, n))) / 2));
   const healOf = (P, x, n) => Math.max(1, Math.round(baseHeal(P, x, n) * amp(P)));   // 顯示＝實際（healP 會再乘 amp）
