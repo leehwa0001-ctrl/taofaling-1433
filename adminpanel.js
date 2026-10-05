@@ -32,7 +32,7 @@
     if (town) h += sec('角色', '<div class="adm-row"><label>職業<select id="adm-cls">' + R.CLASS_IDS.map(c => opt(c, R.CLASSES[c].name, c === cls)).join('') + '</select></label>'
       + '<label>轉職路線<select id="adm-adv">' + opt('', '（還沒轉職）', !st.adv) + advs.map(a => opt(a.id, a.name + (a.legacy ? '（舊路線）' : ''), a.id === st.adv)).join('') + '</select></label>'
       + '<label>二次轉職<select id="adm-adv2">' + opt('', '（沒有）', !st.adv2) + opts2.map(o => opt(o.id, o.name, o.id === st.adv2)).join('') + '</select></label>'
-      + '<label>等級<input id="adm-lv" type="number" min="1" max="' + (R.LV_CAP || 80) + '" value="' + st.lv + '" style="width:4.5em"></label>'
+      + '<label>等級<input id="adm-lv" type="number" min="1" max="' + (R.LV_CAP || 100) + '" value="' + st.lv + '" style="width:4.5em"></label>'
       + '<button type="button" class="btn pri" id="adm-cls-go">套用</button></div>'
       + '<div class="adm-row"><label>種族<select id="adm-race">' + Object.keys(R.RACES).map(k => opt(k, R.RACES[k].name + '（' + (R.RACES[k].tier || '') + '）', k === s.race)).join('') + '</select></label><button type="button" class="btn" id="adm-race-go">換種族</button>'
       + '<button type="button" class="btn" id="adm-tal">天賦點 +50</button><button type="button" class="btn" id="adm-star">技能熟練度全 ★5</button></div>');
@@ -72,7 +72,7 @@
     const c = $('adm-cls'); if (c) c.onchange = () => { s.cls = c.value; R.ensureKit && R.ensureKit(s.cls); open(); };
     on('adm-cls-go', () => {
       const cls = $('adm-cls').value, st = s.classes[cls]; s.cls = cls; R.ensureKit && R.ensureKit(cls);
-      st.adv = $('adm-adv').value || null; st.adv2 = $('adm-adv2').value || null; st.lv = Math.max(1, Math.min(R.LV_CAP || 80, +$('adm-lv').value || 1)); st.trial = 2; st.trial2 = 2;
+      st.adv = $('adm-adv').value || null; st.adv2 = $('adm-adv2').value || null; st.lv = Math.max(1, Math.min(R.LV_CAP || 100, +$('adm-lv').value || 1)); st.trial = 2; st.trial2 = 2;
       if (st.adv2) { st.t2 = st.t2 || {}; st.t2[st.adv2] = { done: 1 }; }
       R.save(); toast('職業：' + (R.clsName ? R.clsName(cls) : cls) + ' Lv ' + st.lv, '#7FE0FF'); if (R.restyleSelf) R.restyleSelf(); open();
     });
@@ -81,7 +81,7 @@
     on('adm-star', () => { const st = s.classes[s.cls], PROF = R.SKILL_PROF || [20, 60, 140, 260, 450]; st.sp = st.sp || { r: {}, t: {} }; st.sp.r = st.sp.r || {}; st.sp.u = st.sp.u || {}; Object.values(R.SKILL_LIB || {}).forEach(x => { if (x.cls === s.cls) { st.sp.r[x.id] = 5; st.sp.u[x.id] = PROF[PROF.length - 1]; } }); (R.skillsLearned ? R.skillsLearned(s.cls) : []).forEach(id => { st.sp.r[id] = 5; st.sp.u[id] = PROF[PROF.length - 1]; }); R.save(); toast('技能熟練度全 ★5', '#7FE0FF'); });
     on('adm-item', () => {
       const kind = $('adm-kind').value, base = $('adm-base').value, rarity = +$('adm-rar').value || 0, plus = Math.max(0, Math.min(15, +$('adm-plus').value || 0));
-      const it = R.makeItem({ kind, base, ilvl: R.LV_CAP || 80, rarity, identified: true }); if (!it) return;
+      const it = R.makeItem({ kind, base, ilvl: R.LV_CAP || 100, rarity, identified: true }); if (!it) return;
       if (plus) it.plus = plus;
       const set = $('adm-set').value; if (set && kind === 'armor') it.set = set;
       const lord = $('adm-lord').value; if (lord && R.LORD_GEAR[lord]) { it.lord = lord; }

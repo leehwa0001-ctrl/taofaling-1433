@@ -4,10 +4,10 @@
 // - 會長室：嵌燈全暗著，只有落地窗那邊亮；他拿著澆壺在窗邊澆花、哼著早就退流行的小曲；桌上那本日記的封面寫著「愛人」。
 //   （前傳裡的米雅、他被精神控制的那個春天都不寫進遊戲，只留這些畫面。）
 // - 第一次見面：指派「在卡索級的特別討伐令裡打倒最深處的佩特拉核心」→ 回來再見他 → 近神段・散心階。
-// - 職業等級 80 以後再見他：指派「一趟卡索級裡打倒三隻領主體、再打倒核心」→ 近神段・斷心階。
+// - 職業等級 100（滿級）以後再見他：指派「一趟卡索級裡打倒三隻領主體、再打倒核心」→ 近神段・斷心階。
 // - 長相（作者 2026-10-04 給的圖）：白髮往後撥、幾綹垂在額前；下巴、嘴邊一圈短短的白鬍子；眼睛是一圈一圈的彩虹色（中間藍、外面綠黃紅）；
 //   曬過的膚色；藍襯衫、袖子捲到手肘、領口開著；深色褲子、皮帶、棕色綁帶靴。窗邊（陽台）擺滿向日葵和一盆一盆的花。程式畫的點陣頭像（R.kansaitPortrait）作者說醜，不顯示；有作者的圖時設 R.KANSAIT_ART 才放頭像。
-// - 存在 R.S.kansait = { step, lords }。step：1 召見、2 第一件指派中、3 第一件完成、4 散心階（等 80 級）、5 第二件指派中、6 第二件完成、7 斷心階。
+// - 存在 R.S.kansait = { step, lords }。step：1 召見、2 第一件指派中、3 第一件完成、4 散心階（等滿級 100）、5 第二件指派中、6 第二件完成、7 斷心階。
 // 放在 ranks.js、kaso.js 後面。
 (function (R) {
   const W = () => R.W, S = () => R.S, $ = id => document.getElementById(id), esc = s => R.esc(s);
@@ -24,7 +24,7 @@
   const check = () => {
     const s = S(), r = s && s.rank; if (!s || !r) return;
     if (!s.kansait && atAtlas(r) && reqMet() && lv() >= 70) { s.kansait = { step: 1 }; R.save && R.save(); setTimeout(() => R.banner && R.banner('公會會長坎賽特召見', '到公會的登記處，專員會帶你去會長室。'), 1800); }
-    const k = s.kansait; if (k && k.step === 4 && lv() >= 80 && !k.told80) { k.told80 = 1; R.save && R.save(); setTimeout(() => R.toast && R.toast('職業等級 80：會長說過，到了這一步再去找他。（公會的登記處）', '#C8A040'), 2000); }
+    const cap = R.LV_CAP || 100, k = s.kansait; if (k && k.step === 4 && lv() >= cap && !k.toldCap) { k.toldCap = 1; R.save && R.save(); setTimeout(() => R.toast && R.toast('職業等級 ' + cap + '：會長說過，到了這一步再去找他。（公會的登記處）', '#C8A040'), 2000); }
   };
   const nd0 = R.onNewDay;
   R.onNewDay = () => { nd0 && nd0(); try { check(); } catch (e) { console.warn('[kansait]', e); } };
@@ -66,10 +66,10 @@
       '「好。」他在文件上簽了名，字很潦草。「近神段・散心階。」',
       '「從今天起，公會面對世界危機的時候，你是底牌之一。」',
       '「平常照樣接你的委託。真有事，我會找你。」'], btn: '收下勇者證', next: 4, promote: 0 },
-    4: { kick: '公會本部・會長室', title: '會長坎賽特', lines: [OFFICE, '坎賽特哼著那首老歌，在窗邊澆花。', '「最後一階嘛……等你再強一點。」他沒有回頭。「職業等級到 80，再來找我。」'], btn: '告辭' },
+    4: { kick: '公會本部・會長室', title: '會長坎賽特', lines: [OFFICE, '坎賽特哼著那首老歌，在窗邊澆花。', '「最後一階嘛……等你再強一點。」他沒有回頭。「職業等級到 100，再來找我。」'], btn: '告辭' },
     '4b': { kick: '公會本部・會長室', title: '會長坎賽特', lines: [
       OFFICE, '坎賽特把那本日記收進抽屜，關上。',
-      '「80 了啊。」他伸了個懶腰。「最後一階，斷心階。」',
+      '「100 了啊。」他伸了個懶腰。「最後一階，斷心階。」',
       '「這次要難一點：一趟卡索級的特別討伐令裡，打倒三隻領主體，再把核心打下來。」',
       '「一樣，活著回來。」'], btn: '接下指派', next: 5 },
     5: { kick: '公會本部・會長室', title: '會長坎賽特', lines: [OFFICE, '「一趟卡索級裡，三隻領主體，最後是核心。」坎賽特舉起澆壺晃了晃。「慢慢來。」'], btn: '告辭' },
@@ -118,7 +118,7 @@
   R.kansaitPortrait = portrait;
   const office = () => {
     const k = K(); if (!k) return; const r = S().rank;
-    const key = k.step === 4 && lv() >= 80 ? '4b' : String(k.step), sc = SCENES[key]; if (!sc) return;
+    const key = k.step === 4 && lv() >= (R.LV_CAP || 100) ? '4b' : String(k.step), sc = SCENES[key]; if (!sc) return;
     const host = $('hub-sheet'), el = $('hub-modal'); if (!host || !el) return;
     host.innerHTML = '<p class="kicker">' + esc(sc.kick) + '</p><h2>' + esc(sc.title) + '</h2><div class="ks-office">' + (R.KANSAIT_ART ? '<img class="ks-face" src="' + R.KANSAIT_ART + '" alt="會長坎賽特">' : '') + sc.lines.map(l => '<p>' + esc(l) + '</p>').join('') + '</div><div class="row"><button type="button" class="btn pri" id="kso-ok">' + esc(sc.btn) + '</button></div>';
     el.hidden = false; host.scrollTop = 0;
@@ -135,7 +135,7 @@
   // ---------- 公會登記處：勇者證下面 ----------
   const STATUS = {
     1: '會長坎賽特召見：去會長室一趟。', 2: '會長的指派：在卡索級的特別討伐令裡打倒最深處的佩特拉核心，活著回來。', 3: '會長的指派完成了：去會長室回報。',
-    4: '近神段・散心階。下一階：職業等級 80 以後再去找會長。', 5: '會長的指派：一趟卡索級的特別討伐令裡打倒三隻領主體，再打倒核心。', 6: '會長的指派完成了：去會長室回報。', 7: '近神段・斷心階。'
+    4: '近神段・散心階。下一階：職業等級 100（滿級）以後再去找會長。', 5: '會長的指派：一趟卡索級的特別討伐令裡打倒三隻領主體，再打倒核心。', 6: '會長的指派完成了：去會長室回報。', 7: '近神段・斷心階。'
   };
   const hub0 = R.hub;
   R.hub = (t, f) => {
@@ -149,7 +149,7 @@
       if (!atAtlas(r) && r.dan < 5 && !k) return out;
       const div = document.createElement('div'); div.className = 'ks-box';
       if (!k) div.innerHTML = '<p class="note">近神段由會長坎賽特親自決定。條件都達到、職業等級 70 以上（現在 ' + lv() + '），會長會召見你。</p>';
-      else { div.innerHTML = '<p class="note"><b>' + esc(STATUS[k.step] || '') + '</b></p><div class="row"><button type="button" class="btn' + ([1, 3, 6].includes(k.step) || (k.step === 4 && lv() >= 80) ? ' gold' : '') + '" id="ks-go">去會長室</button></div>'; }
+      else { div.innerHTML = '<p class="note"><b>' + esc(STATUS[k.step] || '') + '</b></p><div class="row"><button type="button" class="btn' + ([1, 3, 6].includes(k.step) || (k.step === 4 && lv() >= (R.LV_CAP || 100)) ? ' gold' : '') + '" id="ks-go">去會長室</button></div>'; }
       box.appendChild(div);
       const b = $('ks-go'); if (b) b.onclick = office;
     } catch (e) { console.warn('[kansait]', e); }

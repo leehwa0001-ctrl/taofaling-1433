@@ -18,7 +18,7 @@
   // ---------- 公會大廳裡的勇者（各種種族、各國來的人） ----------
   // 公會招募等級＝你目前職業等級 ±2（上限 R.LV_CAP；以前硬卡 20，高等級後隊友永遠偏弱）
   R.makeRecruit = () => {
-    const S = R.S, lv0 = S && S.classes && S.classes[S.cls] ? S.classes[S.cls].lv : 1, cap = R.LV_CAP || 80;
+    const S = R.S, lv0 = S && S.classes && S.classes[S.cls] ? S.classes[S.cls].lv : 1, cap = R.LV_CAP || 100;
     const off = Math.floor(rnd(-2, 2)), lv = Math.max(1, Math.min(cap, lv0 + off));
     const cls = pick(R.CLASS_IDS), race = R.randomRace ? R.randomRace() : 'human', rc = R.RACES ? R.RACES[race] : null;
     const m = { id: 'm' + Date.now().toString(36) + Math.floor(Math.random() * 1e4), name: R.randomName ? R.randomName(race) : '勇者', race, cls, lv, lvOff: off, fee: 40 + lv * 25, line: pick(LINES),
@@ -32,7 +32,7 @@
   // 已招募／大廳名單的等級跟著你目前職業走（劇情隊友交給 syncStoryLv）
   R.syncRecruitLv = () => {
     const S = R.S; if (!S || !S.classes || !S.classes[S.cls]) return;
-    const mine = S.classes[S.cls].lv || 1, cap = R.LV_CAP || 80;
+    const mine = S.classes[S.cls].lv || 1, cap = R.LV_CAP || 100;
     const bump = m => {
       if (!m || m.story) return;
       if (m.lvOff == null) m.lvOff = Math.max(-2, Math.min(2, (m.lv || 1) - mine));

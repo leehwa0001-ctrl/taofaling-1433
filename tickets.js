@@ -10,7 +10,7 @@
   // 升 10 等經驗書：現在登記的武器（職業）直接升 10 級
   const readBook = () => {
     const S = R.S; if (!(S.xpBooks > 0)) return;
-    const st = S.classes[S.cls], lv0 = st.lv, cap = R.LV_CAP || 80;
+    const st = S.classes[S.cls], lv0 = st.lv, cap = R.LV_CAP || 100;
     S.xpBooks--;
     // 不能超過等級上限（以前會直接 +10，滿級附近會破帽）；多出來的等同一級的經驗換成技能點（跟 levelcap.js 滿級後一樣）
     if (st.lv > cap) { st.spBonus = (st.spBonus || 0) + (st.lv - cap); st.lv = cap; }
