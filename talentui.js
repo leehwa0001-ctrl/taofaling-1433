@@ -153,7 +153,7 @@
     const cb = host.querySelector('[data-close]'), row = cb && cb.closest('.row'); if (row) row.remove();
     const used = R.spTotal(st) - free;
     host.innerHTML = '<div class="tu-root"><div class="tu-head"><h2>技能點・天賦・' + esc(R.clsName(cls)) + ' Lv ' + st.lv + '</h2><span class="tu-pts">可用 <b>' + free + '</b> 點<small>（共 ' + R.spTotal(st) + '，用掉 ' + used + '）</small></span>' + (R.talentSlots ? (R.talentSlots() >= 2 ? '<span class="tu-slot">奧義兩格</span>' : '<button type="button" class="mini gold" data-tuslot' + (free >= 10 ? '' : ' disabled') + ' title="奧義原本只能學一個；花 10 點多開一格（最多兩個）">多開一格奧義（10 點）</button>') : '') + '</div>'
-      + '<details class="tu-help"><summary>怎麼點</summary><p class="note">等級幾級就有幾點（每升一級 +1）' + (st.lv >= R.LV_CAP ? '；滿級之後每攢滿一級的經驗再 1 點' : '') + '，全部用在天賦；每個武器類別的點數分開算。技能不花點數：用越多越熟練，每一星冷卻 −5%（技能書的技能傷害再 +12%）。</p>'
+      + '<details class="tu-help"><summary>怎麼點</summary><p class="note">每升一級 +2 點（等級 ×2）' + (st.lv >= R.LV_CAP ? '；滿級之後每攢滿一級的經驗再 1 點' : '') + '，全部用在天賦；每個武器類別的點數分開算。技能不花點數：用越多越熟練，每一星冷卻 −5%（技能書的技能傷害再 +12%）。</p>'
       + '<p class="note">天賦樹：根基投滿 ' + T.NEED_PATH + ' 點開四條道；一條道投滿 ' + T.NEED_SUB + ' 點開它的兩個分支；分支投滿 ' + T.NEED_CAP + ' 點開它的奧義。道和分支都可以點好幾條，<b>奧義只能學一個</b>（右上角可以花 10 點多開一格，最多兩個）。學的那個奧義點滿以後，多的點數可以放進最下面的「歷練」。要重新分配，到公會的武器登記那裡。</p></details>'
       + '<div class="tu-cols"><section class="tu-skills">' + skillsHtml() + '</section><section class="tu-tree">' + treeHtml(T) + '</section><section class="tu-side">' + detailHtml(T, BY) + '</section></div></div>';
     if (row) host.appendChild(row);

@@ -10,8 +10,18 @@
   // 升 10 等經驗書：現在登記的武器（職業）直接升 10 級
   const readBook = () => {
     const S = R.S; if (!(S.xpBooks > 0)) return;
-    const st = S.classes[S.cls], lv0 = st.lv; S.xpBooks--; st.lv += BOOK_LV;
-    R.save(); R.hub(); R.say(R.clsName(S.cls) + ' Lv ' + lv0 + ' → ' + st.lv + (lv0 < R.PROMOTE_LV && st.lv >= R.PROMOTE_LV ? '。轉職的等級到了（到公會看轉職條件）' : ''));
+    const st = S.classes[S.cls], lv0 = st.lv, cap = R.LV_CAP || 80;
+    S.xpBooks--;
+    // 不能超過等級上限（以前會直接 +10，滿級附近會破帽）；多出來的等同一級的經驗換成技能點（跟 levelcap.js 滿級後一樣）
+    if (st.lv > cap) { st.spBonus = (st.spBonus || 0) + (st.lv - cap); st.lv = cap; }
+    const gain = Math.min(BOOK_LV, Math.max(0, cap - st.lv));
+    st.lv += gain;
+    const extra = BOOK_LV - gain;
+    if (extra > 0) st.spBonus = (st.spBonus || 0) + extra;
+    R.save(); R.hub();
+    R.say(R.clsName(S.cls) + ' Lv ' + lv0 + ' → ' + st.lv
+      + (extra ? '（已滿級，多出來的 ' + extra + ' 級換成 ' + extra + ' 點技能點）' : '')
+      + (lv0 < R.PROMOTE_LV && st.lv >= R.PROMOTE_LV ? '。轉職的等級到了（到公會看轉職條件）' : ''));
   };
 
   // 用抽選券改種族：抽一次一張、十連抽十張；選了才登記，不收手續費，也不受一天一次的限制

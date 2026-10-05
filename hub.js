@@ -21,6 +21,15 @@
     }
     // 新的職業（2026-10-04 武術家）：舊存檔補上這個職業的等級、裝備欄
     if (s.classes && s.equip) R.CLASS_IDS.forEach(c => { if (!s.classes[c]) s.classes[c] = { lv: 1, xp: 0, adv: null }; if (!s.equip[c]) s.equip[c] = { weapon: null, head: null, body: null, legs: null, feet: null, charm: null }; });
+    // 經驗書以前會把等級加破 80：多出來的級換成技能點（跟 levelcap／tickets 一樣）
+    if (s.classes) {
+      const cap = R.LV_CAP || 80;
+      Object.values(s.classes).forEach(st => {
+        if (!st || !(st.lv > cap)) return;
+        st.spBonus = (st.spBonus || 0) + (st.lv - cap);
+        st.lv = cap; st.xp = 0;
+      });
+    }
     return s;
   };
   R.migrate = migrate;

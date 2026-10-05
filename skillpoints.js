@@ -76,7 +76,7 @@
   R.hurtPlayer = (raw, src, o) => { const P = W().P; return hp0(P && P.talGuard ? raw * (1 - P.talGuard) : raw, src, o); };
   // 升級：提醒有點數可以用
   const gx0 = R.gainXp;
-  R.gainXp = v => { const st = stOf(), lv0 = st.lv, b0 = st.spBonus || 0; gx0(v); const n = (st.lv - lv0) + ((st.spBonus || 0) - b0); if (n > 0) setTimeout(() => R.toast && R.toast('技能點 +' + n + '（可用 ' + R.spFree(st) + ' 點）', '#E8C04A'), 2400); };
+  R.gainXp = v => { const st = stOf(), lv0 = st.lv, b0 = st.spBonus || 0; gx0(v); const n = (st.lv - lv0) * 2 + ((st.spBonus || 0) - b0); if (n > 0) setTimeout(() => R.toast && R.toast('技能點 +' + n + '（可用 ' + R.spFree(st) + ' 點）', '#E8C04A'), 2400); };
 
   // ---------- 畫面 ----------
   const book = (host, where, close) => {
