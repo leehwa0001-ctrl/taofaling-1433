@@ -13,8 +13,8 @@
 const http = require('http');
 const { WebSocketServer } = require('ws');
 
-const PORT = +process.env.PORT || 8787, MAX = 4, MAX_BYTES = 64 * 1024;
-const PROTOCOL = '1433-net-2', RATE = 48, HOLD = 120000;   // 每條連線每秒最多 48 則；斷線保留座位 120 秒（短暫斷線不關房）
+const PORT = +process.env.PORT || 8787, MAX = 4, MAX_BYTES = 96 * 1024;
+const PROTOCOL = '1433-net-2', RATE = 72, HOLD = 120000;   // 每條連線每秒最多 72 則；斷線保留座位 120 秒；換層控制訊息不佔額度
 const LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const rooms = new Map();   // code → { code, host, members: Map(id → client) }
 let nextId = 1;
@@ -55,9 +55,10 @@ wss.on('connection', ws => {
   ws.on('message', raw => {
     const txt = typeof raw === 'string' ? raw : raw.toString();
     if (txt === 'ping') { try { ws.send('pong'); } catch (e) { } ws.dead = false; return; }   // 用戶端心跳（與 CF auto-response 同一字串）
-    const now = Date.now(); if (now - (c.rt || 0) > 1000) { c.rt = now; c.rn = 0; } if (++c.rn > RATE) return;
     let o; try { o = JSON.parse(txt); } catch (e) { return; }
     if (!o || typeof o.t !== 'string') return;
+    const ctrl = o.t === 'msg' && o.d && typeof o.d.k === 'string' && ['floor', 'run', 'end', 'busy', 'wantFloor', 'hd'].includes(o.d.k);
+    if (!ctrl) { const now = Date.now(); if (now - (c.rt || 0) > 1000) { c.rt = now; c.rn = 0; } if (++c.rn > RATE) return; }
     if (o.t === 'create' || o.t === 'join') {
       if (o.v !== PROTOCOL) return send(c, { t: 'err', msg: '連線版本不同，請重新整理遊戲並更新伺服器。' });
       // 先驗證目的房間，失敗時保留原房；重複開房／加入同房也不拆房。

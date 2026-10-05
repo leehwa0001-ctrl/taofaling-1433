@@ -12,7 +12,8 @@
 // 3. 倒下：還有隊友站著的時候，倒下不會馬上結束，躺著等隊友扶（走過去按空白鍵）；45 秒沒人扶、或大家都倒了，才真的倒下。
 // 4. 換房主、斷線：房主離開或斷線，伺服器換下一個人當房主——那個人的鏡像變成自己的遺跡生物，繼續跑；
 //    斷線的人 120 秒內連回來（net.js）就照新房主的資料重來；重連時房主重送整層快照。房主的分頁在背景時，用 Worker 的計時器繼續跑遊戲（瀏覽器在背景不跑畫面）。
-// - 訊息都每 0.1 秒打包成一則（伺服器每條連線每秒最多 40 則）：房主 { k: 'h' }、隊員 { k: 'g' }，都帶 rid（run.coop.seed）、f、n（第幾次換樓層），對不上的丟掉。
+// - 訊息都每 0.1 秒打包成一則（伺服器每條連線每秒約 72 則；floor／wantFloor／hd 控制訊息不佔額度）：房主 { k: 'h' }、隊員 { k: 'g' }，都帶 rid（run.coop.seed）、f、n（第幾次換樓層），對不上的丟掉。
+// - 換層加固：生怪／快照訊息限大小分批、dump 錯開送、換層後自動 dump、wantFloor 觸發 dump、隊員換層後重要快照。
 // 放在 net.js 後面（所有包 R.spawnEnemy、R.hurtEnemy、R.killEnemy、R.updateEnemies、R.allyHit、R.onPlayerDown 的檔案後面）。
 (function (R) {
   const W = () => R.W, N = R.net; if (!N) return;
@@ -78,30 +79,70 @@
   // ---------- 房主：快照、送出去 ----------
   const snapOf = e => [e.nid, Math.round(e.x * 10), Math.round(e.z * 10), Math.round((e.yaw || 0) * 100), Math.max(0, Math.round(e.hp)), Math.round(((e.m && e.m.g && e.m.g.position.y) || 0) * 10),
     (e.under ? 2 : 0) | (e.invuln ? 8 : 0) | (e.dormant ? 16 : 0) | (e.m && e.m.g && e.m.g.visible === false ? 32 : 0)];
+  // 單則訊息壓在 ~24KB 內（伺服器上限 64KB；換層瞬間生怪＋快照容易爆）
+  const MSG_BUDGET = 24000, SPAWN_CHUNK = 36, SNAP_CHUNK = 90, DUMP_CHUNK = 40;
+  const fitSend = (msg, to) => {
+    let raw = JSON.stringify({ t: 'msg', d: msg, to });
+    if (raw.length <= MSG_BUDGET + 64) { N.send(msg, to); return true; }
+    return false;
+  };
   const flushHost = run => {
     const q = H.q, msg = Object.assign({ k: 'h' }, tag(run));
     // 漏網的：不是經過 R.spawnEnemy 最外層生的（例如 monsters2.js 成群的那幾隻用內層的生），也補編號、照樣乘人數加成
     W().enemies.forEach(e => { if (e.dead || e.nid) return; e.nid = ++M.seq; M.map.set(e.nid, e); H.fresh.push(e); const k = hpK(); if (k > 1) { e.hp *= k; e.hpMax *= k; } });
     H.fresh.forEach(e => { if (!e.dead && e.nid) q.s.push(e); }); H.fresh = [];
-    if (q.s.length) { msg.s = q.s.splice(0, 120).filter(e => !e.dead).map(e => { H.sent.add(e.nid); return info(e); }); if (!msg.s.length) delete msg.s; }
-    H.fullT -= 0.1; const full = H.fullT <= 0; if (full) H.fullT = 2;
+    // 換層剛載完：先只送一小批生怪，下一幀再繼續，避免一包塞爆被伺服器丟掉
+    const spawnN = (N.floorBusy && N.floorBusy()) ? Math.min(12, SPAWN_CHUNK) : SPAWN_CHUNK;
+    if (q.s.length) {
+      const batch = q.s.splice(0, spawnN).filter(e => !e.dead).map(e => { H.sent.add(e.nid); return info(e); });
+      if (batch.length) msg.s = batch;
+    }
+    H.fullT -= 0.1; const full = H.fullT <= 0; if (full) H.fullT = 2.5;
     const ss = [];
     M.map.forEach((e, nid) => {
       if (e.dead) { M.map.delete(nid); return; }
       if (!H.sent.has(nid)) return;
       const s = snapOf(e), key = s.join(','); if (!full && H.last.get(nid) === key) return; H.last.set(nid, key); ss.push(s);
     });
-    if (ss.length) msg.ss = ss;
-    if (q.d.length) msg.d = q.d.splice(0);
-    if (q.sh.length) msg.sh = q.sh.splice(0, 60);
-    if (q.fx.length) msg.fx = q.fx.splice(0, 40);
-    if (q.dm.length) msg.dm = q.dm.splice(0);
-    if (full) msg.al = [...M.map.keys()].filter(nid => H.sent.has(nid));
-    if (Object.keys(msg).length > 4) N.send(msg);
+    if (ss.length) msg.ss = ss.splice(0, SNAP_CHUNK);
+    // 沒塞進這則的快照留到下一幀（寫回 last 清掉，下一幀會重抓）
+    ss.forEach(s => { H.last.delete(s[0]); });
+    if (q.d.length) msg.d = q.d.splice(0, 80);
+    if (q.sh.length) msg.sh = q.sh.splice(0, 24);
+    if (q.fx.length) msg.fx = q.fx.splice(0, 20);
+    if (q.dm.length) msg.dm = q.dm.splice(0, 40);
+    if (full && !msg.s) msg.al = [...M.map.keys()].filter(nid => H.sent.has(nid)).slice(0, 400);
+    if (Object.keys(msg).length > 4) {
+      if (!fitSend(msg)) {
+        // 還是太大：拆成只送生怪／只送快照
+        if (msg.s) { const m2 = Object.assign({ k: 'h' }, tag(run), { s: msg.s }); N.send(m2); }
+        if (msg.ss) { const m3 = Object.assign({ k: 'h' }, tag(run), { ss: msg.ss }); N.send(m3); }
+        if (msg.d || msg.sh || msg.fx || msg.dm || msg.al) {
+          const m4 = Object.assign({ k: 'h' }, tag(run));
+          ['d', 'sh', 'fx', 'dm', 'al'].forEach(k => { if (msg[k]) m4[k] = msg[k]; });
+          N.send(m4);
+        }
+      }
+    }
   };
+  // dump 錯開送：換層／重連時一次噴好幾包會撞速率上限或塞爆緩衝
+  let dumpQ = Promise.resolve();
   const dump = (run, to) => {
-    const all = [...M.map.values()].filter(e => !e.dead);
-    for (let i = 0; i < all.length || i === 0; i += 100) { const part = all.slice(i, i + 100); part.forEach(e => H.sent.add(e.nid)); N.send(Object.assign({ k: 'hd' }, tag(run), { s: part.map(info), last: i + 100 >= all.length ? 1 : 0 }), to); if (!all.length) break; }
+    const all = [...M.map.values()].filter(e => !e.dead), nAt = run.coop.n, seedAt = run.coop.seed;
+    const chunks = [];
+    for (let i = 0; i < all.length || i === 0; i += DUMP_CHUNK) {
+      const part = all.slice(i, i + DUMP_CHUNK);
+      part.forEach(e => H.sent.add(e.nid));
+      chunks.push({ s: part.map(info), last: i + DUMP_CHUNK >= all.length ? 1 : 0 });
+      if (!all.length) break;
+    }
+    dumpQ = dumpQ.then(async () => {
+      for (let i = 0; i < chunks.length; i++) {
+        const r2 = host(); if (!r2 || r2.coop.seed !== seedAt || r2.coop.n !== nAt) return;
+        try { N.send(Object.assign({ k: 'hd' }, tag(r2), chunks[i]), to); } catch (e) { }
+        if (i + 1 < chunks.length) await new Promise(ok => setTimeout(ok, 70));
+      }
+    }).catch(() => { });
   };
   // 房主那邊的遺跡生物倒下：告訴大家
   const ke0 = R.killEnemy;
@@ -231,14 +272,16 @@
   };
 
   // ---------- 隊員收到房主的 ----------
+  let needCool = 0;
+  const askNeed = () => { if (needCool > 0) return; needCool = 1.2; G.need = true; G.needT = Math.min(G.needT, 0.15); };
   const applySnap = a => {
-    const e = M.map.get(a[0]); if (!e || e.dead) { G.need = true; return; }
+    const e = M.map.get(a[0]); if (!e || e.dead) { askNeed(); return; }
     e.tx = a[1] / 10; e.tz = a[2] / 10; e.tyaw = a[3] / 100; if (a[4] > 0) e.hp = Math.max(1, Math.min(e.hpMax || a[4], a[4])); e.ty = a[5] / 10;
     const f = a[6] | 0; e.under = !!(f & 2); e.invuln = !!(f & 8); e.dormant = !!(f & 16); e.hidden = !!(f & 32);
   };
   const die = nid => { const e = M.map.get(nid); if (!e) return; M.map.delete(nid); if (e.dead) return; if (e.tx != null) { e.x = e.tx; e.z = e.tz; } e.netDie = true; e.hp = 0; try { R.killEnemy(e); } catch (err) { console.warn('[net2] die', err); } };
   const vanish = e => { e.dead = true; detach(e); };
-  const prune = al => { const s = new Set(al); M.map.forEach((e, nid) => { if (!s.has(nid)) { M.map.delete(nid); vanish(e); } }); al.forEach(nid => { if (!M.map.has(nid)) G.need = true; }); };
+  const prune = al => { const s = new Set(al); M.map.forEach((e, nid) => { if (!s.has(nid)) { M.map.delete(nid); vanish(e); } }); if (al.some(nid => !M.map.has(nid))) askNeed(); };
   const shotIn = o => { const src = o.src ? M.map.get(o.src) : null; const p = Object.assign({}, o, { owner: 'e', src: src || null }); Object.keys(p).forEach(k => { if (p[k] === undefined) delete p[k]; }); try { R.fire(p); } catch (e) { } };
   const fxIn = f => { const o = Object.assign({}, f[4] || {}); for (const k of Object.keys(o)) { if (k.length > 1 && k.endsWith('N') && typeof o[k] === 'number') { const t = M.map.get(o[k]); if (!t) return; o[k.slice(0, -1)] = t; delete o[k]; } } try { R.fx(f[0], f[1], f[2], f[3], o); } catch (e) { } };
   const takeDmg = dm => { if (dm[0] !== N.me) return; const P = W().P; if (!P || P.dead) return; R.hurtPlayer(+dm[1] || 0, (dm[2] && M.map.get(dm[2])) || null); };
@@ -325,6 +368,22 @@
       try { dump(run, o.id); } catch (e) { console.warn('[net2] dump-back', e); }
     }
   };
+  // net.js：隊員 wantFloor → 推樓層後順便 dump；換層完成 → 對全房 dump
+  N.onWantFloor = to => {
+    const run = host(); if (!run) return;
+    H.fullT = 0; H.last = new Map();
+    try { dump(run, to == null ? undefined : to); } catch (e) { console.warn('[net2] dump-want', e); }
+  };
+  N.onFloorReady = () => {
+    const run = host(); if (!run) return;
+    H.fullT = 0; H.last = new Map();
+    // 稍微晚一點再 dump，讓隊員先 loadFloor 對上 n，future 緩衝才接得到
+    const nAt = run.coop.n, seedAt = run.coop.seed;
+    setTimeout(() => {
+      const r2 = host(); if (!r2 || r2.coop.seed !== seedAt || r2.coop.n !== nAt) return;
+      try { dump(r2); } catch (e) { console.warn('[net2] dump-floor', e); }
+    }, 500);
+  };
   N.onRoom = (o, back) => {
     const run = run0(); if (!back || !run) return;
     if (run.coop.host && o.host !== N.me) demote(run);
@@ -357,6 +416,10 @@
     if (run && !run.coop.host) {
       const fut = G.future.filter(d => d.rid === run.coop.seed && d.n === run.coop.n); G.future = G.future.filter(d => d.rid === run.coop.seed && d.n > run.coop.n);
       fut.forEach(d => fromHost(N.host, d));
+      // 換層後一定再要一次整層（未來緩衝可能沒接到生怪包）
+      G.need = true; G.needT = 0; G.orphanT = Math.max(G.orphanT, 2.5); needCool = 0;
+    } else if (run && run.coop.host) {
+      H.fullT = 0; H.last = new Map();
     }
     const P = W().P; if (P && P.netDown) { P.netDown = null; P.dead = false; P.hp = Math.max(1, Math.round(P.hpMax * 0.2)); R.setDown && R.setDown(P.h, false); }   // 換層的時候還躺著：跟著站起來
     return r;
@@ -379,7 +442,7 @@
       syncRT();
       H.t += dt; if (H.t >= 0.1) { H.t = 0; try { flushHost(run); } catch (e) { console.warn('[net2] flush', e); } }
     } else {
-      G.needT -= dt; G.t += dt;
+      G.needT -= dt; G.t += dt; needCool = Math.max(0, needCool - dt);
       if (G.orphanT > 0) { G.orphanT -= dt; if (G.orphanT <= 0) { G.standins.forEach(e => { e.dead = true; }); G.standins = []; } }   // 一直沒接手的替身：當作沒有（守門的那群才不會卡住）
       if (G.t >= 0.1) { G.t = 0; flushGuest(run); }
     }

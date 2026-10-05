@@ -6,14 +6,15 @@
 // - 看得到彼此：位置、方向、出手、翻滾、倒下（每秒 10 次）；頭上有名字。
 // - 第一階段還沒做：遺跡生物、寶箱、掉落各算各的（第二階段改成房主決定遺跡生物）。
 // - 第二階段（net2.js）：遺跡生物、寶箱、倒下都同步；這個檔多了：別人的位置表 N.remotes、不認得的訊息交給 N.onMsg2／N.onServer2、
-//   斷線 120 秒內自動重新連線回原本的座位（指數退避；伺服器有 caps 才會）、房主換人（伺服器送 { t: 'host', id }）；用戶端每 20 秒送 ping 保活。
+//   斷線 120 秒內自動重新連線回原本的座位（指數退避；伺服器有 caps 才會）、房主換人（伺服器送 { t: 'host', id }）；用戶端每 12 秒送 ping 保活。
+//   換層加固：載入前後 ping、樓層訊息重送、校驗失敗先重同步再踢人、wantFloor 順便 dump。
 (function (R) {
   const W = () => R.W, S = () => R.S, $ = id => document.getElementById(id), esc = s => R.esc(s);
   const PROD = 'wss://taofaling-1433.1433.workers.dev';   // Cloudflare（server-cf/，2026-10-05 上線）
   const LS = 'tf-net-server';
   const PROTOCOL = '1433-net-2';
   const HOLD_MS = 120000;   // 與伺服器座位保留時間一致（短暫斷線 2 分鐘內可重連）
-  const BEAT_MS = 20000;    // 用戶端心跳：送文字 ping（CF／Node 都回 pong）
+  const BEAT_MS = 12000;    // 用戶端心跳：送文字 ping（CF／Node 都回 pong；換層卡住主線程時也盡量保活）
   // https://… 也收（Render 給的網址是 https）：換成 wss://
   const wsOf = u => String(u || '').trim().replace(/^http(s?):\/\//, 'ws$1://').replace(/\/+$/, '');
   const serverUrl = () => wsOf(serverUrl0());
@@ -231,9 +232,29 @@
   R.buildFloor = (sc, run, F) => run && run.coop ? R.withSeed(seedOf(run, 2), () => bf0(sc, run, F)) : bf0(sc, run, F);
   // 這一層長得一不一樣（地形和寶箱的位置）：房主的和自己的對不上就在 console 留話，方便查
   const checksum = F => { let h = 2166136261; const T = F.tile && F.tile.T; if (T) for (let i = 0; i < T.length; i++) h = Math.imul(h ^ T[i], 16777619); (F.chests || []).forEach(c => { h = Math.imul(h ^ Math.round((c.x || 0) * 10) ^ Math.round((c.z || 0) * 10) << 8, 16777619); }); return h >>> 0; };
-  const cks = { mine: {}, host: {} };
-  const compare = n => { const a = cks.mine[n], b = cks.host[n]; if (a == null || b == null) return; if (a !== b) { console.warn('[net] 這一層和房主的不一樣', n, a, b); N.leave(); R.banner('地圖不同步，已離開連線房間', '請所有人重新整理遊戲後再組隊；這一趟改為單人'); } delete cks.mine[n]; delete cks.host[n]; };
+  const cks = { mine: {}, host: {} }, ckBad = {};   // n → 連續校驗失敗次數（換層瞬間偶發不一致：先重同步，不要立刻踢人）
+  const keepAlive = () => { try { if (N.ws && N.ws.readyState === 1) N.ws.send('ping'); } catch (e) { } };
+  const compare = n => {
+    const a = cks.mine[n], b = cks.host[n]; if (a == null || b == null) return;
+    if (a === b) { delete ckBad[n]; delete cks.mine[n]; delete cks.host[n]; return; }
+    ckBad[n] = (ckBad[n] || 0) + 1;
+    console.warn('[net] 這一層和房主的不一樣', n, a, b, 'times', ckBad[n]);
+    // 第一次：跟房主要樓層／快照再對一次；連續兩次才離開（避免換層瞬間假陽性斷線）
+    if (ckBad[n] < 2) {
+      R.toast && R.toast('地圖校驗不一致，正在重新同步……', '#FFB45A');
+      try {
+        if (isHost()) { pushFloor(); if (N.onWantFloor) N.onWantFloor(null); }
+        else if (N.host) { N.send({ k: 'wantFloor', rid: coop() && coop().coop.seed }, N.host); }
+      } catch (e) { }
+      delete cks.mine[n]; delete cks.host[n];
+      return;
+    }
+    delete ckBad[n]; delete cks.mine[n]; delete cks.host[n];
+    N.leave(); R.banner('地圖不同步，已離開連線房間', '請所有人重新整理遊戲後再組隊；這一趟改為單人');
+  };
 
+  let floorBusy = false, followPend = null, followTimer = null;
+  N.floorBusy = () => floorBusy;
   const lf0 = R.loadFloor;
   R.loadFloor = (f, o) => {
     o = o || {}; const run = W().run;
@@ -243,11 +264,36 @@
       if (run.coop.host) run.coop.n++;
       else if (o.fresh) run.coop.n = 1;
     }
-    const r = lf0(f, o);
+    // 換層會卡住主線程數百毫秒～數秒：先送 ping 保活，載完再送一次，避免 CF／中介把連線當閒置切掉
+    const coopNow = run && run.coop && !run.coop.solo;
+    if (coopNow) { floorBusy = true; keepAlive(); }
+    let r;
+    try { r = lf0(f, o); }
+    finally { if (coopNow) { keepAlive(); floorBusy = false; } }
     if (run && run.coop && !run.coop.solo && W().F) {
       const ck = checksum(W().F); cks.mine[run.coop.n] = ck; if (!run.coop.host) compare(run.coop.n);
-      if (run.coop.host) N.send({ k: 'floor', rid: run.coop.seed, f, up: !!o.up, warp: !!o.warp, n: run.coop.n, ck });
-      else if (o.fresh && lastFloor && lastFloor.rid === run.coop.seed && lastFloor.n > 1) setTimeout(() => follow(lastFloor), 300);   // 房主已經往下走了：追上去
+      if (run.coop.host) {
+        const msg = { k: 'floor', rid: run.coop.seed, f, up: !!o.up, warp: !!o.warp, n: run.coop.n, ck };
+        try { N.send(msg); } catch (e) { }
+        // 換層瞬間訊息容易被擠掉：稍後再推樓層；dump 只做一次（等隊員 loadFloor 對上 n）
+        const nAt = run.coop.n, seedAt = run.coop.seed;
+        setTimeout(() => {
+          const r2 = coop(); if (!r2 || !r2.coop.host || r2.coop.seed !== seedAt || r2.coop.n !== nAt || !W().F) return;
+          pushFloor();
+          if (N.onFloorReady) try { N.onFloorReady(); } catch (e) { }
+        }, 450);
+        setTimeout(() => {
+          const r2 = coop(); if (!r2 || !r2.coop.host || r2.coop.seed !== seedAt || r2.coop.n !== nAt || !W().F) return;
+          pushFloor();
+        }, 1300);
+      } else if (o.fresh && lastFloor && lastFloor.rid === run.coop.seed && lastFloor.n > 1) setTimeout(() => follow(lastFloor), 300);   // 房主已經往下走了：追上去
+      else if (!run.coop.host && o.netFollow) {
+        // 跟完樓層：跟房主要整層快照（避免只收到 floor、怪還沒過來）
+        const seedAt = run.coop.seed;
+        const ask = () => { const r2 = coop(); if (!r2 || r2.coop.host || r2.coop.seed !== seedAt || !N.host) return; try { N.send({ k: 'wantFloor', rid: seedAt }, N.host); } catch (e) { } };
+        setTimeout(ask, 350);
+        setTimeout(ask, 1400);
+      }
     }
     return r;
   };
@@ -261,14 +307,21 @@
   const follow = d => {
     const run = coop(); if (!run || run.coop.host || run.coop.seed !== d.rid) return;
     if (run.coop.n === d.n && run.floor === d.f) return;   // 同一層：checksum 已在收到時比過
-    // 斷線重連後可能比房主超前／落後：一律跟房主的樓層與 n 對齊
-    R.fade(() => {
-      const r2 = coop(); if (!r2 || r2.coop.seed !== d.rid) return;
-      if (r2.coop.n === d.n && r2.floor === d.f) return;
-      r2.coop.n = d.n; R.loadFloor(d.f, { up: !!d.up, warp: !!d.warp, netFollow: true });
-      if (d.up) R.banner('跟著房主往回走', '遺跡一直在長：上一層已經不是來的時候的樣子');
-      else R.toast && R.toast('已與房主同步樓層', '#7FE0FF');
-    });
+    // 合併快速連續的 floor（換層重送）：只跟最後一則，避免疊 fade 卡死／斷線
+    followPend = d;
+    if (followTimer) return;
+    followTimer = setTimeout(() => {
+      followTimer = null;
+      const d2 = followPend; followPend = null; if (!d2) return;
+      keepAlive();
+      R.fade(() => {
+        const r2 = coop(); if (!r2 || r2.coop.seed !== d2.rid) return;
+        if (r2.coop.n === d2.n && r2.floor === d2.f) return;
+        r2.coop.n = d2.n; R.loadFloor(d2.f, { up: !!d2.up, warp: !!d2.warp, netFollow: true });
+        if (d2.up) R.banner('跟著房主往回走', '遺跡一直在長：上一層已經不是來的時候的樣子');
+        else R.toast && R.toast('已與房主同步樓層', '#7FE0FF');
+      });
+    }, floorBusy ? 80 : 0);
   };
   // 上下樓跟著房主走（從入口走出去可以）
   const de0 = R.descend;
@@ -297,7 +350,10 @@
     }
     else if (d.k === 'end' && from === N.host) { const run = coop(); if (run && !run.coop.host && run.coop.seed === d.rid) { run.coop.solo = true; clearRemotes(); R.banner(nameOf(N.host) + ' 回到地面了', '剩下的路自己走：碰回歸水晶就能回去'); } }
     else if (d.k === 'bye' && coop() && d.rid === coop().coop.seed) dropRemote(from);
-    else if (d.k === 'wantFloor' && isHost() && coop() && d.rid === coop().coop.seed) pushFloor(from);   // 隊員重連：跟房主要目前樓層
+    else if (d.k === 'wantFloor' && isHost() && coop() && d.rid === coop().coop.seed) {
+      pushFloor(from);   // 隊員重連／換層後：跟房主要目前樓層
+      if (N.onWantFloor) try { N.onWantFloor(from); } catch (e) { }   // net2：順便 dump 整層遺跡生物
+    }
     else if (d.k === 'p') presence(from, d);
     else if (N.onMsg2) N.onMsg2(from, d);   // 第二階段（net2.js）
   };

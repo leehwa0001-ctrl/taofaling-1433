@@ -4,12 +4,13 @@
 // - 全部的房間放在同一個 Durable Object（名字 'lobby'）裡：程式和 server.js 一樣簡單。玩家多到一個物件撐不住再分房。
 // - 用「WebSocket 休眠」（acceptWebSocket）：大家都在城裡沒傳訊息的時候，物件可以睡著不計時間；
 //   醒來時從每條連線身上的附件（serializeAttachment：id、名字、外觀、房號、房主）把房間重建回來。
-// - 每條連線每秒最多 40 則訊息（遊戲每秒送 10 則位置），超過的丟掉——免得有人亂送吃光免費額度。
+// - 每條連線每秒最多 72 則訊息（遊戲每秒送 10 則位置）；換層控制訊息（floor／run／end／busy／wantFloor／hd）不佔額度，超過的一般訊息丟掉。
 // - 2026-10-05（第二階段，和 server/server.js 一樣）：房主離開或斷線換下一個人當房主（{ t: 'host', id }），所有人都走了才關房；
 //   斷線保留座位 120 秒（{ t: 'away', id }，用 rejoin: { id, token } 連回來 → { t: 'back', id }）；'room' 多帶 token、caps: 1。
 //   全房短暫斷線不立刻關房：空房仍留在 this.rooms，座位在 this.away，到期用 alarm 清掉；保留的座位記在記憶體（物件睡著就沒了）。
+//   換層加固（2026-10-05）：RATE 72、MAX_BYTES 96KB；floor／wantFloor／hd 等控制訊息不計入速率，減少換層瞬間被丟掉。
 // 部署：見 server-cf/README.md（npx wrangler login、npx wrangler deploy）。
-const MAX = 4, MAX_BYTES = 64 * 1024, PROTOCOL = '1433-net-2', RATE = 48, HOLD = 120000;
+const MAX = 4, MAX_BYTES = 96 * 1024, PROTOCOL = '1433-net-2', RATE = 72, HOLD = 120000;
 const LETTERS = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 const clean = (v, n) => String(v == null ? '' : v).slice(0, n);
 
@@ -101,10 +102,13 @@ export class Lobby {
   async webSocketMessage(ws, raw) {
     this.load();
     if (typeof raw !== 'string' || raw.length > MAX_BYTES) return;
-    // 每秒最多 RATE 則
-    const now = Date.now(), rt = this.rate.get(ws) || { t: now, n: 0 }; if (now - rt.t > 1000) { rt.t = now; rt.n = 0; } rt.n++; this.rate.set(ws, rt); if (rt.n > RATE) return;
     let o; try { o = JSON.parse(raw); } catch (e) { return; }
     if (!o || typeof o.t !== 'string') return;
+    // 換層／重連控制訊息不佔速率：避免換層瞬間 floor＋hd 被丢掉造成斷線感
+    const ctrl = o.t === 'msg' && o.d && typeof o.d.k === 'string' && ['floor', 'run', 'end', 'busy', 'wantFloor', 'hd'].includes(o.d.k);
+    if (!ctrl) {
+      const now = Date.now(), rt = this.rate.get(ws) || { t: now, n: 0 }; if (now - rt.t > 1000) { rt.t = now; rt.n = 0; } rt.n++; this.rate.set(ws, rt); if (rt.n > RATE) return;
+    }
     const a = this.att(ws); if (this.away.size) this.purge();
     if (o.t === 'create' || o.t === 'join') {
       if (o.v !== PROTOCOL) return this.send(ws, { t: 'err', msg: '連線版本不同，請重新整理遊戲並更新伺服器。' });
