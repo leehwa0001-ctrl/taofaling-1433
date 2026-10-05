@@ -16,10 +16,12 @@
   R.PARTY_SHARE = 0.15;   // 每個隊友分走的委託報酬
 
   // ---------- 公會大廳裡的勇者（各種種族、各國來的人） ----------
+  // 公會招募等級＝你目前職業等級 ±2（上限 R.LV_CAP；以前硬卡 20，高等級後隊友永遠偏弱）
   R.makeRecruit = () => {
-    const S = R.S, lv0 = S ? S.classes[S.cls].lv : 1, cls = pick(R.CLASS_IDS), race = R.randomRace ? R.randomRace() : 'human', rc = R.RACES ? R.RACES[race] : null;
-    const lv = Math.max(1, Math.min(20, lv0 + Math.floor(rnd(-2, 2))));
-    const m = { id: 'm' + Date.now().toString(36) + Math.floor(Math.random() * 1e4), name: R.randomName ? R.randomName(race) : '勇者', race, cls, lv, fee: 40 + lv * 25, line: pick(LINES),
+    const S = R.S, lv0 = S && S.classes && S.classes[S.cls] ? S.classes[S.cls].lv : 1, cap = R.LV_CAP || 80;
+    const off = Math.floor(rnd(-2, 2)), lv = Math.max(1, Math.min(cap, lv0 + off));
+    const cls = pick(R.CLASS_IDS), race = R.randomRace ? R.randomRace() : 'human', rc = R.RACES ? R.RACES[race] : null;
+    const m = { id: 'm' + Date.now().toString(36) + Math.floor(Math.random() * 1e4), name: R.randomName ? R.randomName(race) : '勇者', race, cls, lv, lvOff: off, fee: 40 + lv * 25, line: pick(LINES),
       look: { top: pick(TOPS), cloak: pick(TOPS), hair: rc && rc.hairs ? pick(rc.hairs) : pick(['#2A2420', '#6A4A2E', '#1A1714', '#8A5A2E', '#C99B55', '#D8D2C4']), skin: rc ? pick(rc.skins) : undefined, race, hs: pick(['short', 'long', 'ponytail', 'bun', 'spiky', 'bob', 'braid', 'crop']), acc: Math.random() < 0.3 ? pick(['scarf', 'glasses', 'headband', 'earring']) : null, accCol: pick(['#C8323A', '#2E5A8A', '#3E7A48', '#C9A13A']) } };
     // 東鶴排外：魔族不太有人肯同行；其他種族偶爾也有人只跟同族的走
     const x = R.xenoLevel ? R.xenoLevel() : 0;
@@ -27,7 +29,24 @@
     else if (x === 2 && Math.random() < 0.15) { m.refuse = true; m.line = '「……我習慣跟同鄉的人一起。」'; }
     return m;
   };
-  R.ensureRoster = force => { const S = R.S; if (!S) return; S.party = S.party || []; if (force || !S.roster || S.roster.length < 3 || S.roster.some(m => !m.look)) S.roster = [0, 1, 2, 3].map(() => R.makeRecruit()); };
+  // 已招募／大廳名單的等級跟著你目前職業走（劇情隊友交給 syncStoryLv）
+  R.syncRecruitLv = () => {
+    const S = R.S; if (!S || !S.classes || !S.classes[S.cls]) return;
+    const mine = S.classes[S.cls].lv || 1, cap = R.LV_CAP || 80;
+    const bump = m => {
+      if (!m || m.story) return;
+      if (m.lvOff == null) m.lvOff = Math.max(-2, Math.min(2, (m.lv || 1) - mine));
+      m.lv = Math.max(1, Math.min(cap, mine + m.lvOff));
+      m.fee = 40 + m.lv * 25;
+    };
+    (S.party || []).forEach(bump);
+    (S.roster || []).forEach(bump);
+  };
+  R.ensureRoster = force => {
+    const S = R.S; if (!S) return; S.party = S.party || [];
+    if (force || !S.roster || S.roster.length < 3 || S.roster.some(m => !m.look)) S.roster = [0, 1, 2, 3].map(() => R.makeRecruit());
+    R.syncRecruitLv();
+  };
   R.hire = i => { const S = R.S, m = S.roster[i]; if (!m || m.refuse || S.party.length >= R.PARTY_MAX || S.gold < m.fee) return false; S.gold -= m.fee; S.party.push(m); S.roster.splice(i, 1); R.save(); return true; };
   R.dismiss = i => { const S = R.S; S.party.splice(i, 1); R.save(); };
 
@@ -212,4 +231,11 @@
       + list.map(a => '<div class="pm' + (a.downed ? ' down' : '') + '"><span>' + R.esc(a.name) + (a.rival ? '（臨時）' : '') + '</span><small>' + R.esc(R.CLASSES[a.cls].name) + ' Lv ' + a.m.lv + '</small><div class="meter"><i style="width:' + Math.max(0, a.hp / a.hpMax * 100) + '%"></i></div>' + (a.downed ? '<b>倒下了</b>' : '') + '</div>').join('')
       + gone.map(pm => '<div class="pm down"><span>' + R.esc(pm.m.name) + '</span><small>被帶回地面了</small></div>').join('');
   };
+
+  // 跟劇情隊友的 syncStoryLv 掛在一起（people.js／storyally.js 後面才定義；下一輪事件迴圈再包）
+  setTimeout(() => {
+    const sy = R.syncStoryLv; if (!sy || sy._withRecruit) return;
+    R.syncStoryLv = () => { sy(); R.syncRecruitLv(); };
+    R.syncStoryLv._withRecruit = 1;
+  }, 0);
 })(window.R);
