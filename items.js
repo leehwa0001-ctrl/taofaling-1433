@@ -44,7 +44,7 @@
     for (let i = 0; i < nItems; i++) {
       const r = Math.random();
       if (r < 0.62) {
-        const own = R.weaponsFor(cls), all = Object.keys(R.WEAPONS);
+        const own = R.weaponsFor(cls).filter(k => !R.WEAPONS[k].legacy), all = Object.keys(R.WEAPONS).filter(k => !R.WEAPONS[k].legacy);
         const base = Math.random() < 0.6 ? pick(own) : pick(all);
         const rarity = wpick(R.LOOT_WEIGHTS[g].map((w, k) => (tier ? w * (1 + k * tier * 0.35) : w)));
         out.push({ item: R.makeItem({ kind: 'weapon', base, ilvl, rarity, identified: Math.random() < R.RARITY[rarity].known }) });

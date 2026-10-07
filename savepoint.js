@@ -22,8 +22,8 @@
     const every = (run && R.saveEvery) ? R.saveEvery(run) : EVERY, m = wp(), L = wl(id), added = [];
     const add = n => { if (n >= 3 && !L.includes(n)) { L.push(n); added.push(n); } };
     if (every > 0) for (let n = every; n <= depth; n += every) add(n);
-    add(depth); L.sort((a, c) => a - c);
-    if (depth > (m[id] || 0)) m[id] = depth;
+    L.sort((a, c) => a - c);
+    const deepest = every > 0 ? Math.floor(depth / every) * every : 0; if (deepest >= 3 && deepest > (m[id] || 0)) m[id] = deepest;
     if (added.length) R.save && R.save();
     return added;
   };
@@ -51,7 +51,8 @@
     if (n > 0 && n % every === 0) { const [x, z] = placeNear(r, SPOTS); F.save = Object.assign(stone(x, z, '#7AC8FF'), { n }); setTimeout(() => { if (W().F === F && R.toast) R.toast('這一層有存檔點：入口房間發藍光的記錄碑，走過去按空白鍵記下。', '#7AC8FF'); }, 1600); }
     else if (run.floor === 0 && every > 0) setTimeout(() => { if (W().F === F && R.toast) R.toast('這座遺跡每 ' + every + ' 層有一個存檔點（第 ' + every + ' 層的入口房間）。', '#7AC8FF'); }, 2600);
     // 入口那一層：轉送到記下的那一層
-    const list = wl(run.site.id).filter(n => n >= 3 && floorOf(run, n) < run.floors), entry = 0;
+    const raw = wl(run.site.id), list = raw.filter(n => n >= 3 && n % every === 0 && floorOf(run, n) < run.floors), entry = 0;
+    if (list.length !== raw.length) { const store = S().waypointList[run.site.id]; store.splice(0, store.length, ...list); wp()[run.site.id] = list.length ? list[list.length - 1] : 0; R.save && R.save(); }
     if (run.floor === entry && list.length) { const [x, z] = placeNear(r, WARP_SPOTS); F.warp = Object.assign(stone(x, z, '#B88AFF'), { n: list[list.length - 1], list }); }
   };
   const lf0 = R.loadFloor;

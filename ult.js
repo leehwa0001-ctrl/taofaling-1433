@@ -55,10 +55,13 @@
 
   // ---------- 七招 ----------
   const ULT = {
-    gunner: { name: '彈幕風暴', sub: '槍手的大招：三秒內朝四面八方掃射', go: P => {
-      const b = base(P), w = W(), run = w.run; let t = 3, f = 0, a = 0; P.iframe = Math.max(P.iframe || 0, 0.6);
-      w.dyn.push(dt => { if (w.run !== run || P.dead) return false; t -= dt; f -= dt; a += dt * 7; if (f <= 0) { f = 0.05; for (let i = 0; i < 3; i++) R.fire({ kind: 'bullet', owner: 'p', x: P.x, z: P.z, a: a + i * Math.PI * 2 / 3, speed: 34, dmg: b * 0.7, life: 0.7, primary: false }); } if (rnd() < 0.3) R.fx('poof', P.x, 1, P.z, { color: '#FFE08A', n: 2 }); return t > 0; });
-      later(() => { R.fx('boom', P.x, 0.4, P.z, { r: 5, color: '#FFD06A' }); R.aoe(P.x, P.z, 5, b * 6, { kb: 4 }); R.shake && R.shake(0.6); }, 3000);
+    gunner: { name: '彈幕風暴', sub: '槍手的大招：三秒內朝準心方向扇形高速掃射', go: P => {
+      const b = base(P), run = W().run; P.iframe = Math.max(P.iframe || 0, 3.1); let n = 0;
+      for (let t = 0; t < 3000; t += 80) later(() => {
+        if (W().run !== run || P.dead) return; const a0 = P.aimA || 0;
+        for (let i = -3; i <= 3; i++) R.fire({ kind: 'bullet', owner: 'p', x: P.x, z: P.z, a: a0 + i * 0.17 + (rnd() - 0.5) * 0.025, speed: 34, dmg: b * 0.34, life: 0.9, pierce: 1, primary: false });
+        if ((n++ % 4) === 0) { R.fx('line', P.x, 1, P.z, { a: a0, len: 7, color: '#9AD8FF' }); R.shake && R.shake(0.06); }
+      }, t);
     } },
     archer: { name: '流星箭雨', sub: '弓箭手的大招：一大片的箭從天上落下來', go: P => {
       const b = base(P), [x, z] = aimPt(P, 13); R.fx('mark', x, 0, z, { r: 6, t: 0.6 });

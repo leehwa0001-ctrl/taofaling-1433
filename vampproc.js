@@ -44,7 +44,7 @@
     if (mul !== 1) x = Math.round(x * mul);
     return Number.isFinite(x) ? Math.max(0, x) : 0;
   };
-  const wMult = P => { const wd = P.item && R.WEAPONS[P.item.base], rate = (wd && wd.rate) || REF_RATE, base = P.item && P.item.base; let m = LONG * REF_RATE / rate; if (base === 'gauntlet' || base === 'claws') m *= 0.25; return Math.max(1, Math.min(15, m)); };   // 作者：拳套／鐵爪攻速太快，武器吸血乘數改成原本的 1/4
+  const wMult = P => { const wd = P.item && R.WEAPONS[P.item.base], rate = (wd && wd.rate) || REF_RATE, base = P.item && P.item.base; let m = LONG * REF_RATE / rate; if (base === 'gauntlet' || base === 'claws') m *= 0.25; const hits = Math.max(1, (P.ws && (P.ws.pellets || P.ws.hits)) || (wd && (wd.pellets || wd.hits)) || 1); m /= hits; if (wd && wd.kind === 'magic') m *= 0.5; return Math.max(0.25, Math.min(15, m)); };   // 作者：拳套／鐵爪攻速太快，武器吸血乘數改成原本的 1/4
   const amp = P => Math.max(0, 1 + (R.recovAmpOf ? R.recovAmpOf(P) : num(P.recovAmp)));   // 含滴血重生的恢復量%（實際乘在 healP；這裡給顯示用）
   const baseHeal = (P, x, n) => Math.max(1, Math.round(Math.ceil(wMult(P) * (1 + x / HEAL_PER)) * (1 + Math.sqrt(Math.max(1, n))) / 2));
   const healOf = (P, x, n) => Math.max(1, Math.round(baseHeal(P, x, n) * amp(P)));   // 顯示＝實際（healP 會再乘 amp）
@@ -75,7 +75,7 @@
     const x = coef(P, g.skill); if (x <= 0) return;
     if (key === 'sk') { R.healP(Math.max(1, Math.round(baseHeal(P, x, g.n) * skMult(x)))); return; }   // 技能、大招：baseHeal（恢復量% 由 healP 乘）
     if (Math.random() >= chanceOf(x)) return;
-    R.healP(baseHeal(P, x, g.n));
+    R.healP(baseHeal(P, x, 1));   // 普攻多發／多段／範圍同時命中仍只按一次攻擊的回血量算
   };
   // 單一閘門：反擊／荊棘／noVamp／source=reflect 任一成立 → 正規化旗標＋進 _vampBlock 深度
   // 巢狀傷害（反傷過程中再打出去的）就算漏標也不會進吸血；擊倒回血看 R._vampBlock／R._reflectKill

@@ -73,7 +73,7 @@ window.R = window.R || {};
   R.xpNeed = lv => 60 + lv * 55;
 
   R.SKILLS = {
-    roll: { name: '翻滾射擊', cd: 6, mp: 8, desc: '往前翻滾、瞬間換好彈匣，接下來三發必定暴擊。' },
+    roll: { name: '翻滾射擊', cd: 6, mp: 8, desc: '朝準心反方向翻滾、瞬間換好彈匣，接下來三發必定暴擊。' },
     volley: { name: '箭雨', cd: 8, mp: 14, desc: '在準心處降下三波箭雨。' },
     whirl: { name: '旋風斬', cd: 8, mp: 10, desc: '原地旋轉 1.2 秒，砍到身邊所有敵人。' },
     fireball: { name: '火球', cd: 5, mp: 18, desc: '射出會爆炸的火球，燒到的敵人持續燃燒。' },
@@ -108,7 +108,7 @@ window.R = window.R || {};
   // 2026-10-03 職業平衡（作者：弓箭手、刀客比較弱）：弓 +20%（短弓 11→13、長弓 25→30、弩 19→23）、聖杖 11→13；弓箭手生命 86→94、刀客 102→112
   R.WEAPONS = {
     pistol: { name: '手槍', cls: ['gunner'], kind: 'gun', dmg: 9, rate: 4.2, speed: 28, range: 14, mag: 12, reload: 1, spread: 0.04 },
-    rifle: { name: '步槍', cls: ['gunner'], kind: 'gun', dmg: 6.5, rate: 9, speed: 32, range: 16, mag: 30, reload: 1.6, spread: 0.08 },
+    rifle: { name: '步槍', cls: ['gunner'], kind: 'gun', dmg: 3.25, rate: 9, speed: 32, range: 16, mag: 30, reload: 3.2, spread: 0.08 },
     shotgun: { name: '霰彈槍', cls: ['gunner'], kind: 'gun', dmg: 5.5, pellets: 6, rate: 1.3, speed: 24, range: 7, mag: 6, reload: 1.5, spread: 0.45 },
     shortbow: { name: '短弓', cls: ['archer'], kind: 'bow', dmg: 13, rate: 3, speed: 24, range: 15 },
     longbow: { name: '長弓', cls: ['archer'], kind: 'bow', dmg: 30, rate: 1.1, speed: 30, range: 20, pierce: 1, charge: 1 },
@@ -129,7 +129,7 @@ window.R = window.R || {};
   R.STARTER = { gunner: 'pistol', archer: 'shortbow', warrior: 'sword', mage: 'staff', priest: 'holystaff', blade: 'katana', knight: 'sword', monk: 'gauntlet' };
   // 登記武器：勇者證上寫的是主要武器，公會照它的類別派委託（類別就是職業）。騎士是「武器＋盾」
   R.REG = [
-    { cls: 'gunner', group: '槍械', list: [['pistol', '單發準、換彈快。'], ['rifle', '連射，彈匣大。'], ['shotgun', '近距離一發打一片。']] },
+    { cls: 'gunner', group: '槍械', list: [['pistol', '手槍類（包含雙持），單發準、換彈快。'], ['rifle', '連射，彈匣大。'], ['shotgun', '近距離一發打一片。'], ['sniperrifle', '狙擊槍，射得慢但射程遠、單發重。']] },
     { cls: 'archer', group: '弓', list: [['shortbow', '射得快。'], ['longbow', '按住蓄力，射得遠又痛。'], ['crossbow', '一箭貫穿。']] },
     { cls: 'warrior', group: '重兵器', list: [['sword', '平衡，揮得快。'], ['greatsword', '慢，一刀掃一大片。'], ['axe', '重，把敵人打退。']] },
     { cls: 'mage', group: '魔導具', list: [['staff', '會爆炸的法彈。'], ['orb', '三發會追蹤的法彈。']] },

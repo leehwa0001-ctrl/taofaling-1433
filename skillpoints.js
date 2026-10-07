@@ -22,10 +22,11 @@
     if (!st.sp.m1) { st.sp.m1 = 1; Object.keys(st.sp.r).forEach(id => { const r = st.sp.r[id]; if (r > 0) st.sp.u[id] = Math.max(st.sp.u[id] || 0, PROF[r - 1]); }); }   // 舊存檔：點數升的星保留
     return st.sp;
   };
-  const spent = st => Object.values(sp(st).t).reduce((a, v) => a + v, 0);   // 星改成熟練度：點數只算天賦
-  const talSpent = st => Object.values(sp(st).t).reduce((a, v) => a + v, 0);
-  R.spTotal = st => Math.max(0, st.lv) * 2 + (st.spBonus || 0);   // 2026-10-05 作者：天賦點變多——每級 2 點（天賦樹改成四條道）   // 2026-10-04 作者：等級有 50 就有 50 點天賦點（原本是等級 − 1）
-  R.spFree = st => R.spTotal(st) - spent(st);
+  const spent = st => Object.values(sp(st).t).reduce((a, v) => a + v, 0);   // talenttree.js 載入後會用加權花費覆蓋
+  const talSpent = st => R.talentSpent ? R.talentSpent(st) : spent(st);
+  const levelPts = lv => { lv = Math.max(0, Math.floor(lv || 0)); return Math.min(lv, 20) + Math.max(0, Math.min(lv, 40) - 20) * 2 + Math.max(0, lv - 40) * 3; };
+  R.spTotal = st => levelPts(st.lv) + (st.spBonus || 0) * 2;   // 1～20：1／級；21～40：2／級；41+：3／級；滿級歷練每次 2 點
+  R.spFree = st => R.spTotal(st) - (R.talentSpent ? R.talentSpent(st) : spent(st));
   const rank = (id, cls) => { const s = S(); if (!s) return 0; const st = stOf(cls), r = (st && st.sp && st.sp.r) || {}; return Math.max(r[id] || 0, /_aw$/.test(id || '') ? r[id.replace(/_aw$/, '')] || 0 : 0); };   // 覺醒版（_aw）沿用原版的星數
   const tal = (id, cls) => { const s = S(); if (!s) return 0; const st = stOf(cls); return (st && st.sp && st.sp.t[id]) || 0; };
   R.skillRank = rank;
@@ -44,11 +45,14 @@
   const T = R.SKILL_TYPES; let depth = 0;
   if (T) Object.keys(T).forEach(k => { const f = T[k]; T[k] = (s, P, w, pw) => { const id = s && s._id; let m = 1; if (!depth && id && id.indexOf(':') < 0) m = 1 + 0.12 * rank(id, P && P.cls); depth++; try { return f(s, P, w, pw * m); } finally { depth--; } }; });
   const cdScale = (P, id, get, set) => { const r = id ? rank(id, P.cls) : 0; if (r) set(get() * (1 - 0.05 * r)); };
-  // 熟練度：放出去一次 +1，滿了升一星
+  const baseCd = id => Math.max(1, Number((R.SKILLS[id] && R.SKILLS[id].cd) || (R.SKILL_LIB && R.SKILL_LIB[id] && R.SKILL_LIB[id].cd) || 8));
+  const profNeed = (id, r) => { const k = Math.max(0.2, Math.min(1, 8 / baseCd(id))); return Math.max(r + 1, Math.round(PROF[r] * k)); };
+  R.skillProfNeed = profNeed;
+  // 熟練度：長冷卻技能需要的次數會按冷卻折算；天啟的免費重放不灌熟練度
   const gainProf = (P, id) => {
-    if (!id || id.indexOf(':') >= 0 || !S()) return; const st = stOf(P.cls); if (!st) return;
+    if (!id || id.indexOf(':') >= 0 || !S() || (P && P._apEcho)) return; const st = stOf(P.cls); if (!st) return;
     const p = sp(st); p.u[id] = (p.u[id] || 0) + 1; const r = p.r[id] || 0;
-    if (r < MAXR && p.u[id] >= PROF[r]) { p.r[id] = r + 1; R.toast && R.toast('「' + (R.SKILLS[id] ? R.SKILLS[id].name : id) + '」熟練了：★' + (r + 1) + '（冷卻 −' + 5 * (r + 1) + '%' + (R.SKILL_LIB && R.SKILL_LIB[id] ? '、傷害 +' + 12 * (r + 1) + '%' : '') + '）', '#E8C04A'); R.sfx && R.sfx('magic'); }
+    if (r < MAXR && p.u[id] >= profNeed(id, r)) { p.r[id] = r + 1; R.toast && R.toast('「' + (R.SKILLS[id] ? R.SKILLS[id].name : id) + '」熟練了：★' + (r + 1) + '（冷卻 −' + 5 * (r + 1) + '%' + (R.SKILL_LIB && R.SKILL_LIB[id] ? '、傷害 +' + 12 * (r + 1) + '%' : '') + '）', '#E8C04A'); R.sfx && R.sfx('magic'); }
   };
   R.skillProf = (id, cls) => { const st = stOf(cls); return st ? (sp(st).u[id] || 0) : 0; };
   const us0 = R.useSkill;
@@ -76,17 +80,17 @@
   R.hurtPlayer = (raw, src, o) => { const P = W().P; return hp0(P && P.talGuard ? raw * (1 - P.talGuard) : raw, src, o); };
   // 升級：提醒有點數可以用
   const gx0 = R.gainXp;
-  R.gainXp = v => { const st = stOf(), lv0 = st.lv, b0 = st.spBonus || 0; gx0(v); const n = (st.lv - lv0) * 2 + ((st.spBonus || 0) - b0); if (n > 0) setTimeout(() => R.toast && R.toast('技能點 +' + n + '（可用 ' + R.spFree(st) + ' 點）', '#E8C04A'), 2400); };
+  R.gainXp = v => { const st = stOf(), p0 = R.spTotal(st); gx0(v); const n = R.spTotal(st) - p0; if (n > 0) setTimeout(() => R.toast && R.toast('技能點 +' + n + '（可用 ' + R.spFree(st) + ' 點）', '#E8C04A'), 2400); };
 
   // ---------- 畫面 ----------
   const book = (host, where, close) => {
     const s = S(), cls = s.cls, st = stOf(cls), p = sp(st), free = R.spFree(st), ts = talSpent(st), atGuild = where === 'hub', fee = 40 * st.lv;
     const skills = learnedOf(cls);
     host.innerHTML = '<h2>技能點・天賦・' + esc(R.clsName(cls)) + ' Lv ' + st.lv + (st.lv >= R.LV_CAP ? '（滿級）' : '／' + R.LV_CAP) + '</h2>'
-      + '<p class="note">每升一級 +2 點' + (st.lv >= R.LV_CAP ? '；滿級之後每攢滿一級的經驗再 1 點' : '') + '，用在天賦。可用 <b>' + free + '</b> 點（共 ' + R.spTotal(st) + '，用掉 ' + (R.spTotal(st) - free) + '）。每個武器類別的點數分開算。</p>'
-      + '<h3>技能熟練度（最多 ★' + MAXR + '）</h3><p class="note">技能用越多越熟練：每放出去一次 +1，用滿 ' + PROF.join('、') + ' 次各升一星（不用花點數）。每一星：冷卻 −5%；技能書的技能傷害再 +12%（原本的基本技能只縮短冷卻）。</p>'
+      + '<p class="note">Lv 1～20 每級 +1 點、21～40 每級 +2 點、41 級以上每級 +3 點' + (st.lv >= R.LV_CAP ? '；滿級之後每攢滿一級的經驗再 +2 點' : '') + '，用在天賦。可用 <b>' + free + '</b> 點（共 ' + R.spTotal(st) + '，用掉 ' + (R.spTotal(st) - free) + '）。每個武器類別的點數分開算。</p>'
+      + '<h3>技能熟練度（最多 ★' + MAXR + '）</h3><p class="note">技能用越多越熟練：每成功施放一次 +1；8 秒左右的技能基準是 ' + PROF.join('、') + ' 次，冷卻越長需要的次數越少（40 秒技能只要基準的約 20%）。每一星：冷卻 −5%；技能書的技能傷害再 +12%（原本的基本技能只縮短冷卻）。</p>'
       + [null, st.adv].filter((v, i) => i === 0 || v).map(adv => { const list = skills.filter(id => { const L = R.SKILL_LIB && R.SKILL_LIB[id], a = L ? L.adv || null : ((R.ADV[cls] || []).some(x => x.skill === id) ? st.adv : null); return a === adv; }); if (!list.length) return ''; const an = adv && (R.ADV[cls] || []).find(x => x.id === adv);
-        return '<p class="note"><b>' + esc(adv ? '轉職・' + (an ? an.name : adv) : '基本・' + R.CLASSES[cls].name) + '</b></p><div class="sp-list">' + list.map(id => { const r = p.r[id] || 0, u = p.u[id] || 0, lib = !!(R.SKILL_LIB && R.SKILL_LIB[id]), lo = r ? PROF[r - 1] : 0, hi = PROF[Math.min(r, MAXR - 1)], k = r >= MAXR ? 1 : Math.max(0, Math.min(1, (u - lo) / (hi - lo)));
+        return '<p class="note"><b>' + esc(adv ? '轉職・' + (an ? an.name : adv) : '基本・' + R.CLASSES[cls].name) + '</b></p><div class="sp-list">' + list.map(id => { const r = p.r[id] || 0, u = p.u[id] || 0, lib = !!(R.SKILL_LIB && R.SKILL_LIB[id]), lo = r ? profNeed(id, r - 1) : 0, hi = profNeed(id, Math.min(r, MAXR - 1)), k = r >= MAXR ? 1 : Math.max(0, Math.min(1, (u - lo) / (hi - lo)));
           return '<div class="sp-row"><b>' + esc(R.SKILLS[id].name) + '</b><span class="sp-star">' + '★'.repeat(r) + '<i>' + '☆'.repeat(MAXR - r) + '</i></span><small>' + (r ? (lib ? '傷害 +' + 12 * r + '%・' : '') + '冷卻 −' + 5 * r + '%' : '還沒熟練') + '</small>' + (r < MAXR ? '<span class="sp-prof" title="熟練度"><i style="width:' + Math.round(k * 100) + '%"></i><em>' + u + '／' + hi + '</em></span>' : '<span class="tag">滿星</span>') + '</div>'; }).join('') + '</div>'; }).join('')
       + '<h3>天賦（投了 ' + ts + ' 點）</h3>' + TIER.map((tn, k) => { const open = ts >= TIER_NEED[k]; return '<p class="note"><b>' + tn + '</b>' + (k ? (open ? '' : '（要先在天賦投 ' + TIER_NEED[k] + ' 點）') : '') + '</p><div class="sp-list">' + TAL.filter(x => x[2] === k).map(([id, n, , mx, d]) => { const v = p.t[id] || 0; return '<div class="sp-row' + (open ? '' : ' locked') + '"><b>' + esc(n) + '</b><span class="sp-star">' + v + '／' + mx + '</span><small>每級 ' + esc(d) + '</small>' + (v < mx ? '<button type="button" class="mini gold" data-spt="' + id + '"' + (!open || free < 1 ? ' disabled' : '') + '>+1（1 點）</button>' : '<span class="tag">滿級</span>') + '</div>'; }).join('') + '</div>'; }).join('')
       + '<div class="row">' + (atGuild ? '<button type="button" class="btn" data-sprs="1"' + (s.gold < fee || !(R.spTotal(st) - free) ? ' disabled' : '') + '>天賦全部重新分配（' + fee + ' 費拉）</button>' : '<span class="note">要重新分配天賦，到公會的武器登記那裡。</span>') + '<button type="button" class="btn pri" data-close="1">好了</button></div>';

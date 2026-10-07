@@ -10,7 +10,7 @@
 // 要放在 adv2more.js 後面（包 R.onPlayerDown 最外面：委託失敗、死因、段位的記錄之前先攔下來；主教的復活留到下一次）。
 (function (R) {
   const W = () => R.W;
-  const DOWN = 1.0, AFTER = 0.6;
+  const DOWN = 1.0, AFTER = 1.5;
   let hit = null;   // 這一下的傷害（R.hurtPlayer 裡面才有）
   const hp0 = R.hurtPlayer;
   R.hurtPlayer = (raw, src, o) => {

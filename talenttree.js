@@ -30,9 +30,9 @@
     { id: 'blade', n: '攻擊之道', c: '#FF6A5A', d: '攻勢：暴擊、穿透、攻速。',
       nodes: [N('T_acc', '精準', 5, '暴擊率 +1%', (P, v) => { if (P.ws) P.ws.crit += 0.01 * v; }), N('T_fat', '致命', 5, '暴擊傷害 +6%', (P, v) => { P.critMult += 0.06 * v; }), N('T_pen', '穿透', 5, '無視敵人護甲 +4%', (P, v) => { P.pen = Math.min(0.8, (P.pen || 0) + 0.04 * v); })],
       subs: [
-        { id: 'gale', n: '疾風', d: '手快、腳快。', nodes: [N('T_spd', '迅捷', 5, '攻擊速度 +3%', (P, v) => { if (P.ws) P.ws.rate *= 1 + 0.03 * v; }), N('T_eva', '身法', 5, '翻滾冷卻 −5%', (P, v) => { P.dodgeCdMax *= 1 - 0.05 * v; }),
+        { id: 'gale', n: '疾風', d: '手快、腳快。', nodes: [N('T_spd', '迅捷', 5, '攻擊速度 +6%', (P, v) => { if (P.ws) P.ws.rate *= 1 + 0.06 * v; }), N('T_eva', '身法', 5, '翻滾冷卻 −5%', (P, v) => { P.dodgeCdMax *= 1 - 0.05 * v; }),
           N('T_trA1', '狂速', 5, '攻擊速度 +12%｜技能冷卻 +6%', (P, v) => { if (P.ws) P.ws.rate *= 1 + 0.12 * v; P.skillCdMult *= 1 + 0.06 * v; }, 1)],
-          cap: N('T_capA1', '奧義・千刃', 5, '攻擊速度 +5%、暴擊率 +2%；點滿：每第五下普攻多砍一下', (P, v) => { if (P.ws) { P.ws.rate *= 1 + 0.05 * v; P.ws.crit += 0.02 * v; } if (v >= 5) capOn(P, 'A1'); }) },   // 2026-10-05 作者：奧義的數值強一點（talentcap.js）
+          cap: N('T_capA1', '奧義・千刃', 5, '攻擊速度 +5%、暴擊率 +2%；點滿：每第五下額外攻擊必定暴擊，並按暴擊率提高該次暴擊傷害', (P, v) => { if (P.ws) { P.ws.rate *= 1 + 0.05 * v; P.ws.crit += 0.02 * v; } if (v >= 5) capOn(P, 'A1'); }) },   // 2026-10-05 作者：奧義的數值強一點（talentcap.js）
         { id: 'heavy', n: '重擊', d: '一下比一下重。', nodes: [N('T_str2', '剛力', 5, '傷害 +3%', (P, v) => { P.dmgMult *= 1 + 0.03 * v; }), N('T_brk', '破勢', 5, '無視護甲 +3%、暴擊傷害 +4%', (P, v) => { P.pen = Math.min(0.8, (P.pen || 0) + 0.03 * v); P.critMult += 0.04 * v; }),
           N('T_trA2', '捨身', 5, '傷害 +6%｜受到的傷害 +4%', (P, v) => { P.dmgMult *= 1 + 0.06 * v; P.ttGuard = (P.ttGuard || 0) - 0.04 * v; }, 1)],
           cap: N('T_capA2', '奧義・斬鐵', 5, '暴擊傷害 +15%、無視護甲 +5%；點滿：對精英、領主體的傷害 +25%', (P, v) => { P.critMult += 0.15 * v; P.pen = Math.min(0.85, (P.pen || 0) + 0.05 * v); if (v >= 5) capOn(P, 'A2'); }) }
@@ -45,7 +45,7 @@
           cap: N('T_capB3', '奧義・反擊', 5, '受到的傷害 −3%、每級把受到傷害的 20% 反彈給打你的敵人（吃傷害增幅，無視牠的防禦、減傷）；點滿：全部反彈，傷害再 ×4，每次反擊另外附加你最大生命 10% 的傷害', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.03 * v; P.ttReflect = 0.2 * v; if (v >= 5) capOn(P, 'B3'); }) },
         { id: 'life', n: '體魄', d: '生命值。', nodes: [N('T_hp3', '生機', 5, '生命 +3%、魔防 +1', (P, v) => { P.hpMax = Math.round(P.hpMax * (1 + 0.03 * v)); P.mdef = (P.mdef || 0) + v; }), N('T_hp4', '血氣', 5, '生命 +5%', (P, v) => { P.hpMax = Math.round(P.hpMax * (1 + 0.05 * v)); }),
           N('T_trB2', '苦修', 5, '生命 +8%｜傷害 −3%', (P, v) => { P.hpMax = Math.round(P.hpMax * (1 + 0.08 * v)); P.dmgMult *= 1 - 0.03 * v; }, 1)],
-          cap: N('T_capB1', '奧義・不動如山', 5, '受到的傷害 −4%、生命 +5%；點滿：不會被擊退', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.04 * v; P.hpMax = Math.round(P.hpMax * (1 + 0.05 * v)); if (v >= 5) capOn(P, 'B1'); }) }
+          cap: N('T_capB1', '奧義・不動如山', 5, '受到的傷害 −4%、生命 +5%；點滿：不會被擊退；造成傷害獲得最大生命 12% 護盾（8 秒冷卻）', (P, v) => { P.ttGuard = (P.ttGuard || 0) + 0.04 * v; P.hpMax = Math.round(P.hpMax * (1 + 0.05 * v)); if (v >= 5) capOn(P, 'B1'); }) }
       ] },
     { id: 'mind', n: '魔法之道', c: '#B88AFF', d: '術勢：技能、魔力。',
       nodes: [N('T_med', '冥想', 5, '技能冷卻 −2%', (P, v) => { P.skillCdMult *= 1 - 0.02 * v; }), N('T_mpr', '回魔', 5, '每秒回復魔力 +0.4', (P, v) => { P.mpRegen = (P.mpRegen || 0) + 0.4 * v; }), N('T_amp', '共鳴', 5, '技能書技能的傷害 +3%', (P, v) => { P.ttSkill = (P.ttSkill || 0) + 0.03 * v; })],
@@ -55,14 +55,14 @@
           cap: N('T_capC1', '奧義・無念', 5, '技能冷卻 −5%；點滿：放技能有 25% 不進冷卻', (P, v) => { P.skillCdMult *= 1 - 0.05 * v; if (v >= 5) capOn(P, 'C1'); }) },
         { id: 'abyss', n: '深淵', d: '一發比一發重。', nodes: [N('T_wis2', '深魔', 5, '魔力 +5%', (P, v) => { P.mpMax = Math.round(P.mpMax * (1 + 0.05 * v)); }), N('T_amp2', '增幅', 5, '技能書技能的傷害 +4%', (P, v) => { P.ttSkill = (P.ttSkill || 0) + 0.04 * v; }),
           N('T_trC2', '專精', 5, '技能書技能的傷害 +6%｜普攻的傷害 −3%', (P, v) => { P.ttSkill = (P.ttSkill || 0) + 0.06 * v; P.ttPrimary = (P.ttPrimary || 0) + 0.03 * v; }, 1)],
-          cap: N('T_capC2', '奧義・天啟', 5, '技能書技能的傷害 +8%、魔力 +6%；點滿：技能的暴擊率 +15%', (P, v) => { P.ttSkill = (P.ttSkill || 0) + 0.08 * v; P.mpMax = Math.round(P.mpMax * (1 + 0.06 * v)); if (v >= 5) capOn(P, 'C2'); }) }
+          cap: N('T_capC2', '奧義・天啟', 5, '技能書技能的傷害 +8%、魔力 +6%；點滿：每次施放技能有 20% 機率再施放一次，重放也能繼續觸發', (P, v) => { P.ttSkill = (P.ttSkill || 0) + 0.08 * v; P.mpMax = Math.round(P.mpMax * (1 + 0.06 * v)); if (v >= 5) capOn(P, 'C2'); }) }
       ] },
     { id: 'mend', n: '恢復之道', c: '#6AE08A', d: '回復：每秒回血、吸血、恢復量、體力。',
-      nodes: [N('T_rec', '調息', 5, '每秒回復生命 +1', (P, v) => { P.regen = (P.regen || 0) + v; }), N('T_heal', '癒合', 5, '恢復量 +4%（每秒回血、吸血都算）', (P, v) => { P.recovAmp = (P.recovAmp || 0) + 0.04 * v; }), N('T_stam', '喘息', 5, '體力回復 +6%', (P, v) => { P.ttStam = (P.ttStam || 0) + 0.06 * v; })],
+      nodes: [N('T_rec', '調息', 5, '每 5 秒回復生命 +0.5', (P, v) => { P.regen = (P.regen || 0) + 0.1 * v; }), N('T_heal', '癒合', 5, '恢復量 +4%（每秒回血、吸血都算）', (P, v) => { P.recovAmp = (P.recovAmp || 0) + 0.04 * v; }), N('T_stam', '喘息', 5, '體力回復 +6%', (P, v) => { P.ttStam = (P.ttStam || 0) + 0.06 * v; })],
       subs: [
         { id: 'regen', n: '自然恢復', d: '站得住就會好。', nodes: [N('T_rec2', '再生', 5, '每秒回復生命 +1.5', (P, v) => { P.regen = (P.regen || 0) + 1.5 * v; }), N('T_heal2', '生生不息', 5, '恢復量 +5%', (P, v) => { P.recovAmp = (P.recovAmp || 0) + 0.05 * v; }),
           N('T_trD1', '靜養', 5, '每秒回復生命 +4｜攻速 −4%', (P, v) => { P.regen = (P.regen || 0) + 4 * v; if (P.ws) P.ws.rate *= 1 - 0.04 * v; }, 1)],
-          cap: N('T_capB2', '奧義・不死身', 5, '生命剩三成以下時，每秒再回復 1.5% 生命；點滿：受到致命傷時留 1 點生命、3 秒不會受傷（90 秒一次）', (P, v) => { P.ttLowRegen = 0.015 * v; if (v >= 5) capOn(P, 'B2'); }) },
+          cap: N('T_capB2', '奧義・不死身', 5, '生命低於 50% 時每級每秒回復最大生命 1.6%；高於 50% 時護盾效果 +5%／級；保命進入冷卻後兩項加成減半。點滿：致命傷留 1 點生命、3 秒無敵（90 秒一次）', (P, v) => { P.ttUndyingLv = v; if (v >= 5) capOn(P, 'B2'); }) },
         { id: 'leech', n: '吸血', d: '打到就回。', nodes: [N('T_vx1', '飲血', 5, '吸血系數 +10', (P, v) => { P.vampX = (P.vampX || 0) + 10 * v; }), N('T_vx2', '血契', 5, '吸血系數 +6、恢復量 +3%', (P, v) => { P.vampX = (P.vampX || 0) + 6 * v; P.recovAmp = (P.recovAmp || 0) + 0.03 * v; }),
           N('T_trD2', '渴血', 5, '吸血系數 +20｜每秒回復生命 −1.5', (P, v) => { P.vampX = (P.vampX || 0) + 20 * v; P.regen = (P.regen || 0) - 1.5 * v; }, 1)],
           cap: N('T_capD2', '奧義・滴血重生', 5, '生命越低越會回：每少 1% 生命，吸血系數 +0.2%、恢復量 +0.1%；點滿＝+1%、+0.5%', (P, v) => { P.ttBleed = v / 5; if (v >= 5) capOn(P, 'D2'); }) }
@@ -72,6 +72,9 @@
   const NEED_PATH = 8, NEED_SUB = 10, NEED_CAP = 8;
   const ALL = ROOT.concat(...PATHS.map(p => p.nodes.concat(...p.subs.map(s => s.nodes.concat([s.cap]))))).concat([XP]);
   const BY = {}; ALL.forEach(n => { BY[n.id] = n; });
+  // 花費：根基／四條道 1 點，第二分支 2 點，奧義 3 點，歷練 2 點／級。
+  const COST = {}; ROOT.forEach(n => { COST[n.id] = 1; }); PATHS.forEach(p => { p.nodes.forEach(n => { COST[n.id] = 1; }); p.subs.forEach(s => { s.nodes.forEach(n => { COST[n.id] = 2; }); COST[s.cap.id] = 3; }); }); COST[XP.id] = 2;
+  R.talentCost = id => COST[id] || 1;
   // 給 charsheet.js 看的（[id, 名字, 階, 最多, 說明]）
   R.TALENTS = ALL.map(n => [n.id, n.n, 0, n.mx, n.d]);
 
@@ -79,10 +82,10 @@
   const tt = st => { st.sp = st.sp || { r: {}, t: {} }; st.sp.t = st.sp.t || {}; return st.sp.t; };
   // 舊的天賦退回來
   const mig = st => {
-    const t = tt(st); if (st.sp.tree === 3) return t;
+    const t = tt(st); if (st.sp.tree === 4) return t;
     const old = Object.keys(t).filter(k => t[k] > 0), n = old.reduce((a, k) => a + t[k], 0);   // 2026-10-05 四條道：全部退回一次
-    old.forEach(k => delete t[k]); st.sp.tree = 3;
-    if (n) setTimeout(() => R.toast && R.toast('天賦樹改成四條道（攻擊、防禦、魔法、恢復）：原本的 ' + n + ' 點全部退回來，可以重新點。', '#E8C04A'), 1500);
+    old.forEach(k => delete t[k]); st.sp.tree = 4;
+    if (n) setTimeout(() => R.toast && R.toast('天賦點與節點花費重新平衡：原本的 ' + n + ' 級天賦全部退回來，可以重新點。', '#E8C04A'), 1500);
     return t;
   };
   const sum = (t, list) => list.reduce((a, n) => a + (t[n.id] || 0), 0);
@@ -113,9 +116,11 @@
   // 給 talentui.js（新的技能點畫面）用：樹的結構、現在幾級、點一下
   R.TALENT_TREE = { ROOT, PATHS, XP, NEED_PATH, NEED_SUB, NEED_CAP };
   R.talentLv = (id, cls) => mig(stOf(cls))[id] || 0;
+  const spentCost = t => (t.T_slot2 ? 10 : 0) + ALL.reduce((a, n) => a + (t[n.id] || 0) * (COST[n.id] || 1), 0);
+  R.talentSpent = st => spentCost(mig(st));
   R.talentSlots = cls => slotsOf(mig(stOf(cls)));
   R.talentBuySlot = cls => { const st = stOf(cls), t = mig(st); if (t.T_slot2 || R.spFree(st) < 10) return false; t.T_slot2 = 10; R.save && R.save(); return true; };
-  R.talentAdd = (id, cls) => { const st = stOf(cls), t = mig(st); if (R.spFree(st) < 1 || why(t, id)) return false; t[id] = (t[id] || 0) + 1; R.save && R.save(); return true; };
+  R.talentAdd = (id, cls) => { const st = stOf(cls), t = mig(st), c = COST[id] || 1; if (R.spFree(st) < c || why(t, id)) return false; t[id] = (t[id] || 0) + 1; R.save && R.save(); return true; };
 
   // ---------- 效果 ----------
   const cp0 = R.calcPlayer;
@@ -131,21 +136,21 @@
   const he0 = R.hurtEnemy;
   R.hurtEnemy = (e, raw, o) => { const P = W().P; return he0(e, P && P.ttPrimary && o && o.primary ? raw * (1 - Math.min(0.6, P.ttPrimary)) : raw, o); };
   const st0 = R.step;
-  R.step = dt => { const r = st0(dt); const P = W().P; if (P && P.ttLowRegen && !P.dead && P.hp > 0 && P.hp < P.hpMax * 0.3) R.healP(P.hpMax * P.ttLowRegen * dt * (R.regenMul ? R.regenMul(P) : 1), true); return r; };
+  R.step = dt => { const r = st0(dt); const P = W().P; /* 不死身的條件恢復移到 talentcap.js，這裡不重複結算。 */ return r; };
   // 技能書的技能（skillbook.js 的「型」）：傷害照 P.ttSkill 加
   const TY = R.SKILL_TYPES; let depth = 0;
   if (TY) Object.keys(TY).forEach(k => { const f = TY[k]; TY[k] = (s, P, w, pw) => { const m = !depth && P && P.ttSkill ? 1 + P.ttSkill : 1; depth++; try { return f(s, P, w, pw * m); } finally { depth--; } }; });
 
   // ---------- 畫面：把 skillpoints.js 的天賦那一段換成樹 ----------
   const nodeHtml = (t, n, col) => {
-    const v = t[n.id] || 0, w = why(t, n.id), full = v >= n.mx, free = R.spFree(stOf()) > 0;
+    const v = t[n.id] || 0, w = why(t, n.id), full = v >= n.mx, c = COST[n.id] || 1, free = R.spFree(stOf()) >= c;
     return '<div class="tt-node' + (v ? ' on' : '') + (w && !full ? ' lock' : '') + '" style="--tc:' + (col || '#C8C0B0') + '"><b>' + esc(n.n) + '</b><span>' + (n.mx > 99 ? v : v + '／' + n.mx) + '</span><small>每級 ' + esc(n.d) + '</small>'
-      + (full ? '<em>滿級</em>' : w ? '<em class="why">' + esc(w) + '</em>' : '<button type="button" class="mini gold" data-ttp="' + n.id + '"' + (free ? '' : ' disabled') + '>+1</button>') + '</div>';
+      + (full ? '<em>滿級</em>' : w ? '<em class="why">' + esc(w) + '</em>' : '<button type="button" class="mini gold" data-ttp="' + n.id + '"' + (free ? '' : ' disabled') + '>+1（' + c + ' 點）</button>') + '</div>';
   };
   const treeHtml = st => {
     const t = mig(st), c0 = capOf(t), root = sum(t, ROOT);
-    return '<h3>天賦樹（投了 ' + Object.values(t).reduce((a, v) => a + v, 0) + ' 點）</h3>'
-      + '<p class="note">根基投滿 ' + NEED_PATH + ' 點以後開四條道；一條道投滿 ' + NEED_SUB + ' 點以後開它的兩個分支；分支投滿 ' + NEED_CAP + ' 點開它的奧義。道和分支都可以點好幾條，<b>奧義只能學一個</b>（技能點畫面右上角可以花 10 點多開一格；學了別的就鎖起來；要換到公會的武器登記那裡重新分配）。一條路走到底要 45 點；奧義點滿以後，多的點數也可以放進「歷練」。</p>'
+    return '<h3>天賦樹（投了 ' + spentCost(t) + ' 點）</h3>'
+      + '<p class="note">根基投滿 ' + NEED_PATH + ' 點以後開四條道；一條道投滿 ' + NEED_SUB + ' 點以後開它的兩個分支；分支投滿 ' + NEED_CAP + ' 點開它的奧義。道和分支都可以點好幾條，<b>奧義只能學一個</b>（技能點畫面右上角可以花 10 點多開一格；學了別的就鎖起來；要換到公會的武器登記那裡重新分配）。花費：根基與四條道每級 1 點、第二分支每級 2 點、奧義每級 3 點、歷練每級 2 點。奧義點滿以後，多的點數也可以放進「歷練」。</p>'
       + '<div class="tt-tree"><div class="tt-root"><div class="tt-h">根基<small>' + root + '／15</small></div><div class="tt-row">' + ROOT.map(n => nodeHtml(t, n)).join('') + '</div></div>'
       + '<div class="tt-paths">' + PATHS.map(p => {
         return '<div class="tt-path' + (pathPts(t, p) ? ' pick' : '') + '" style="--tc:' + p.c + '"><div class="tt-h">' + esc(p.n) + '<small>' + esc(p.d) + '</small></div>'
@@ -160,7 +165,7 @@
     let n = h3; while (n && n !== row) { const nx = n.nextElementSibling; n.remove(); n = nx; }
     const box = document.createElement('div'); box.innerHTML = treeHtml(stOf()); (row ? row.parentNode.insertBefore(box, row) : host.appendChild(box));
     const st = stOf(), t = tt(st);
-    box.querySelectorAll('[data-ttp]').forEach(b => { b.onclick = () => { const id = b.dataset.ttp; if (R.spFree(st) < 1 || why(t, id)) return; t[id] = (t[id] || 0) + 1; R.save && R.save(); R.skillPoints(where, true); }; });
+    box.querySelectorAll('[data-ttp]').forEach(b => { b.onclick = () => { if (R.talentAdd && R.talentAdd(b.dataset.ttp)) R.skillPoints(where, true); }; });
     const rs = host.querySelector('[data-sprs]'); if (rs) { const f0 = rs.onclick; rs.onclick = () => { f0 && f0(); R.skillPoints(where, true); }; }
   };
   const sp0 = R.skillPoints;

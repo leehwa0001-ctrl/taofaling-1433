@@ -9,7 +9,7 @@
   const D = (id, cls, lv, name, desc, fx, cost) => ({ id, cls, lv, name, desc, fx, cost });
   const LIST = [
     D('gu1', 'gunner', 1, '快速裝填', '換彈快 25%。', { reload: 0.25 }), D('gu2', 'gunner', 3, '擴充彈匣', '彈匣多 30%。', { mag: 0.3 }), D('gu3', 'gunner', 5, '穩定射擊', '暴擊率 +8%。', { crit: 0.08 }), D('gu4', 'gunner', 7, '連射', '攻速 +12%。', { rate: 0.12 }),
-    D('gu5', 'gunner', 9, '精準要害', '暴擊傷害 +30%。', { critMult: 0.3 }), D('gu6', 'gunner', 12, '狙擊本能', '8 公尺外的目標傷害 +20%。', { far: 0.2 }), D('gu7', 'gunner', 15, '彈殼回收', '擊倒遺跡生物，彈匣立刻補 3 發。', { killAmmo: 3 }), D('gu8', 'gunner', 18, '背水射擊', '生命低於 30% 時傷害 +30%。', { low: 0.3 }),
+    D('gu5', 'gunner', 9, '精準要害', '暴擊傷害 +30%。', { critMult: 0.3 }), D('gu6', 'gunner', 12, '狙擊本能', '8 公尺外的目標傷害 +20%，攻擊射程 +15%。', { far: 0.2, range: 0.15 }), D('gu7', 'gunner', 15, '彈殼回收', '擊倒遺跡生物，彈匣立刻補 3 發。', { killAmmo: 3 }), D('gu8', 'gunner', 18, '背水射擊', '生命低於 30% 時傷害 +30%。', { low: 0.3 }),
     D('ar1', 'archer', 1, '鷹眼', '射程 +20%、暴擊率 +4%。', { range: 0.2, crit: 0.04 }), D('ar2', 'archer', 3, '速射', '攻速 +14%。', { rate: 0.14 }), D('ar3', 'archer', 5, '輕裝', '翻滾冷卻 −20%。', { dodge: 0.2 }), D('ar4', 'archer', 7, '狩獵本能', '8 公尺外的目標傷害 +20%。', { far: 0.2 }),
     D('ar5', 'archer', 9, '麻痺箭', '18% 機率讓目標變慢。', { slow: 0.18 }), D('ar6', 'archer', 12, '貫穿', '箭多穿過一隻；遠程傷害 +6%。', { pierce: 1, ranged: 0.06 }), D('ar7', 'archer', 15, '獵人的耐心', '翻滾後 1.5 秒內的下一擊 +40%。', { dodgeHit: 0.4 }), D('ar8', 'archer', 18, '風之加護', '移動 +10%。', { speed: 0.1 }),
     D('wa1', 'warrior', 1, '重擊', '近戰傷害 +12%。', { melee: 0.12 }), D('wa2', 'warrior', 3, '鐵骨', '防禦 +4。', { def: 4 }), D('wa3', 'warrior', 5, '旋風', '揮砍的範圍 +25%。', { arc: 0.25 }), D('wa4', 'warrior', 7, '戰吼', '擊倒遺跡生物後 3 秒內傷害 +20%。', { rage: 0.2 }),
@@ -116,7 +116,7 @@
     if (was && e.dead && f && !(by && by.rival) && !(R._reflectKill > 0) && !(R._vampBlock > 0)) {   // 反擊／荊棘／_vampBlock：不算擊倒回血
       if (f.killHeal) {   // 遞減（作者 2026-10-05）：每次生效，之後的回復少 1%，最多少 50%，換樓層重算
         const fl = (W().run && W().run.floor) || 0; if (P._khFloor !== fl) { P._khFloor = fl; P._khN = 0; }
-        R.healP(P.hpMax * f.killHeal * (1 - Math.min(0.5, 0.01 * (P._khN || 0))), true); P._khN = (P._khN || 0) + 1;
+        R.healP(P.hpMax * (P.cls === 'gunner' ? Math.min(0.01, f.killHeal) : f.killHeal) * (1 - Math.min(0.5, 0.01 * (P._khN || 0))), true); P._khN = (P._khN || 0) + 1;
       }
       if (f.killMp) P.mp = Math.min(P.mpMax, P.mp + f.killMp);
       if (f.killAmmo && P.ws && P.ws.mag) P.ammo = Math.min(P.ws.mag, (P.ammo || 0) + f.killAmmo);
@@ -129,7 +129,7 @@
     const P = W().P, f = P && P.pv;
     // 不屈／殉道（fx.last）：真的倒下的時候才算——改在 unyield.js（原本這裡看扣護甲之前的傷害，死不了的攻擊也會觸發）
     const r = hp(raw, src, o);
-    if (f && f.thorns && src && src.def && !src.dead && raw > 0) R.hurtEnemy(src, raw * f.thorns, R.markNoVamp ? R.markNoVamp({ thorns: 1, fromBehind: false }) : { thorns: 1, reflect: true, noVamp: true, fromBehind: false });   // 走 markNoVamp 單一閘門
+    if (f && f.thorns && src && src.def && !src.dead && raw > 0 && Math.hypot((src.x || 0) - P.x, (src.z || 0) - P.z) <= 5) R.hurtEnemy(src, raw * f.thorns, R.markNoVamp ? R.markNoVamp({ thorns: 1, fromBehind: false }) : { thorns: 1, reflect: true, noVamp: true, fromBehind: false });   // 走 markNoVamp 單一閘門
     return r;
   };
   const hl = R.healP;

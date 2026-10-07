@@ -164,7 +164,7 @@
   R.panZoom = (svg, onPick) => {
     const vb0 = svg.viewBox.baseVal, W0 = vb0.width, H0 = vb0.height;
     const v = { x: 0, y: 0, w: W0, h: H0 };
-    const apply = () => { v.w = Math.min(W0, Math.max(W0 / 5, v.w)); v.h = v.w * H0 / W0; v.x = Math.max(-W0 * 0.1, Math.min(W0 * 1.1 - v.w, v.x)); v.y = Math.max(-H0 * 0.1, Math.min(H0 * 1.1 - v.h, v.y)); svg.setAttribute('viewBox', v.x.toFixed(1) + ' ' + v.y.toFixed(1) + ' ' + v.w.toFixed(1) + ' ' + v.h.toFixed(1)); };
+    const apply = () => { v.w = Math.min(W0, Math.max(W0 / 5, v.w)); v.h = v.w * H0 / W0; v.x = Math.max(-W0 * 0.1, Math.min(W0 * 1.1 - v.w, v.x)); v.y = Math.max(-H0 * 0.1, Math.min(H0 * 1.1 - v.h, v.y)); svg.setAttribute('viewBox', v.x.toFixed(1) + ' ' + v.y.toFixed(1) + ' ' + v.w.toFixed(1) + ' ' + v.h.toFixed(1)); const z = W0 / v.w, d = Math.max(0.58, Math.min(1, 0.58 + (z - 1) * 0.105)); svg.style.setProperty('--map-detail-scale', d.toFixed(3)); };
     const toSvg = (cx, cy) => { const r = svg.getBoundingClientRect(), sc = Math.max(v.w / r.width, v.h / r.height), ox = (r.width * sc - v.w) / 2, oy = (r.height * sc - v.h) / 2; return [v.x + (cx - r.left) * sc - ox, v.y + (cy - r.top) * sc - oy]; };
     const zoomAt = (cx, cy, f) => { const [px, py] = toSvg(cx, cy); const nw = Math.min(W0, Math.max(W0 / 5, v.w * f)), k = nw / v.w; v.x = px - (px - v.x) * k; v.y = py - (py - v.y) * k; v.w = nw; apply(); };
     svg.addEventListener('wheel', e => { e.preventDefault(); zoomAt(e.clientX, e.clientY, e.deltaY > 0 ? 1.15 : 1 / 1.15); }, { passive: false });

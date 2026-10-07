@@ -23,7 +23,7 @@
   const cds = (P, k) => { P.skillCd = (P.skillCd || 0) * k; if (P.skCd) P.skCd = P.skCd.map(c => (c || 0) * k); };
   const shield = (P, v, t) => { P.shield = Math.max(P.shield || 0, P.hpMax * v); if (P.buff) P.buff.shieldT = Math.max(P.buff.shieldT || 0, t || 8); };
   const C = {
-    gunner: ['整整 3 秒不會受傷，掃完 6 發必定暴擊', P => { P.iframe = Math.max(P.iframe || 0, 3.1); if (P.ws && P.ws.mag) { P.ammo = P.ws.mag; P.reloadT = 0; } later(P => { P.crits = (P.crits || 0) + 6; }, 3000); }],
+    gunner: ['整整 3 秒不會受傷；施放時裝滿彈匣，掃射結束後 5 秒射速 +25%', P => { P.iframe = Math.max(P.iframe || 0, 3.1); if (P.ws && P.ws.mag) { P.ammo = P.ws.mag; P.reloadT = 0; } later(P => { if (R.SKILL_TYPES && R.SKILL_TYPES.buff) R.SKILL_TYPES.buff({ _id: 'ult:gunner:rate', t: 5, rate: 1.25 }, P); }, 3000); }],
     archer: ['落點的敵人變慢；8 秒內暴擊 +20%、移動 +15%', P => { const [x, z] = aim(P, 13); [0, 1200, 2400].forEach(ms => later(() => near(x, z, 7).forEach(e => { if (e.st) e.st.slow = Math.max(e.st.slow || 0, 2.5); }), ms)); buff(P, 'archer', { t: 8, crit: 0.2, speed: 1.15, color: '#BFE8FF' }); }],
     warrior: ['攻擊距離越長範圍越大；落地後 6 秒受到的傷害 −30%', P => { later(P => buff(P, 'warrior', { t: 6, def: 0.3, color: '#FF8A5A' }), 700); }],
     mage: ['重置技能冷卻，回滿魔力', P => { cds(P, 0); P.mp = P.mpMax; }],

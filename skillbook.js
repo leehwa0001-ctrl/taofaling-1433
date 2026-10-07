@@ -279,8 +279,12 @@
       if (s.end) nova(P, w, s.end, pw);
     },
     buff(s, P) {
-      P.sb = P.sb || {}; const b = P.sb[s._id] = Object.assign({ left: s.t }, s);
+      P.sb = P.sb || {};
+      const old = P.sb[s._id];   // 同名增益重放＝刷新，不把舊倍率留在身上一直疊
+      if (old) { if (old.spd) P.speed /= old.spd; if (old.rate && P.ws) P.ws.rate /= old.rate; }
+      const b = P.sb[s._id] = Object.assign({ left: s.t }, s);
       if (s.speed) { P.speed *= s.speed; b.spd = s.speed; }
+      if (s.rate && P.ws) { P.ws.rate *= s.rate; b.rate = s.rate; }
       if (s.taunt) P.taunt = Math.max(P.taunt || 0, s.taunt);
       if (s.invis) P.invis = Math.max(P.invis || 0, s.invis);
       if (s.kekkai) P.buff.kekkai = Math.max(P.buff.kekkai || 0, s.t);
@@ -343,11 +347,11 @@
   R.step = dt => {
     step0(dt);
     const w = W(), P = w.P; if (!P || !P.sb || !w.run || w.paused) return;
-    Object.keys(P.sb).forEach(k => { const b = P.sb[k]; b.left -= dt; if (b.regen) R.healP(P.hpMax * b.regen * dt * (R.regenMul ? R.regenMul(P) : 1), true); if (b.left <= 0) { if (b.spd) P.speed /= b.spd; delete P.sb[k]; } });
+    Object.keys(P.sb).forEach(k => { const b = P.sb[k]; b.left -= dt; if (b.regen) R.healP(P.hpMax * b.regen * dt * (R.regenMul ? R.regenMul(P) : 1), true); if (b.left <= 0) { if (b.spd) P.speed /= b.spd; if (b.rate && P.ws) P.ws.rate /= b.rate; delete P.sb[k]; } });
   };
   // 換樓層：強化跟著帶下去（時間照算）；回到地面就清掉
   const er0 = R.endRun;
-  if (er0) R.endRun = (...a) => { const P = W().P; if (P && P.sb) { sbList(P).forEach(b => { if (b.spd) P.speed /= b.spd; }); P.sb = {}; } return er0(...a); };
+  if (er0) R.endRun = (...a) => { const P = W().P; if (P && P.sb) { sbList(P).forEach(b => { if (b.spd) P.speed /= b.spd; if (b.rate && P.ws) P.ws.rate /= b.rate; }); P.sb = {}; } return er0(...a); };
 
   // ---------- 升級：學會新技能 ----------
   const gx0 = R.gainXp;
@@ -359,7 +363,9 @@
   };
 
   // ---------- 技能書（換技能的畫面） ----------
-  const KEYS = () => (R.touch ? ['技能鈕', '第二鈕', '第三鈕', '第四鈕', '第五鈕'] : ['R／右鍵', '3', '4', '5', '6']);
+  const KEYS = () => (R.touch ? ['技能鈕', '第二鈕', '第三鈕', '第四鈕', '第五鈕'] : [
+    (R.keyName ? R.keyName('skill1') : 'R') + '／右鍵', R.keyName ? R.keyName('skill2') : '3', R.keyName ? R.keyName('skill3') : '4', R.keyName ? R.keyName('skill4') : '5', R.keyName ? R.keyName('skill5') : '6'
+  ]);
   let pickSlot = 0;
   const book = (host, close) => {
     const S = R.S, cls = S.cls, st = S.classes[cls], lo = R.loadoutOf(cls), keys = KEYS();

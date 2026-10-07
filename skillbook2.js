@@ -203,8 +203,8 @@
     },
     // 無敵：t 秒內不會受傷；cleanse 解除變慢和看不清楚；dodge 翻滾馬上可以再用
     guard(s, P) { P.iframe = Math.max(P.iframe || 0, s.t || 1); if (s.cleanse) { P.slowT = 0; P.blindT = 0; } if (s.dodge) P.dodgeCd = 0; R.fx('ring', P.x, 0.1, P.z, { r: 1.8, color: s.color || '#FFFFFF' }); R.fx('blink', P.x, 1, P.z); },
-    // 換彈：彈匣馬上裝滿；crits：接下來幾發必定暴擊
-    reload(s, P) { if (!s.noReload && P.ws.mag) { P.ammo = P.ws.mag; P.reloadT = 0; } if (s.crits) P.crits = (P.crits || 0) + s.crits; R.fx('ring', P.x, 0.1, P.z, { r: 1.2, color: '#FFE08A' }); },
+    // 換彈：彈匣馬上裝滿；rate：一段時間提高射速（同名重放只刷新時間，不疊倍率）
+    reload(s, P) { if (!s.noReload && P.ws.mag) { P.ammo = P.ws.mag; P.reloadT = 0; } if (s.crits) P.crits = (P.crits || 0) + s.crits; if (s.rate && R.SKILL_TYPES && R.SKILL_TYPES.buff) R.SKILL_TYPES.buff({ _id: s._id + ':rate', t: s.rateT || 5, rate: s.rate }, P); R.fx('ring', P.x, 0.1, P.z, { r: 1.2, color: '#FFE08A' }); },
     // 躍擊：跳起來落在準心處（在空中不會受傷），落地再炸一圈
     jumpx(s, P, w, pw) { const [x, z] = R.nearestFloor(...aimIn(P, s.range || 9)), dur = s.dur || 0.6; P.jump = { t: 0, dur, x0: P.x, z0: P.z, x1: x, z1: z }; P.air = dur; if (s.end) later(() => nova(P, w, s.end, pw, x, z), dur * 1000 + 20); },
     // 多段斬：幾道直線斬擊（spread：張開的角度；around：平均分布在四周）
@@ -223,7 +223,7 @@
   const C = { fire: '#FF7A3A', frost: '#BFE6FF', holy: '#FFE8A0', gold: '#C9A13A', earth: '#A08A6A', shadow: '#3A2A4A', hex: '#9A4ACF', green: '#6FB36A', white: '#FFFFFF', bolt: '#BFE8FF', boom: '#FFB45A' };
   const NEW = [
     // 槍手
-    ['g_quick', '快拔換彈', 'gunner', 3, 8, 6, 'reload', { crits: 2 }, '一瞬間換好彈匣，接下來兩發必定暴擊。'],
+    ['g_quick', '快拔換彈', 'gunner', 3, 8, 6, 'reload', { rate: 1.25, rateT: 5 }, '一瞬間換好彈匣，接下來 5 秒射擊速度 +25%。'],
     ['g_slug', '獨頭彈', 'gunner', 7, 6, 8, 'shotx', { k: 2.6, sp: 30, stun: 0.5, slow: 2 }, '射出一發沉重的獨頭彈：打中的敵人暈眩一下、變慢。'],
     ['g_turret', '自動砲台', 'gunner', 9, 16, 14, 'turret', { t: 8, rate: 0.5, reach: 10, k: 0.45, kind: 'bullet', look: 'gun' }, '在準心處架起一座刻了索敵咒文的小砲台，8 秒內自動射擊附近的敵人。'],
     ['g_flare', '照明彈', 'gunner', 11, 12, 12, 'combo', { parts: [['mark', { range: 12, r: 4, t: 6 }], ['at', { range: 12, r: 4, k: 0.3, burn: 1, fx: 'pillar', color: C.boom }, 0]] }, '打出照明彈：落點附近的敵人被照得無處可躲，6 秒內受到的傷害 +30%，並且燃燒。'],

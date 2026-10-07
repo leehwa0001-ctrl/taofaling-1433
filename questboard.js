@@ -30,7 +30,7 @@
     });
     const gs = [...new Set(list.map(x => x.s.grade))].filter(g => g !== 'hamilia');   // 哈米莉亞級的遺跡生物不主動打人：不出討伐
     for (let i = 0; i < 3 && gs.length; i++) {
-      const g = pick(gs), G = R.gradeById(g), pool = (G.pool || []).map(base).filter((v, j, a) => a.indexOf(v) === j && R.ENEMIES[v] && !R.ENEMIES[v].elite && !R.ENEMIES[v].boss && !R.ENEMIES[v].env && v !== 'chochin' && v !== 'gaki');
+      const g = pick(gs), G = R.gradeById(g), pool = (G.pool || []).map(base).filter((v, j, a) => a.indexOf(v) === j && R.ENEMIES[v] && !R.ENEMIES[v].elite && !R.ENEMIES[v].boss && !R.ENEMIES[v].env && v !== 'chochin' && v !== 'gaki' && (R.SITES || []).some(site => site.kind === 'ruin' && R.gradeById(site.grade) && R.gradeById(site.grade).lv >= G.lv && R.siteMain && R.siteMain(site).includes(v)));
       if (!pool.length) continue; const mon = pick(pool); if (out.some(q => q.mon === mon)) continue;
       out.push({ kind: 'kill', mon, grade: g, letter: list.find(x => x.s.grade === g).sp.letter, need: 4 + G.lv + Math.round(rnd() * 4) });
     }
@@ -74,9 +74,17 @@
     } catch (err) { console.warn('[questboard]', err); }
     return r;
   };
+  const snapScore = run => {
+    const qs = S() && S().quests, P = W().P, tk = run && run.task; if (!qs || !qs.length || !ruinRun(run) || !P) return;
+    const deep = tk ? Math.max(1, tk.deepest || 1) : Math.max(1, run.floor || 1), react = (run.reactCount || 0) + (tk && tk.react0 || 0), notice = (run.noticeCount || 0) + (tk && tk.notice0 || 0);
+    const hurt = clamp(100 * P.hp / Math.max(1, P.hpMax) - 15 * (W().allies || []).filter(a => a.downed).length);
+    const env = clamp(100 - (5 * notice + 20 * react) * Math.min(1, 15 / deep));
+    const eff = tk ? ((tk.t / 90) <= tk.limitH ? 100 : clamp(100 - 3 * Math.ceil(tk.t / 90 - tk.limitH))) : null;
+    qs.forEach(q => { if (q.kind === 'gather' || (q.kind === 'floor' && q.siteId === run.site.id) || (q.kind === 'kill' && (run.grade.lv || 1) >= lvOf(q.grade))) q.eval = { hurt, env, eff }; });
+  };
   const ex0 = R.extract;
   R.extract = how => {
-    const run = W().run, was = run && run.done, r = ex0(how);
+    const run = W().run, was = run && run.done; snapScore(run); const r = ex0(how);
     try { const qs = S() && S().quests; if (run && !was && run.done && qs && qs.length && ruinRun(run)) { qs.forEach(q => { if (q.kind === 'gather' && run.mats && run.mats[q.mat]) { const b = q.prog; q.prog = Math.min(q.need, q.prog + run.mats[q.mat]); told(q, b); } }); R.save(); } } catch (err) { console.warn('[questboard]', err); }
     return r;
   };
@@ -84,7 +92,7 @@
   const st0 = R.step; let hudT = 0;
   R.step = dt => {
     st0(dt);
-    const run = W().run; hudT -= dt; if (hudT > 0) return; hudT = 0.5;
+    const run = W().run; hudT -= dt; if (hudT > 0) return; hudT = 0.5; snapScore(run);
     let el = $('r-qb'); const qs = (S() && S().quests || []).filter(q => ruinRun(run) && (q.kind === 'gather' || (q.kind === 'floor' && q.siteId === run.site.id) || (q.kind === 'kill' && (run.grade.lv || 1) >= lvOf(q.grade))));
     if (!run || run.done || !qs.length) { if (el) el.hidden = true; return; }
     if (!el) { const tl = $('r-tl'); if (!tl) return; el = document.createElement('div'); el.id = 'r-qb'; el.className = 'glass dungeon-only r-misc'; tl.appendChild(el); }
@@ -95,9 +103,9 @@
   // ---------- 繳交：每一件登錄到勇者證 ----------
   const turnIn = q => {
     const s = S(), n = times(q); if (!n) return 0;
-    const d = (s.day || 0) - (q.day0 || 0), eff = d <= 5 ? 100 : clamp(100 - 5 * (d - 5));
+    const d = (s.day || 0) - (q.day0 || 0), eff = q.eval && q.eval.eff != null ? q.eval.eff : (d <= 5 ? 100 : clamp(100 - 5 * (d - 5))), hurt = q.eval ? q.eval.hurt : 85, env = q.eval ? q.eval.env : 85;
     s.tasks = s.tasks || [];
-    for (let i = 0; i < n; i++) s.tasks.push({ id: s.tasks.length + 1, site: '委託板・' + text(q), grade: q.grade, letter: q.letter, kind: 'board', need: q.need, done: q.need, limitH: 0, h: 0, s: [100, eff, 85, 85, null], day: s.day, ready: (s.day || 0) + 1, failed: false, rkTag: 1, board: 1 });
+    for (let i = 0; i < n; i++) s.tasks.push({ id: s.tasks.length + 1, site: '委託板・' + text(q), grade: q.grade, letter: q.letter, kind: 'board', need: q.need, done: q.need, limitH: 0, h: 0, s: [100, eff, hurt, env, null], day: s.day, ready: (s.day || 0) + 1, failed: false, rkTag: 1, board: 1 });
     s.gold += q.pay * n; s.quests = quests().filter(x => x !== q);
     return n;
   };

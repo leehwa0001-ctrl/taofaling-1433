@@ -9,7 +9,8 @@
   const rnd = Math.random;
   // ---------- 武器 ----------
   Object.assign(R.WEAPONS, {
-    dualpistol: { name: '雙槍', cls: ['gunner'], kind: 'gun', dmg: 7, pellets: 2, rate: 3.6, speed: 27, range: 12, mag: 16, reload: 1.3, spread: 0.12 },
+    dualpistol: { name: '雙槍（舊制）', cls: ['gunner'], kind: 'gun', dmg: 7, pellets: 2, rate: 3.6, speed: 27, range: 12, mag: 16, reload: 1.3, spread: 0.12, legacy: 1 },
+    sniperrifle: { name: '狙擊步槍', cls: ['gunner'], kind: 'gun', dmg: 28, rate: 0.75, speed: 55, range: 24, mag: 5, reload: 2.7, spread: 0.015 },
     repeater: { name: '連弩', cls: ['archer'], kind: 'bow', dmg: 11, rate: 3.2, speed: 32, range: 15 },
     warhammer: { name: '巨鎚', cls: ['warrior'], kind: 'melee', dmg: 32, rate: 0.85, range: 2.6, arc: 2, kb: 4, stun: 0.25 },
     wand: { name: '短杖', cls: ['mage'], kind: 'magic', dmg: 9, rate: 3.4, speed: 20, range: 13, mp: 1 },
@@ -59,7 +60,7 @@
     return r;
   };
   // ---------- 拿在手上的樣子：借用同一種類、樣子相近的武器（sprites.js） ----------
-  const LOOK = R.WEAPON_LOOK = Object.assign(R.WEAPON_LOOK || {}, { dualpistol: 'pistol', repeater: 'crossbow', warhammer: 'mace', wand: 'staff', censer: 'bell', nodachi: 'katana', halberd: 'spear', claws: 'gauntlet', harp: 'lute', totem: 'staff', compass: 'disc', runeaxe: 'axe', brush: 'chalk' });   // 別的檔案可以再加（R.WEAPON_LOOK）
+  const LOOK = R.WEAPON_LOOK = Object.assign(R.WEAPON_LOOK || {}, { dualpistol: 'pistol', sniperrifle: 'rifle', repeater: 'crossbow', warhammer: 'mace', wand: 'staff', censer: 'bell', nodachi: 'katana', halberd: 'spear', claws: 'gauntlet', harp: 'lute', totem: 'staff', compass: 'disc', runeaxe: 'axe', brush: 'chalk' });   // 別的檔案可以再加（R.WEAPON_LOOK）
   const mk0 = R.makeHeroSprite;
   R.makeHeroSprite = (cls, base, look) => { const h = mk0(cls, LOOK[base] || base, look); if (LOOK[base]) h.base = base; return h; };
   const sw0 = R.setHeroWeapon;
@@ -67,6 +68,7 @@
   // ---------- 圖示（16×16 點陣） ----------
   R.ICON_EXTRA = Object.assign(R.ICON_EXTRA || {}, {
     dualpistol: ({ rc, m, WOOD }) => { rc(1, 3, 7, 2, m[1]); rc(5, 5, 2, 3, WOOD[0]); rc(8, 9, 7, 2, m[1]); rc(12, 11, 2, 3, WOOD[0]); rc(1, 3, 2, 1, m[0]); rc(8, 9, 2, 1, m[0]); },
+    sniperrifle: ({ rc, ln, m, WOOD }) => { ln(1, 8, 14, 8, m[1], 2); rc(8, 5, 4, 2, m[0]); rc(12, 7, 3, 2, m[2]); ln(5, 9, 3, 13, WOOD[0], 2); },
     repeater: ({ rc, ln, m, WOOD }) => { ln(2, 13, 13, 2, WOOD[0], 2); ln(3, 6, 10, 13, m[1], 2); rc(10, 1, 4, 3, m[0]); rc(11, 4, 2, 2, m[2]); },
     warhammer: ({ rc, ln, m, WOOD }) => { ln(3, 14, 10, 7, WOOD[0], 2); rc(8, 1, 7, 6, m[1]); rc(8, 1, 7, 2, m[0]); rc(10, 7, 3, 1, m[2]); },
     wand: ({ ln, circ, m, WOOD, GEM, tier }) => { ln(3, 13, 11, 5, WOOD[1], 2); circ(12, 4, 2.2, GEM[tier] || GEM[0]); circ(11.5, 3.5, 0.8, '#FFFFFF'); },

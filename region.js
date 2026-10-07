@@ -193,7 +193,7 @@
   };
   R.siteLords = site => { const rg = regionOf(site), g = site && G(site.grade); if (rg && rg.lords && rg.lords[site.id]) return rg.lords[site.id].slice(); return g && g.lords ? g.lords.slice() : null; };
   // 委託板：這種生物在哪幾座遺跡出現（同一個分級以上）
-  R.monSites = (id, gid) => { const lv = (G(gid) || {}).lv || 0, list = R.SITES.filter(s => s.kind === 'ruin' && s.id !== 'kanko' && G(s.grade) && (G(s.grade).lv || 0) >= lv && R.sitePool(s).includes(id)); if (!list.length) return ''; list.sort((a, b) => (R.siteMain(b).includes(id) - R.siteMain(a).includes(id)) || (G(a.grade).lv - G(b.grade).lv)); return '・常見於' + list.slice(0, 2).map(s => '「' + s.name + '」').join('、'); };
+  R.monSites = (id, gid) => { const lv = (G(gid) || {}).lv || 0, list = R.SITES.filter(s => s.kind === 'ruin' && s.id !== 'kanko' && G(s.grade) && (G(s.grade).lv || 0) >= lv && R.sitePool(s).includes(id)); if (!list.length) return ''; const main = list.filter(s => R.siteMain(s).includes(id)).sort((a, b) => G(a.grade).lv - G(b.grade).lv); if (main.length) return '・常見於' + main.slice(0, 2).map(s => '「' + s.name + '」').join('、'); list.sort((a, b) => G(a.grade).lv - G(b.grade).lv); return '・可能出現於' + list.slice(0, 2).map(s => '「' + s.name + '」').join('、'); };
   R.siteMain = site => (site && SITE_MAIN[site.id] || []).filter(id => R.ENEMIES[id]);
 
   // ---------- 下遺跡的時候：run.grade 換成這座遺跡的複本 ----------

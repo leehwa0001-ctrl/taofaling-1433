@@ -191,7 +191,7 @@
         }
       } else if (pz.kind === 'push' && S.rocks) {
         S.rocks.forEach(rk => {
-          if (rk.anim) { const a = rk.anim; a.t += dt / 0.25; const u = Math.min(1, a.t); rk.m.position.set(a.x0 + (a.x1 - a.x0) * u, 0.8, a.z0 + (a.z1 - a.z0) * u); rk.m.rotation.z += dt * 4; if (u >= 1) rk.anim = null; return; }
+          if (rk.anim) { const a = rk.anim; a.t += dt / 0.25; const u = Math.min(1, a.t); const nx = a.x0 + (a.x1 - a.x0) * u, nz = a.z0 + (a.z1 - a.z0) * u, ox = rk.m.position.x, oz = rk.m.position.z; rk.m.position.set(nx, 0.8, nz); rk.m.rotation.z -= (nx - ox) / 0.8; rk.m.rotation.x += (nz - oz) / 0.8; if (u >= 1) rk.anim = null; return; }
           const dx = rk.x - P.x, dz = rk.z - P.z, d = Math.hypot(dx, dz), sp = Math.hypot(mvx, mvz);
           // 頂著石頭（貼著、往石頭的方向走）0.25 秒：推一格
           if (d < 1.45 && sp > 0.001 && (mvx * dx + mvz * dz) / (sp * d) > 0.6) {

@@ -32,7 +32,9 @@
   const hubOpen = () => { const h = $('hub'); return h && !h.hidden; };
   const modal = (html, foot) => {
     if (hubOpen()) { $('hub-sheet').innerHTML = html + foot; $('hub-modal').hidden = false; return { box: $('hub-sheet'), close: () => { $('hub-modal').hidden = true; } }; }
-    R.sheet(html, foot); return { box: $('r-sheet'), close: R.closeSheet };
+    const mapWasOpen = $('map') && !$('map').hidden; if (mapWasOpen && R.showScreen) R.showScreen('run');
+    R.sheet(html, foot);
+    return { box: $('r-sheet'), close: () => { R.closeSheet(); if (mapWasOpen && R.showScreen && !W().run) R.showScreen('map'); } };
   };
   // 外層的包裝（main.js、gtamap.js……）只傳 id，所以「已經看過委託書」用旗子記，不用第二個參數
   let okId = null, freeId = null, contId = null;   // freeId：不接委託，自己下去（沒有委託報酬、不打成績，加注條款也不算）；contId：繼續手上的委託

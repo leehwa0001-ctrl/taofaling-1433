@@ -76,10 +76,10 @@ body.pixel #r-map,body.pixel #gl{image-rendering:pixelated}
 .site{cursor:pointer;outline:none}
 .site:focus-visible .mk{transform:scale(1.25)}
 .site:focus-visible .site-name{fill:#8A1E18;text-decoration:underline}
-.site .mk{transition:transform .15s;transform-box:fill-box;transform-origin:center}
+.site .mk{transition:transform .15s;transform-box:fill-box;transform-origin:center;transform:scale(var(--map-detail-scale,1))}
 .site:hover .mk,.site:focus .mk,.site.sel .mk{transform:scale(1.25)}
-.site-name{font-family:var(--serif);font-weight:700;font-size:16px;fill:#2A2418;text-anchor:middle;paint-order:stroke;stroke:#F4E9CD;stroke-width:4px;stroke-linejoin:round}
-.k-capital .site-name{font-size:21px;fill:#8A1E18}
+.site-name{font-family:var(--serif);font-weight:700;font-size:calc(16px * var(--map-detail-scale,1));fill:#2A2418;text-anchor:middle;paint-order:stroke;stroke:#F4E9CD;stroke-width:4px;stroke-linejoin:round}
+.k-capital .site-name{font-size:calc(21px * var(--map-detail-scale,1));fill:#8A1E18}
 .k-forbidden .site-name{fill:#8A1E18}
 .site.locked{opacity:.78}
 .site.sel .site-name{fill:#8A1E18}
@@ -1017,4 +1017,5 @@ body.touch #r-toast{top:auto;bottom:calc(max(8px,env(safe-area-inset-bottom)) + 
 <script src="pauselayout.js"></script><!-- 暫停選單分三欄：左邊角色總數值、中間操作說明和按鈕置頂（所有包 R.pauseSheet 的檔案後面） -->
 <script src="adminpanel.js"></script><!-- 管理員面板：只有管理員號看得到（測試用） -->
 <script src="affixround.js"></script><!-- 裝備詞條的數字四捨五入到小數點後 2 位（所有包 R.itemLines、改詞綴 txt 的檔案後面） -->
+<script src="balance20261006.js"></script><!-- 2026-10-06 平衡：詞條隨物品等級／稀有度、技能加速削弱、槍手射程與武器種類 -->
 <script src="main.js"></script>

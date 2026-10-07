@@ -354,7 +354,7 @@
     const aimIn = max => { const d = Math.hypot(ax - P.x, az - P.z); const k = d > max ? max / d : 1; return [P.x + (ax - P.x) * k, P.z + (az - P.z) * k]; };
     R.sfx && R.sfx('skill');
     switch (P.skill) {
-      case 'roll': R.dash(a, 5, 0.25, { iframe: true }); P.ammo = ws.mag || P.ammo; P.reloadT = 0; P.crits = 3; break;
+      case 'roll': R.dash(a + Math.PI, 5, 0.25, { iframe: true }); P.ammo = ws.mag || P.ammo; P.reloadT = 0; P.crits = 3; break;
       case 'volley': { const [x, z] = aimIn(12); [0, 0.35, 0.7].forEach(t => later(() => { R.fx('rain', x, 0, z, { r: 2.8 }); R.aoe(x, z, 2.8, base * 0.9); }, t * 1000)); R.fx('mark', x, 0, z, { r: 2.8, t: 1 }); break; }
       case 'whirl': P.buff.whirl = 1.2; break;
       case 'fireball': R.fire({ kind: 'fire', owner: 'p', x: P.x, z: P.z, a, speed: 14, dmg: base * 2.4, life: 1.4, radius: 3, primary: false }); break;

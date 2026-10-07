@@ -114,7 +114,7 @@
       return { name: adv ? '轉職・' + (an ? an.name : adv) : '基本・' + R.CLASSES[cls].name, ids };
     }).filter(g => g.ids.length);
   };
-  const profOf = id => { const PROF = R.SKILL_PROF || [20, 60, 140, 260, 450], r = R.skillRank ? R.skillRank(id) : 0, u = R.skillProf ? R.skillProf(id) : 0, lo = r ? PROF[r - 1] : 0, hi = PROF[Math.min(r, PROF.length - 1)]; return { r, u, hi, k: r >= 5 ? 1 : Math.max(0, Math.min(1, (u - lo) / (hi - lo))) }; };
+  const profOf = id => { const PROF = R.SKILL_PROF || [20, 60, 140, 260, 450], r = R.skillRank ? R.skillRank(id) : 0, u = R.skillProf ? R.skillProf(id) : 0, need = rr => R.skillProfNeed ? R.skillProfNeed(id, rr) : PROF[Math.min(rr, PROF.length - 1)], lo = r ? need(r - 1) : 0, hi = need(r); return { r, u, hi, k: r >= 5 ? 1 : Math.max(0, Math.min(1, (u - lo) / Math.max(1, hi - lo))) }; };
   const stars = r => '<span class="tu-st">' + '★'.repeat(r) + '<i>' + '☆'.repeat(5 - r) + '</i></span>';
   const skillsHtml = () => '<h3>技能</h3>' + skillGroups().map(g => '<p class="tu-g">' + esc(g.name) + '</p>' + g.ids.map(id => {
     const sk = R.SKILLS[id], f = profOf(id), ic = R.skillIconURL ? R.skillIconURL(id) : '';
@@ -140,10 +140,10 @@
         + '<p class="tu-meta">熟練度 ' + f.u + (f.r >= 5 ? '（滿星）' : '／' + f.hi + ' 次升到 ★' + (f.r + 1)) + '</p>'
         + '<p class="tu-meta">' + (f.r ? '現在：冷卻 −' + 5 * f.r + '%' + (lib ? '、傷害 +' + 12 * f.r + '%' : '') : '還沒熟練') + '（每一星冷卻 −5%' + (lib ? '、傷害 +12%' : '') + '；技能是用越多越熟練，不花點數）</p></div>';
     }
-    const n = BY[sel && sel.id] || T.ROOT[0], s = stateOf(n), o = layout(T).nodes.find(q => q.n === n), col = o ? o.col : '#E8C04A';
+    const n = BY[sel && sel.id] || T.ROOT[0], s = stateOf(n), o = layout(T).nodes.find(q => q.n === n), col = o ? o.col : '#E8C04A', cost = R.talentCost ? R.talentCost(n.id) : 1;
     return '<div class="tu-dt' + (o && o.cap ? ' cap' : '') + '" style="--tc:' + col + '"><div class="tu-big"><img src="' + tIcon(n.id) + '" alt=""></div><h4>' + esc(n.n) + '</h4><div class="tu-lv">' + s.v + (n.mx > 99 ? ' 級' : ' ／ ' + n.mx) + '</div><hr>'
       + (n.tr ? '<p>每級：<span class="tu-pos">' + esc(n.d.split('｜')[0]) + '</span><br><span class="tu-neg">代價：' + esc(n.d.split('｜')[1] || '') + '</span></p>' : '<p>每級：' + esc(n.d) + '</p>') + '<p class="tu-meta">' + esc(o ? o.where : '歷練') + (o && o.cap ? '・奧義只能學一個' : '') + '</p>'
-      + (s.full ? '<p class="tu-ok">滿級</p>' : s.w ? '<p class="tu-why">' + esc(s.w) + '</p>' : '<button type="button" class="btn pri" data-tuadd="' + n.id + '"' + (free > 0 ? '' : ' disabled') + '>+1' + (free > 0 ? '' : '（沒有點數）') + '</button>')
+      + (s.full ? '<p class="tu-ok">滿級</p>' : s.w ? '<p class="tu-why">' + esc(s.w) + '</p>' : '<button type="button" class="btn pri" data-tuadd="' + n.id + '"' + (free >= cost ? '' : ' disabled') + '>+1（' + cost + ' 點）' + (free >= cost ? '' : '・點數不足') + '</button>')
       + '</div>';
   };
   const build = (where, host) => {
@@ -153,8 +153,8 @@
     const cb = host.querySelector('[data-close]'), row = cb && cb.closest('.row'); if (row) row.remove();
     const used = R.spTotal(st) - free;
     host.innerHTML = '<div class="tu-root"><div class="tu-head"><h2>技能點・天賦・' + esc(R.clsName(cls)) + ' Lv ' + st.lv + '</h2><span class="tu-pts">可用 <b>' + free + '</b> 點<small>（共 ' + R.spTotal(st) + '，用掉 ' + used + '）</small></span>' + (R.talentSlots ? (R.talentSlots() >= 2 ? '<span class="tu-slot">奧義兩格</span>' : '<button type="button" class="mini gold" data-tuslot' + (free >= 10 ? '' : ' disabled') + ' title="奧義原本只能學一個；花 10 點多開一格（最多兩個）">多開一格奧義（10 點）</button>') : '') + '</div>'
-      + '<details class="tu-help"><summary>怎麼點</summary><p class="note">每升一級 +2 點（等級 ×2）' + (st.lv >= R.LV_CAP ? '；滿級之後每攢滿一級的經驗再 1 點' : '') + '，全部用在天賦；每個武器類別的點數分開算。技能不花點數：用越多越熟練，每一星冷卻 −5%（技能書的技能傷害再 +12%）。</p>'
-      + '<p class="note">天賦樹：根基投滿 ' + T.NEED_PATH + ' 點開四條道；一條道投滿 ' + T.NEED_SUB + ' 點開它的兩個分支；分支投滿 ' + T.NEED_CAP + ' 點開它的奧義。道和分支都可以點好幾條，<b>奧義只能學一個</b>（右上角可以花 10 點多開一格，最多兩個）。學的那個奧義點滿以後，多的點數可以放進最下面的「歷練」。要重新分配，到公會的武器登記那裡。</p></details>'
+      + '<details class="tu-help"><summary>怎麼點</summary><p class="note">1～20 級每級 +1 點，21～40 級每級 +2 點，41 級以上每級 +3 點' + (st.lv >= R.LV_CAP ? '；滿級後每次歷練 +2 點' : '') + '，全部用在天賦；每個武器類別的點數分開算。技能不花點數：用越多越熟練，每一星冷卻 −5%（技能書的技能傷害再 +12%）。</p>'
+      + '<p class="note">天賦樹：根基投滿 ' + T.NEED_PATH + ' 點開四條道；一條道投滿 ' + T.NEED_SUB + ' 點開它的兩個分支；分支投滿 ' + T.NEED_CAP + ' 點開它的奧義。道和分支都可以點好幾條，<b>奧義只能學一個</b>（右上角可以花 10 點多開一格，最多兩個）。學的那個奧義點滿以後，多的點數可以放進最下面的「歷練」。花費：根基與四條道 1 點／級、第二分支 2 點／級、奧義 3 點／級、歷練 2 點／級。要重新分配，到公會的武器登記那裡。</p></details>'
       + '<div class="tu-cols"><section class="tu-skills">' + skillsHtml() + '</section><section class="tu-tree">' + treeHtml(T) + '</section><section class="tu-side">' + detailHtml(T, BY) + '</section></div></div>';
     if (row) host.appendChild(row);
     const again = () => R.skillPoints(where, true);

@@ -86,9 +86,10 @@
     const w = W(), run = w.run, n0 = w.enemies ? w.enemies.length : 0, was = run && run.reacting;
     const r = react0(...a);
     if (run && !was && run.reacting && run.reaction === 'bio') {
-      const lv = run.grade.lv || 1, kids = w.enemies.slice(n0).filter(e => e.id === 'gaki' && !e.dead);
-      kids.forEach(e => { e.hp *= 3 + lv; e.hpMax *= 3 + lv; e.dmg *= 1.6; e.bioKid = true; });
-      const P = w.P, room = R.roomAt(P.x, P.z) || w.F.rooms[0], [mx, mz] = R.roomPoint ? R.roomPoint(room, { away: P, min: 4 }) : [room.x, room.z];
+      const lv = run.grade.lv || 1, P = w.P, room = R.roomAt(P.x, P.z) || w.F.rooms[0], kids = w.enemies.slice(n0).filter(e => e.id === 'gaki' && !e.dead);
+      const placeKid = e => { const pt = R.roomPoint ? R.roomPoint(room, { away: P, min: 2 }) : [room.x, room.z]; e.x = pt[0]; e.z = pt[1]; e.room = room.i; if (e.m && e.m.g) { e.m.g.position.x = e.x; e.m.g.position.z = e.z; } e.hp *= 1.5; e.hpMax *= 1.5; e.dmg *= 1.5; e.bioKid = true; };
+      kids.forEach(placeKid); const want = Math.max(3, kids.length * 3); for (let i = kids.length; i < want; i++) { const pt = R.roomPoint ? R.roomPoint(room, { away: P, min: 2 }) : [room.x, room.z], k = R.spawnEnemy('gaki', pt[0], pt[1], room.i, { aggro: true }); if (k) placeKid(k); }
+      const [mx, mz] = R.roomPoint ? R.roomPoint(room, { away: P, min: 4 }) : [room.x, room.z];
       const m = R.spawnEnemy('gaki', mx, mz, room.i, { aggro: true });
       if (m) {
         m.hp = m.hpMax = (260 + 220 * lv) * Math.max(1, m.hpMax / R.ENEMIES.gaki.hp); m.dmg *= 2.2;   /* 2026-10-04 作者：一個技能就全死了——母體的生命照深度、玩家等級一起加強（和其他遺跡生物一樣），不再是固定的 */ m.speed *= 0.5; m.bioMother = true; m.spawnT = 5;
@@ -150,7 +151,7 @@
       m.hp = Math.min(m.hpMax, m.hp + m.hpMax * 0.015 * dt);
       m.spawnT -= dt; if (m.spawnT <= 0) {
         m.spawnT = 5; const alive = (w.enemies || []).filter(e => e.bioKid && !e.dead).length;
-        if (alive < 18) for (let i = 0; i < 2; i++) { const [x, z] = floorAt(m.x + (rnd() - 0.5) * 3, m.z + (rnd() - 0.5) * 3), k = R.spawnEnemy('gaki', x, z, m.room, { aggro: true }); if (k) { const lv = run.grade.lv || 1; k.hp *= 3 + lv; k.hpMax *= 3 + lv; k.dmg *= 1.6; k.bioKid = true; } }
+        if (alive < 54) { const room = w.F && w.F.rooms && w.F.rooms[m.room] || R.roomAt(m.x, m.z); for (let i = 0; i < 6; i++) { const pt = room && R.roomPoint ? R.roomPoint(room, { away: m, min: 1 }) : floorAt(m.x + (rnd() - 0.5) * 3, m.z + (rnd() - 0.5) * 3), k = R.spawnEnemy('gaki', pt[0], pt[1], m.room, { aggro: true }); if (k) { k.hp *= 1.5; k.hpMax *= 1.5; k.dmg *= 1.5; k.bioKid = true; } } }
       }
     });
     if (!run.lastF || run.lastF !== w.F) { run.lastF = w.F; lastP = null; }
