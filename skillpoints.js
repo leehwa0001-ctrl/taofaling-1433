@@ -24,8 +24,8 @@
   };
   const spent = st => Object.values(sp(st).t).reduce((a, v) => a + v, 0);   // talenttree.js 載入後會用加權花費覆蓋
   const talSpent = st => R.talentSpent ? R.talentSpent(st) : spent(st);
-  const levelPts = lv => { lv = Math.max(0, Math.floor(lv || 0)); return Math.min(lv, 20) + Math.max(0, Math.min(lv, 40) - 20) * 2 + Math.max(0, lv - 40) * 3; };
-  R.spTotal = st => levelPts(st.lv) + (st.spBonus || 0) * 2;   // 1～20：1／級；21～40：2／級；41+：3／級；滿級歷練每次 2 點
+  const levelPts = lv => { lv = Math.max(0, Math.floor(lv || 0)); return Math.min(lv, 20) * 2 + Math.max(0, Math.min(lv, 40) - 20) * 3 + Math.max(0, lv - 40) * 4; };
+  R.spTotal = st => levelPts(st.lv) + (st.spBonus || 0) * 2;   // 1～20：2／級；21～40：3／級；41+：4／級；滿級歷練每次 2 點
   R.spFree = st => R.spTotal(st) - (R.talentSpent ? R.talentSpent(st) : spent(st));
   const rank = (id, cls) => { const s = S(); if (!s) return 0; const st = stOf(cls), r = (st && st.sp && st.sp.r) || {}; return Math.max(r[id] || 0, /_aw$/.test(id || '') ? r[id.replace(/_aw$/, '')] || 0 : 0); };   // 覺醒版（_aw）沿用原版的星數
   const tal = (id, cls) => { const s = S(); if (!s) return 0; const st = stOf(cls); return (st && st.sp && st.sp.t[id]) || 0; };
@@ -87,7 +87,7 @@
     const s = S(), cls = s.cls, st = stOf(cls), p = sp(st), free = R.spFree(st), ts = talSpent(st), atGuild = where === 'hub', fee = 40 * st.lv;
     const skills = learnedOf(cls);
     host.innerHTML = '<h2>技能點・天賦・' + esc(R.clsName(cls)) + ' Lv ' + st.lv + (st.lv >= R.LV_CAP ? '（滿級）' : '／' + R.LV_CAP) + '</h2>'
-      + '<p class="note">Lv 1～20 每級 +1 點、21～40 每級 +2 點、41 級以上每級 +3 點' + (st.lv >= R.LV_CAP ? '；滿級之後每攢滿一級的經驗再 +2 點' : '') + '，用在天賦。可用 <b>' + free + '</b> 點（共 ' + R.spTotal(st) + '，用掉 ' + (R.spTotal(st) - free) + '）。每個武器類別的點數分開算。</p>'
+      + '<p class="note">Lv 1～20 每級 +2 點、21～40 每級 +3 點、41 級以上每級 +4 點' + (st.lv >= R.LV_CAP ? '；滿級之後每攢滿一級的經驗再 +2 點' : '') + '，用在天賦。可用 <b>' + free + '</b> 點（共 ' + R.spTotal(st) + '，用掉 ' + (R.spTotal(st) - free) + '）。每個武器類別的點數分開算。</p>'
       + '<h3>技能熟練度（最多 ★' + MAXR + '）</h3><p class="note">技能用越多越熟練：每成功施放一次 +1；8 秒左右的技能基準是 ' + PROF.join('、') + ' 次，冷卻越長需要的次數越少（40 秒技能只要基準的約 20%）。每一星：冷卻 −5%；技能書的技能傷害再 +12%（原本的基本技能只縮短冷卻）。</p>'
       + [null, st.adv].filter((v, i) => i === 0 || v).map(adv => { const list = skills.filter(id => { const L = R.SKILL_LIB && R.SKILL_LIB[id], a = L ? L.adv || null : ((R.ADV[cls] || []).some(x => x.skill === id) ? st.adv : null); return a === adv; }); if (!list.length) return ''; const an = adv && (R.ADV[cls] || []).find(x => x.id === adv);
         return '<p class="note"><b>' + esc(adv ? '轉職・' + (an ? an.name : adv) : '基本・' + R.CLASSES[cls].name) + '</b></p><div class="sp-list">' + list.map(id => { const r = p.r[id] || 0, u = p.u[id] || 0, lib = !!(R.SKILL_LIB && R.SKILL_LIB[id]), lo = r ? profNeed(id, r - 1) : 0, hi = profNeed(id, Math.min(r, MAXR - 1)), k = r >= MAXR ? 1 : Math.max(0, Math.min(1, (u - lo) / (hi - lo)));

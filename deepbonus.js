@@ -1,21 +1,31 @@
-// 深度加成（2026-10-04 作者：遺跡深層的怪物增幅可以再更明顯一點，也顯示在左上角——比如第 20 層怪物血量 +30%、傷害 +15%；
-//   第 60 層怪物血量 +200%、傷害 +100%，隨著深度顏色也會出現變化。「寶箱裡面多一樣 XX%」改成「寶物數量增加」「寶物稀有度增加」，也加在深層的增幅上）
-// - 照畫面上的層數 n（第 n 層）：k = (n ÷ 60)^1.75（第 20 層 0.15、第 40 層 0.49、第 60 層 1、第 80 層 1.65）。
-//   遺跡生物：生命 +200%×k、傷害 +100%×k（最多 +400%／+200%）；寶物數量 +60%×k、寶物稀有度 +80%×k（最多 +100%）；經驗 +150%×k（最多 +300%；2026-10-05 作者：多一點點，原本 +100%×k）。
-//   哈米莉亞級、觀光遺跡、狩獵場不加。
-// - combat.js 原本每一層 +16% 生命、+10% 傷害（換算回舊層數）那一段拿掉了，換成這個——左上角寫的就是實際的加成。
-//   difficulty.js 後期的生命保底也不再照深度加（一般、精英），由這裡乘。
-//   領主體、佩特拉核心的生命照舊（difficulty.js 本來就照深度給保底，再乘會變成要打好幾百下；摩爾斯級以下的核心沒有保底，照樣加），傷害一樣加。
-// - 寶物數量：寶箱開出的每一件，有這個機率再多開一件；寶物稀有度：開寶箱時，越稀有的權重乘得越多（×(1＋稀有度級數×加成×0.5)）。
+// 深度加成（2026-10-07 作者：不要再照絕對「第幾層」算，改成照這座遺跡已經走到總樓層的幾 %；
+//   這樣短遺跡和長遺跡都會從淺層一路拉到該分級應有的最深層強度。）
+// - 深度進度＝目前樓層 ÷ 這座遺跡總樓層。例：20 層的阿彌勒級，最深生命增幅 +50%；
+//   第 1 層 +2.5%、第 10 層 +25%、第 15 層 +37.5%、第 20 層 +50%。
+// - 各分級最深層的「生命增幅」：阿彌勒 +50%、摩爾斯 +100%、克森特 +200%、卡索 +300%。
+//   傷害增幅維持生命的一半：+25%／+50%／+100%／+150%。哈米莉亞級不加。
+// - 寶物數量、稀有度、經驗也改跟同一個深度百分比走；克森特最深層仍約等同舊制第 60 層的獎勵。
+// - difficulty.js 的領主／核心生命保底照舊；這裡只負責可見的「深度」增幅。
 // 放在 difficulty.js、pact.js、loot.js、sets.js、crafting.js 後面（包 R.spawnEnemy、R.rollChest 最外面）；左上角的「深度」那一格也在這裡。
 (function (R) {
   const W = () => R.W, $ = id => document.getElementById(id), isLord = d => !!(d && /^領主體/.test(d.name || ''));
-  const shown = run => { const RP = R.ruinPlusDebug; return RP && RP.has0 && RP.has0(run) ? run.floor : run.floor + 1; };   // 畫面上的第幾層
-  const NONE = { n: 0, k: 0, hp: 0, dmg: 0, qty: 0, rare: 0, xp: 0 };
+  const TOTAL = { amile: 0.5, mors: 1, kesent: 2, kaso: 3, kansait: 3 };
+  const has0 = run => { const RP = R.ruinPlusDebug; return !!(RP && RP.has0 && RP.has0(run)); };
+  const shown = run => run.f0 && has0(run) ? run.floor : run.floor + 1;   // 第 0 層休息區不算深度；真正第 1 層從 1／總樓層開始
+  const totalFloors = run => Math.max(1, (run.floors || 1) - (run.f0 ? 1 : 0));
+  const NONE = { n: 0, total: 0, p: 0, k: 0, amp: 0, cap: 0, hp: 0, dmg: 0, qty: 0, rare: 0, xp: 0 };
   R.depthBonus = run => {
     if (!run || !run.grade || !run.site || run.grade.id === 'hamilia' || run.grade.id === 'hunt' || run.site.id === 'kanko' || run.site.outdoor) return NONE;
-    const n = Math.max(0, shown(run)), k = Math.pow(n / 60, 1.75);
-    return { n, k, hp: Math.min(4, 2 * k), dmg: Math.min(2, k), qty: Math.min(1, 0.6 * k), rare: Math.min(1, 0.8 * k), xp: Math.min(3, 1.5 * k) };
+    const cap = TOTAL[run.grade.id] || 0; if (!cap) return NONE;
+    const n = Math.max(0, shown(run)), total = totalFloors(run), p = Math.max(0, Math.min(1, n / total)), amp = cap * p;
+    return {
+      n, total, p, k: p, amp, cap,
+      hp: amp,
+      dmg: amp * 0.5,
+      qty: Math.min(1, amp * 0.3),
+      rare: Math.min(1, amp * 0.4),
+      xp: Math.min(3, amp * 0.75)
+    };
   };
 
   // ---------- 遺跡生物 ----------
@@ -58,7 +68,7 @@
       const run = W().run, b = R.depthBonus(run); let el = $('deep-box');
       if (!run || !b.k || b.n < 1) { if (el) el.hidden = true; return r; }
       if (!el) { const where = $('r-where'); if (!where) return r; el = document.createElement('div'); el.id = 'deep-box'; el.className = 'glass dungeon-only'; where.after(el); }
-      const col = colOf(b.k), html = '<b style="color:' + col + '">深度・第 ' + b.n + ' 層</b><span>遺跡生物 生命 <em style="color:' + col + '">' + pc(b.hp) + '</em>・傷害 <em style="color:' + col + '">' + pc(b.dmg) + '</em></span><span>寶物數量 <em>' + pc(b.qty) + '</em>・寶物稀有度 <em>' + pc(b.rare) + '</em></span><span>經驗 <em style="color:#9AE07A">' + pc(b.xp) + '</em></span>';
+      const col = colOf(b.k), html = '<b style="color:' + col + '">深度・第 ' + b.n + '／' + b.total + ' 層</b><span>本層增幅 <em style="color:' + col + '">' + pc(b.amp) + '</em>（最深 ' + pc(b.cap) + '）</span><span>遺跡生物 生命 <em style="color:' + col + '">' + pc(b.hp) + '</em>・傷害 <em style="color:' + col + '">' + pc(b.dmg) + '</em></span><span>寶物數量 <em>' + pc(b.qty) + '</em>・寶物稀有度 <em>' + pc(b.rare) + '</em></span><span>經驗 <em style="color:#9AE07A">' + pc(b.xp) + '</em></span>';
       el.hidden = false; el.style.setProperty('--dc', col); if (html !== last) { el.innerHTML = html; last = html; }
     } catch (e) { }
     return r;
