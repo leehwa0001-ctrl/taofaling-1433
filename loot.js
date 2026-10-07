@@ -12,6 +12,8 @@
   R.rollChest = (g, floor, cls, tier) => {
     const out = rc0(g, floor, cls, tier), c = ctx; ctx = null;
     if (!c || g <= 0) return out;   // 不是開寶箱（行商、精英、擬態箱……）、哈米莉亞級（本來就是雜物）
+    const run = R.W && R.W.run;
+    if (run && run.floor === run.floors - 1) return out;   // 最深層是走到底的保底獎勵：正常寶箱必定有東西；金箱本來就不會空
     const P = R.W && R.W.P, luck = (P && P.luck) || 0, p = ((c.opened || 0) >= 1 ? 0.6 : EMPTY[Math.min(2, c.tier || 0)]) * Math.max(0.4, 1 - luck * 0.03);
     if (Math.random() < p) { c.wasEmpty = 1; setTimeout(() => R.toast && R.toast('寶箱是空的。……被別的勇者先搜過了。', '#C8B88A'), 150); return []; }
     const items = out.filter(o => o.item);

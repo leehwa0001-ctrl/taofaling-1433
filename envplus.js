@@ -42,16 +42,22 @@
     return (w.zones || []).some(z => !z.dead && /lava|magma|fire|flame|burn/.test(z.kind || '') && Math.hypot(z.x - P.x, z.z - P.z) < (z.r || 1) + 2.5);
   };
   // 畫面四周結霜、左上角的凍傷值
-  const overlay = () => { let el = $('env-frost-ov'); if (!el) { el = document.createElement('div'); el.id = 'env-frost-ov'; document.body.appendChild(el); } return el; };
+  const overlay = () => { let el = $('env-frost-ov'); if (!el) { el = document.createElement('div'); el.id = 'env-frost-ov'; el.hidden = true; document.body.appendChild(el); } return el; };
   const chip = () => { let el = $('env-frost'); if (!el) { const tl = $('r-tl'); if (!tl) return null; el = document.createElement('div'); el.id = 'env-frost'; el.className = 'glass dungeon-only r-misc'; el.title = '凍傷：站在積雪裡會一直漲，滿了會變慢、掉生命。離開積雪、靠近營火或火焰就會退。'; tl.appendChild(el); } return el; };
+  const clearFrost = reset => {
+    const el = $('env-frost'), ov = $('env-frost-ov');
+    if (el) el.hidden = true;
+    if (ov) { ov.style.opacity = 0; ov.hidden = true; }
+    if (reset) F2 = null;
+  };
   let hudT = 0;
   const hud = run => {
     const el = $('env-frost'), ov = $('env-frost-ov'), show = !!(F2 && run && run.env === 'snow' && on(run));
-    if (!show) { if (el) el.hidden = true; if (ov) ov.style.opacity = 0; return; }
+    if (!show) { clearFrost(false); return; }
     const c = chip(); if (!c) return; const v = Math.round(F2.frost), n = Math.round(v / 10);
     c.hidden = false; const h = '凍傷 <b style="color:' + (v >= 100 ? '#FF7A7A' : v >= 60 ? '#BFE8FF' : '#E8F2FF') + '">' + '▮'.repeat(n) + '▯'.repeat(10 - n) + '</b> ' + v + (v >= 100 ? '・<b style="color:#FF9A6A">凍僵了</b>' : '');
     if (c.dataset.h !== h) { c.dataset.h = h; c.innerHTML = h; }
-    overlay().style.opacity = (Math.min(1, v / 100) * 0.9).toFixed(2);
+    const frostOv = overlay(); frostOv.hidden = false; frostOv.style.opacity = (Math.min(1, v / 100) * 0.9).toFixed(2);
   };
 
   // ---------- 每一格 ----------
@@ -88,6 +94,13 @@
   };
   const lf0 = R.loadFloor;
   R.loadFloor = (f, o) => { const r = lf0(f, o); try { buildDrift(); } catch (e) { console.warn('[envplus]', e); } return r; };
+  // 凍傷遮罩掛在 body 上，不屬於遺跡場景；回城／打開公會後 R.step 可能停住，所以要在切畫面時主動清掉。
+  const et0 = R.enterTownNow;
+  if (et0) R.enterTownNow = (...a) => { clearFrost(true); return et0(...a); };
+  const oh0 = R.openHub;
+  if (oh0) R.openHub = (...a) => { clearFrost(true); return oh0(...a); };
+  const rs0 = R.results;
+  if (rs0) R.results = (...a) => { clearFrost(false); return rs0(...a); };
 
   const css = document.createElement('style');
   css.textContent = '#env-frost-ov{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;transition:opacity .4s;'
