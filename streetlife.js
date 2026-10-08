@@ -102,6 +102,7 @@
     if (L.busk) L.busk.h.g.visible = eve;
     L.carts.forEach(c => { const st = c.g.userData.steam; if (st && night) { const k = (L.t * 0.5) % 1; st.position.y = 1.3 + k * 1.2; st.scale.setScalar(0.6 + k); st.material.opacity = 0.35 * (1 - k); } c.g.visible = night; c.v.h.g.visible = night; c.b.on = night; });
   };
+  R.SL = { ROLES, GOSSIP, shamisen };   // 精緻城市（cklife.js）也用
   const enter0 = R.enterTownNow;
   R.enterTownNow = (from, at) => { enter0(from, at); const tw = W.town; if (tw) { try { build(tw); } catch (e) { console.warn('[streetlife]', e); } } };
   const step0 = R.townStep;

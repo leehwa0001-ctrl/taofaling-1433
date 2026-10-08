@@ -143,7 +143,8 @@
       const vis = b.rank < dayK && near(b, P, 70); b.m.g.visible = vis;
       if (b.rank >= dayK) return;
       const dx = b.tx - b.x, dz = b.tz - b.z, d = Math.hypot(dx, dz);
-      if (d < 0.6) { const C = R.CITY, nb = C.adj[b.ni]; if (nb && nb.length) { let k = pick(nb); if (nb.length > 1 && k === b.prev) k = pick(nb); b.prev = b.ni; b.ni = k; } const [sx, sy] = C.nodes[b.ni]; b.tx = (sx + (rnd() - 0.5) * 3 - 500) * C.S; b.tz = (sy + (rnd() - 0.5) * 3 - 500) * C.S; return; }
+      if (d < 0.6) { if (b.next) { b.next(b); return; } const C = R.CITY, nb = C.adj[b.ni];   // b.next：精緻城市的腳踏車自己選下一段（cklife.js）
+         if (nb && nb.length) { let k = pick(nb); if (nb.length > 1 && k === b.prev) k = pick(nb); b.prev = b.ni; b.ni = k; } const [sx, sy] = C.nodes[b.ni]; b.tx = (sx + (rnd() - 0.5) * 3 - 500) * C.S; b.tz = (sy + (rnd() - 0.5) * 3 - 500) * C.S; return; }
       const ux = dx / d, uz = dz / d;
       let want = b.sp;
       if (vis) {
@@ -221,6 +222,7 @@
     else if (d < 3) a.barkT = 8;
   };
 
+  R.lifeStep = step; R.lifePet = pet;   // 精緻城市（cklife.js）也用同一套
   const etn = R.enterTownNow;
   R.enterTownNow = (from, at) => { etn(from, at); try { setup(); } catch (e) { console.warn('townlife', e); } };
   const ts = R.townStep;
