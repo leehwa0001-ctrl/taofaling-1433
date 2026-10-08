@@ -88,7 +88,7 @@
     gauge(P) {
       const s = P._fa || 'fist', en = Math.round(P._faEn || 0), b = P._faBoost;
       const T = { fist: '攻速 +30%', palm: '擊退 +50%', step: '普攻往前衝 2 公尺', leg: '傷害 +100%、範圍 +30%' }[s];
-      return { name: FA[s][0] + (b && b.s === s ? '・強化' : ''), col: FA[s][1], v: en, max: 100, full: en >= 100, text: T + (P._faStepHits > 0 ? '・傷害 +25%（' + P._faStepHits + ' 下）' : ''), x: en >= 100 && !(P._faStepHits > 0) ? 'X 換法：強化' : 'X 換法' };
+      return { name: FA[s][0] + (b && b.s === s ? '・強化' : ''), col: FA[s][1], v: en, max: 100, full: en >= 100, text: '能量 ' + en + '／100', sub: T + (P._faStepHits > 0 ? '・傷害 +25%（' + P._faStepHits + ' 下）' : ''), x: en >= 100 && !(P._faStepHits > 0) ? '換法（強化）' : '換法' };
     }
   };
   // 普攻真的出手了（攻擊冷卻變長）：能量、步法的移動、強化用掉

@@ -169,7 +169,8 @@
       if (it.kind === 'weapon') return !!(R.WEAPONS[it.base] && (R.WEAPONS[it.base].cls || []).includes(c));
       return !R.canUse || R.canUse(it, c);   // 防具／飾品／護符：看力量夠不夠等
     };
-    const CATS = [['all', '全部', () => true]].concat(R.GEAR_KEYS.map(k => [k, R.GEAR_NAME[k] || k, it => slotOf(it) === k]), [['use', '能用的', it => R.canUse(it, S.cls)], ['unid', '未鑑定', it => !it.identified], ['lock', '上鎖', it => it.locked]]);
+    // 2026-10-08 作者：分類只留一個「飾品」（不分飾品一、二；飾品二格的東西本來會跑到「飾品二」分類）
+    const CATS = [['all', '全部', () => true]].concat(R.GEAR_KEYS.filter(k => k !== 'acc2').map(k => [k, R.GEAR_NAME[k] || k, k === 'acc' ? it => it.kind === 'acc' : it => slotOf(it) === k]), [['use', '能用的', it => R.canUse(it, S.cls)], ['unid', '未鑑定', it => !it.identified], ['lock', '上鎖', it => it.locked]]);
     const cat = CATS.find(c => c[0] === stashCat) || CATS[0], SORT = { rar: (a, b) => (b.identified ? b.rarity : -1) - (a.identified ? a.rarity : -1) || (b.ilvl || 0) - (a.ilvl || 0), lvl: (a, b) => (b.ilvl || 0) - (a.ilvl || 0) || (b.rarity || 0) - (a.rarity || 0), new: () => 0 };
     // 屬性選項：倉庫裡實際出現過的詞綴（未鑑定不算）
     const affixOpts = [];

@@ -41,6 +41,12 @@
     const w = W(), C = w.F && w.F.camp; if (C && Math.hypot(C.x - P.x, C.z - P.z) < 4) return true;
     return (w.zones || []).some(z => !z.dead && /lava|magma|fire|flame|burn/.test(z.kind || '') && Math.hypot(z.x - P.x, z.z - P.z) < (z.r || 1) + 2.5);
   };
+  // 給狀態圖示、生命球用（frost1008.js）：凍傷值、現在每秒漲多少（跟下面 R.step 的算法一樣）
+  R.frostState = () => {
+    const w = W(), run = w.run, P = w.P; if (!F2 || F2.F !== w.F || !P || !(run && run.env === 'snow' && on(run))) return null;
+    const S = ks(), storm = !!(S && S.storm > 0), drift = inDrift(P), heat = nearHeat(P); let rate = drift ? 30 : storm ? 6 : -8; if (heat || P.dead) rate = heat ? -30 : -8;
+    return { v: F2.frost, rate, drift, heat, storm, k: deepK(run) };
+  };
   // 畫面四周結霜、左上角的凍傷值
   const overlay = () => { let el = $('env-frost-ov'); if (!el) { el = document.createElement('div'); el.id = 'env-frost-ov'; el.hidden = true; document.body.appendChild(el); } return el; };
   const chip = () => { let el = $('env-frost'); if (!el) { const tl = $('r-tl'); if (!tl) return null; el = document.createElement('div'); el.id = 'env-frost'; el.className = 'glass dungeon-only r-misc'; el.title = '凍傷：站在積雪裡會一直漲，滿了會變慢、掉生命。離開積雪、靠近營火或火焰就會退。'; tl.appendChild(el); } return el; };

@@ -102,6 +102,7 @@
   };
 
   // 現在身上有的狀態
+  R.STATUS_ICON = ICON;   // 別的檔案可以加圖示
   const collect = () => {
     const P = W.P, run = W.run, S = R.S, out = []; if (!P || !run) return out;
     const add = (key, name, icon, color, lines, left, total, bad, note) => out.push({ key, name, icon, color, lines, left, total, bad: !!bad, note });
@@ -138,6 +139,8 @@
         '點滿時：每少 1% 生命，吸血系數 +1%、恢復量 +0.5%（每秒回血、吸血都算）'
       ], null, null, false, '天賦・恢復奧義');
     }
+    // 別的檔案加的狀態（R.STATUS_EXTRA：fn(P, run, add)；frost1008.js 的凍傷）
+    (R.STATUS_EXTRA || []).forEach(f => { try { f(P, run, add); } catch (e) { console.warn('[statusicons]', e); } });
     return out;
   };
 

@@ -2,7 +2,7 @@
 // - 裝備欄多一格「飾品二」（R.GEAR_KEYS 加 acc2）：戒指、項鍊、手環……什麼飾品都能戴，兩格可以戴同一種（兩個戒指也行）。
 //   能力（詞綴、強化、寶石）照算：calcPlayer、角色總數值都是看 R.GEAR_KEYS 加起來的。
 // - 戴上去：第一格空著戴第一格；第一格有了、第二格空著，戴第二格；兩格都有，換掉第一格（R.slotOf 照這個順序回答，
-//   倉庫、遺跡裡的背包都照這個）。倉庫的飾品多一個「戴在飾品二」的鈕，可以直接換第二格。
+//   倉庫、遺跡裡的背包都照這個）。要指定哪一格：倉庫上面的裝備欄點那一格選（gearcmp.js）。
 // - 新的飾品三種（寶箱會掉、飾品工房做得出來）：腳鍊（輕身＝移動）、臂環（穿透）、墜飾（回魔）。
 // 放在 crafting.js、raid.js、hub.js 後面。
 (function (R) {
@@ -17,21 +17,7 @@
     if (it && e.acc === it.id) return 'acc'; if (it && e.acc2 === it.id) return 'acc2';
     return e.acc && R.itemById(e.acc) && !(e.acc2 && R.itemById(e.acc2)) ? 'acc2' : 'acc';
   };
-  // 倉庫：飾品多一個「戴在飾品二」
-  const hub0 = R.hub;
-  R.hub = (...a) => {
-    const r = hub0(...a);
-    try {
-      const s = S();
-      document.querySelectorAll('[data-equip]').forEach(b => {
-        const it = R.itemById(b.dataset.equip); if (!it || it.kind !== 'acc' || b.parentNode.querySelector('[data-equip2]')) return;
-        const b2 = document.createElement('button'); b2.type = 'button'; b2.className = 'btn'; b2.dataset.equip2 = it.id; b2.textContent = '戴在飾品二';
-        b2.onclick = () => { const e = s.equip[s.cls] = s.equip[s.cls] || {}; if (e.acc === it.id) e.acc = null; e.acc2 = it.id; R.save && R.save(); R.hub(); };
-        b.after(b2);
-      });
-    } catch (e) { console.warn('[acc2]', e); }
-    return r;
-  };
+  // 倉庫：原本飾品多一個「戴在飾品二」的鈕——2026-10-08 作者：拿掉；「穿上」自動放空的那一格，要指定哪一格到上面的裝備欄點那一格選（gearcmp.js）
   // ---------- 新的飾品 ----------
   Object.assign(R.ACC, {
     anklet: { name: '腳鍊', imp: 'fleet', r: [3, 6] },

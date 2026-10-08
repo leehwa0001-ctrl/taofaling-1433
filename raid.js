@@ -112,8 +112,9 @@
     if (weaponChanged) { P.ammo = P.ws.mag || 0; P.reloadT = 0; if (R.setHeroWeapon) R.setHeroWeapon(P.h, P.item.base); }
     if (R.dressHero) R.dressHero(P.h, R.equipped(s.cls));
   };
-  const equip = it => {
-    const s = S(), run = W().run, g = G(), k = slotOf(it); if (!k || !R.GEAR_KEYS.includes(k)) return '這個不能穿。';
+  // want：拖到哪一格（飾品可以指定飾品、飾品二；2026-10-08 作者：裝備總覽一樣可以選）
+  const equip = (it, want) => {
+    const s = S(), run = W().run, g = G(), k = it && it.kind === 'acc' && (want === 'acc' || want === 'acc2') ? want : slotOf(it); if (!k || !R.GEAR_KEYS.includes(k)) return '這個不能穿。';
     if (R.canUse && !R.canUse(it, s.cls)) return '現在的職業用不了（或是太重）。';
     const eq = s.equip[s.cls] = s.equip[s.cls] || {}, old = eq[k] ? R.itemById(eq[k]) : null, p = g.at.get(it);
     let sp = null;
@@ -219,7 +220,7 @@
           const d = drag; drag = null; if (d && d.ghost) d.ghost.remove();
           if (!d || !d.moved) { sel = { it }; R.bagSheet(); return; }
           const tgt = document.elementFromPoint(ev.clientX, ev.clientY), slot = tgt && tgt.closest && tgt.closest('[data-slot]');
-          if (slot) { const err = equip(d.it); if (err) R.toast(err, '#FF9A6A'); else sel = { slot: slotOf(d.it) }; }
+          if (slot) { const err = equip(d.it, slot.dataset.slot); if (err) R.toast(err, '#FF9A6A'); else sel = { slot: slotOf(d.it) }; }
           else if (fitsAt(d.it, d.cx, d.cy, d.r, d.it)) { g.at.set(d.it, { x: d.cx, y: d.cy, r: d.r }); sel = { it: d.it }; }
           R.bagSheet();
         };
