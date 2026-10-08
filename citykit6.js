@@ -102,18 +102,39 @@
   let BANNER = null;
   const bannerMat = () => {
     if (BANNER) return BANNER;
-    const TH = T(), c = document.createElement('canvas'); c.width = 128; c.height = 320; const g = c.getContext('2d');
-    g.fillStyle = '#F2EEE4'; g.fillRect(0, 0, 128, 320);
-    g.fillStyle = '#B8202A'; g.fillRect(0, 0, 5, 320); g.fillRect(123, 0, 5, 320);
-    const sx = 64, sy = 88; g.fillStyle = '#D42A2A';
-    for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; g.beginPath(); g.moveTo(sx + Math.cos(a - 0.1) * 29, sy + Math.sin(a - 0.1) * 29); g.lineTo(sx + Math.cos(a) * 43, sy + Math.sin(a) * 43); g.lineTo(sx + Math.cos(a + 0.1) * 29, sy + Math.sin(a + 0.1) * 29); g.closePath(); g.fill(); }
-    g.beginPath(); g.arc(sx, sy, 25, 0, Math.PI * 2); g.fill();
-    g.fillStyle = '#1E3A7A'; g.beginPath(); g.moveTo(20, 170); g.lineTo(64, 118); g.lineTo(108, 170); g.closePath(); g.fill();
-    g.fillStyle = '#F2EEE4'; g.beginPath(); g.moveTo(51, 133); g.lineTo(64, 118); g.lineTo(77, 133); g.lineTo(70, 129); g.lineTo(64, 136); g.lineTo(58, 129); g.closePath(); g.fill();
-    g.strokeStyle = '#1E3A7A'; g.lineWidth = 6; g.lineCap = 'round';
-    for (let k = 0; k < 3; k++) { const y0 = 184 + k * 15; g.beginPath(); for (let x = 14; x <= 114; x += 2) { const yy = y0 + Math.sin((x - 14) / 100 * Math.PI * 3) * 4; if (x === 14) g.moveTo(x, yy); else g.lineTo(x, yy); } g.stroke(); }
-    g.fillStyle = '#1E3A7A'; g.beginPath(); g.moveTo(0, 250); g.quadraticCurveTo(64, 228, 128, 240); g.lineTo(128, 320); g.lineTo(0, 320); g.closePath(); g.fill();
-    g.globalCompositeOperation = 'destination-out'; g.beginPath(); g.moveTo(34, 321); g.lineTo(64, 290); g.lineTo(94, 321); g.closePath(); g.fill(); g.globalCompositeOperation = 'source-over';
+    // 2026-10-09 作者給了正式的昭旭紋章：白底；紅日＋細長的光芒（上半圈和兩側，下面被山擋住）；深藍的山（中間一座高的、兩邊各一座小的，
+    //   中間那座蓋住太陽的下緣）；下面三道浪，最上面那道兩端捲起來。旗：上面白底畫紋章，下面深藍、燕尾。
+    const TH = T(), c = document.createElement('canvas'); c.width = 256; c.height = 640; const g = c.getContext('2d');
+    const NAVY = '#0B3463', RED = '#C8202A';
+    g.fillStyle = '#F6F4EE'; g.fillRect(0, 0, 256, 640);
+    // 紋章（照原圖 1448×1086 的座標畫，再縮放）：寬 205～1245、高 155～865
+    const sc = 252 / 1040; g.save(); g.translate(2 - 205 * sc, 96 - 155 * sc); g.scale(sc, sc);
+    const SX = 728, SY = 452;
+    // 光芒：角度（度，往上為正）、長度
+    g.fillStyle = RED;
+    [[90, 296], [115, 276], [65, 276], [138, 278], [42, 278], [162, 274], [18, 274], [185, 286], [-5, 286], [208, 267], [-28, 267]].forEach(([deg, L]) => {
+      const t = deg * Math.PI / 180, r0 = 140, hw = 0.085, p = (r, an) => [SX + Math.cos(an) * r, SY - Math.sin(an) * r];
+      const [x1, y1] = p(r0, t - hw), [x2, y2] = p(r0, t + hw), [x3, y3] = p(L, t);
+      g.beginPath(); g.moveTo(x1, y1); g.lineTo(x3, y3); g.lineTo(x2, y2); g.closePath(); g.fill();
+    });
+    g.beginPath(); g.arc(SX, SY, 122, 0, Math.PI * 2); g.fill();
+    // 山：三座峰，下緣是一道浪
+    g.fillStyle = NAVY; g.beginPath();
+    g.moveTo(402, 668); g.quadraticCurveTo(470, 630, 535, 575); g.lineTo(575, 604); g.quadraticCurveTo(620, 568, 655, 528); g.lineTo(661, 536); g.lineTo(728, 462);
+    g.lineTo(795, 536); g.lineTo(801, 528); g.quadraticCurveTo(836, 568, 885, 604); g.lineTo(920, 575); g.quadraticCurveTo(985, 630, 1050, 668);
+    g.quadraticCurveTo(980, 700, 900, 690); g.quadraticCurveTo(810, 676, 728, 656); g.quadraticCurveTo(640, 676, 560, 690); g.quadraticCurveTo(470, 700, 402, 668); g.closePath(); g.fill();
+    // 浪：沿著中線、兩端變細的帶子
+    const band = (x0, x1, yf, w) => { const N = 48, up = [], dn = []; for (let i = 0; i <= N; i++) { const x = x0 + (x1 - x0) * i / N, y = yf(x), k = Math.sin(Math.PI * i / N) ** 0.6 * w / 2; up.push([x, y - k]); dn.push([x, y + k]); } g.beginPath(); up.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); dn.reverse().forEach(([x, y]) => g.lineTo(x, y)); g.closePath(); g.fill(); };
+    band(340, 1115, x => 726 - 20 * Math.cos(2 * Math.PI * (x - 730) / 380), 46);
+    band(205, 1245, x => 796 - 34 * Math.cos(2 * Math.PI * (x - 300) / 900), 48);
+    band(530, 880, x => 862 - 46 * Math.sin(Math.PI * (x - 530) / 350), 36);
+    // 兩端的捲
+    g.strokeStyle = NAVY; g.lineCap = 'round';
+    [[352, 676, 1], [1104, 676, -1]].forEach(([cx, cy, sd]) => { g.lineWidth = 26; g.beginPath(); if (sd > 0) g.arc(cx, cy, 38, Math.PI * 0.4, Math.PI * 1.72, false); else g.arc(cx, cy, 38, Math.PI * 0.6, Math.PI * -0.72, true); g.stroke(); g.lineWidth = 10; g.beginPath(); g.arc(cx + sd * 15, cy + 3, 9, 0, Math.PI * 2); g.stroke(); });
+    g.restore();
+    // 下面深藍、上緣微彎、燕尾
+    g.fillStyle = NAVY; g.beginPath(); g.moveTo(0, 400); g.quadraticCurveTo(128, 372, 256, 392); g.lineTo(256, 640); g.lineTo(0, 640); g.closePath(); g.fill();
+    g.globalCompositeOperation = 'destination-out'; g.beginPath(); g.moveTo(66, 642); g.lineTo(128, 578); g.lineTo(190, 642); g.closePath(); g.fill(); g.globalCompositeOperation = 'source-over';
     const t = new TH.CanvasTexture(c); t.encoding = TH.sRGBEncoding; t.anisotropy = 4; t.userData.shared = true;
     const m = new TH.MeshStandardMaterial({ map: t, roughness: 0.85, metalness: 0, side: TH.DoubleSide, alphaTest: 0.5 });
     // 風：旗的下半部跟著時間飄（上面綁著不動）
@@ -319,7 +340,7 @@
       o = o || {}; const [x0, z0, x1, z1] = rect, TH = B.TH, mats = [], base = new TH.Color(o.col || '#3A5440'), tmp = new TH.Color();
       for (let i = 0; i < n; i++) {
         const x = rr(x0, x1), z = rr(z0, z1); if (o.skip && o.skip(x, z)) continue;
-        const h = rr(10, 18) * (o.s || 1), r = h * rr(0.24, 0.3), m4 = new TH.Matrix4().compose(new TH.Vector3(x, CK.heightAt(x, z), z), new TH.Quaternion().setFromAxisAngle(new TH.Vector3(0, 1, 0), rr(0, 6.28)), new TH.Vector3(r * 2, h, r * 2));
+        const h = rr(10, 18) * (o.s || 1), r = h * rr(0.24, 0.3), m4 = new TH.Matrix4().compose(new TH.Vector3(x, o.y != null ? o.y : CK.heightAt(x, z), z), new TH.Quaternion().setFromAxisAngle(new TH.Vector3(0, 1, 0), rr(0, 6.28)), new TH.Vector3(r * 2, h, r * 2));
         mats.push([m4, rr(0.78, 1.12)]);
       }
       if (!mats.length) return;
