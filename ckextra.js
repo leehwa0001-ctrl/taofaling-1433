@@ -58,6 +58,7 @@
   const spots = () => {
     const tw = W.town, city = tw.city, out = [], seen = {};
     if (city.plaza) out.push({ n: city.plazaName || '站前廣場', x: city.plaza[0], z: city.plaza[1] });
+    (city.ft || []).forEach(([n, x, z]) => { seen[n] = 1; out.push({ n, x, z }); });   // 城自己加的地點（沒有門的地方）
     tw.inter.forEach(it => { const l = lbl(it); if (!/^走進/.test(l)) return; const n = l.replace(/^走進/, '').replace(/[（(].*$/, ''); if (seen[n]) return; seen[n] = 1; out.push({ n, x: it.x, z: it.z }); });
     return out;
   };

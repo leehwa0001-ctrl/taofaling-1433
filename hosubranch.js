@@ -39,6 +39,7 @@
     const s = S(); if (!s.branchSeen) { s.branchSeen = 1; R.save && R.save(); }
     R.openHub('guild');
   };
+  R.hosuBranch = { BOX, enter: enterBranch, open };   // 精緻城市版的奉主（city_hosu.js）蓋自己的石樓、門口叫這個
   const ts0 = R.townStep;
   R.townStep = dt => { const r = ts0(dt); try { const tw = W.town; if (tw && tw.hosu && !tw.branchBuilt && W.scene && tw.inter) build(tw); if (tw && tw.branchFlag) tw.branchFlag.rotation.y = Math.sin(tw.t * 2.2) * 0.25; } catch (e) { console.warn('[hosubranch]', e); tw && (tw.branchBuilt = true); } return r; };
 

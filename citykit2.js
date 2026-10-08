@@ -488,7 +488,7 @@
     if (R.crimeMinimap) R.crimeMinimap(x, pt);   // 通緝中：衛兵的位置
     (CK.mapHooks || []).forEach(f => { try { f(x, pt, 'mini', { s }); } catch (e) { } });   // 目的地、導航線（ckmove.js）
   };
-  const stampDone = (city, it) => { const g = S().cityHub, sid = it.sight; return !!(sid && g && g.stamps && g.stamps[city.id + ':' + sid]); };
+  const stampDone = (city, it) => { if (city.stampDone) return city.stampDone(it); const g = S().cityHub, sid = it.sight; return !!(sid && g && g.stamps && g.stamps[city.id + ':' + sid]); };
   const bigMap = () => {
     if (R.sheetOpen && R.sheetOpen()) { R.closeSheet(); return; }
     const tw = W.town, P = W.P, mc = tw.mapCanvas, city = tw.city, wpx = Math.max(300, Math.min(860, Math.floor(window.innerWidth * 0.86))), sc = wpx / mc.width, hpx = Math.round(mc.height * sc);

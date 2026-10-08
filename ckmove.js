@@ -103,7 +103,7 @@
       if (pc) kiosk(pc, '#8A3A3A', '租魔導車（一天 40 費拉）', () => rentCar(pcAt));
       const carAt = rent.carAt || pcAt; if (carAt && S().ckCar === key()) parkCar(carAt);
       // 路上的車：停下來的時候可以搶（精緻城市的車也是車頭朝 -z，跟 vehicles.js 一樣）
-      (tw.cars || []).forEach(c => tw.inter.push({ get x() { return c.x; }, get z() { return c.z; }, r: 3, label: '把司機拉下來搶車（犯罪）', when: () => !R.inVehicle() && (c.v || 0) < 1.5 && (tw.cars || []).includes(c), act: () => {
+      (tw.cars || []).forEach(c => tw.inter.push({ get x() { return c.x != null ? c.x : c.g.position.x; }, get z() { return c.z != null ? c.z : c.g.position.z; }, r: 3, label: '把司機拉下來搶車（犯罪）', when: () => !R.inVehicle() && (c.v || 0) < 1.5 && (tw.cars || []).includes(c), act: () => {
         tw.cars = tw.cars.filter(o => o !== c);
         const Cr = R.crime; if (Cr) { Cr.heat = Math.min(3, Cr.heat + 2); Cr.lostT = 0; if (R.alertGuards) R.alertGuards(c.x, c.z, 70); }
         R.banner('搶車！', '司機摔在路上大喊：「有人搶車——！」（通緝 ' + '★'.repeat(Cr ? Cr.heat : 2) + '）');

@@ -569,6 +569,8 @@
   R.goHosu = () => { const s = S(); s.gold = Math.max(0, s.gold - FARE); R.save(); R.closeSheet(); R.fade(enter); };
   R.inHosu = () => !!(W.town && W.town.hosu);
   R.hosuEnter = enter;   // 不收車錢、直接進奉主（hosubranch.js：從奉主分館出發的遺跡回來）
+  // 2026-10-09：精緻城市版的奉主（city_hosu.js）用這裡的觀光章、小吃、天守閣、奉主塔、回東鶴
+  R.hosuApi = { SIGHTS, FOOD, visit, book, eat, castleTop, towerTop, backToDonghe, FARE, enterOld: enter };
 
   // ---------- 每一格 ----------
   const smokeGeo = () => smokeGeo.g || (smokeGeo.g = (() => { const g = new (T().SphereGeometry)(0.45, 6, 5); g.userData.shared = true; return g; })());

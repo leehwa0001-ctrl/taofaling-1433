@@ -513,7 +513,7 @@
   // ---------- 售票口選單 ----------
   const ticketSheet = (fromId) => {
     const s = S(), gold = s ? s.gold : 0;
-    R.sheet('<p class="kicker">' + (fromId ? esc((byId(fromId) || {}).name || '') + '・轉乘' : '東鶴站・售票口') + '</p><h2>昭旭城際交通</h2>'
+    R.sheet('<p class="kicker">' + (fromId ? esc((byId(fromId) || {}).name || (fromId === 'hosu' ? '奉主' : '')) + '・轉乘' : '東鶴站・售票口') + '</p><h2>昭旭城際交通</h2>'
       + '<p>「要去哪一座城？單程含座位。北州、納瓦要換渡輪，日子比較久。」</p><p class="note">費拉 ' + gold + '・段位 ' + esc(R.rankName ? R.rankName() : '') + '</p>'
       + '<div class="az-grid">'
       + (!fromId ? '<button type="button" class="btn pri" id="az-hosu">奉主（3D 城・60 費拉）</button>' : '')
