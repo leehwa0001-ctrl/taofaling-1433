@@ -40,7 +40,7 @@
     shade: { name: '暗影族', tier: 'SSR', from: '地下靈魂迴廊・光影族種', xeno: 2, skins: ['#3E3A4C', '#322E40'], hairs: ['#141018', '#2A2438'], eye: '#B8E0FF', b: { dodge: 0.3, back: 0.25, calm: 0.15 }, line: '身上飄著影子，眼睛發著淡藍的光。閃得快，從背後下手特別重，佩特拉也不太注意得到。', look: { wisp: 1 } },
     golddragon: { name: '金龍人族', tier: 'SSR', from: '地下礦脈・岩龍族種', xeno: 2, skins: ['#D8B048', '#C89A38'], b: { def: 6, hp: 0.2, ore: 0.6 }, line: '金色的鱗片和龍角，和龍人族是不同的族種。鱗片堅硬，掘礦時有機會多獲得一塊礦石。', look: { horns: 'dragon', tail: 'dragon', scales: 1, bald: 1, crest: 1 } },
     dragon: { name: '龍人族', tier: 'SSR', from: '地表山地・節鱗族種', xeno: 2, skins: ['#C8553F', '#B2463A'], b: { hp: 0.2, dmg: 0.15, def: 4, immune: { burn: 1 } }, line: '鱗片、角、尾巴。很少見。', look: { horns: 'dragon', tail: 'dragon', scales: 1, bald: 1, crest: 1 } },
-    demon: { name: '純魔族', tier: 'UR', from: '魔界・克拉克特斯（公會分類：神魔族）', xeno: 3, skins: ['#E8D8E0', '#C8B8D0'], hairs: ['#14101A', '#E8E4F0'], eye: '#C8323A',
+    demon: { name: '純魔族', tier: 'UR', w: 0.1,   /* 2026-10-09 作者：在 UR 裡也不要那麼容易抽到（原本 1，佔 UR 的三分之一；0.1 約佔 UR 的 5%） */ from: '魔界・克拉克特斯（公會分類：神魔族）', xeno: 3, skins: ['#E8D8E0', '#C8B8D0'], hairs: ['#14101A', '#E8E4F0'], eye: '#C8323A',
       b: { hp: 0.3, mp: 0.35, dmg: 0.25, def: 6, vamp: 0.02, skillCd: 0.15, regen: 0.8, calm: 0.15, critMult: 0.25, speed: 0.05 },   // 2026-10-09 作者：改名「純魔族」、改強（之前削弱成生命 +15%、傷害 +12%，比 SSR 的龍人族還弱）
       line: '翅膀、黑色雙角。人界的人怕你：店家不賣你東西、路人躲著走、私人賞金獵人會來找你。公會把你列為「受監視對象」——但也只有公會不准任何人討伐你。', look: { horns: 'demon', wings: 'demon' } }   // 作者：拿掉光環
   };
