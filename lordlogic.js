@@ -37,7 +37,7 @@
     e.def = Object.assign({}, e.def, { size: (e.def.size || 2.4) * k, ai: D[e.id] ? 'LL_' + e.id : e.def.ai });
     refresh(e);
   };
-  const refresh = e => { const s = e.m && e.m.g ? e.m.g.scale.x : e.lordK || 1; e.BR = e.w0 * s * 0.4; e.def.size = e.BR * 2; };
+  const refresh = e => { const s = e.m && e.m.g ? e.m.g.scale.x : e.lordK || 1; e.BR = e.w0 * s * 0.28; e.def.size = e.BR * 2; };   // 2026-10-08 作者：碰撞框小 30%（0.4 → 0.28；圖的邊有空白，子彈還沒碰到影子就算打中）
   R.lordGeo = e => (e && e.BR ? Math.min(2.6, Math.max(1, e.BR / 1.8)) : 1);
   const se0 = R.spawnEnemy;
   R.spawnEnemy = (...a) => { const e = se0(...a); try { sizeUp(e); } catch (er) { console.warn('[lordlogic]', er); } return e; };

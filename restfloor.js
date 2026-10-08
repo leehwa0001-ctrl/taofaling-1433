@@ -34,7 +34,8 @@
     C.used = true; P.hp = Math.min(P.hpMax, P.hp + P.hpMax * 0.4); P.mp = Math.min(P.mpMax, P.mp + P.mpMax * 0.4);
     (w.allies || []).forEach(a => { if (a.downed) { a.downed = false; if (R.setDown) R.setDown(a.h, false); a.hp = Math.max(a.hp || 0, (a.hpMax || 100) * 0.4); } else if (a.hpMax) a.hp = Math.min(a.hpMax, a.hp + a.hpMax * 0.4); });
     C.fl.scale.setScalar(0.5); C.fl2.scale.setScalar(0.5); C.L.intensity = 0.5;
-    R.sfx && R.sfx('drink'); R.toast((w.run.grade.zone === '討伐區' ? '在別的勇者留下的營地坐了一會兒。' : '在公會擺的營火旁坐了一會兒。') + '（生命、魔力回復四成）');
+    if (R.sanAdd) R.sanAdd(8);   // 2026-10-08 作者：營火回一點理智（約 8）
+    R.sfx && R.sfx('drink'); R.toast((w.run.grade.zone === '討伐區' ? '在別的勇者留下的營地坐了一會兒。' : '在公會擺的營火旁坐了一會兒。') + '（生命、魔力回復四成、理智 +8）');
   };
   const ni0 = R.nearestInteract;
   R.nearestInteract = () => {

@@ -11,7 +11,7 @@
   const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z), angTo = (a, b) => Math.atan2(b.x - a.x, b.z - a.z);
   const AI = R.AI_X = R.AI_X || {};
   const later = (f, ms) => { const run = W().run; setTimeout(() => { if (W().run === run && run && !run.done) f(); }, ms); };
-  const floorAt = (x, z) => (R.nearestFloor ? R.nearestFloor(x, z) : [x, z]);
+  const floorAt = (x, z) => (R.safeLand ? R.safeLand(x, z) : R.nearestFloor ? R.nearestFloor(x, z) : [x, z]);   // ruinsafe.js：落點要是空地、看得到（2026-10-08 三羽鴉瞬移出牆外）
   const targets = () => { const w = W(); return [w.P].concat((w.allies || []).filter(a => !a.downed), R.netTargets ? R.netTargets() : []).filter(t => t && !t.dead); };   // 多人連線：房主這邊也算別人（net2.js）
   const hurtAny = (t, dmg, e, o) => (t.ally ? R.hurtAlly(t, dmg, e, o) : R.hurtPlayer(dmg, e, o));
   const near = (x, z, r) => targets().filter(t => Math.hypot(t.x - x, t.z - z) < r);

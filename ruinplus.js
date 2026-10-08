@@ -103,7 +103,8 @@
   const rest = () => {
     const P = W.P; if (!P) return; P.hp = P.hpMax; P.mp = P.mpMax;
     (W.allies || []).forEach(a => { if (a.downed) { a.downed = false; if (R.setDown) R.setDown(a.h, false); } a.hp = a.hpMax || a.hp; });
-    R.sfx && R.sfx('drink'); R.toast('在營火旁坐了一會兒。手腳暖了，傷也包紮好了。（生命、魔力回滿）');
+    const san = W.F && !W.F.sanRest && R.sanAdd; if (san) { W.F.sanRest = 1; R.sanAdd(8); }   // 2026-10-08 作者：營火回一點理智（約 8；一層一次）
+    R.sfx && R.sfx('drink'); R.toast('在營火旁坐了一會兒。手腳暖了，傷也包紮好了。（生命、魔力回滿' + (san ? '、理智 +8' : '') + '）');
   };
   const supply = () => {
     const S = R.S, ph = 24, pm = 24;

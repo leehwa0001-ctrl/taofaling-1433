@@ -11,7 +11,7 @@
   const W = () => R.W, rnd = Math.random, pick = a => a[Math.floor(rnd() * a.length)];
   const dist = (a, b) => Math.hypot(a.x - b.x, a.z - b.z), angTo = (a, b) => Math.atan2(b.x - a.x, b.z - a.z);
   const later = (f, ms) => { const run = W().run; setTimeout(() => { if (W().run === run && run && !run.done) f(); }, ms); };
-  const floorAt = (x, z) => (R.nearestFloor ? R.nearestFloor(x, z) : [x, z]);
+  const floorAt = (x, z) => (R.safeLand ? R.safeLand(x, z) : R.nearestFloor ? R.nearestFloor(x, z) : [x, z]);   // ruinsafe.js：落點要是空地、看得到（2026-10-08 三羽鴉瞬移出牆外）
   const AFX = {
     swift: { n: '迅捷', c: '#9AE0FF' }, armored: { n: '堅甲', c: '#C8C0A8' }, enrage: { n: '狂怒', c: '#FF5A4A' }, splitter: { n: '分裂', c: '#B8E07A' },
     volatile: { n: '爆裂', c: '#FF9A3A' }, vampiric: { n: '吸血', c: '#C8204A' }, frost: { n: '冰霜', c: '#BFE8FF' }, blink: { n: '閃現', c: '#B88AFF' },
