@@ -58,7 +58,7 @@
           cap: N('T_capC2', '奧義・天啟', 5, '技能書技能的傷害 +8%、魔力 +6%；點滿：每次施放技能有 20% 機率再施放一次，重放也能繼續觸發', (P, v) => { P.ttSkill = (P.ttSkill || 0) + 0.08 * v; P.mpMax = Math.round(P.mpMax * (1 + 0.06 * v)); if (v >= 5) capOn(P, 'C2'); }) }
       ] },
     { id: 'mend', n: '恢復之道', c: '#6AE08A', d: '回復：每秒回血、吸血、恢復量、體力。',
-      nodes: [N('T_rec', '調息', 5, '每 5 秒回復生命 +0.5', (P, v) => { P.regen = (P.regen || 0) + 0.1 * v; }), N('T_heal', '癒合', 5, '恢復量 +4%（每秒回血、吸血都算）', (P, v) => { P.recovAmp = (P.recovAmp || 0) + 0.04 * v; }), N('T_stam', '喘息', 5, '體力回復 +6%', (P, v) => { P.ttStam = (P.ttStam || 0) + 0.06 * v; })],
+      nodes: [N('T_rec', '調息', 5, '每 5 秒回復生命 +1.5（超過最大生命 1% 的部分只剩 1/5 效果）', (P, v) => { P.regen = (P.regen || 0) + 1.0 * v; }), N('T_heal', '癒合', 5, '恢復量 +4%（每秒回血、吸血都算）', (P, v) => { P.recovAmp = (P.recovAmp || 0) + 0.04 * v; }), N('T_stam', '喘息', 5, '體力回復 +6%', (P, v) => { P.ttStam = (P.ttStam || 0) + 0.06 * v; })],
       subs: [
         { id: 'regen', n: '自然恢復', d: '站得住就會好。', nodes: [N('T_rec2', '再生', 5, '每秒回復生命 +1.5', (P, v) => { P.regen = (P.regen || 0) + 1.5 * v; }), N('T_heal2', '生生不息', 5, '恢復量 +5%', (P, v) => { P.recovAmp = (P.recovAmp || 0) + 0.05 * v; }),
           N('T_trD1', '靜養', 5, '每秒回復生命 +4｜攻速 −4%', (P, v) => { P.regen = (P.regen || 0) + 4 * v; if (P.ws) P.ws.rate *= 1 - 0.04 * v; }, 1)],
