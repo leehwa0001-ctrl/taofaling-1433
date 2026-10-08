@@ -76,6 +76,7 @@ body.pixel #r-map,body.pixel #gl{image-rendering:pixelated}
 .site{cursor:pointer;outline:none}
 .site:focus-visible .mk{transform:scale(1.25)}
 .site:focus-visible .site-name{fill:#8A1E18;text-decoration:underline}
+/* 2026-10-09 作者：地圖放大縮小，文字、圖示在畫面上的大小不變（map.js 設 --map-k＝1÷放大倍率） */.site-in{transform:scale(var(--map-site,var(--map-k,1)))}.map-svg text:not(.site-name){transform-box:fill-box;transform-origin:center;transform:scale(var(--map-k,1))}
 .site .mk{transition:transform .15s;transform-box:fill-box;transform-origin:center;transform:scale(var(--map-detail-scale,1))}
 .site:hover .mk,.site:focus .mk,.site.sel .mk{transform:scale(1.25)}
 .site-name{font-family:var(--serif);font-weight:700;font-size:calc(16px * var(--map-detail-scale,1));fill:#2A2418;text-anchor:middle;paint-order:stroke;stroke:#F4E9CD;stroke-width:4px;stroke-linejoin:round}

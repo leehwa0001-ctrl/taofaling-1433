@@ -110,8 +110,8 @@
     // 鄰國名稱
     s += neigh.map(([n, v]) => { let x = NX(v.c[0]), y = NY(v.c[1]); x = Math.max(60, Math.min(NW - 60, x)); y = Math.max(24, Math.min(NH - 14, y)); return '<text x="' + f1(x) + '" y="' + f1(y) + '" class="neigh-name">' + esc(n) + '</text>'; }).join('');
     // 地點
-    s += R.SITES.filter(x => x.map === 'nation').map(x => '<g class="site k-' + x.kind + (x.status === 'lock' ? ' locked' : '') + '" data-site="' + x.id + '" transform="translate(' + f1(NX(x.x)) + ' ' + f1(NY(x.z)) + ')" tabindex="0" role="button" aria-label="' + esc(x.name) + '"><g class="mk">' + marker(x) + '</g>'
-      + '<text class="site-name"' + (x.lx ? ' x="' + x.lx + '"' : '') + ' y="' + (x.ly != null ? x.ly : x.kind === 'forbidden' ? 62 : x.kind === 'capital' ? 30 : 28) + '">' + esc(x.name) + '</text></g>').join('');
+    s += R.SITES.filter(x => x.map === 'nation').map(x => '<g class="site k-' + x.kind + (x.status === 'lock' ? ' locked' : '') + '" data-site="' + x.id + '" transform="translate(' + f1(NX(x.x)) + ' ' + f1(NY(x.z)) + ')" tabindex="0" role="button" aria-label="' + esc(x.name) + '"><g class="site-in"><g class="mk">' + marker(x) + '</g>'
+      + '<text class="site-name"' + (x.lx ? ' x="' + x.lx + '"' : '') + ' y="' + (x.ly != null ? x.ly : x.kind === 'forbidden' ? 62 : x.kind === 'capital' ? 30 : 28) + '">' + esc(x.name) + '</text></g></g>').join('');
     s += '<rect width="' + NW + '" height="' + NH + '" fill="url(#vig)" pointer-events="none"/><rect width="' + NW + '" height="' + NH + '" filter="url(#paper)" pointer-events="none"/>';
     return s + '</svg>';
   };
@@ -155,16 +155,21 @@
     // 湯山村的溫泉
     s += '<ellipse cx="130" cy="60" rx="22" ry="12" fill="#9CC3C8" stroke="' + INK + '" stroke-width="1.4"/><path d="M120 48q-6 -12 2 -20M136 46q-6 -12 2 -20" fill="none" stroke="#8A7A6A" stroke-width="1.6" stroke-linecap="round"/>';
     // 地點
-    s += R.SITES.filter(x => x.map === 'donghe').map(x => { const [px, py] = P(x.x, x.y); return '<g class="site k-' + x.kind + (x.status === 'lock' ? ' locked' : '') + '" data-site="' + x.id + '" transform="translate(' + px + ' ' + py + ')" tabindex="0" role="button" aria-label="' + esc(x.name) + '"><g class="mk">' + marker(x) + '</g><text class="site-name" y="30">' + esc(x.name) + '</text></g>'; }).join('');
+    s += R.SITES.filter(x => x.map === 'donghe').map(x => { const [px, py] = P(x.x, x.y); return '<g class="site k-' + x.kind + (x.status === 'lock' ? ' locked' : '') + '" data-site="' + x.id + '" transform="translate(' + px + ' ' + py + ')" tabindex="0" role="button" aria-label="' + esc(x.name) + '"><g class="site-in"><g class="mk">' + marker(x) + '</g><text class="site-name" y="30">' + esc(x.name) + '</text></g></g>'; }).join('');
     s += '<rect width="1000" height="1000" filter="url(#paper2)" pointer-events="none"/>';
     return s + '</svg>';
   };
 
   // ---------- 拖曳、縮放 ----------
+  const SITE_PX = 1.29;   // 地點裡一個單位在畫面上幾個像素（名字 16×0.58 單位 → 約 12 像素）
   R.panZoom = (svg, onPick) => {
     const vb0 = svg.viewBox.baseVal, W0 = vb0.width, H0 = vb0.height;
     const v = { x: 0, y: 0, w: W0, h: H0 };
-    const apply = () => { v.w = Math.min(W0, Math.max(W0 / 5, v.w)); v.h = v.w * H0 / W0; v.x = Math.max(-W0 * 0.1, Math.min(W0 * 1.1 - v.w, v.x)); v.y = Math.max(-H0 * 0.1, Math.min(H0 * 1.1 - v.h, v.y)); svg.setAttribute('viewBox', v.x.toFixed(1) + ' ' + v.y.toFixed(1) + ' ' + v.w.toFixed(1) + ' ' + v.h.toFixed(1)); const z = W0 / v.w, d = Math.max(0.58, Math.min(1, 0.58 + (z - 1) * 0.105)); svg.style.setProperty('--map-detail-scale', d.toFixed(3)); };
+    const apply = () => { v.w = Math.min(W0, Math.max(W0 / 5, v.w)); v.h = v.w * H0 / W0; v.x = Math.max(-W0 * 0.1, Math.min(W0 * 1.1 - v.w, v.x)); v.y = Math.max(-H0 * 0.1, Math.min(H0 * 1.1 - v.h, v.y)); svg.setAttribute('viewBox', v.x.toFixed(1) + ' ' + v.y.toFixed(1) + ' ' + v.w.toFixed(1) + ' ' + v.h.toFixed(1)); svg.style.setProperty('--map-k', (v.w / W0).toFixed(4)); svg.style.setProperty('--map-detail-scale', '0.58'); const rr = svg.getBoundingClientRect(), px = rr.width > 0 ? Math.min(rr.width / v.w, rr.height / v.h) : 0; if (px > 0) svg.style.setProperty('--map-site', (SITE_PX / px).toFixed(4)); };
+    // 2026-10-09 作者：地圖放大縮小，文字、圖示在畫面上的大小不變（只有地點之間的距離變）：
+    // 地點（圖示＋名字）固定成畫面上的大小（名字約 12 像素）；島名、地區名維持全圖時的大小（乘上 1÷放大倍率）
+    requestAnimationFrame(() => apply());
+    const onRs = () => { if (!svg.isConnected) { window.removeEventListener('resize', onRs); return; } apply(); }; window.addEventListener('resize', onRs);
     const toSvg = (cx, cy) => { const r = svg.getBoundingClientRect(), sc = Math.max(v.w / r.width, v.h / r.height), ox = (r.width * sc - v.w) / 2, oy = (r.height * sc - v.h) / 2; return [v.x + (cx - r.left) * sc - ox, v.y + (cy - r.top) * sc - oy]; };
     const zoomAt = (cx, cy, f) => { const [px, py] = toSvg(cx, cy); const nw = Math.min(W0, Math.max(W0 / 5, v.w * f)), k = nw / v.w; v.x = px - (px - v.x) * k; v.y = py - (py - v.y) * k; v.w = nw; apply(); };
     svg.addEventListener('wheel', e => { e.preventDefault(); zoomAt(e.clientX, e.clientY, e.deltaY > 0 ? 1.15 : 1 / 1.15); }, { passive: false });

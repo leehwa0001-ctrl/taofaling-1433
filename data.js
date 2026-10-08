@@ -136,7 +136,7 @@ window.R = window.R || {};
     { cls: 'priest', group: '聖具', list: [['holystaff', '法彈打中會回一點生命。'], ['mace', '近身打，有機會把敵人打暈。']] },
     { cls: 'blade', group: '刀', list: [['katana', '快、準。'], ['dualblades', '一次砍兩下。']] },
     { cls: 'knight', group: '武器＋盾', list: [['sword', '平衡；正面的傷害減少。'], ['spear', '刺得遠；正面的傷害減少。'], ['mace', '會把敵人打暈；正面的傷害減少。']] },
-    { cls: 'monk', group: '拳術', list: [['gauntlet', '近身拳法，一招一式，一次兩拳。'], ['staffpole', '長棍四式輪流出招：連棍、刺棍、跳棍、掃棍，掃一大片、把敵人推開。']] }
+    { cls: 'monk', group: '拳術', list: [['gauntlet', '近身拳法，一招一式，一次兩拳。'], ['staffpole', '長棍四式輪流出招：連棍、甩棍、跳棍、怒棍（效果跟拳法、掌法、步法、腿法一樣），掃一大片、把敵人推開。']] }
   ];
   R.regGroup = cls => R.REG.find(g => g.cls === cls);
   R.regName = (cls, base) => R.WEAPONS[base].name + (cls === 'knight' ? '＋盾' : '');
