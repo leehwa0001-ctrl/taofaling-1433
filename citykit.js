@@ -165,7 +165,26 @@
         g.fillStyle = '#3A4650'; g.fillRect(x + 3, wy, w - 6, wh); for (let k = 1; k < 4; k++) { g.fillStyle = '#9AA0A4'; g.fillRect(x + 3 + (w - 6) * k / 4 - 1, wy, 2, wh); }
         r.fillStyle = '#202020'; r.fillRect(x + 3, wy, w - 6, wh);
         if (lit) { e.fillStyle = '#E8F0E8'; e.fillRect(x + 3, wy, w - 6, wh); }
-      }, wall: true, base: 'corrugated' }
+      }, wall: true, base: 'corrugated' },
+      // 和風高樓（皇嶺，2026-10-08）：白漆喰、深色的木柱和橫樑、障子窗（晚上透出暖黃的光）；有的格子是小的蟲籠窗
+      wafu: { tw: 2.4, th: 3.6, bays: 6, floors: 6, draw: (g, e, r, x, y, w, h, R2) => {
+        const lit = R2() < 0.55, small = R2() < 0.22, pw = Math.max(2, w * 0.08);
+        g.fillStyle = '#3A2A20'; g.fillRect(x, y, pw, h); g.fillRect(x, y + h * 0.84, w, h * 0.16); g.fillRect(x, y, w, h * 0.05);
+        r.fillStyle = '#A8A8A8'; r.fillRect(x, y, pw, h); r.fillRect(x, y + h * 0.84, w, h * 0.16);
+        const wx = x + pw + w * (small ? 0.22 : 0.08), ww = w - pw - w * (small ? 0.44 : 0.16), wy = y + h * (small ? 0.3 : 0.17), wh = h * (small ? 0.3 : 0.56);
+        g.fillStyle = '#4A382C'; g.fillRect(wx - 2, wy - 2, ww + 4, wh + 4); g.fillStyle = '#E4D8C0'; g.fillRect(wx, wy, ww, wh);
+        const lines = c => { c.fillStyle = '#4A382C'; for (let k = 1; k < (small ? 6 : 4); k++) c.fillRect(wx + ww * k / (small ? 6 : 4) - 1, wy, 2, wh); if (!small) for (let k = 1; k < 5; k++) c.fillRect(wx, wy + wh * k / 5 - 1, ww, 2); };
+        lines(g); r.fillStyle = '#C0C0C0'; r.fillRect(wx, wy, ww, wh);
+        if (lit) { e.fillStyle = R2() < 0.8 ? '#F8C478' : '#FFE0A8'; e.fillRect(wx, wy, ww, wh); lines(e); e.fillStyle = '#000'; for (let k = 1; k < (small ? 6 : 4); k++) e.fillRect(wx + ww * k / (small ? 6 : 4) - 1, wy, 2, wh); }
+      }, wall: true },
+      // 城（天守、櫓）：白漆喰、黑色的格子窗（晚上幾格亮著）
+      shiro: { tw: 2.6, th: 4, bays: 6, floors: 4, draw: (g, e, r, x, y, w, h, R2) => {
+        const lit = R2() < 0.3, ww = w * 0.46, wh = h * 0.3, wx = x + (w - ww) / 2, wy = y + h * 0.3;
+        g.fillStyle = '#1E1C1E'; g.fillRect(wx, wy, ww, wh); g.fillStyle = '#5A5458'; for (let k = 1; k < 5; k++) g.fillRect(wx + ww * k / 5 - 1, wy, 2, wh);
+        g.fillStyle = 'rgba(0,0,0,.08)'; g.fillRect(x, y + h * 0.9, w, h * 0.1);
+        r.fillStyle = '#606060'; r.fillRect(wx, wy, ww, wh);
+        if (lit) { e.fillStyle = '#F2C070'; e.fillRect(wx, wy, ww, wh); e.fillStyle = '#000'; for (let k = 1; k < 5; k++) e.fillRect(wx + ww * k / 5 - 1, wy, 3, wh); }
+      }, wall: true }
     };
     const PX = 64, FMETA = {};
     Object.keys(FACADES).forEach(k => { const F = FACADES[k]; FMETA[k] = { tw: F.tw, th: F.th, bays: F.bays, floors: F.floors }; });
@@ -282,8 +301,8 @@
   };
   CK.mats = MATS;
 
-  // ---------- 合併繪製（照材質、照 48 公尺的區塊合起來；uv 照公尺算，外牆照每一面置中） ----------
-  const CHUNK = 48;
+  // ---------- 合併繪製（照材質、照 96 公尺的區塊合起來（2026-10-08：48 → 96，繪製次數少很多）；uv 照公尺算，外牆照每一面置中） ----------
+  const CHUNK = 96;
   CK.batch = () => {
     const TH = T(), map = new Map(), m4 = new TH.Matrix4(), nm = new TH.Matrix3(), q = new TH.Quaternion(), e = new TH.Euler(), p = new TH.Vector3(), s = new TH.Vector3();
     const base = geo => geo.userData.ni || (geo.userData.ni = (() => { const g = geo.index ? geo.toNonIndexed() : geo; return { P: g.attributes.position.array, N: g.attributes.normal.array, U: g.attributes.uv ? g.attributes.uv.array : null, n: g.attributes.position.count, box: !!geo.userData.box }; })());

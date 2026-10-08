@@ -73,7 +73,11 @@
     // 畫（水不畫、陰影不重算）
     const vis = wm.visible, au = r.shadowMap.autoUpdate, sky = W.town.L && W.town.L.sky, sp = sky ? sky.position.clone() : null;
     wm.visible = false; r.shadowMap.autoUpdate = false; if (sky) sky.position.copy(vc.position);
+    // 2026-10-08：遠處（180 公尺外）的小區塊不畫進倒影（倒影只有 0.4 倍解析度看不出來；皇嶺改建後河邊一格多畫上千次）。山、火山這種大的照畫
+    const tw = W.town; if (!tw._rl || tw._rlS !== W.scene) { tw._rlS = W.scene; tw._rl = []; W.scene.traverse(o => { if (!o.isMesh || !o.geometry || o.isInstancedMesh || o.matrixAutoUpdate) return; const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere(); const s = g.boundingSphere; if (!s || s.radius > 150) return; o.updateMatrixWorld(); const c = s.center.clone().applyMatrix4(o.matrixWorld); tw._rl.push([o, c.x, c.y, c.z, s.radius]); }); }
+    const off = []; tw._rl.forEach(q => { const o = q[0]; if (o.visible && Math.hypot(q[1] - RF.cw.x, q[3] - RF.cw.z) - q[4] > 180) { o.visible = false; off.push(o); } });
     r.setRenderTarget(RF.rt); r.clear(); r.render(W.scene, vc);
+    off.forEach(o => { o.visible = true; });
     wm.visible = vis; r.shadowMap.autoUpdate = au; if (sky) sky.position.copy(sp);
     RF.u.tRefl.value = RF.rt.texture; RF.u.rOn.value = 1;
   });
