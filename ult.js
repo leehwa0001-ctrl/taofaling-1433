@@ -99,10 +99,15 @@
     } }
   };
   R.ULTS = ULT;
+  // 大招本身持續多久（秒）：這段時間打出去的傷害不幫大招充能（2026-10-08：彈幕風暴掃 3 秒，以前只擋 1.5 秒，後半段又充滿可以連放）
+  Object.assign(ULT.gunner, { dur: 3.3 }); Object.assign(ULT.archer, { dur: 3 }); Object.assign(ULT.warrior, { dur: 2 }); Object.assign(ULT.mage, { dur: 3.5 });
+  Object.assign(ULT.priest, { dur: 8.5 }); Object.assign(ULT.blade, { dur: 3.5 }); Object.assign(ULT.knight, { dur: 4.5 });
   R.castUlt = () => {
     const P = W().P, run = W().run; if (!P || !run || run.done || P.dead || (R.sheetOpen && R.sheetOpen())) return;
     if ((P.ult || 0) < 100) { R.toast && R.toast('大招還沒滿（' + Math.floor(P.ult || 0) + '%）'); return; }
-    const u = ULT[P.cls] || ULT.warrior, c = col(P.cls); P.ult = 0; P.ulting = true; setTimeout(() => { P.ulting = false; }, 1500);
+    const u = ULT[P.cls] || ULT.warrior, c = col(P.cls); P.ult = 0; P.ulting = true;
+    { const w0 = W(), run0 = w0.run; let ut = u.dur || 4; const off = () => { P.ulting = false; }; clearTimeout(P._ultT); P._ultT = setTimeout(off, (ut + 5) * 1000);   // 換樓層 dyn 會被清掉：保險用的
+      if (w0.dyn) w0.dyn.push(dt => { ut -= dt; if (ut <= 0 || W().run !== run0) { off(); return false; } return true; }); else P._ultT = setTimeout(off, ut * 1000); }
     flash(c, 520); cutIn(u.name, u.sub, c); burst(P, c, true); R.shake && R.shake(0.7); R.sfx && R.sfx('chest');
     try { u.go(P); } catch (e) { console.warn('[ult]', e); }
   };
