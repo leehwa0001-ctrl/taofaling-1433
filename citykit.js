@@ -57,7 +57,7 @@
     };
     const tint = (base, v, k) => [base[0] * (1 + (v - 0.5) * k), base[1] * (1 + (v - 0.5) * k), base[2] * (1 + (v - 0.5) * k)];
     // 每一種貼圖代表幾公尺（[寬, 高]）
-    const SIZE = { asphalt: [6, 6], pavers: [2.4, 2.4], granite: [2.4, 2.4], plaster: [3, 3], concrete: [7.2, 7.2], brick: [1.8, 1.4], ashlar: [4.2, 3], ishigaki: [5, 5], kawara: [2.4, 1.8], copper: [2.7, 2.7], planks: [2, 2], lattice: [1.8, 1.8], corrugated: [2.4, 2.4], grass: [6, 6], gravel: [3, 3], sand: [5, 5], soil: [4, 4], yard: [5, 5], water: [9, 9], wood: [1.6, 1.6], paint: [2, 2], metal: [1, 1] };
+    const SIZE = { asphalt: [6, 6], pavers: [2.4, 2.4], granite: [2.4, 2.4], plaster: [3, 3], concrete: [7.2, 7.2], brick: [1.8, 1.4], ashlar: [4.2, 3], ishigaki: [5, 5], kawara: [2.4, 1.8], copper: [2.7, 2.7], planks: [2, 2], lattice: [1.8, 1.8], corrugated: [2.4, 2.4], grass: [6, 6], gravel: [3, 3], sand: [5, 5], soil: [4, 4], yard: [5, 5], water: [9, 9], wood: [1.6, 1.6], paint: [2, 2], metal: [1, 1], tatami: [1.8, 1.8] };
     // nk＝法線的強度
     const GEN = {
       asphalt: () => Object.assign(paint(512, (x, y) => { const n = fbm(x / 64, y / 64, 3, 8, 4), sp = hash2(x, y, 9), b = 58 + (n - 0.5) * 26 + (sp > 0.93 ? 22 : sp < 0.05 ? -14 : 0); return [b, b + 1, b + 4, sp > 0.93 ? 0.6 : n * 0.4, 0.82 + (sp > 0.93 ? -0.25 : 0)]; }), { nk: 2.2 }),
@@ -103,6 +103,8 @@
       wood: () => Object.assign(paint(256, (x, y) => { const g = fbm(x / 4, y / 64, 151, [64, 4], 3), k = fbm(x / 32, y / 32, 152, 8, 2), b = 84 + (g - 0.5) * 40 + (k - 0.5) * 16; return [b, b * 0.7, b * 0.48, g, 0.7]; }), { nk: 1.4 }),
       // 塗料（朱漆、白漆）：只有一點點不平
       paint: () => Object.assign(paint(128, (x, y) => { const n = fbm(x / 32, y / 32, 161, 4, 3), b = 235 + (n - 0.5) * 18; return [b, b, b, n * 0.3, 0.55]; }), { nk: 0.6 }),
+      // 榻榻米：兩張並排（0.9 公尺寬），長邊有深色的布邊，藺草一條一條
+      tatami: () => { const N = 256; return Object.assign(paint(N, (x, y) => { const m = Math.floor(x / (N / 2)), fx = (x % (N / 2)) / (N / 2), edge = fx < 0.05 || fx > 0.95, straw = 0.5 + 0.5 * Math.sin(x / N * Math.PI * 2 * 64), n = fbm(x / 32, y / 32, 181 + m, 8, 3); if (edge) return [46, 58, 52, 0.7, 0.8]; const b = 0.82 + (straw - 0.5) * 0.12 + (n - 0.5) * 0.1; return [184 * b, 182 * b, 128 * b, straw * 0.5, 0.85]; }), { nk: 1.4 }); },
       // 金屬（拉絲）
       metal: () => Object.assign(paint(128, (x, y) => { const s = fbm(x / 64, y / 2, 171, [2, 64], 2), b = 200 + (s - 0.5) * 30; return [b, b, b + 4, s * 0.3, 0.35 + s * 0.2]; }), { nk: 0.5 })
     };
@@ -222,7 +224,7 @@
   const ask = key => { if (ASKED.has(key)) return; ASKED.add(key); const w = getWorker(), [kind, name] = key.split(':'); if (w) w.postMessage({ kind, name }); else mainGen(key); };
   const want = (key, set) => { if (READY[key]) { apply(set, READY[key]); return; } (PEND[key] = PEND[key] || []).push(set); ask(key); };
   // 遊戲一開就先在背景畫（常用的先畫）
-  CK.warm = () => { ['asphalt', 'pavers', 'granite', 'yard', 'concrete', 'grass', 'gravel', 'kawara', 'paint', 'metal', 'wood', 'plaster', 'ishigaki', 'ashlar', 'brick', 'copper', 'water', 'planks', 'lattice', 'corrugated', 'sand', 'soil'].forEach(n => ask('tex:' + n)); L0.facs.forEach(n => ask('fac:' + n)); };
+  CK.warm = () => { ['asphalt', 'pavers', 'granite', 'yard', 'concrete', 'grass', 'gravel', 'kawara', 'paint', 'metal', 'wood', 'plaster', 'ishigaki', 'ashlar', 'brick', 'copper', 'water', 'planks', 'lattice', 'corrugated', 'sand', 'soil', 'tatami'].forEach(n => ask('tex:' + n)); L0.facs.forEach(n => ask('fac:' + n)); };
   CK.texReady = () => L0.names.every(n => READY['tex:' + n]) && L0.facs.every(n => READY['fac:' + n]);
   window.addEventListener('load', () => setTimeout(() => { try { CK.warm(); } catch (e) { } }, 6000));
   // 取貼圖：{ map, normalMap, roughnessMap, size }（替身先頂著）
@@ -400,9 +402,10 @@
     const dpr = window.devicePixelRatio || 1, pr = HQ.q >= 2 ? Math.min(dpr, 1.5) : HQ.q === 1 ? Math.min(dpr, 1.15) : 0.85;
     if (Math.abs(r.getPixelRatio() - pr) > 0.01) r.setPixelRatio(pr);
     const sz = size(), w = sz.x, h = sz.y; if (w < 4 || h < 4) return;
-    const far = CK.far || 900; if (cam.far !== far || cam.near !== 0.4 || Math.abs(cam.aspect - w / h) > 1e-3) { cam.far = far; cam.near = 0.4; cam.aspect = w / h; cam.updateProjectionMatrix(); }
+    const far = CK.far || 4200; if (cam.far !== far || cam.near !== 0.8 || Math.abs(cam.aspect - w / h) > 1e-3) { cam.far = far; cam.near = 0.8; cam.aspect = w / h; cam.updateProjectionMatrix(); }
     if (!HQ.rt || HQ.w !== w || HQ.h !== h) hqResize(w, h);
     const ac = r.autoClear;
+    (CK.pre || []).forEach(f => { try { f(cam, w, h); } catch (e) { console.warn('[citykit pre]', e); } });
     r.setRenderTarget(HQ.rt); r.clear(); r.render(W.scene, cam);
     const P = CK.post, bl = HQ.q > 0 ? P.bloom : 0;
     if (bl > 0) {
@@ -426,13 +429,27 @@
     'uniform vec3 top; uniform vec3 hor; uniform vec3 gnd; uniform vec3 sunDir; uniform vec3 sunCol; uniform float cloud; uniform float time; uniform float night; varying vec3 vDir;',
     'float h1(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }',
     'float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h1(i), h1(i + vec2(1, 0)), f.x), mix(h1(i + vec2(0, 1)), h1(i + vec2(1, 1)), f.x), f.y); }',
-    'float fb(vec2 p){ float v = 0.0, a = 0.5; for (int i = 0; i < 5; i++){ v += a * n2(p); p *= 2.03; a *= 0.5; } return v; }',
-    'void main(){ vec3 d = normalize(vDir); float y = d.y;',
-    '  vec3 c = y > 0.0 ? mix(hor, top, pow(clamp(y, 0.0, 1.0), 0.55)) : mix(hor, gnd, clamp(-y * 6.0, 0.0, 1.0));',
-    '  float sd = max(dot(d, normalize(sunDir)), 0.0);',
-    '  c += sunCol * (pow(sd, 900.0) * 6.0 + pow(sd, 18.0) * 0.35 + pow(sd, 4.0) * 0.12) * (1.0 - night * 0.6);',
-    '  if (y > 0.0) { vec2 uv = d.xz / (y + 0.12) * 1.6 + vec2(time * 0.006, time * 0.002); float k = fb(uv); float cov = smoothstep(1.0 - cloud, 1.15 - cloud * 0.5, k); vec3 cc = mix(hor * 1.05 + sunCol * 0.25, vec3(0.62, 0.64, 0.68) * (0.35 + 0.65 * (1.0 - night)), cloud * 0.6); c = mix(c, cc, cov * smoothstep(0.0, 0.18, y) * 0.92); }',
-    '  if (night > 0.5 && y > 0.05) { vec2 st = d.xz / (y + 0.3) * 120.0; float s = step(0.9975, h1(floor(st))); c += vec3(s) * (night - 0.5) * 2.0 * (1.0 - cloud) * 0.9; }',
+    'float fb(vec2 p){ float v = 0.0, a = 0.5; mat2 m = mat2(1.6, 1.2, -1.2, 1.6); for (int i = 0; i < 6; i++){ v += a * n2(p); p = m * p; a *= 0.5; } return v; }',
+    'void main(){ vec3 d = normalize(vDir); float y = d.y; vec3 sd3 = normalize(sunDir); float sd = max(dot(d, sd3), 0.0);',
+    '  vec3 c = y > 0.0 ? mix(hor, top, pow(clamp(y, 0.0, 1.0), 0.48)) : mix(hor, gnd, clamp(-y * 5.0, 0.0, 1.0));',
+    '  c += sunCol * (pow(sd, 6.0) * 0.22 + pow(sd, 48.0) * 0.35) * (1.0 - night * 0.7) * (1.0 - cloud * 0.5);',
+    '  c += sunCol * smoothstep(0.99955, 0.99985, sd) * 18.0 * (1.0 - night) * (1.0 - cloud * 0.85);',
+    '  if (y > 0.0) {',
+    '    vec2 uv = d.xz / (y + 0.08) * 0.9 + vec2(time * 0.004, time * 0.0015);',
+    '    vec2 q = vec2(fb(uv + vec2(1.7, 9.2)), fb(uv + vec2(8.3, 2.8)));',
+    '    float den = fb(uv * 1.3 + q * 1.6);',
+    '    float cov = smoothstep(0.62 - cloud * 0.42, 0.86 - cloud * 0.3, den);',
+    '    float den2 = fb(uv * 1.3 + q * 1.6 + sd3.xz * 0.18);',
+    '    float lit = clamp(0.55 + (den - den2) * 4.0, 0.0, 1.0);',
+    '    vec3 shade = mix(hor * 0.78, vec3(0.42, 0.44, 0.50), 0.35) * (1.0 - night * 0.85);',
+    '    vec3 bright = (sunCol * 1.15 + hor * 0.35) * (1.0 - night * 0.8) + vec3(0.02, 0.025, 0.04) * night;',
+    '    vec3 cc = mix(shade, bright, lit * (1.0 - cloud * 0.55));',
+    '    cc += sunCol * pow(sd, 10.0) * (1.0 - cov) * 0.9 * (1.0 - night);',
+    '    float fade = smoothstep(0.0, 0.22, y);',
+    '    c = mix(c, cc, cov * fade * 0.96);',
+    '    c = mix(c, hor * 1.02, (1.0 - smoothstep(0.0, 0.08, y)) * 0.55);',
+    '  }',
+    '  if (night > 0.5 && y > 0.05) { vec2 st = d.xz / (y + 0.3) * 140.0; float s = step(0.9978, h1(floor(st))); c += vec3(s) * (night - 0.5) * 2.0 * (1.0 - cloud) * 0.9; }',
     '  gl_FragColor = vec4(c, 1.0); }'
   ].join('\n');
   CK.skyMat = () => new (T().ShaderMaterial)({ uniforms: { top: { value: new (T().Color)() }, hor: { value: new (T().Color)() }, gnd: { value: new (T().Color)() }, sunDir: { value: new (T().Vector3)(0, 1, 0) }, sunCol: { value: new (T().Color)() }, cloud: { value: 0.3 }, time: { value: 0 }, night: { value: 0 } }, vertexShader: SKY_VS, fragmentShader: SKY_FS, side: T().BackSide, depthWrite: false, fog: false });

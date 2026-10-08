@@ -17,6 +17,7 @@
 
   CK.define({
     id: 'huangling', name: '皇嶺', seed: 1433, stationName: '皇嶺站',
+    land: [[-1000, -980], [1000, -980], [1000, 980], [-1000, 980]],   // 地面一直鋪到山腳（低角度的鏡頭看得到）
     walk: [-180, -165, 180, 165], spawn: [0, 138, Math.PI], camYaw: Math.PI,   // 鏡頭在北邊、看著車站（鏡頭在南邊會卡在車站裡）
     banner: '昭旭的首都・山嶺都城',
     firstTip: '第一次來皇嶺：Tab 看地圖。皇城、向日塔、昭皇大學、山城神社、昭旭城古蹟都有觀光章；公會昭旭分館在大通的東邊；回東鶴到南邊的皇嶺站。',
@@ -84,13 +85,15 @@
       // ---------- 中段 ----------
       // 西：古寺（昭光寺）和五重塔
       temple(B, [-84, -6, -40, 42]);
-      B.row('e', -13.5, -8, 42, 13, { style: 'machiya', h: 6.4 }, 5.5, 7.5, i => (i % 2 ? { name: pk(['湯豆腐・南山', '甘味處・白玉', '扇子・風雅', '和菓子・山月', '口紅・紅屋']) } : {}));
+      const tofuRow = B.row('e', -13.5, -8, 42, 13, { style: 'machiya', h: 6.4 }, 5.5, 7.5, i => (i === 1 ? { name: '湯豆腐・南山', noren: '#2A3A5A' } : i % 2 ? { name: pk(['甘味處・白玉', '扇子・風雅', '和菓子・山月', '口紅・紅屋']) } : {}));
+      { const r = tofuRow[1].r; CK.door(B, -12.3, (r[1] + r[3]) / 2, 'hl_tofu', '走進湯豆腐・南山', '#E8A03A', Math.PI / 2); }
       B.row('n', -10, -38, -27, 12, { style: 'machiya', h: 6.4 }, 5, 6, () => ({}));
       // 東：拱廊商店街（南北，走路的）＋兩邊的店
       arcade(B, [36, -10.5, 50, 44.5]);
       B.row('w', 13.5, -8, 42, 12, { style: 'office', h: 21 }, 10, 16, (i) => (i === 0 ? { name: '皇嶺觀光案內所', h: 10.5, style: 'house' } : { ad: rnd() < 0.4 }));
       B.row('e', 86.5, -8, 42, 14, { style: 'apt', h: 20.3 }, 14, 20, () => ({}));
-      B.row('n', -10, 55, 72, 12, { style: 'house', h: 10 }, 7, 10, () => ({ name: rnd() < 0.5 ? pk(['喫茶・向日葵', '書店・積學堂', '眼鏡・光', '文具・墨', '花店・浪']) : null }));
+      const bookRow = B.row('n', -10, 55, 72, 12, { style: 'house', h: 10 }, 7, 10, i => (i === 0 ? { name: '書店・積學堂' } : { name: rnd() < 0.5 ? pk(['喫茶・向日葵', '眼鏡・光', '文具・墨', '花店・浪']) : null }));
+      { const r = bookRow[0].r; CK.door(B, (r[0] + r[2]) / 2, -11.2, 'hl_books', '走進書店・積學堂', '#C8B08A', Math.PI); }
       B.area('昭光寺', [-86, -10, -38, 44]); B.area('昭陽商店街（拱廊）', [34, -12, 52, 46]); B.area('昭皇大學', [100, -80, 142, 46]);
       // ---------- 西：昭旭城古蹟、山城神社 ----------
       ruins(B, [-172, -74, -108, -30]);
@@ -108,7 +111,8 @@
       B.walk([[-84, 77.4], [-16, 77.4]], 3); B.walk([[-16, 94], [-84, 94]], 2);
       B.area('町家老街', [-86, 59, -13, 106]);
       // 東：飯店、辦公（大通東）、遊樂場
-      B.row('w', 13.5, 62, 104, 14, { style: 'glass', h: 28.8 }, 12, 18, () => ({ ad: rnd() < 0.5 }));
+      const innRow = B.row('w', 13.5, 62, 104, 14, { style: 'glass', h: 28.8 }, 12, 18, i => (i === 0 ? { style: 'house', h: 14, name: '旅館・嶺月', vsign: '旅館' } : { ad: rnd() < 0.5 }));
+      { const r = innRow[0].r; CK.door(B, r[0] - 1.2, (r[1] + r[3]) / 2, 'hl_inn', '走進旅館・嶺月（住宿）', '#7AC8E8', -Math.PI / 2); }
       B.row('e', 86.5, 62, 104, 12, { style: 'office', h: 21 }, 10, 14, () => ({}));
       B.row('s', 104, 32, 70, 14, { style: 'house', h: 10.5 }, 8, 12, () => ({ name: rnd() < 0.6 ? pk(['居酒屋・一獻', '拉麵・山嶺', '烤雞串・鳥平', '咖哩・印度屋']) : null }));
       amusement(B, [101.5, 59.5, 140, 106]);
@@ -163,6 +167,8 @@
       B.talker(118, 104, Math.PI, '遊樂場的小孩', ['「摩天輪轉一圈要八分鐘！」', '「旋轉木馬的白馬是我的！」', '「冬天遊樂場人好少，可以一直玩。」']);
       B.talker(70, 121.5, Math.PI, '向日塔的售票員', ['「向日塔的塔頂對著日出的方向。早上第一班最多人。」', '「天氣好的話，看得到天宮島的海岸線。」', '「上去要 15 費拉。」']);
       // ---------- 遠景：四周的山、山城 ----------
+      // 城外的田（外圍房子再過去）
+      [[-1000, -980, 1000, -380], [-1000, 380, 1000, 980], [-1000, -380, -380, 380], [380, -380, 1000, 380]].forEach(r => B.zone(r, 'grass', 0.01));
       mountains(B);
       B.outskirts({ band: 150, skip: (x, z) => (x > 146 && x < 176) || (z < -150 && x > -80 && x < 80) });   // 河、皇城後面不蓋
     },
@@ -171,6 +177,129 @@
       const pl = tw.plane; if (pl) { pl.t += dt; const k = (pl.t % 70) / 70, x = -900 + k * 1800, z = 600 - k * 1300; pl.g.position.set(x, 180 + k * 120, z); pl.g.rotation.y = Math.atan2(1800, -1300); pl.g.visible = k < 0.98; }
     }
   });
+
+
+  // ================= 走得進去的店、空間（2026-10-08 作者：皇嶺也要有可以進去的商店或空間；citykit5.js） =================
+  // 小吃（跟奉主一樣：吃了當天下遺跡有加成）
+  const eatMenu = (title, say, menu) => {
+    const s = S();
+    R.sheet('<p class="kicker">皇嶺</p><h2>' + R.esc(title) + '</h2><p>' + R.esc(say) + '</p><p class="note">吃了之後，今天下遺跡有加成（一天算最後吃的那一餐）。費拉 ' + s.gold + '</p><div class="dn-menu">'
+      + menu.map((m, i) => '<button type="button" class="btn" data-hlf="' + i + '"' + (s.gold < m[1] ? ' disabled' : '') + '><b>' + R.esc(m[0]) + '</b>　' + m[1] + ' 費拉<br><small>' + R.esc(m[2]) + '</small></button>').join('') + '</div>',
+      '<div class="row"><button type="button" class="btn pri" id="hlf-x">不吃了</button></div>');
+    document.getElementById('hlf-x').onclick = R.closeSheet;
+    document.querySelectorAll('[data-hlf]').forEach(b => { b.onclick = () => { const m = menu[+b.dataset.hlf]; if (s.gold < m[1]) return; s.gold -= m[1]; s.buff = { kind: 'food', b: m[3], until: s.day }; R.save(); R.sfx && R.sfx('coin'); R.closeSheet(); R.toast('吃了' + m[0] + '。今天下遺跡有加成。', '#E8C04A'); }; });
+  };
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  // 公會昭旭分館
+  CK.defineRoom({ id: 'hl_guild', name: '公會昭旭分館', hint: '大廳比東鶴分館高一層樓；委託板貼滿首都的護送和警備', w: 18, d: 14, h: 4.6, floor: 'gran', wall: 'plaster', wain: 'woodD', build(B, K) {
+    K.counter(0, -4.4, 9, 0.9, { mat: 'woodB', top: 'wood' }); K.register(-3, -4.4);
+    K.wallSign('公會昭旭分館', 'n', 0, 3.4, { size: 0.7, bg: '#2E5A3A', fg: '#F4ECD8' });
+    K.board(-6.2, -6.9, 3.2); K.board(6.2, -6.9, 3.2);
+    B.inter(0, -3.3, 2.2, '櫃台：今日地方委託', () => R.azuki.quest('huangling'), '#3E9A5A');
+    B.inter(-6.2, -5.9, 2, '委託板（看看）', () => R.townTalk('公會昭旭分館・委託板', [pick(['典禮警備：昭皇巡幸當天，皇城前廣場的人群疏導。報酬另議。', '護送：魔力學院的教授要去北州的古森取樣，求兩名同行者。', '急件：議政院的地下室傳出怪聲。勇者證討伐段以上。——下面有人寫「是老鼠」。', '尋人：遊樂場走失的小孩，穿紅色外套。（已找到，請撕掉）'])]));
+    B.talker(2.5, -5.4, 0, '分館的館員', ['「首都分館的委託，多半是護送和典禮的警備。」', '「遠方遺跡的大委託，請回東鶴或奉主的分館。」', '「議政院前面最近有人抗議，路過的時候小心。」']);
+    B.talker(-2.5, -5.4, 0, '分館的書記', ['「勇者證給我看一下……東鶴登記的？那邊的館長還好嗎？」', '「地方委託一天一件。做完明天再來。」']);
+    B.talker(-5.5, 2, Math.PI / 2, '休息的勇者', ['「首都的委託都很無聊。護送、站崗、護送、站崗。」', '「我是為了看向日塔的日出才來皇嶺的。」']);
+    K.bench(-6, 0.5, 3, Math.PI / 2); K.bench(6, 0.5, 3, -Math.PI / 2); K.bench(-6, 3.5, 3, Math.PI / 2);
+    K.plant(-8.2, 5.8); K.plant(8.2, 5.8); K.plant(-8.2, -5.8); K.plant(8.2, -5.8);
+    K.rug(0, 1.5, 4, 8, '#2E5A3A');
+    K.lamp(-4, 0); K.lamp(4, 0); K.lamp(0, -3);
+  } });
+  // 世界中央銀行・昭旭分館
+  CK.defineRoom({ id: 'hl_bank', name: '世界中央銀行・昭旭分館', hint: '大理石的大廳，腳步聲很響', w: 20, d: 14, h: 5.6, floor: 'marble', wall: 'plaster', wain: 'ashlar', trim: 'gold', amb: 0.9, build(B, K) {
+    K.counter(0, -3.6, 15, 0.8, { mat: 'woodB', top: 'marble', h: 1.1 });
+    for (let x = -6; x <= 6; x += 3) { B.box(CK.M('glassL'), x - 1.4, 1.1, -3.65, x + 1.4, 2.3, -3.55); B.box(CK.M('gold'), x - 1.45, 2.3, -3.7, x + 1.45, 2.36, -3.5); }
+    [-7.5, -2.5, 2.5, 7.5].forEach(x => { B.part(B.g.cyl24, CK.M('marble'), x, 2.8, 1.5, 0.9, 5.6, 0.9); B.solid(x - 0.45, 1.05, x + 0.45, 1.95, 'deco'); });
+    K.wallSign('世界中央銀行', 'n', 0, 3.8, { size: 0.65, bg: '#F2F0EA', fg: '#3A2E20' });
+    B.inter(-3, -2.5, 2.2, '存款・借款窗口', () => R.bankSheet ? R.bankSheet() : R.toast('今天窗口休息。'), '#C8A040');
+    B.inter(3, -2.5, 2.2, '股票窗口', () => R.stockSheet ? R.stockSheet() : R.toast('今天不開盤。'), '#C8A040');
+    B.talker(-3, -4.6, 0, '存款窗口的行員', ['「費拉的母行之一。存款、借款都在這裡。」', '「外幣兌換在二號窗口。德克斯凡的票子最多。」']);
+    B.talker(3, -4.6, 0, '股票窗口的行員', ['「開盤的時候這裡吵得跟遺跡一樣。」', '「東鶴冒險用品最近漲了不少。」']);
+    B.talker(6, 4, Math.PI, '排隊的商人', ['「匯款到德克斯凡要三天。我等不了三天。」', '「這張票子……被說是假的。我在奉主收的。」']);
+    K.bench(-7, 4.5, 3.5, 0); K.bench(0, 4.5, 3.5, 0);
+    K.plant(-9, -5.8, 1.2); K.plant(9, -5.8, 1.2);
+    K.lamp(-5, 0); K.lamp(5, 0); K.lamp(0, 3);
+  } });
+  // 皇嶺百貨・地下美食街
+  CK.defineRoom({ id: 'hl_dept', name: '皇嶺百貨・地下美食街', hint: '試吃的香味從四面八方飄過來', w: 22, d: 14, h: 4, floor: 'tile', wall: 'plaster', wain: 'woodD', build(B, K) {
+    K.showcase(-6, -5, 6, 0); K.showcase(6, -5, 6, 0); K.showcase(-6, 0, 6, 0); K.showcase(6, 0, 6, 0);
+    K.wallSign('和菓子', 'n', -6, 2.8, { size: 0.55, bg: '#5A1A2A', fg: '#FFE8B0', lit: 1 }); K.wallSign('洋菓子・麵包', 'n', 6, 2.8, { size: 0.55, bg: '#1A2A4A', fg: '#FFE8B0', lit: 1 });
+    B.inter(-6, -4.0, 2.2, '和菓子櫃（皇嶺點心組合）', () => R.azuki.food('huangling'), '#E8A03A');
+    B.inter(6, -4.0, 2.2, '洋菓子櫃（試吃、買點心）', () => R.azuki.food('huangling'), '#E8A03A');
+    B.inter(-6, 1.0, 2, '試吃（免費）', () => R.toast(pick(['試吃的羊羹。甜得剛好。', '試吃的煎餅，很脆。', '店員又塞了一塊給你。']), '#E8C04A'));
+    B.talker(-6, -6.2, 0, '和菓子櫃的店員', ['「皇嶺的點心組合，送禮最受歡迎。」', '「冬天限定的柚子羊羹，今天最後幾條。」']);
+    B.talker(6, -6.2, 0, '洋菓子櫃的店員', ['「德克斯凡的師傅做的蛋糕，下午三點出爐。」', '「麵包買三送一。」']);
+    B.talker(0, 3.5, Math.PI, '逛街的太太', ['「地下街是皇嶺最好吃的地方。」', '「你也是來買伴手禮的？」']);
+    K.shelf(-10.6, 3, 4, Math.PI / 2); K.shelf(10.6, 3, 4, -Math.PI / 2);
+    K.lamp(-6, -2.5); K.lamp(6, -2.5); K.lamp(0, 3);
+  } });
+  // 和菓子・山月（町家）
+  CK.defineRoom({ id: 'hl_wagashi', name: '皇嶺點心・山月', hint: '暖簾後面，木頭的展示櫃裡擺著當季的和菓子', w: 10, d: 8, h: 3.2, floor: 'wfloor', wall: 'plaster', wain: 'woodB', build(B, K) {
+    K.tatami(-5, -4, 5, -1.6);
+    K.showcase(0, 0.2, 5, 0, ['#F4E8E0', '#E8A0B0', '#A8C878', '#8A5A3A', '#F0D080', '#D0A0D8']);
+    K.shoji(-2.5, -3.9, 4, 0); K.shoji(2.5, -3.9, 4, 0);
+    B.inter(0, 1.3, 2, '買點心吃', () => eatMenu('皇嶺點心・山月', '「今天的生菓子是『雪椿』。」', [['生菓子「雪椿」配抹茶', 10, '白色的練切包著紅豆餡，配一碗熱抹茶', { mp: 0.06, regen: 0.1 }], ['柚子羊羹', 7, '冬天限定，柚子的香味很清楚', { hp: 0.04, mp: 0.03 }], ['烤糰子（三串）', 6, '醬油烤的，甜甜鹹鹹', { hp: 0.05 }]]), '#E8A03A');
+    B.talker(0, -1.0, 0, '山月的老闆娘', ['「我們家的和菓子，從昭光帝國的時候做到現在。」', '「生菓子只放得了一天，今天吃掉喔。」', '「下雪的日子，店裡最安靜。」']);
+    K.lamp(0, -0.8);
+  } });
+  // 塔下喫茶「向日」
+  CK.defineRoom({ id: 'hl_cafe', name: '塔下喫茶「向日」', hint: '咖啡的香味，留聲機在放舊的曲子', w: 12, d: 9, h: 3.4, floor: 'wfloor', wall: 'brick', wain: 'woodB', build(B, K) {
+    K.counter(-2, -3.3, 6, 0.8, { mat: 'woodB', top: 'woodD' });
+    K.shelf(-2, -4.2, 6, 0, { h: 2.2, cols: ['#E8E4DC', '#8A5A3A', '#5A3A2A', '#E8C060'] });
+    [[2.5, 0], [-3, 1.5], [3.5, 2.8]].forEach(([x, z]) => K.cafeSet(x, z));
+    B.inter(-2, -2.3, 2, '點咖啡、點心', () => R.azuki.food('huangling'), '#E8A03A');
+    B.talker(-2, -3.85, 0, '喫茶店的老闆', ['「向日塔的日出那班人走了以後，這裡才安靜。」', '「咖啡豆是從西見港進來的。」', '「厚片吐司配咖啡，早上十一點以前加一顆蛋。」']);
+    B.talker(-4.5, 1.4, Math.PI / 2, '看報紙的老先生', ['「議會選舉……哪一黨上台都一樣。」', '「我每天坐這個位子，二十年了。」']);
+    K.plant(5.2, -3.6); K.lamp(-2, -1.5); K.lamp(3, 1.5);
+  } });
+  // 湯豆腐・南山（料亭）
+  CK.defineRoom({ id: 'hl_tofu', name: '湯豆腐・南山', hint: '榻榻米的座敷，土鍋冒著熱氣', w: 12, d: 10, h: 3.2, floor: 'wfloor', wall: 'plaster', wain: 'woodB', build(B, K) {
+    K.tatami(-6, -5, 6, 1.5);
+    [[-3.5, -2.5], [0, -2.5], [3.5, -2.5]].forEach(([x, z]) => { B.Bt.yOff = 0.22; K.lowTable(x, z, 1.4, 1.0); K.cushion(x - 0.9, z, '#7A2A3A'); K.cushion(x + 0.9, z, '#7A2A3A'); B.part(B.g.cyl, CK.M('black'), x, 0.42, z, 0.4, 0.14, 0.4); B.part(B.g.cyl, CK.M('white'), x, 0.5, z, 0.32, 0.03, 0.32); B.Bt.yOff = 0; });
+    K.shoji(-6, -4.95, 4, 0); K.shoji(2, -4.95, 6, 0);
+    K.counter(-3.5, 3.4, 4, 0.6, { mat: 'woodB' });
+    B.inter(0, 2.6, 2.2, '點湯豆腐', () => eatMenu('湯豆腐・南山', '「豆腐是今天早上用山上的水做的。」', [['湯豆腐定食', 12, '昆布高湯裡的嫩豆腐，配柚子醋和蔥', { hp: 0.06, regen: 0.15 }], ['田樂豆腐', 8, '烤過的豆腐塗上甜味噌', { hp: 0.04, dmg: 0.02 }], ['豆腐皮蓋飯', 10, '湯葉鋪在白飯上，淋一點醬汁', { mp: 0.05, hp: 0.03 }]]), '#E8A03A');
+    B.talker(-3.5, 2.6, Math.PI, '南山的女將', ['「歡迎光臨。鞋子脫在這裡。」', '「冬天的湯豆腐，客人都是為了暖身子來的。」']);
+    B.talker(3.5, -1.2, Math.PI, '吃飯的觀光客', ['「這豆腐好燙，可是停不下來。」', '「早上去了山城神社，石階爬到腿軟。」']);
+    K.lamp(-2, -2); K.lamp(3, -2);
+  } });
+  // 旅館・嶺月
+  CK.defineRoom({ id: 'hl_inn', name: '旅館・嶺月', hint: '玄關的地板擦得發亮，裡面是榻榻米的客房', w: 14, d: 10, h: 3.4, floor: 'wfloor', wall: 'plaster', wain: 'woodD', build(B, K) {
+    K.counter(-3.5, 2.2, 4, 0.8, { mat: 'woodB' });
+    K.tatami(-7, -5, 7, -0.5); K.shoji(-3.5, -0.5, 7, 0); K.shoji(3.5, -0.5, 7, 0);
+    [-4.5, -1.5].forEach(x => { B.Bt.yOff = 0.22; K.futon(x, -2.8); B.Bt.yOff = 0; });
+    B.Bt.yOff = 0.22; K.lowTable(3.5, -2.8, 1.4, 1.0); K.cushion(2.6, -2.8, '#5A3A2A'); K.cushion(4.4, -2.8, '#5A3A2A'); B.Bt.yOff = 0;
+    B.solid(-7, -1.0, 7, -0.0, 'wall');   // 客房要從櫃台辦入住（拉門關著）
+    B.inter(-3.5, 3.2, 2.2, '住一晚（30 費拉）', () => { const d = W.town.outer && W.town.outer.P; CK.innStay('huangling', 30, d || { x: 12.3, z: 70, yaw: -Math.PI / 2 }); }, '#7AC8E8');
+    B.talker(-3.5, 1.2, 0, '嶺月的掌櫃', ['「歡迎。一晚三十費拉，附早餐。」', '「客房看得到皇城的天守，晚上會點燈。」', '「勇者大人？最近來皇嶺的勇者變多了。」']);
+    K.bench(4, 3.2, 3, 0); K.plant(6.3, 4.2); K.lamp(-3.5, 2.5); K.lamp(3, 2.5);
+  } });
+  // 書店・積學堂
+  CK.defineRoom({ id: 'hl_books', name: '書店・積學堂', hint: '舊書和新書的味道混在一起', w: 12, d: 10, h: 3.6, floor: 'wfloor', wall: 'plaster', wain: 'woodD', build(B, K) {
+    K.books(-3, -4.6, 5, 0); K.books(3, -4.6, 5, 0); K.books(-5.75, 0, 6, Math.PI / 2); K.books(5.75, 0, 6, -Math.PI / 2);
+    K.books(-1.5, 0.5, 3.4, 0); K.books(1.9, 0.5, 3.4, Math.PI);
+    K.counter(3.8, 3.4, 2.6, 0.7, { mat: 'woodB' });
+    const LORE = [['《昭光帝國興亡錄》', '「……帝國在本土城市戰之後分成兩半，北州的貴族不肯投降，直到最後一位將軍在古森自盡。」'], ['《遺跡生物圖鑑・首都版》', '「皇嶺附近的遺跡，生物多半怕光。帶燈的勇者活得比較久。」'], ['《魔力學概論》（昭皇大學教科書）', '「魔力是可以測量的。佩特拉的核心，是迄今發現密度最高的魔力體。」'], ['《皇嶺觀光導覽》', '「向日塔的展望台：天氣好時可遠眺天宮島海岸線。」'], ['《艾菲爾斯特地理》', '「昭旭聯合王國由天宮島、北州島、納瓦諸島組成。」']];
+    B.inter(-1.5, 2.0, 2.2, '翻翻書', () => { const b = pick(LORE); R.townTalk('書店・積學堂', ['你翻開' + b[0] + '。', b[1]]); }, '#C8B08A');
+    B.talker(3.8, 4.2, Math.PI, '積學堂的店主', ['「皇嶺的舊書店有三十幾家，我們最老。」', '「找遺跡的資料？右邊那排，最下面。」', '「站著看可以，不要折到書角。」']);
+    K.lamp(0, -1.5); K.lamp(0, 2.5);
+  } });
+  // 皇嶺站・大廳
+  CK.defineRoom({ id: 'hl_station', name: '皇嶺站・大廳', hint: '「往東鶴的魔導電車，即將進站——」', w: 26, d: 14, h: 7, floor: 'gran', wall: 'conc', wain: 'metal', trim: 'steelD', amb: 1.0, build(B, K) {
+    K.gates(0, -3.5, 7, 1.5);
+    B.box(CK.M('steelD'), -13, 0, -3.6, -5.6, 1.1, -3.4); B.box(CK.M('steelD'), 5.6, 0, -3.6, 13, 1.1, -3.4); B.solid(-13, -3.6, -5.6, -3.4, 'wall'); B.solid(5.6, -3.6, 13, -3.4, 'wall'); B.solid(-5.6, -4.2, 5.6, -2.8, 'wall');
+    K.counter(-9, 1.0, 5, 0.9, { mat: 'steelD', top: 'marble' }); B.box(CK.M('glassL'), -11.4, 1.05, 0.95, -6.6, 2.4, 1.05);
+    K.wallSign('皇嶺站', 'n', 0, 5.6, { size: 1.2, bg: '#1A2A4A', fg: '#FFFFFF', lit: 1 });
+    K.wallSign('東鶴　奉主　吉山　府廳　西見', 'n', 0, 4.4, { size: 0.45, bg: '#0E0E14', fg: '#FFD84A', lit: 1 });
+    B.inter(-9, 2.2, 2.4, '售票口（回東鶴、轉往他城）', () => CK.ticket(), '#5A8AC8');
+    B.inter(0, -1.6, 2.4, '時刻表', () => R.townTalk('皇嶺站的時刻表', ['往東鶴：每天六班（魔導電車，一天）', '往奉主：每小時一班', '往吉山、府廳：每天四班', '往北州（古森、岳北）：接西見的渡輪', '山嶺國際機場：接駁巴士在站前廣場的西邊']), '#5A8AC8');
+    B.talker(-9, 0.0, 0, '售票口的站務員', ['「往東鶴的票嗎？」', '「北州要轉渡輪，日子比較久。」']);
+    K.shelf(10, 2, 4, -Math.PI / 2, { cols: ['#C83A3A', '#E8E4DC', '#E8B830', '#3A7A4A'] });
+    B.inter(8.6, 2, 2, '車站的小賣店', () => R.azuki.food('huangling'), '#E8A03A');
+    K.bench(-3, 4.5, 4, 0); K.bench(3, 4.5, 4, 0);
+    B.talker(0, 2.5, Math.PI, '等車的上班族', ['「首都的電車從來不誤點。」', '「東鶴？要坐一整天呢。」']);
+    K.lamp(-8, 0); K.lamp(0, 2); K.lamp(8, 0);
+  } });
 
   // ================= 地標 =================
   // ---- 皇城：石垣島上的白牆、隅櫓、御殿、天守（向日殿）；正門（櫓門）關著 ----
@@ -241,7 +370,7 @@
     P(g.prism, M('white'), x1 - 3.5, 13.2, cz, L + 1, 3, 5, 0, Math.PI / 2, 0);
     B.sign('世界中央銀行・昭旭分館', 'e', x1 - 1, cz, 12.5, { size: 0.62, bg: '#F2F0EA', fg: '#3A2E20', weight: 'bold' });
     B.solid(fx, z0 + 2, x1 - 0.5, z1 - 2, 'house');
-    B.inter(x1 + 1.2, cz, 2.6, '世界央行昭旭分館（進去看看）', () => az().fac('huangling', 'bank'), '#C8A040');
+    CK.door(B, x1 + 1.2, cz, 'hl_bank', '走進世界央行昭旭分館（存款、股票）', '#C8A040', Math.PI / 2);
   }
   // ---- 議政院：中央高塔（階梯狀的金字塔頂），左右兩翼（正面朝南） ----
   function parliament(B, r) {
@@ -270,7 +399,7 @@
     B.flag(x0 - 1.5, cz - 9.5, 14, '#2E6A3E');
     B.sign('公會昭旭分館', 'w', x0 - 2.6, cz, 5.9, { size: 0.72, bg: '#2E5A3A', fg: '#F4ECD8', box: 1, lit: 1 });
     B.solid(x0 - 2.6, cz - 4.2, x0, cz - 2.9, 'deco'); B.solid(x0 - 2.6, cz + 2.9, x0, cz + 4.2, 'deco');
-    B.inter(x0 - 3.2, cz, 2.6, '公會昭旭分館（地方委託）', () => az().fac('huangling', 'guild'), '#3E9A5A');
+    CK.door(B, x0 - 3.2, cz, 'hl_guild', '走進公會昭旭分館（地方委託）', '#3E9A5A', -Math.PI / 2);
   }
   // ---- 皇嶺百貨（正面朝南） ----
   function dept(B, r) {
@@ -279,7 +408,7 @@
     B.box(M('shopLit'), x0 + 1, 0.3, z1, x1 - 1, 4.4, z1 + 0.06);
     B.box(M('steelD'), x0 + 0.5, 4.4, z1, x1 - 0.5, 4.9, z1 + 2.4);
     B.sign('皇嶺百貨', 's', z1 + 0.06, cx, 8.4, { size: 1.6, bg: '#5A1A2A', fg: '#FFE8B0', box: 1, lit: 1 });
-    B.inter(cx - 6, z1 + 3, 2.4, '皇嶺百貨・地下美食街（買點心吃）', () => az().food('huangling'), '#E8A03A');
+    CK.door(B, cx - 6, z1 + 3, 'hl_dept', '走進皇嶺百貨（地下美食街）', '#E8A03A', 0);
   }
   // ---- 昭皇大學：正門、紅磚的本館＋鐘樓、圖書館、魔力學院的溫室、中庭 ----
   function university(B, r) {
@@ -358,7 +487,7 @@
     B.plaza(cx - 3, z0, cx + 3, z1, 'pav');
     const SH = [['皇嶺點心・山月', 'food'], ['土產・千代', null], ['藥妝・白藤', null], ['書店・積學堂', null], ['和服・染', null], ['喫茶・六角', null], ['遊樂場・星光', null], ['唱片・音盤', null], ['拉麵・新京', null], ['香・松香', null]];
     let k = 0;
-    const each = side => (i, rr0) => { const sp = SH[k++ % SH.length]; const o = { name: sp[0], vsign: sp[0].split('・')[0], neon: 0 }; if (sp[1] === 'food') { const ix = side === 'e' ? rr0[2] + 1.4 : rr0[0] - 1.4; B.inter(ix, (rr0[1] + rr0[3]) / 2, 2, sp[0] + '（買點心吃）', () => az().food('huangling'), '#E8A03A'); } return o; };
+    const each = side => (i, rr0) => { const sp = SH[k++ % SH.length]; const o = { name: sp[0], vsign: sp[0].split('・')[0], neon: 0 }; if (sp[1] === 'food') { const ix = side === 'e' ? rr0[2] + 1.4 : rr0[0] - 1.4; CK.door(B, ix, (rr0[1] + rr0[3]) / 2, 'hl_wagashi', '走進' + sp[0], '#E8A03A', side === 'e' ? Math.PI / 2 : -Math.PI / 2); } return o; };
     B.row('e', cx - 3, z0 + 0.5, z1 - 0.5, cx - 3 - x0 + 4, { style: 'house', h: 8 }, 5, 8, each('e'));
     B.row('w', cx + 3, z0 + 0.5, z1 - 0.5, x1 - cx - 3 + 4, { style: 'house', h: 8 }, 5, 8, each('w'));
     // 拱廊的屋頂（拱形的玻璃）、柱、入口的招牌
@@ -463,7 +592,7 @@
     B.box(M('metal'), cx - 22, 4.6, z0 - 5, cx + 22, 4.9, z0 + 2); [-20, -10, 0, 10, 20].forEach(dx => P(g.cyl8, M('metal'), cx + dx, 2.3, z0 - 4.4, 0.3, 4.6, 0.3));
     [-20, -10, 0, 10, 20].forEach(dx => B.solid(cx + dx - 0.2, z0 - 4.6, cx + dx + 0.2, z0 - 4.2, 'deco'));
     B.sign('皇嶺站', 'n', z0 + 1.8, cx, 17.6, { size: 2.2, bg: '#1A2A4A', fg: '#FFFFFF', box: 1, lit: 1 });
-    B.inter(cx, z0 - 1.2, 3, '皇嶺站：售票口（回東鶴、轉往他城）', () => CK.ticket(), '#5A8AC8');
+    CK.door(B, cx, z0 - 1.2, 'hl_station', '走進皇嶺站（售票口：回東鶴、轉往他城）', '#5A8AC8', Math.PI);
     B.inter(cx - 10, z0 - 1.2, 2.4, '皇嶺站的時刻表', () => R.townTalk('皇嶺站的時刻表', ['往東鶴：每天六班（魔導電車，一天）', '往奉主：每小時一班', '往吉山、府廳：每天四班', '往北州（古森、岳北）：接西見的渡輪', '山嶺國際機場：接駁巴士在站前廣場的西邊']));
   }
   // ---- 向日塔：塔底的大樓＋細長的白塔、展望台（朝東）、紅白的天線 ----
@@ -481,7 +610,7 @@
     B.sign('向日塔', 'n', z - 9, x, 28, { size: 1.6, bg: '#E8E4DC', fg: '#B8202A', box: 1, lit: 1 });
     B.inter(x - 4, z - 10.4, 2.6, '觀光景點：向日塔（觀光章）', () => az().stamp('huangling', 'hl_tower'), '#E8C04A').sight = 'hl_tower';
     B.inter(x + 4, z - 10.4, 2.4, '登向日塔（15 費拉）', () => az().act('huangling'), '#E8A03A');
-    B.inter(x + 9, z - 10.4, 2, '塔下喫茶「向日」（喝咖啡）', () => az().food('huangling'), '#E8A03A');
+    CK.door(B, x + 9, z - 10.4, 'hl_cafe', '走進塔下喫茶「向日」', '#E8A03A', Math.PI);
     B.label('向日塔', x, z);
     // 飛機（山嶺國際機場）
     const pg = new TH.Group(), wm = CK.M('white'); [[0, 0, 0, 3, 3, 30], [0, 0, 2, 34, 0.4, 5], [0, 2.4, 13, 0.4, 5, 3], [0, 0.6, 13, 10, 0.3, 2.5]].forEach(([a, b, c, sx, sy, sz]) => { const m = new TH.Mesh(g.box, wm); m.position.set(a, b, c); m.scale.set(sx, sy, sz); pg.add(m); });
@@ -489,14 +618,8 @@
   }
   // ---- 遠景：四周的山（雪頂）、山脊上的山城 ----
   function mountains(B) {
-    const TH = THREE, N = 120, pos = [], idx = [], col = [], rad0 = 330, rad1 = 900;
-    const hAt = (a, rad) => { const n = CK.fbm(a / (Math.PI * 2) * 32, rad / 160, 77, 32, 4), k = (rad - rad0) / (rad1 - rad0); const south = Math.max(0, Math.cos(a - Math.PI / 2)); return Math.max(0, (60 + n * 190) * Math.sin(Math.min(1, k * 1.6) * Math.PI / 2) * (1 - south * 0.65)); };
-    const NR = 16; for (let j = 0; j <= NR; j++) for (let i = 0; i <= N; i++) { const a = i / N * Math.PI * 2, rad = rad0 + (rad1 - rad0) * j / NR, h = hAt(a, rad); pos.push(Math.cos(a) * rad, h - 2, Math.sin(a) * rad * 0.95); const snow = h > 175 ? 1 : h > 135 ? (h - 135) / 40 : 0, tone = CK.fbm(i / N * 64, j, 91, 64, 2), c = [0.13 + tone * 0.05 + snow * 0.72, 0.17 + tone * 0.06 + snow * 0.7, 0.13 + tone * 0.04 + snow * 0.78]; col.push(c[0], c[1], c[2]); }
-    for (let j = 0; j < NR; j++) for (let i = 0; i < N; i++) { const a = j * (N + 1) + i, b = a + 1, c = a + N + 1, d = c + 1; idx.push(a, c, b, b, c, d); }
-    const geo = new TH.BufferGeometry(); geo.setAttribute('position', new TH.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new TH.Float32BufferAttribute(col, 3)); geo.setIndex(idx); geo.computeVertexNormals();
-    const m = new TH.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0, side: TH.DoubleSide }); m.userData.shared = false;
-    const mesh = new TH.Mesh(geo, m); mesh.receiveShadow = false; B.group.add(mesh);
-    // 山城：三座（北、西北、東北的山脊上）
-    [[-Math.PI / 2, 420], [-Math.PI * 0.78, 470], [-Math.PI * 0.2, 450]].forEach(([a, rad]) => { const x = Math.cos(a) * rad, z = Math.sin(a) * rad * 0.95, y = hAt(((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2), rad) - 2; B.box(CK.M('ishi'), x - 14, y - 6, z - 10, x + 14, y + 4, z + 10); yagura(B, x, z, y + 4, 3, 1.4); });
+    // 四面環山（南邊開一個口：平原、機場）；山脊上三座山城
+    const hAt = CK.mountains(B, { r0: 680, r1: 2800, h: 420, seed: 11, low: [[Math.PI * 0.32, Math.PI * 0.68, 0.18]], snow: 250 });
+    [[-Math.PI / 2, 900], [-Math.PI * 0.8, 960], [-Math.PI * 0.2, 940]].forEach(([a, rad]) => { const aa = ((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2), x = Math.cos(a) * rad, z = Math.sin(a) * rad, y = hAt(aa, rad) - 3; B.box(CK.M('ishi'), x - 16, y - 10, z - 12, x + 16, y + 5, z + 12); yagura(B, x, z, y + 5, 3, 1.6); });
   }
 })(window.R);

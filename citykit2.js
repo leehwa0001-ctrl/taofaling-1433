@@ -55,7 +55,7 @@
     rail: { col: '#5A5452', metal: 0.8, rough: 0.4 }, sleeper: { tex: 'wood', col: '#5A4A40' }, ballast: { tex: 'gravel', col: '#9A968E' },
     lamp: { col: '#FFF4DC', em: '#FFE2B0', ei: 0, lamp: true, snow: 0 }, shopLit: { col: '#FFF6E8', em: '#FFE6BC', ei: 1.1, snow: 0 }, winLit: { col: '#FFF0D0', em: '#FFE0A8', ei: 1.4, snow: 0 },
     leafPine: { tex: 'grass', col: '#6E8C66', rough: 0.95, snow: 1.3 }, leafCedar: { tex: 'grass', col: '#5E7A58', rough: 0.95, snow: 1.3 }, leafGreen: { tex: 'grass', col: '#8AA076', rough: 0.95, snow: 1.3 }, hedge: { tex: 'grass', col: '#7E9870', snow: 1.2 }, bark: { tex: 'wood', col: '#7A6A5E' }, barkD: { tex: 'wood', col: '#54463E' },
-    rubber: { col: '#202022', rough: 0.9 }, red: { tex: 'paint', col: '#B82E2A' }, blue: { tex: 'paint', col: '#2E5A9A' }, green: { tex: 'paint', col: '#3E7A52' }, yellow: { tex: 'paint', col: '#E8B830' }
+    rubber: { col: '#202022', rough: 0.9 }, tatami: { tex: 'tatami', snow: 0, ground: 1 }, wfloor: { tex: 'planks', col: '#D8B48A', rough: 0.45, snow: 0, ground: 1 }, marble: { tex: 'granite', col: '#F4F0EA', rough: 0.2, snow: 0, ground: 1, env: 1.2 }, carpet: { tex: 'paint', col: '#8A2A2A', rough: 0.95, snow: 0, ground: 1 }, tile: { tex: 'pavers', col: '#E8E4DC', rough: 0.35, snow: 0, ground: 1 }, red: { tex: 'paint', col: '#B82E2A' }, blue: { tex: 'paint', col: '#2E5A9A' }, green: { tex: 'paint', col: '#3E7A52' }, yellow: { tex: 'paint', col: '#E8B830' }
   };
   CK.M = (name, o) => CK.mat(o ? name + '|' + JSON.stringify(o) : name, Object.assign({}, MDEF[name] || {}, o || {}));
   CK.MDEF = MDEF;
@@ -133,7 +133,7 @@
     // 地面（扣掉水）
     const shape = new TH.Shape(land.map(p => new TH.Vector2(p[0], -p[1])));
     D.water.forEach(w => shape.holes.push(new TH.Path(w.poly.map(p => new TH.Vector2(p[0], -p[1])))));
-    const lg = new TH.ShapeGeometry(shape); Bt.add(lg, M('land'), 0, 0, 0, 1, 1, 1, -Math.PI / 2, 0, 0);
+    if (!city.noLand) { const lg = new TH.ShapeGeometry(shape); Bt.add(lg, M('land'), 0, 0, 0, 1, 1, 1, -Math.PI / 2, 0, 0); }
     // 平的地面
     D.zones.forEach(z => { const sh = new TH.Shape(z.poly.map(p => new TH.Vector2(p[0], -p[1]))); Bt.add(new TH.ShapeGeometry(sh), M(z.mat, { ground: 1 }), 0, z.y, 0, 1, 1, 1, -Math.PI / 2, 0, 0); });
     // 車道：柏油、標線（路口裡不畫）、斑馬線
@@ -272,14 +272,14 @@
   // ---------- 天空、光線、天氣 ----------
   const setupSky = (sc, city) => {
     const TH = T(), tw = W.town;
-    const skyM = CK.skyMat(), sky = new TH.Mesh(new TH.SphereGeometry(1200, 32, 16), skyM); sky.frustumCulled = false; sky.renderOrder = -10; sc.add(sky);
+    const skyM = CK.skyMat(), sky = new TH.Mesh(new TH.SphereGeometry(3800, 48, 24), skyM); sky.frustumCulled = false; sky.renderOrder = -10; sc.add(sky);
     const envSc = new TH.Scene(), envM = new TH.ShaderMaterial({ uniforms: skyM.uniforms, vertexShader: skyM.vertexShader, fragmentShader: skyM.fragmentShader, side: TH.BackSide, depthWrite: false }); envSc.add(new TH.Mesh(new TH.SphereGeometry(100, 32, 16), envM));
     const hemi = new TH.HemisphereLight(0xffffff, 0x444444, 0.6); sc.add(hemi);
     const sun = new TH.DirectionalLight(0xffffff, 2); const q = CK.quality();
-    sun.castShadow = q > 0; sun.shadow.mapSize.set(q >= 2 ? 2048 : 1024, q >= 2 ? 2048 : 1024);
-    const scam = sun.shadow.camera; scam.left = -48; scam.right = 48; scam.top = 48; scam.bottom = -48; scam.near = 1; scam.far = 260; sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.04;
+    sun.castShadow = q > 0; sun.shadow.mapSize.set(q >= 2 ? 4096 : 2048, q >= 2 ? 4096 : 2048);
+    const scam = sun.shadow.camera; scam.left = -75; scam.right = 75; scam.top = 75; scam.bottom = -75; scam.near = 1; scam.far = 400; sun.shadow.bias = -0.0003; sun.shadow.normalBias = 0.05;
     sc.add(sun); sc.add(sun.target); W.moon = sun; W.torch = null;
-    sc.fog = new TH.Fog(0xffffff, 80, 700);
+    sc.fog = new TH.FogExp2(0xffffff, 0.0008);
     const pts = []; const np = R.touch ? 4 : 8; for (let i = 0; i < np; i++) { const p = new TH.PointLight(new TH.Color('#FFD8A8').convertSRGBToLinear(), 0, 18, 1.8); p.position.set(0, -50, 0); sc.add(p); pts.push(p); }
     tw.L = { sky, skyM, envSc, hemi, sun, pts, pm: new TH.PMREMGenerator(W.renderer), env: null, envKey: '', lastH: -1 };
     // 雪（或雨）：在鏡頭附近的一個盒子裡循環，頂點著色器自己算位置
@@ -297,7 +297,7 @@
     const tw = W.town, L = tw && tw.L; if (!L) return;
     const h = R.hourNow ? R.hourNow() : 12, wn = R.weatherNow ? R.weatherNow() : '晴', city = tw.city, k = CK.lightFor(h + (city.hourShift || 0), wn), TH = T(), lc = a => new TH.Color(a[0], a[1], a[2]);
     const u = L.skyM.uniforms; u.top.value.copy(lc(k.top)).convertSRGBToLinear(); u.hor.value.copy(lc(k.hor)).convertSRGBToLinear(); u.gnd.value.copy(lc(k.gnd)).convertSRGBToLinear(); u.sunCol.value.copy(lc(k.sunC)).convertSRGBToLinear(); u.sunDir.value.set(k.s.dir[0], k.s.dir[1], k.s.dir[2]); u.cloud.value = k.wx.cloud; u.night.value = k.night;
-    W.scene.fog.color.copy(u.hor.value); const fogK = k.wx.fog * (city.fog || 1); W.scene.fog.near = 140 / fogK; W.scene.fog.far = (city.far || 1500) / fogK;
+    W.scene.fog.color.copy(u.hor.value); const fogK = k.wx.fog * (city.fog || 1); W.scene.fog.density = 0.0006 * fogK * (k.night > 0.5 ? 1.3 : 1);
     L.sun.color.copy(u.sunCol.value); L.sun.intensity = k.sunI; L.sunDir = k.s.dir;
     L.hemi.color.copy(u.top.value).lerp(new TH.Color(1, 1, 1), 0.35); L.hemi.groundColor.copy(lc([0.34, 0.31, 0.28])).convertSRGBToLinear(); L.hemi.intensity = k.hemiI * (k.night > 0.5 ? 0.6 : 1);
     // 環境反光：時間、天氣變了才重算
@@ -354,7 +354,7 @@
     R.spawnTownAllies();
     R.showScreen('run'); $('run').classList.add('town'); W.paused = false;
     if (R.SEE) R.SEE.r.value = 3.2;
-    W.cam.yawT = city.camYaw || 0; R.placeCam(null); fixCam(0);
+    W.cam.yawT = city.camYaw || 0; R.placeCam(null); fixCam(0); CK.fixSprites();
     applyTime(true);
     try { W.renderer.compile(W.scene, W.camera); } catch (e) { }
     hud(true);
@@ -365,15 +365,33 @@
   };
 
   // ---------- 鏡頭：跟著地面的高度（台階、橋上） ----------
+  // 鏡頭（2026-10-08 作者給了一部影片：「把場景做成像這樣、一樣的精緻度」）：
+  //   漫遊（預設）：低角度的第三人稱，看得到地平線、天空、遠山、水面的倒影；滾輪拉近拉遠＝高低（近的時候更低）。
+  //   俯瞰：原本那種從上面斜看（視角收窄、往後退）。暫停選單切換，存在瀏覽器（tfl-citycam）。
   const FOV = 30, BASE_FOV = 44;
+  CK.camMode = () => { try { return localStorage.getItem('tfl-citycam') || 'low'; } catch (e) { return 'low'; } };
+  CK.setCamMode = m => { try { localStorage.setItem('tfl-citycam', m); } catch (e) { } };
+  CK.camPitch = () => (W.town && W.town.room ? 54 * Math.PI / 180 : CK.camMode() === 'top' ? Math.atan2(R.CAM.h, R.CAM.back) : (14 + ((W.cam ? W.cam.zoom : 1) - 0.65) / 0.8 * 22) * Math.PI / 180);
   const fixCam = dt => {
     const P = W.P, c = W.camera, y = CK.heightAt(P.x, P.z);
     P.yv = dt ? P.yv + (y - P.yv) * Math.min(1, dt * 6) : y;
-    const k = Math.tan(BASE_FOV / 2 * Math.PI / 180) / Math.tan(FOV / 2 * Math.PI / 180), tx = P.x, ty = 0.6, tz = P.z;
-    c.position.set(tx + (c.position.x - tx) * k, ty + (c.position.y - ty) * k + P.yv, tz + (c.position.z - tz) * k);
-    if (c.fov !== FOV) { c.fov = FOV; c.updateProjectionMatrix(); }
-    c.lookAt(tx, P.yv + ty, tz);
+    if (CK.camMode() === 'top') {
+      const k = Math.tan(BASE_FOV / 2 * Math.PI / 180) / Math.tan(FOV / 2 * Math.PI / 180), tx = P.x, ty = 0.6, tz = P.z;
+      c.position.set(tx + (c.position.x - tx) * k, ty + (c.position.y - ty) * k + P.yv, tz + (c.position.z - tz) * k);
+      if (c.fov !== FOV) { c.fov = FOV; c.updateProjectionMatrix(); }
+      c.lookAt(tx, P.yv + ty, tz);
+      return;
+    }
+    const z = W.cam.zoom, pitch = CK.camPitch(), dist = W.town.room ? 12 + (z - 0.65) / 0.8 * 8 : 7 + (z - 0.65) / 0.8 * 11, yaw = W.cam.yaw, tx = P.x, ty = P.yv + 1.5, tz = P.z;
+    let cx = tx + Math.sin(yaw) * Math.cos(pitch) * dist, cy = ty + Math.sin(pitch) * dist, cz = tz + Math.cos(yaw) * Math.cos(pitch) * dist;
+    cy = Math.max(cy, CK.heightAt(cx, cz) + 1.2);   // 鏡頭不鑽進地面、台階裡
+    c.position.set(cx, cy, cz);
+    const fv = W.town.room ? 46 : 52; if (c.fov !== fv) { c.fov = fv; c.updateProjectionMatrix(); }
+    c.lookAt(tx, ty + 0.4, tz);
   };
+  // 人物的看板：照鏡頭的俯角補高度（sprites.js 的 TILT 是照原本 57 度的鏡頭算的）
+  const tiltK = () => (1 / Math.cos(CK.camPitch())) / (R.PIX ? R.PIX.TILT : 1);
+  CK.fixSprites = () => { const tw = W.town, k = tiltK(); if (!tw) return; const set = h => { if (h && h.g && h.g.scale.y !== k) h.g.scale.y = k; }; set(W.P && W.P.h); (tw.npcs || []).forEach(n => set(n.h)); (tw.allies || []).forEach(a => set(a.h)); };
 
   // ---------- 每一格 ----------
   const step = dt => {
@@ -401,14 +419,14 @@
     const L = tw.L;
     tw.lt = (tw.lt || 0) - dt; if (tw.lt <= 0) { tw.lt = 0.3; applyTime(false); lampLights(P); }
     if (L) {
-      const d = L.sunDir || [0.3, 0.8, 0.4]; L.sun.position.set(P.x + d[0] * 120, d[1] * 120, P.z + d[2] * 120); L.sun.target.position.set(P.x, 0, P.z);
+      const d = L.sunDir || [0.3, 0.8, 0.4], ahead = CK.camMode && CK.camMode() !== 'top' ? 45 : 0, fx = P.x - Math.sin(W.cam.yaw) * ahead, fz = P.z - Math.cos(W.cam.yaw) * ahead; L.sun.position.set(fx + d[0] * 200, d[1] * 200, fz + d[2] * 200); L.sun.target.position.set(fx, 0, fz);
       // 陰影貼圖的格子對齊（走路時陰影的邊不會閃）
       const sc = L.sun.shadow.camera, texel = (sc.right - sc.left) / L.sun.shadow.mapSize.x; L.sun.target.position.x = Math.round(L.sun.target.position.x / texel) * texel; L.sun.target.position.z = Math.round(L.sun.target.position.z / texel) * texel;
-      L.sun.position.x = L.sun.target.position.x + d[0] * 120; L.sun.position.z = L.sun.target.position.z + d[2] * 120;
+      L.sun.position.x = L.sun.target.position.x + d[0] * 200; L.sun.position.z = L.sun.target.position.z + d[2] * 200;
       L.sky.position.copy(W.camera.position);
       const su = L.snow.material.uniforms; su.t.value = tw.t; su.c.value.set(P.x, 0, P.z); L.skyM.uniforms.time.value = tw.t;
     }
-    R.placeCam(dt, 0); fixCam(dt);
+    R.placeCam(dt, 0); fixCam(dt); CK.fixSprites();
     R.updateSee(true, { x: P.x, z: P.z }, W.camera); if (R.SEE && R.SEE.p.value) R.SEE.p.value.y = P.yv + 1.5;
     hud(false, dt);
     R.drawMinimap();
@@ -421,7 +439,8 @@
   const rollOver = () => {
     const tw = W.town, P = W.P; if (!tw || !P) return;
     tw.rolling = true; R.S.pendingHour = null;
-    R.fade(() => { R.advanceDays(1); R.S.hour = 6; CK.enter(tw.ck, { at: [P.x, P.z, P.yaw] }); const E = R.eventsToday ? R.eventsToday() : {}; R.banner(R.shortDate ? R.shortDate() : '', '在街上待到天亮了。' + (E.weather ? '今天的天氣：' + E.weather + '。' : '')); });
+    const at = tw.outer ? [tw.outer.P.x, tw.outer.P.z, tw.outer.P.yaw] : [P.x, P.z, P.yaw];
+    R.fade(() => { R.advanceDays(1); R.S.hour = 6; CK.enter(tw.ck, { at }); const E = R.eventsToday ? R.eventsToday() : {}; R.banner(R.shortDate ? R.shortDate() : '', '在街上待到天亮了。' + (E.weather ? '今天的天氣：' + E.weather + '。' : '')); });
   };
 
   // ---------- 狀態列 ----------
@@ -486,9 +505,10 @@
     const tw = W.town, city = tw.city;
     R.sheet('<h2>' + esc(city.name) + '</h2><p class="note">' + (R.dateLabel ? esc(R.dateLabel()) : '') + '</p><p class="note">' + (R.touch ? '左搖桿移動・靠近人或店按「互動」' : 'WASD 移動・Shift 跑步・空白鍵互動・Q／E 轉視角・Tab 地圖') + '。回東鶴或去別的城：到' + esc(city.stationName || '車站') + '買票。</p>'
       + '<p class="note">畫質：' + QN[CK.quality()] + '（高：反鋸齒、泛光、清楚的陰影；手機建議中或低）</p>',
-      '<div class="row"><button type="button" class="btn pri" id="ck-x">繼續</button><button type="button" class="btn" id="ck-map">' + esc(city.name) + '地圖</button><button type="button" class="btn" id="ck-book">昭旭觀光手冊</button><button type="button" class="btn" id="ck-q">畫質：' + QN[CK.quality()] + '</button>' + (R.reportClip ? '<button type="button" class="btn" id="ck-clip">回報穿模</button>' : '') + '<button type="button" class="btn" id="ck-title">回到標題</button></div>');
+      '<div class="row"><button type="button" class="btn pri" id="ck-x">繼續</button><button type="button" class="btn" id="ck-map">' + esc(city.name) + '地圖</button><button type="button" class="btn" id="ck-book">昭旭觀光手冊</button><button type="button" class="btn" id="ck-q">畫質：' + QN[CK.quality()] + '</button><button type="button" class="btn" id="ck-cam">鏡頭：' + (CK.camMode() === 'top' ? '俯瞰' : '漫遊（低角度）') + '</button>' + (R.reportClip ? '<button type="button" class="btn" id="ck-clip">回報穿模</button>' : '') + '<button type="button" class="btn" id="ck-title">回到標題</button></div>');
     $('ck-x').onclick = R.closeSheet; $('ck-map').onclick = () => { R.closeSheet(); setTimeout(bigMap, 30); }; $('ck-book').onclick = () => R.azukiBook && R.azukiBook();
-    $('ck-q').onclick = () => { CK.setQuality((CK.quality() + 1) % 3); const L = W.town.L; if (L) { const q = CK.quality(); L.sun.castShadow = q > 0; L.sun.shadow.mapSize.set(q >= 2 ? 2048 : 1024, q >= 2 ? 2048 : 1024); if (L.sun.shadow.map) { L.sun.shadow.map.dispose(); L.sun.shadow.map = null; } } menu(); };
+    $('ck-q').onclick = () => { CK.setQuality((CK.quality() + 1) % 3); const L = W.town.L; if (L) { const q = CK.quality(); L.sun.castShadow = q > 0; L.sun.shadow.mapSize.set(q >= 2 ? 4096 : 2048, q >= 2 ? 4096 : 2048); if (L.sun.shadow.map) { L.sun.shadow.map.dispose(); L.sun.shadow.map = null; } } menu(); };
+    $('ck-cam').onclick = () => { CK.setCamMode(CK.camMode() === 'top' ? 'low' : 'top'); menu(); };
     if ($('ck-clip')) $('ck-clip').onclick = () => { R.closeSheet(); setTimeout(R.reportClip, 50); };
     $('ck-title').onclick = () => { R.save(); R.closeSheet(); R.leaveTown(); if (R.goTitle) R.goTitle(); };
   };
@@ -523,6 +543,8 @@
   const ta0 = R.townArea; R.townArea = () => (R.inCity3D() ? W.town.city.name + '・' + areaAt(W.P.x, W.P.z) : ta0());
   const en0 = R.enterTownNow; R.enterTownNow = (...a) => { if (W.town && W.town.L) { try { W.town.L.pm.dispose(); if (W.town.L.env) W.town.L.env.dispose(); } catch (e) { } } if (R.SEE) R.SEE.r.value = 2.5; return en0(...a); };
   const gh0 = R.goHosu; if (gh0) R.goHosu = (...a) => gh0(...a);
+
+  CK._int = { makeBuilder, finishGround, hgInit, obbReset, OBB, drawMap, hud: f => hud(f), fixCam: dt => fixCam(dt) };
 
   // ---------- 防穿模的檢查（開發用）：R.cityCheck() ----------
   R.cityCheck = () => {
