@@ -30,7 +30,7 @@
     R.SKILLS[id] = { name: s.name, cd: s.cd, mp: s.mp, desc }; return id;
   });
   const OPTS = cls => [{ id: 'awaken', name: '覺醒', desc: '走原本的轉職路線再往上：傷害 +12%、生命 +10%、技能冷卻 −8%。路線上最強的那一招多一個「覺醒」版（威力 ×1.5）。' }]
-    .concat(cls === 'mage' && HM.length ? [{ id: 'harmonic', name: '諧鳴・瑟蘭派', desc: '諧鳴有五個派系，公會目前只登錄了瑟蘭派：用共振圍出閉環的「奏域」，在裡面改寫法術的頻率。學會' + HM.map(id => '「' + R.SKILLS[id].name + '」').join('') + '（40～' + (LV + HM.length - 1) + ' 級）。魔法傷害 +10%、魔力 +15%、技能冷卻 −5%。' }] : []);
+    .concat(cls === 'mage' && HM.length ? [{ id: 'harmonic', name: '諧鳴・瑟蘭派', desc: '諧鳴有五個派系，公會目前只登錄了瑟蘭派：用共振圍出閉環的「奏域」，在裡面改寫法術的頻率。學會' + HM.filter(id => R.SKILLS[id]).map(id => '「' + R.SKILLS[id].name + '」').join('') + '（40～' + (LV + HM.length - 1) + ' 級）。魔法傷害 +10%、魔力 +15%、技能冷卻 −5%。' }] : []);
   R.ADV2_OPTS = OPTS;   // adv2more.js 會包住它，加每個職業自己的二轉、諧鳴的其他派系
   const optName = (cls, id) => { const o = R.ADV2_OPTS(cls).find(x => x.id === id); return o ? o.name : ''; };
   // ---------- 技能書：學會的條件 ----------
