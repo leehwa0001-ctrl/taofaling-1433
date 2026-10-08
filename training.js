@@ -11,6 +11,7 @@
   const ID = 'guild-train', DOOR = { x: -11.2, z: -3.4 };   // 2026-10-05 作者：稻草人放在樓梯底下，不然大家不知道訓練場在哪（原本在南牆出口左邊 -4, 7.6）
   const isTrain = run => !!(run && run.site && run.site.id === ID);
   const here = () => { const run = W().run; return isTrain(run) && !run.done ? run : null; };
+  R.inTraining = () => !!here();   // 技能書、被動看這個（不只看 run.train）
 
   // ---------- 場地、木樁 ----------
   if (!R.SITES.find(s => s.id === ID)) R.SITES.push({ id: ID, kind: 'train', outdoor: 1, grade: 'hunt', type: 'forest', name: '公會後院・訓練場', desc: '公會後院的空地，立著幾個稻草木樁。' });
@@ -135,14 +136,18 @@
     return r;
   };
 
+  // 訓練場的記號：2026-10-08 作者回報「訓練場換技能沒有正確運作（技能沒有真的換上去）」——
+  // 開始遺跡的時候 W.run 是晚一點才建好的（中間有淡出），startRun 包裝那時候看到的還不是訓練場，
+  // run.train 一直沒設，技能書、被動就當成在遺跡裡不給換。改成載入樓層的時候（那時一定有 W.run）再補一次。
+  const mark = run => { if (!isTrain(run) || run.train) return; run.pact = null; run.train = 1; run.grade = Object.assign({}, run.grade, { name: '訓練場', letter: '—', passive: 1 }); run.floors = 1; };
   const sr0 = R.startRun;
   R.startRun = id => {
-    const r = sr0(id), run = W().run;
-    if (isTrain(run)) { run.pact = null; run.train = 1; run.grade = Object.assign({}, run.grade, { name: '訓練場', letter: '—', passive: 1 }); run.floors = 1; }
+    const r = sr0(id); mark(W().run);
     return r;
   };
   const lf0 = R.loadFloor;
   R.loadFloor = (f, o) => {
+    mark(W().run);
     const r = lf0(f, o), w = W(), run = w.run, F = w.F; if (!isTrain(run) || !F) return r;
     // 寶箱、打得壞的東西、遺跡生物（含特殊的）都拿掉
     (F.chests || []).forEach(c => { if (c.mesh && c.mesh.parent) c.mesh.parent.remove(c.mesh); if (c.col) c.col.on = false; }); F.chests = [];
