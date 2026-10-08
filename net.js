@@ -249,7 +249,7 @@
     outP = null; outPs = null; outQ = []; if (outTimer) { clearTimeout(outTimer); outTimer = null; }
     if (floorGraceTimer) { clearTimeout(floorGraceTimer); floorGraceTimer = null; } floorBusy = false;
     clearRemotes(); const run = W().run; if (run && run.coop) run.coop.solo = true;
-    pending = null; lastFloor = null; guestGo = false; cks.mine = {}; cks.host = {}; Object.keys(hostLayouts).forEach(k => delete hostLayouts[k]); Object.keys(fdBuf).forEach(k => delete fdBuf[k]); pendingHostLayout = null;
+    pending = null; lastFloor = null; guestGo = false; cks.mine = {}; cks.host = {}; Object.keys(applied).forEach(k => delete applied[k]); Object.keys(hostLayouts).forEach(k => delete hostLayouts[k]); Object.keys(fdBuf).forEach(k => delete fdBuf[k]); pendingHostLayout = null;
     if (had && why) R.toast(why, '#FFB45A');
     refresh();
   };
@@ -321,7 +321,7 @@
   R.startParty = run => {
     const result = sp0(run);
     if (N.room && isHost()) {
-      cks.mine = {}; cks.host = {}; lastFloor = null; Object.keys(hostLayouts).forEach(k => delete hostLayouts[k]); Object.keys(fdBuf).forEach(k => delete fdBuf[k]); pendingHostLayout = null;
+      cks.mine = {}; cks.host = {}; lastFloor = null; Object.keys(applied).forEach(k => delete applied[k]); Object.keys(hostLayouts).forEach(k => delete hostLayouts[k]); Object.keys(fdBuf).forEach(k => delete fdBuf[k]); pendingHostLayout = null;
       run.coop = { seed: (R.nativeRandom() * 4294967296) >>> 0, n: 0, host: true };
       N.send({ k: 'run', site: run.site.id, name: run.site.name, seed: run.coop.seed, cfg: { env: run.env, reaction: run.reaction, floors: run.floors, tide: run.tide, pact: run.pact } });
     } else if (N.room && pending && pending.site === run.site.id) {
@@ -435,20 +435,26 @@
   const bf0 = R.buildFloor;
   R.buildFloor = (sc, run, F) => run && run.coop ? R.withSeed(seedOf(run, 2), () => bf0(sc, run, F)) : bf0(sc, run, F);
   // 這一層長得一不一樣（地形和寶箱的位置）
-  const checksum = F => { let h = 2166136261; const T = F.tile && F.tile.T; if (T) for (let i = 0; i < T.length; i++) h = Math.imul(h ^ T[i], 16777619); (F.chests || []).forEach(c => { h = Math.imul(h ^ Math.round((c.x || 0) * 10) ^ Math.round((c.z || 0) * 10) << 8, 16777619); }); return h >>> 0; };
+  // 只看地形：寶箱另外用 snapChests 對齊（2026-10-08：寶箱位置的四捨五入對不上，會一直強制套用、每次都把人拉回入口）
+  const checksum = F => { let h = 2166136261; const T = F.tile && F.tile.T; if (T) for (let i = 0; i < T.length; i++) h = Math.imul(h ^ T[i], 16777619); return h >>> 0; };
+  const applied = {};   // 已經套用過的房主地圖：n → ck（同一份不要再套第二次）
   const cks = { mine: {}, host: {} }, ckBad = {};
   const keepAlive = () => { try { if (N.ws && N.ws.readyState === 1) N.ws.send('ping'); } catch (e) { } };
   const forceApplyHost = L => {
     const run = coop(); if (!run || run.coop.host || !L || L.rid !== run.coop.seed) return;
     if (floorBusy) { setTimeout(() => { try { forceApplyHost(L); } catch (e) { } }, 400); return; }
+    if (applied[L.n] === L.ck && W().F && checksum(W().F) === L.ck) return;
+    applied[L.n] = L.ck;
     console.info('[net] 強制套用房主地圖', L.n, L.f, L.ck);
     markFloorBusy(true); keepAlive();
     R.fade(() => {
       keepAlive();
       const r2 = coop(); if (!r2 || r2.coop.seed !== L.rid) { endFloorBusySoon(800); return; }
+      const P0 = W().P, same = r2.coop.n === L.n && r2.floor === L.f && P0, keep = same ? { x: P0.x, z: P0.z } : null;
       pendingHostLayout = L;
       r2.coop.n = L.n;
       R.loadFloor(L.f, { netFollow: true, hostForce: true });
+      if (keep && W().P) { const P = W().P, [x, z] = R.nearestFloor ? R.nearestFloor(keep.x, keep.z) : [keep.x, keep.z]; P.x = x; P.z = z; if (P.h && P.h.g) P.h.g.position.set(x, 0, z); (W().allies || []).forEach((a, i) => { const [ax, az] = R.nearestFloor ? R.nearestFloor(x + (i ? 1.4 : -1.4), z + 1.2) : [x, z]; a.x = ax; a.z = az; if (a.h && a.h.g) a.h.g.position.set(ax, 0, az); }); if (R.placeCam) R.placeCam(null); }
       try { snapChests(W().F, L); } catch (e) { }
       const ck = W().F && checksum(W().F); if (ck != null) { cks.mine[L.n] = ck; cks.host[L.n] = L.ck; if (ck === L.ck) { delete ckBad[L.n]; delete cks.mine[L.n]; delete cks.host[L.n]; } }
       R.toast && R.toast('已套用房主地圖', '#7FE0FF');
@@ -464,7 +470,7 @@
       if (isHost()) { pushFloor(); pushFloorDump(); if (N.onWantFloor) N.onWantFloor(null); }
       else {
         const L = hostLayouts[n];
-        if (L && (L.ck === b || b == null)) forceApplyHost(L);
+        if (L && (L.ck === b || b == null) && applied[n] !== L.ck) forceApplyHost(L);
         else if (N.host) N.send({ k: 'wantFloor', rid: coop() && coop().coop.seed }, N.host);
       }
     } catch (e) { }
