@@ -1,0 +1,502 @@
+// 皇嶺（首都）的 3D 城（作者的《昭旭重要城市》：對標京都；首都；山嶺都城、碉堡、城堡，昭旭皇室的象徵、昭皇住的地方；
+// 現代化了，但更偏觀光城市和政治中心。主要設施：公會昭旭分館、世界央行昭旭分館、昭皇大學（附設魔力學院分院）、昭旭城古蹟、皇城、向日塔；
+// 子設施：觀光地、山嶺國際機場、遊樂場、各式山城、神社）。2026-10-08 作者：城市不用太像素化、精緻化，大小約三分之二個東鶴。
+// 地圖（北是 -z）：
+//   北：皇城（護城河圍著的石垣島，只開放到正門前；外苑是兩邊的松林）
+//   中：皇嶺大通（從皇城前一直到車站）；公會昭旭分館、世界央行昭旭分館隔著大通相對；議政院；古寺的五重塔（觀光地）；拱廊商店街
+//   東：昭皇大學（紅磚、鐘樓、魔力學院的玻璃溫室）、向日川和兩座拱橋、河岸步道、遊樂場
+//   西：昭旭城古蹟（台地上的石垣、殘存的隅櫓、碉堡）、山城神社（千本鳥居的長石階）、町家的老街
+//   南：皇嶺站、向日塔；機場的接駁巴士。四周是山，山脊上看得到幾座山城。
+// 觀光章照 azukicities.js 的 hl_tower、hl_castle、hl_uni、hl_shrine，加一個 hl_ruin（昭旭城古蹟）。
+(function (R) {
+  const CK = R.CK, W = R.W, S = () => R.S;
+  // 觀光章多一個：昭旭城古蹟
+  const AZ = (R.AZUKI_CITIES || []).find(c => c.id === 'huangling');
+  if (AZ && !AZ.sights.find(s => s[0] === 'hl_ruin')) AZ.sights.push(['hl_ruin', '昭旭城古蹟', '古蹟', '昭光帝國時代的舊城。石垣只剩西北兩面，隅櫓是唯一沒燒掉的建築。導覽牌說：「舊都的城，守的是山口；新的皇城，守的是人心。」']);
+  const az = () => R.azuki;
+
+  CK.define({
+    id: 'huangling', name: '皇嶺', seed: 1433, stationName: '皇嶺站',
+    walk: [-180, -165, 180, 165], spawn: [0, 138, Math.PI], camYaw: Math.PI,   // 鏡頭在北邊、看著車站（鏡頭在南邊會卡在車站裡）
+    banner: '昭旭的首都・山嶺都城',
+    firstTip: '第一次來皇嶺：Tab 看地圖。皇城、向日塔、昭皇大學、山城神社、昭旭城古蹟都有觀光章；公會昭旭分館在大通的東邊；回東鶴到南邊的皇嶺站。',
+    mapNote: '北邊是皇城，南邊是皇嶺站。',
+    ads: ['昭旭鐵道', '皇嶺銘菓・山月', '德克斯凡商會', '昭皇大學', '向日塔', '天宮海運', '白藤堂製藥'],
+    vendLines: ['罐裝的焙茶，熱的。', '皇嶺限定的柚子熱飲。', '熱咖啡，罐子上印著向日塔。'],
+    carCols: ['#E8E4DC', '#2A2A30', '#6A1E22', '#2E4A6A', '#C8C0B0', '#4A5A4A', '#B8BCC2', '#1A1A1E'],
+    build(B) {
+      const M = CK.M, g = B.g, P = B.part, BOX = B.box, rr = B.rr, pk = B.pk, rnd = B.rnd;
+      // ---------- 道路 ----------
+      const X0 = -300, X1 = 140;
+      B.road(X0, -92, X1, -82, { sw: 4, name: '北嶺通' });
+      B.road(-8, -82, 8, 110, { sw: 5, name: '皇嶺大通', line: 'y' });
+      B.road(X0, -22, 98, -14, { sw: 3.5, name: '昭陽通' });
+      B.road(X0, 48, X1, 56, { sw: 3.5, name: '向日通' });
+      B.road(X0, 110, X1, 118, { sw: 4, name: '站前通' });
+      B.road(-98, -82, -90, 110, { sw: 3.5, name: '西堀通' });
+      B.road(90, -82, 98, 110, { sw: 3.5, name: '東堀通' });
+      // 河岸步道（向日川的西岸）
+      B.plaza(144, -200, 150, 200, 'gravel');
+      // ---------- 向日川（東邊，南北流） ----------
+      B.water([[150, -260], [168, -260], [170, -150], [166, -40], [169, 60], [166, 170], [168, 260], [150, 260], [150, 120], [150, -120]], { level: -1.6, bank: 'ishi', name: '向日川' });
+      B.zone([[168, -260], [260, -260], [260, 260], [168, 260], [166, 170], [169, 60], [166, -40], [170, -150]], 'grass', 0.02);
+      // 兩座拱橋（走得過去，中間高 1.3 公尺）、一座車道的橋
+      B.bridge(148, -62, 172, -56, { rise: 1.3, deck: 0.12, mat: 'woodD', railMat: 'verm', rail: true });
+      B.bridge(148, 72, 172, 78, { rise: 1.3, deck: 0.12, mat: 'woodD', railMat: 'verm', rail: true });
+      // 東岸：河岸的步道（窄）
+      B.plaza(170, -200, 180, 200, 'gravel', { noCurb: true });
+      // ---------- 皇城 ----------
+      // 護城河（C 字形：南邊正中間是土橋）
+      B.water([[-62, -158], [62, -158], [62, -100], [6, -100], [6, -108], [50, -108], [50, -150], [-50, -150], [-50, -108], [-6, -108], [-6, -100], [-62, -100]], { level: -1.4, bank: 'ishi', name: '皇城の濠' });
+      B.terrace(-50, -150, 50, -108, 3.6, { wall: 'ishi', top: 'gravel', open: [] });
+      B.plaza(-6, -108, 6, -100, 'gran');           // 土橋
+      B.plaza(-62, -100, 62, -96, 'gran');           // 皇城前（跟北大路的人行道接起來）
+      B.area('皇城', [-62, -160, 62, -100]); B.area('皇城前廣場', [-62, -100, 62, -92]);
+      castle(B);
+      // 外苑（護城河兩邊的松林）
+      [[-180, -165, -66, -96], [66, -165, 140, -96]].forEach((r, i) => {
+        B.zone(r, 'gravel', 0.02);
+        for (let k = 0; k < 26; k++) { const x = rr(r[0] + 4, r[2] - 4), z = rr(r[1] + 4, r[3] - 5); if (Math.abs(z - (r[1] + r[3]) / 2) < 3) continue; B.tree(x, z, 'pine', rr(0.9, 1.3)); }
+        // 步道、石燈籠、長椅
+        B.zone([r[0], (r[1] + r[3]) / 2 - 2, r[2], (r[1] + r[3]) / 2 + 2], 'gran', 0.03);
+        for (let x = r[0] + 10; x < r[2] - 6; x += 18) { B.lantern(x, (r[1] + r[3]) / 2 - 3.4, 0.9); B.bench(x + 6, (r[1] + r[3]) / 2 + 3.2, Math.PI); }
+        B.area(i ? '皇城外苑（東）' : '皇城外苑（西）', r);
+        B.walk([[r[0] + 2, (r[1] + r[3]) / 2], [r[2] - 2, (r[1] + r[3]) / 2]], 4);
+      });
+      B.label('皇城', 0, -132, 1); B.label('外苑', -120, -130); B.label('外苑', 102, -130);
+
+      // ---------- 北大路以南：西（議政院、銀行）、東（公會、百貨） ----------
+      // 世界央行昭旭分館：大通西邊，正面朝東
+      bank(B, [-40, -74, -14, -52]);
+      // 昭旭議政院：三條通北邊，正面朝南；前面是庭
+      parliament(B, [-84, -70, -46, -36]);
+      B.zone([-84, -34, -46, -26], 'grass', 0.02); for (let x = -80; x <= -50; x += 10) B.tree(x, -30, 'shrub', 1.2);
+      // 公會昭旭分館：大通東邊，正面朝西
+      guild(B, [16, -74, 42, -50]);
+      // 皇嶺百貨：正面朝南（三條通）
+      dept(B, [50, -60, 85, -26]);
+      B.row('n', -77.5, 44, 85, 14, { style: 'office', h: 17.5 }, 9, 14, () => ({ ad: rnd() < 0.3 }));   // 北大路沿街的辦公大樓
+      B.row('w', 13.5, -48, -26, 12, { style: 'house', h: 9 }, 7, 10, () => ({ name: pk(['皇嶺銘菓・山月', '和紙・千代', '茶舖・山霧', '漆器・朱', '扇子・風雅']) }));
+      B.row('e', -13.5, -48, -26, 12, { style: 'office', h: 14 }, 8, 11, () => ({}));
+      B.area('皇嶺大通', [-13, -92, 13, 122]); B.area('官廳街', [-86, -78, -13, -25]); B.area('公會・百貨', [13, -78, 86, -25]);
+      // ---------- 昭皇大學（東洞院通以東、北大路～五條通） ----------
+      university(B, [101.5, -78, 140, 44.5]);
+      // ---------- 中段 ----------
+      // 西：古寺（昭光寺）和五重塔
+      temple(B, [-84, -6, -40, 42]);
+      B.row('e', -13.5, -8, 42, 13, { style: 'machiya', h: 6.4 }, 5.5, 7.5, i => (i % 2 ? { name: pk(['湯豆腐・南山', '甘味處・白玉', '扇子・風雅', '和菓子・山月', '口紅・紅屋']) } : {}));
+      B.row('n', -10, -38, -27, 12, { style: 'machiya', h: 6.4 }, 5, 6, () => ({}));
+      // 東：拱廊商店街（南北，走路的）＋兩邊的店
+      arcade(B, [36, -10.5, 50, 44.5]);
+      B.row('w', 13.5, -8, 42, 12, { style: 'office', h: 21 }, 10, 16, (i) => (i === 0 ? { name: '皇嶺觀光案內所', h: 10.5, style: 'house' } : { ad: rnd() < 0.4 }));
+      B.row('e', 86.5, -8, 42, 14, { style: 'apt', h: 20.3 }, 14, 20, () => ({}));
+      B.row('n', -10, 55, 72, 12, { style: 'house', h: 10 }, 7, 10, () => ({ name: rnd() < 0.5 ? pk(['喫茶・向日葵', '書店・積學堂', '眼鏡・光', '文具・墨', '花店・浪']) : null }));
+      B.area('昭光寺', [-86, -10, -38, 44]); B.area('昭陽商店街（拱廊）', [34, -12, 52, 46]); B.area('昭皇大學', [100, -80, 142, 46]);
+      // ---------- 西：昭旭城古蹟、山城神社 ----------
+      ruins(B, [-172, -74, -108, -30]);
+      shrine(B, [-176, -4, -116, 40]);
+      B.area('昭旭城古蹟', [-180, -80, -102, -25]); B.area('山城神社', [-180, -10, -102, 45]);
+      // ---------- 南段 ----------
+      // 町家的老街（西）
+      // 兩條石板巷（東西向，走路的）：町家面對巷子
+      B.plaza(-86.5, 74, -13, 80, 'gran'); B.plaza(-86.5, 90.5, -13, 96.5, 'gran');   // 巷子 6 公尺寬（鏡頭從上面斜看，太窄會被屋簷蓋住）
+      const shopN = () => ({ name: pk(['料亭・山水', '蕎麥・更科', '漬物・大山', '豆腐・森屋', '酒藏・月影', '甘味・小豆', '扇子・風雅']) });
+      B.row('s', 74, -84, -16, 12, { style: 'machiya', h: 6.4 }, 5, 7, i => (i % 3 === 1 ? shopN() : {}));
+      B.row('n', 80, -84, -16, 10.5, { style: 'machiya', h: 6.4 }, 5, 7, i => (i % 3 === 0 ? shopN() : {}));
+      B.row('n', 96.5, -84, -16, 9, { style: 'machiya', h: 6.4 }, 5, 7, i => (i % 4 === 2 ? shopN() : {}));
+      [-70, -50, -30].forEach(x => { B.lantern(x, 74.9, 0.7); B.lantern(x + 8, 91.4, 0.7); });
+      B.walk([[-84, 77.4], [-16, 77.4]], 3); B.walk([[-16, 94], [-84, 94]], 2);
+      B.area('町家老街', [-86, 59, -13, 106]);
+      // 東：飯店、辦公（大通東）、遊樂場
+      B.row('w', 13.5, 62, 104, 14, { style: 'glass', h: 28.8 }, 12, 18, () => ({ ad: rnd() < 0.5 }));
+      B.row('e', 86.5, 62, 104, 12, { style: 'office', h: 21 }, 10, 14, () => ({}));
+      B.row('s', 104, 32, 70, 14, { style: 'house', h: 10.5 }, 8, 12, () => ({ name: rnd() < 0.6 ? pk(['居酒屋・一獻', '拉麵・山嶺', '烤雞串・鳥平', '咖哩・印度屋']) : null }));
+      amusement(B, [101.5, 59.5, 140, 106]);
+      B.area('山嶺遊樂場', [100, 58, 142, 108]);
+      // 西南：住宅
+      B.road(-300, 77, -98, 81, { sw: 0, line: 'none', name: '西坂' });
+      B.row('s', 76.6, -178, -104, 12, { style: 'house', h: 7 }, 7, 10, () => ({}));
+      B.row('n', 81.4, -178, -104, 11, { style: 'house', h: 7 }, 7, 10, () => ({}));
+      B.row('s', 105.6, -178, -104, 10, { style: 'house', h: 7 }, 7, 10, () => ({}));
+      B.area('西坂（住宅）', [-180, 58, -102, 106]);
+      // ---------- 車站、向日塔 ----------
+      station(B, [-50, 145, 50, 165]);
+      B.plaza(-55, 121, 55, 145, 'gran');
+      tower(B, 74, 134);
+      B.row('n', 122, -178, -62, 14, { style: 'office', h: 17.5 }, 10, 16, () => ({ ad: rnd() < 0.4 }));
+      B.row('n', 122, 88, 140, 14, { style: 'glass', h: 21.6 }, 12, 18, () => ({}));
+      B.area('皇嶺站', [-56, 120, 56, 165]); B.area('向日塔', [60, 120, 90, 150]);
+      B.label('皇嶺站', 0, 152, 1); B.label('向日塔', 74, 134); B.label('昭皇大學', 120, -18); B.label('昭光寺', -62, 18); B.label('山城神社', -146, 18); B.label('昭旭城古蹟', -140, -52); B.label('山嶺遊樂場', 120, 82); B.label('公會昭旭分館', 27, -62); B.label('世界央行', -27, -63); B.label('議政院', -65, -53); B.label('向日川', 158, 0);
+      // ---------- 行道樹、路燈、街上的東西 ----------
+      for (let z = -74; z <= 104; z += 12) { if (z > -26 && z < -6 || z > 44 && z < 62) continue; [-12, 12].forEach(x => { if (z > -70 && z < -54) return; B.tree(x, z, 'bare', 1.15); }); }
+      for (let z = -76; z <= 106; z += 24) { if (z > -26 && z < -8 || z > 44 && z < 60) continue; B.lamp(-8.4, z, Math.PI / 2); B.lamp(8.4, z + 12, -Math.PI / 2); }
+      [[-90, -78.5], [-40, -78.5], [40, -78.5], [-60, -11.2], [60, -11.2], [-60, 59.2], [60, 59.2], [-120, 121.6], [120, 121.6]].forEach(([x, z]) => B.lamp(x, z, z > 0 && z < 60 ? Math.PI : 0));
+      [[-12.4, -36, Math.PI / 2], [12.4, 30, -Math.PI / 2], [-12.4, 88, Math.PI / 2], [30, 124.2, Math.PI], [-40, 124.2, Math.PI]].forEach(([x, z, ry]) => B.vend(x, z, ry));
+      B.mailbox(-12.4, 100); B.mailbox(12.6, -36);
+      B.busStop(-28, 125.2, Math.PI, '機場接駁巴士');
+      B.inter(-28, 123.2, 2.2, '山嶺國際機場的接駁巴士（看看）', () => az().fac('huangling', 'airport'), '#5A8AC8');
+      // 電線桿（住宅、老街那邊）
+      B.poles([[-101, 60], [-101, 75], [-101, 90], [-101, 105]], { ry: Math.PI / 2 });
+      B.poles([[-176, 77.3], [-150, 77.3], [-124, 77.3]], {});
+      // ---------- 路人、車 ----------
+      [[-10.5, -78, -10.5, 106], [10.5, -78, 10.5, 106], [-176, -80, 138, -80], [-176, -12.5, 96, -12.5], [-176, 46.5, 138, 46.5], [-176, 58, 138, 58], [-176, 120, 138, 120], [-176, -94, 138, -94], [-88.5, -78, -88.5, 106], [88.5, -78, 88.5, 106], [147, -160, 147, 160], [-40, 128, 40, 128]].forEach(([a, b, c, d]) => B.walk([[a, b], [c, d]], Math.max(2, Math.round(Math.hypot(c - a, d - b) / 26))));
+      // 左側通行：往北的車道在路的西半邊、往南的在東半邊、往西的在南半邊、往東的在北半邊（三個圈都只左轉）
+      B.route([[-4, 50], [-4, -84.5], [-92, -84.5], [-92, 50]], 4);
+      B.route([[4, -84.5], [4, 112], [92, 112], [92, -84.5]], 4);
+      B.route([[92, 54], [-92, 54], [-92, 112], [92, 112]], 3);
+      // 電車（車站南邊，東西向）
+      B.rail([[-700, 176], [700, 176]], { col: '#E8E4DC', stripe: '#C8402A', cars: 6, v: 16 });
+      // ---------- 說話的人 ----------
+      B.talker(-3, 126, Math.PI, '剛下車的觀光客', ['「我從東鶴來的。皇嶺的路是棋盤，比東鶴好認多了。」', '「向日塔要排隊嗎？我想看日落。」', '「車站的天花板是玻璃的，好像走進溫室。」']);
+      B.talker(18, 124, Math.PI, '計程車司機', ['「去皇城？走大通直直往北，十分鐘。」', '「首都的計程車是黑的，東鶴的是黃的。你看，這就是首都的面子。」', '「下雪天上山城神社的石階會滑。小心點。」']);
+      B.talker(4, -97.5, Math.PI, '皇城前的衛兵', ['「外苑可以參觀，正門以內不開放。」', '「今天沒有覲見。勇者證收好。」', '「拍照可以，不要站上石垣。」']);
+      B.talker(-60, -98, 0, '外苑的導覽員', ['「皇城是戰後重修的。石垣最下面那幾層，是昭光帝國時代的。」', '「護城河冬天會結薄冰。去年有隻天鵝困在冰上，衛兵拿竿子去救。」', '「北邊的山上，看得到三座山城的影子。以前山嶺就是靠那些城守的。」']);
+      B.talker(12.4, -67, -Math.PI / 2, '公會分館的館員', ['「首都分館的委託，多半是護送和典禮的警備。」', '「遺跡的大委託請回東鶴或奉主。這邊是地方小事。」', '「議政院前面最近有人抗議，路過的時候小心。」']);
+      B.talker(-12.4, -57, Math.PI / 2, '銀行前的職員', ['「世界央行的昭旭分館。費拉的母行之一。」', '「外幣兌換在二號窗口。德克斯凡的票子最多。」', '「午休時間不換錢喔。」']);
+      B.talker(-66, -30, 0, '抗議的人', ['「議會選舉一定要去投票！不投票就不能抱怨！」', '「德克斯凡的資本進來以後，皇嶺的老店一間一間關了。」', '「我們不是反對外國人，是反對把城賣掉。」']);
+      B.talker(104, -24, -Math.PI / 2, '大學的學生', ['「魔力學院的溫室晚上會自己發光。我們都在那邊熬夜寫報告。」', '「正門的『昭光不滅』是第一任校長寫的。」', '「考試周圖書館搶不到位子，我都跑去神社的石階讀書。」']);
+      B.talker(-104, 24, Math.PI / 2, '神社的巫女', ['「石階有五百三十二級。鳥居是信眾一座一座捐的。」', '「抽個籤吧？大吉的話，綁在左邊的架子上。」', '「下雪的時候，鳥居的朱紅色最好看。」']);
+      B.talker(-104, -40, Math.PI / 2, '古蹟的老人', ['「舊城燒掉那年，我爺爺還是小孩。他說火燒了三天。」', '「隅櫓是唯一留下來的。那時候守城的人，一直守到最後。」', '「石垣上長的那棵松，比我還老。」']);
+      B.talker(-12.4, 30, Math.PI / 2, '町家的老闆娘', ['「這間店我們家開了一百二十年。屋頂的瓦是祖父換的。」', '「湯豆腐冬天最好。坐進來暖一下吧。」', '「觀光客多是好事，但房租一直漲。」']);
+      B.talker(43, 20, 0, '拱廊的店員', ['「昭陽商店街的拱廊下雪也能逛。」', '「皇嶺點心組合？去百貨地下買，那邊最齊。」', '「這條街以前是寺町，現在全是店了。」']);
+      B.talker(146, 0, -Math.PI / 2, '河邊的釣客', ['「向日川的水是從山上下來的，冬天冷到手會痛。」', '「拱橋的欄杆是朱漆的，每三年重新漆一次。」', '「早上清晨的時候，河上會起霧。」']);
+      B.talker(118, 104, Math.PI, '遊樂場的小孩', ['「摩天輪轉一圈要八分鐘！」', '「旋轉木馬的白馬是我的！」', '「冬天遊樂場人好少，可以一直玩。」']);
+      B.talker(70, 121.5, Math.PI, '向日塔的售票員', ['「向日塔的塔頂對著日出的方向。早上第一班最多人。」', '「天氣好的話，看得到天宮島的海岸線。」', '「上去要 15 費拉。」']);
+      // ---------- 遠景：四周的山、山城 ----------
+      mountains(B);
+      B.outskirts({ band: 150, skip: (x, z) => (x > 146 && x < 176) || (z < -150 && x > -80 && x < 80) });   // 河、皇城後面不蓋
+    },
+    tick(dt, tw, P) {
+      // 飛機（山嶺國際機場）：每一分鐘左右從西南飛向東北
+      const pl = tw.plane; if (pl) { pl.t += dt; const k = (pl.t % 70) / 70, x = -900 + k * 1800, z = 600 - k * 1300; pl.g.position.set(x, 180 + k * 120, z); pl.g.rotation.y = Math.atan2(1800, -1300); pl.g.visible = k < 0.98; }
+    }
+  });
+
+  // ================= 地標 =================
+  // ---- 皇城：石垣島上的白牆、隅櫓、御殿、天守（向日殿）；正門（櫓門）關著 ----
+  function castle(B) {
+    const M = CK.M, BOX = B.box, g = B.g, P = B.part, y0 = 3.6;
+    // 島的邊上：白色的塀（瓦的壓頂）
+    const wall = (x0, z0, x1, z1) => { BOX(M('white'), x0, y0, z0, x1, y0 + 2.2, z1); BOX(M('kawara'), x0 - 0.25, y0 + 2.2, z0 - 0.25, x1 + 0.25, y0 + 2.45, z1 + 0.25); BOX(M('black'), x0 - 0.02, y0, z0 - 0.02, x1 + 0.02, y0 + 0.5, z1 + 0.02); };
+    wall(-49.5, -149.5, 49.5, -148.8); wall(-49.5, -149.5, -48.8, -108.5); wall(48.8, -149.5, 49.5, -108.5); wall(-49.5, -109.2, -9, -108.5); wall(9, -109.2, 49.5, -108.5);
+    // 四個角的隅櫓（二層）
+    [[-45, -145], [45, -145], [-45, -112.5], [45, -112.5]].forEach(([x, z]) => yagura(B, x, z, y0, 2));
+    // 正門：櫓門（石垣的缺口上面架一棟長的二層樓）
+    BOX(M('ishi'), -9, 0, -110.5, -4.5, y0, -107.6); BOX(M('ishi'), 4.5, 0, -110.5, 9, y0, -107.6);
+    BOX(M('white'), -10, y0, -111, 10, y0 + 3.2, -107.4); BOX(M('black'), -10.02, y0, -111.02, 10.02, y0 + 0.7, -107.38);
+    for (let x = -8; x <= 8; x += 2.6) BOX(M('woodB'), x - 0.45, y0 + 1.4, -107.38, x + 0.45, y0 + 2.4, -107.3);
+    B.roof(0, -109.2, 21, 4.4, { type: 'hip', y: y0 + 3.2, h: 1.6, o: 0.8, sori: 0.35, mat: 'kawara' });
+    BOX(M('woodB'), -4.5, 0, -108.2, 4.5, y0, -107.9); BOX(M('bronze'), -4.4, 0.2, -108.0, -0.05, y0 - 0.2, -107.8); BOX(M('bronze'), 0.05, 0.2, -108.0, 4.4, y0 - 0.2, -107.8);   // 關著的門
+    for (let i = 0; i < 6; i++) [-2.2, 2.2].forEach(x => P(g.sph, M('gold'), x, 0.8 + i * 0.5, -107.75, 0.14, 0.14, 0.06));
+    B.solid(-9, -110.5, 9, -107.6, 'house');
+    B.inter(0, -105.8, 2.6, '觀光景點：皇城外苑（正門・觀光章）', () => az().stamp('huangling', 'hl_castle'), '#E8C04A').sight = 'hl_castle';
+    B.inter(3.2, -103.6, 2, '皇城的正門（關著）', () => az().fac('huangling', 'castle'));
+    // 門前的石燈籠、松
+    [-12, 12].forEach(x => B.lantern(x, -98.2, 1.2));
+    // 御殿（銅瓦、入母屋）
+    hall(B, -24, -128, 22, 12, y0, 'copper');
+    hall(B, 24, -128, 22, 12, y0, 'copper');
+    hall(B, 0, -118, 30, 8, y0, 'copper', 4.2);
+    // 天守「向日殿」：五層（石台＋白牆、黑色的窗、綠色的銅瓦、金色的鯱）
+    BOX(M('ishi'), -12, y0, -146, 12, y0 + 4.5, -132);
+    let y = y0 + 4.5, w = 22, d = 12;
+    for (let i = 0; i < 5; i++) {
+      const hh = i === 0 ? 4.2 : 3.4; BOX(M('white'), -w / 2, y, -139 - d / 2, w / 2, y + hh, -139 + d / 2);
+      for (let k = -w / 2 + 1.4; k < w / 2 - 0.8; k += 2.2) { BOX(M('black'), k - 0.4, y + hh * 0.4, -139 + d / 2, k + 0.4, y + hh * 0.75, -139 + d / 2 + 0.06); BOX(M('black'), k - 0.4, y + hh * 0.4, -139 - d / 2 - 0.06, k + 0.4, y + hh * 0.75, -139 - d / 2); }
+      const last = i === 4;
+      B.roof(0, -139, w, d, { type: last ? 'hip' : 'hip', y: y + hh, h: last ? 3.2 : 1.6, o: 1.4, sori: 0.45, mat: 'copper', shachi: last, under: 'white', edge: 'white' });
+      if (!last) { B.roof(0, -139 + d / 2 + 0.2, 6, 2.2, { type: 'gable', y: y + hh + 0.4, h: 1.2, o: 0.4, ry: 0, mat: 'copper', ridge: false, gableMat: 'white', under: 'white' }); }   // 千鳥破風
+      y += hh + (last ? 0 : 1.2); w -= 3.2; d -= 1.6;
+    }
+    // 島上的松
+    [[-38, -138], [-34, -120], [36, -140], [32, -118], [-16, -112.5], [16, -112.5], [-40, -128], [40, -128]].forEach(([x, z]) => B.tree(x, z, 'pine', 1.2));
+    B.foot([-50, -150, 50, -108], 'castle', 30);
+  }
+  // 隅櫓：石垣上的二、三層小樓
+  function yagura(B, x, z, y0, n, s) {
+    const M = CK.M, BOX = B.box; s = s || 1; let y = y0, w = 8 * s, d = 7 * s;
+    for (let i = 0; i < n; i++) { const hh = 3 * s; BOX(M('white'), x - w / 2, y, z - d / 2, x + w / 2, y + hh, z + d / 2); BOX(M('black'), x - w / 2 - 0.02, y, z - d / 2 - 0.02, x + w / 2 + 0.02, y + 0.6, z + d / 2 + 0.02); for (let k = -w / 2 + 1.2; k < w / 2 - 0.8; k += 2) { BOX(M('black'), x + k - 0.35, y + hh * 0.45, z + d / 2, x + k + 0.35, y + hh * 0.8, z + d / 2 + 0.05); } B.roof(x, z, w, d, { type: i === n - 1 ? 'hip' : 'hip', y: y + hh, h: i === n - 1 ? 2.2 * s : 1.1 * s, o: 0.9 * s, sori: 0.3, mat: 'kawara', under: 'white', edge: 'white', shachi: i === n - 1 && s >= 1 }); y += hh + 0.8 * s; w -= 2.2 * s; d -= 2 * s; }
+  }
+  // 御殿：木柱、白牆、入母屋（寄棟＋上面的山牆）
+  function hall(B, x, z, w, d, y0, mat, wh) {
+    const M = CK.M, BOX = B.box, g = B.g, P = B.part, h = wh || 5;
+    BOX(M('ashlar'), x - w / 2 - 0.6, y0, z - d / 2 - 0.6, x + w / 2 + 0.6, y0 + 0.8, z + d / 2 + 0.6);
+    BOX(M('white'), x - w / 2 + 0.6, y0 + 0.8, z - d / 2 + 0.6, x + w / 2 - 0.6, y0 + h, z + d / 2 - 0.6);
+    for (let k = -w / 2; k <= w / 2 + 0.01; k += w / Math.round(w / 2.4)) [-d / 2, d / 2].forEach(dz => P(g.cyl, M('woodB'), x + k, y0 + 0.8 + (h - 0.8) / 2, z + dz, 0.4, h - 0.8, 0.4));
+    BOX(M('woodB'), x - w / 2, y0 + h - 0.5, z - d / 2 - 0.1, x + w / 2, y0 + h, z + d / 2 + 0.1);
+    B.roof(x, z, w, d, { type: 'hip', y: y0 + h, h: d * 0.26, o: 1.6, sori: 0.4, mat, ridge: false, under: 'woodD' });
+    B.roof(x, z, w * 0.55, d * 0.45, { type: 'gable', y: y0 + h + d * 0.2, h: d * 0.26, o: 0.5, sori: 0.2, mat, gableMat: 'woodB', under: 'woodD' });
+  }
+
+  // ---- 世界央行昭旭分館：石造、六根柱子、三角楣、台階（正面朝東） ----
+  function bank(B, r) {
+    const M = CK.M, g = B.g, P = B.part, [x0, z0, x1, z1] = r, cz = (z0 + z1) / 2, h = 14;
+    B.bld({ r: [x0, z0, x1 - 6, z1], h, style: 'brick', face: 'e', col: '#E8E0D4', top: false });
+    // 柱廊（往大通凸出）
+    const fx = x1 - 6, L = z1 - z0 - 4;
+    B.box(M('ashlar'), fx, 0, z0 + 2, x1 - 0.5, 1.2, z1 - 2);
+    for (let i = 0; i < 3; i++) B.box(M('ashlar'), x1 - 0.5 - i * 0.45 - 0.45, 0, z0 + 2.5, x1 - 0.5 - i * 0.45, 1.2 - i * 0.4, z1 - 2.5);
+    for (let i = 0; i < 6; i++) { const zz = z0 + 2.8 + i * (L - 1.6) / 5; P(g.cyl24, M('white'), x1 - 2.4, 1.2 + 5.2, zz, 1.1, 10.4, 1.1); P(g.box, M('white'), x1 - 2.4, 1.4, zz, 1.4, 0.4, 1.4); P(g.box, M('white'), x1 - 2.4, 11.6, zz, 1.4, 0.4, 1.4); }
+    B.box(M('white'), fx, 11.8, z0 + 2, x1 - 1, 13.2, z1 - 2);
+    P(g.prism, M('white'), x1 - 3.5, 13.2, cz, L + 1, 3, 5, 0, Math.PI / 2, 0);
+    B.sign('世界中央銀行・昭旭分館', 'e', x1 - 1, cz, 12.5, { size: 0.62, bg: '#F2F0EA', fg: '#3A2E20', weight: 'bold' });
+    B.solid(fx, z0 + 2, x1 - 0.5, z1 - 2, 'house');
+    B.inter(x1 + 1.2, cz, 2.6, '世界央行昭旭分館（進去看看）', () => az().fac('huangling', 'bank'), '#C8A040');
+  }
+  // ---- 議政院：中央高塔（階梯狀的金字塔頂），左右兩翼（正面朝南） ----
+  function parliament(B, r) {
+    const M = CK.M, [x0, z0, x1, z1] = r, cx = (x0 + x1) / 2;
+    B.bld({ r: [x0, z0 + 6, cx - 5, z1], h: 14, style: 'office', face: 's', col: '#E2DCD0', top: false });
+    B.bld({ r: [cx + 5, z0 + 6, x1, z1], h: 14, style: 'office', face: 's', col: '#E2DCD0', top: false });
+    B.bld({ r: [cx - 5, z0, cx + 5, z1 + 1], h: 22, style: 'office', face: 's', col: '#D8D2C4', top: false });
+    let y = 23, w = 9;
+    for (let i = 0; i < 4; i++) { B.box(M('ashlar'), cx - w / 2, y, z0 + 5 - w / 2 + 4, cx + w / 2, y + 2.6, z0 + 5 + w / 2 + 4); y += 2.6; w -= 1.8; }
+    B.box(M('bronze'), cx - 0.3, y, z0 + 8.7, cx + 0.3, y + 4, z0 + 9.3);
+    B.sign('昭旭議政院', 's', z1 + 1, cx, 6.5, { size: 0.9, bg: '#2A2A30', fg: '#E8D8A8' });
+    B.inter(cx, z1 + 3, 2.6, '昭旭議政院（政治中心・參觀走廊）', () => R.townTalk('昭旭議政院', ['參觀走廊的玻璃後面，是空著的議場。', ['「議會選舉快到了。四個黨的海報貼滿了整條三條通。」', '「昭皇不參與政治——至少憲法是這樣寫的。」', '「議場的天花板是從北州運來的古森木做的。」'][Math.floor(Math.random() * 3)]]), '#8A9AB0');
+  }
+  // ---- 公會昭旭分館：石造三層、綠色的旗、門口的燈（正面朝西） ----
+  function guild(B, r) {
+    const M = CK.M, g = B.g, P = B.part, [x0, z0, x1, z1] = r, cz = (z0 + z1) / 2;
+    B.bld({ r, h: 13.5, style: 'brick', face: 'w', col: '#D8D0C0', top: false });
+    // 入口的門廊
+    B.box(M('ashlar'), x0 - 2.4, 0, cz - 4, x0, 0.4, cz + 4);
+    [cz - 3.4, cz + 3.4].forEach(z => P(g.cyl, M('ashlar'), x0 - 2, 2.4, z, 0.7, 4.4, 0.7));
+    B.box(M('ashlar'), x0 - 2.6, 4.6, cz - 4.2, x0, 5.2, cz + 4.2);
+    B.box(M('shopLit'), x0 - 0.06, 0.4, cz - 2.2, x0, 4.2, cz + 2.2);
+    // 綠色的旗（公會的徽章）
+    const flagTex = R.guildFlagTex ? R.guildFlagTex(24, 40, true) : null;
+    if (flagTex) { const fm = new THREE.MeshStandardMaterial({ map: flagTex, roughness: 0.9, side: THREE.DoubleSide }); fm.userData.shared = false; [cz - 7, cz + 7].forEach(z => { const m = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 3.6), fm); m.position.set(x0 - 0.15, 8.6, z); m.rotation.y = -Math.PI / 2; m.castShadow = true; B.group.add(m); }); }
+    B.flag(x0 - 1.5, cz - 9.5, 14, '#2E6A3E');
+    B.sign('公會昭旭分館', 'w', x0 - 2.6, cz, 5.9, { size: 0.72, bg: '#2E5A3A', fg: '#F4ECD8', box: 1, lit: 1 });
+    B.solid(x0 - 2.6, cz - 4.2, x0, cz - 2.9, 'deco'); B.solid(x0 - 2.6, cz + 2.9, x0, cz + 4.2, 'deco');
+    B.inter(x0 - 3.2, cz, 2.6, '公會昭旭分館（地方委託）', () => az().fac('huangling', 'guild'), '#3E9A5A');
+  }
+  // ---- 皇嶺百貨（正面朝南） ----
+  function dept(B, r) {
+    const M = CK.M, [x0, z0, x1, z1] = r, cx = (x0 + x1) / 2;
+    B.bld({ r, h: 24.5, style: 'office', face: 's', col: '#E4DACA', name: null, top: true });
+    B.box(M('shopLit'), x0 + 1, 0.3, z1, x1 - 1, 4.4, z1 + 0.06);
+    B.box(M('steelD'), x0 + 0.5, 4.4, z1, x1 - 0.5, 4.9, z1 + 2.4);
+    B.sign('皇嶺百貨', 's', z1 + 0.06, cx, 8.4, { size: 1.6, bg: '#5A1A2A', fg: '#FFE8B0', box: 1, lit: 1 });
+    B.inter(cx - 6, z1 + 3, 2.4, '皇嶺百貨・地下美食街（買點心吃）', () => az().food('huangling'), '#E8A03A');
+  }
+  // ---- 昭皇大學：正門、紅磚的本館＋鐘樓、圖書館、魔力學院的溫室、中庭 ----
+  function university(B, r) {
+    const M = CK.M, g = B.g, P = B.part, [x0, z0, x1, z1] = r;
+    B.zone([x0, z0, x1, z1], 'grass', 0.02);
+    B.zone([x0, -22, x1 - 6, -16], 'gran', 0.03);   // 從正門往東的步道
+    B.zone([116, z0 + 4, 122, 4], 'gran', 0.03); B.zone([116, 28, 122, z1 - 4], 'gran', 0.03);
+    // 正門：兩根石柱、「昭光不滅」
+    [-25.5, -12.5].forEach(z => { B.box(M('ashlar'), x0, 0, z - 1, x0 + 2, 4.2, z + 1); B.solid(x0, z - 1, x0 + 2, z + 1, 'deco'); });
+    B.sign('昭光不滅', 'w', x0, -25.5, 2.6, { size: 0.45, vert: 1, bg: '#E6E2DA', fg: '#2A2420' });
+    B.sign('昭皇大學', 'w', x0, -12.5, 2.6, { size: 0.45, vert: 1, bg: '#E6E2DA', fg: '#2A2420' });
+    B.fence(x0 + 1, z0 + 1, x0 + 1, -27, 1.6, 'steelD'); B.fence(x0 + 1, -11, x0 + 1, z1 - 1, 1.6, 'steelD');
+    B.solid(x0 + 0.9, z0 + 1, x0 + 1.1, -27, 'deco'); B.solid(x0 + 0.9, -11, x0 + 1.1, z1 - 1, 'deco');
+    B.inter(x0 - 1.6, -19, 2.6, '觀光景點：昭皇大學正門（觀光章）', () => az().stamp('huangling', 'hl_uni'), '#E8C04A').sight = 'hl_uni';
+    // 本館＋鐘樓（正面朝西）
+    B.bld({ r: [124, -40, 138, 0], h: 13, style: 'brick', face: 'w', top: false, roof: 'hip', roofMat: 'copper' });
+    const tx = 131, tz = -20; B.box(M('brick'), tx - 3, 0, tz - 3, tx + 3, 26, tz + 3); B.solid(tx - 3, tz - 3, tx + 3, tz + 3);
+    B.box(M('ashlar'), tx - 3.2, 18, tz - 3.2, tx + 3.2, 18.6, tz + 3.2); B.box(M('ashlar'), tx - 3.2, 25.4, tz - 3.2, tx + 3.2, 26, tz + 3.2);
+    [['w', tx - 3.05], ['e', tx + 3.05]].forEach(([f, c]) => B.part(g.cyl24, M('white'), c, 22, tz, 3.2, 0.12, 3.2, 0, 0, Math.PI / 2));
+    B.roof(tx, tz, 6.4, 6.4, { type: 'pyramid', y: 26, h: 5, o: 0.3, mat: 'copper' });
+    tickClock(B, tx - 3.15, 22, tz);
+    // 圖書館（正面朝南）、講堂
+    B.bld({ r: [104, 6, 136, 26], h: 10.5, style: 'brick', face: 'n', top: false, roof: 'gable', roofMat: 'copper' });
+    B.bld({ r: [104, -76, 128, -52], h: 14, style: 'brick', face: 's', top: false, roof: 'hip', roofMat: 'copper' });
+    B.sign('昭皇大學圖書館', 'n', 6, 120, 8.2, { size: 0.55, bg: '#5A2A20', fg: '#F4E8D0' });
+    // 魔力學院分院的溫室：玻璃、晚上會自己發光（藍綠色）
+    const gx = 110, gz = -38, gw = 10, gd = 14;
+    B.box(M('ashlar'), gx - gw / 2, 0, gz - gd / 2, gx + gw / 2, 0.6, gz + gd / 2);
+    const glow = CK.mat('greenhouseGlow', { col: '#A8F0E0', em: '#5AE8C8', ei: 1.4, neon: true, snow: 0 }); glow.userData.ei0 = 1.4;
+    B.box(glow, gx - gw / 2 + 0.6, 0.6, gz - gd / 2 + 0.6, gx + gw / 2 - 0.6, 3.2, gz + gd / 2 - 0.6);
+    B.box(M('glassL'), gx - gw / 2, 0.6, gz - gd / 2, gx + gw / 2, 4.2, gz + gd / 2);
+    P(g.cyl, M('glassL'), gx, 4.2, gz, gw, gd, gw, Math.PI / 2, 0, 0, { uv: 'keep' });
+    for (let z = gz - gd / 2; z <= gz + gd / 2 + 0.01; z += 2) { B.box(M('metal'), gx - gw / 2, 0.6, z - 0.05, gx - gw / 2 + 0.1, 4.2, z + 0.05); B.box(M('metal'), gx + gw / 2 - 0.1, 0.6, z - 0.05, gx + gw / 2, 4.2, z + 0.05); }
+    for (let i = 0; i < 6; i++) B.tree(gx + rr2(-3, 3), gz + rr2(-5, 5), 'shrub', 1.1);
+    B.solid(gx - gw / 2, gz - gd / 2, gx + gw / 2, gz + gd / 2, 'house'); B.foot([gx - gw / 2, gz - gd / 2, gx + gw / 2, gz + gd / 2], 'glass', 6);
+    B.inter(gx + gw / 2 + 1.2, gz, 2.4, '昭皇大學・魔力學院分院的溫室（看看）', () => az().fac('huangling', 'uni'), '#5AE8C8');
+    // 中庭的樹、長椅
+    [[108, -8], [114, 34], [134, 34], [106, 38]].forEach(([x, z]) => B.tree(x, z, 'bare', 1.3));
+    [[113, 34], [113, -50]].forEach(([x, z]) => B.bench(x, z, Math.PI / 2));
+    B.walk([[x0 + 3, -19], [119, -19], [119, 3]], 3); B.walk([[119, 29], [119, 41]], 1);
+    function rr2(a, b) { return a + (b - a) * B.rnd(); }
+  }
+  // 鐘樓的指針（照遊戲裡的時間走）
+  function tickClock(B, x, y, z) {
+    const TH = THREE, m = new TH.MeshStandardMaterial({ color: '#1A1A1E', roughness: 0.5 }), hh = new TH.Mesh(new TH.BoxGeometry(0.08, 1.0, 0.12), m), mm = new TH.Mesh(new TH.BoxGeometry(0.08, 1.4, 0.08), m);
+    [hh, mm].forEach(o => { o.geometry.translate(0, o === hh ? 0.45 : 0.65, 0); o.position.set(x - 0.08, y, z); o.rotation.y = -Math.PI / 2; B.group.add(o); });
+    W.town.anim.push(() => { const h = R.hourNow ? R.hourNow() : 12; hh.rotation.z = -((h % 12) / 12) * Math.PI * 2; mm.rotation.z = -((h % 1)) * Math.PI * 2; });
+  }
+  // ---- 昭光寺：山門、本堂、五重塔（觀光地） ----
+  function temple(B, r) {
+    const M = CK.M, g = B.g, P = B.part, [x0, z0, x1, z1] = r;
+    B.zone(r, 'gravel', 0.02);
+    // 土塀
+    B.box(M('cream'), x0, 0, z0, x1, 2.4, z0 + 0.6); B.box(M('cream'), x0, 0, z1 - 0.6, x1 - 9, 2.4, z1); B.box(M('cream'), x0, 0, z0, x0 + 0.6, 2.4, z1);
+    B.box(M('cream'), x1 - 0.6, 0, z0, x1, 2.4, (z0 + z1) / 2 - 3); B.box(M('cream'), x1 - 0.6, 0, (z0 + z1) / 2 + 3, x1, 2.4, z1);
+    [[x0, z0, x1, z0 + 0.6], [x0, z1 - 0.6, x1 - 9, z1], [x0, z0, x0 + 0.6, z1], [x1 - 0.6, z0, x1, (z0 + z1) / 2 - 3], [x1 - 0.6, (z0 + z1) / 2 + 3, x1, z1]].forEach(q => { B.solid(q[0], q[1], q[2], q[3], 'wall'); B.box(M('kawara'), q[0] - 0.2, 2.4, q[1] - 0.2, q[2] + 0.2, 2.65, q[3] + 0.2); });
+    // 山門（東邊，對著大通那條巷子）
+    const mz = (z0 + z1) / 2; [-2.6, 2.6].forEach(dz => { P(g.cyl, M('verm'), x1 - 0.3, 2.2, mz + dz, 0.5, 4.4, 0.5); B.solid(x1 - 0.6, mz + dz - 0.3, x1, mz + dz + 0.3, 'deco'); }); B.roof(x1 - 0.3, mz, 7.4, 3.4, { type: 'gable', y: 4.4, h: 1.2, o: 0.6, sori: 0.2, ry: Math.PI / 2, mat: 'kawara', gableWall: false });
+    // 本堂
+    hall(B, x0 + 12, z0 + 14, 18, 12, 0, 'kawara', 5.5);
+    B.solid(x0 + 2.4, z0 + 7.4, x0 + 21.6, z0 + 20.6, 'house'); B.foot([x0 + 2.4, z0 + 7.4, x0 + 21.6, z0 + 20.6], 'temple', 10);
+    // 五重塔
+    const px = x0 + 14, pz = z1 - 13; let y = 0.8, w = 7.2;
+    B.box(M('ashlar'), px - 5, 0, pz - 5, px + 5, 0.8, pz + 5);
+    for (let i = 0; i < 5; i++) { const hh = 3.1; B.box(M('verm'), px - w / 2, y, pz - w / 2, px + w / 2, y + hh, pz + w / 2); B.box(M('white'), px - w / 2 - 0.02, y + hh * 0.35, pz - w / 2 - 0.02, px + w / 2 + 0.02, y + hh * 0.75, pz + w / 2 + 0.02); B.roof(px, pz, w, w, { type: 'pyramid', y: y + hh, h: 1.1, o: 1.5, sori: 0.4, mat: 'kawara', ridge: false }); y += hh + 0.45; w -= 0.8; }
+    P(g.cyl8, M('bronze'), px, y + 3.5, pz, 0.3, 7, 0.3); for (let k = 0; k < 9; k++) P(g.torus, M('bronze'), px, y + 1.4 + k * 0.55, pz, 1.1 - k * 0.05, 1.1 - k * 0.05, 1.1 - k * 0.05, Math.PI / 2, 0, 0);
+    B.solid(px - 5, pz - 5, px + 5, pz + 5, 'house'); B.foot([px - 5, pz - 5, px + 5, pz + 5], 'tower', 30);
+    B.inter(px + 6.6, pz, 2.6, '昭光寺的五重塔（觀光地）', () => R.townTalk('昭光寺・五重塔', ['皇嶺最高的木造塔，五層，戰火裡燒掉過兩次，現在的是第三代。', ['「塔的中心柱沒有落地，是吊著的。地震的時候整座塔會像鐘擺一樣晃。」', '「每一層的屋簷都比下一層小一點點，從下面看才會覺得塔很高。」', '「冬天的五重塔配雪，是皇嶺明信片賣最好的一張。」'][Math.floor(Math.random() * 3)]]), '#E8C04A');
+    for (let i = 0; i < 4; i++) B.lantern(x1 - 6 - i * 6, mz - 3.5, 0.9);
+    [[x0 + 30, z0 + 6], [x0 + 6, z1 - 6], [x0 + 34, z1 - 8]].forEach(([x, z]) => B.tree(x, z, 'pine', 1.1));
+    B.walk([[x1 + 2, mz], [x0 + 26, mz]], 2);
+  }
+  // ---- 昭陽商店街：南北的拱廊（走路的），兩邊是店 ----
+  function arcade(B, r) {
+    const M = CK.M, g = B.g, P = B.part, [x0, z0, x1, z1] = r, cx = (x0 + x1) / 2;
+    B.plaza(cx - 3, z0, cx + 3, z1, 'pav');
+    const SH = [['皇嶺點心・山月', 'food'], ['土產・千代', null], ['藥妝・白藤', null], ['書店・積學堂', null], ['和服・染', null], ['喫茶・六角', null], ['遊樂場・星光', null], ['唱片・音盤', null], ['拉麵・新京', null], ['香・松香', null]];
+    let k = 0;
+    const each = side => (i, rr0) => { const sp = SH[k++ % SH.length]; const o = { name: sp[0], vsign: sp[0].split('・')[0], neon: 0 }; if (sp[1] === 'food') { const ix = side === 'e' ? rr0[2] + 1.4 : rr0[0] - 1.4; B.inter(ix, (rr0[1] + rr0[3]) / 2, 2, sp[0] + '（買點心吃）', () => az().food('huangling'), '#E8A03A'); } return o; };
+    B.row('e', cx - 3, z0 + 0.5, z1 - 0.5, cx - 3 - x0 + 4, { style: 'house', h: 8 }, 5, 8, each('e'));
+    B.row('w', cx + 3, z0 + 0.5, z1 - 0.5, x1 - cx - 3 + 4, { style: 'house', h: 8 }, 5, 8, each('w'));
+    // 拱廊的屋頂（拱形的玻璃）、柱、入口的招牌
+    P(g.cyl, M('glassL'), cx, 7.2, (z0 + z1) / 2, 6.4, z1 - z0, 2.4, Math.PI / 2, 0, 0, { uv: 'keep' });
+    for (let z = z0 + 2; z < z1; z += 6) { [-3.05, 3.05].forEach(dx => P(g.box, M('steel'), cx + dx, 3.6, z, 0.18, 7.2, 0.18)); P(g.box, M('steel'), cx, 7.25, z, 6.4, 0.16, 0.16); }
+    [z0, z1].forEach(z => { P(g.box, M('steelD'), cx, 8.0, z, 6.8, 1.2, 0.4); B.sign('昭陽商店街', z === z0 ? 'n' : 's', z + (z === z0 ? -0.2 : 0.2), cx, 8.0, { size: 0.9, bg: '#8A1A1A', fg: '#FFE8B0', lit: 1 }); });
+    B.walk([[cx - 1, z0 - 2], [cx - 1, z1 + 2]], 5); B.walk([[cx + 1.2, z1 + 2], [cx + 1.2, z0 - 2]], 4);
+  }
+  // ---- 昭旭城古蹟：台地、殘破的石垣、隅櫓、碉堡、天守台的礎石 ----
+  function ruins(B, r) {
+    const M = CK.M, g = B.g, P = B.part, [x0, z0, x1, z1] = r, h = 4.5;
+    B.terrace(x0, z0, x1, z1, h, { wall: 'ishi', top: 'gravel', open: [[x1 - 0.4, -56, x1 + 0.4, -48]] });
+    B.stairs(x1, -56, -101.5, -48, 'w', 0.12, h, { mat: 'ashlar' });
+    // 上面：草、殘存的石垣（缺了一大塊）
+    B.zone([x0 + 0.5, z0 + 0.5, x1 - 0.5, z1 - 0.5], 'grass', h + 0.02);
+    const wallSeg = (a, b, c, d, hh) => { B.box(M('ishi'), a, h, b, c, h + hh, d); B.solid(a, b, c, d, 'wall'); };
+    wallSeg(x0 + 2, z0 + 2, x0 + 30, z0 + 5, 3.4); wallSeg(x0 + 2, z0 + 2, x0 + 5, z0 + 26, 3.4); wallSeg(x0 + 40, z0 + 2, x0 + 52, z0 + 5, 1.6); wallSeg(x0 + 2, z0 + 32, x0 + 5, z0 + 38, 1.2);
+    // 隅櫓（唯一沒燒掉的）
+    B.box(M('ishi'), x0 + 4, h, z0 + 4, x0 + 12, h + 3.4, z0 + 12);
+    yagura(B, x0 + 8, z0 + 8, h + 3.4, 3, 0.75);
+    B.solid(x0 + 5, z0 + 5, x0 + 11, z0 + 11, 'house');
+    // 碉堡：圓形的石砌砲台（現代加的）
+    const bx = x1 - 12, bz = z0 + 12; P(g.cyl24, M('concD'), bx, h + 1.4, bz, 10, 2.8, 10); P(g.cyl24, M('steelD'), bx, h + 2.9, bz, 10.4, 0.25, 10.4); B.box(M('black'), bx - 1.6, h + 1.2, bz + 4.6, bx + 1.6, h + 2, bz + 5.2);
+    B.solid(bx - 5, bz - 5, bx + 5, bz + 5, 'house');
+    // 天守台的礎石（格子）
+    const fx = x0 + 34, fz = z0 + 24; B.box(M('ishi'), fx - 8, h, fz - 6, fx + 8, h + 0.6, fz + 6); B.solid(fx - 8, fz - 6, fx + 8, fz + 6, 'deco');
+    for (let i = -3; i <= 3; i++) for (let j = -2; j <= 2; j++) P(g.cyl8, M('ashlar'), fx + i * 2.2, h + 0.75, fz + j * 2.2, 0.8, 0.3, 0.8);
+    B.tree(x0 + 22, z0 + 14, 'pine', 1.5); B.tree(x0 + 12, z1 - 8, 'pine', 1.2); B.tree(x1 - 8, z1 - 8, 'bare', 1.2);
+    // 說明牌
+    P(g.box, M('woodD'), x1 - 9, h + 1.1, z1 - 14, 1.6, 1.0, 0.12); P(g.box, M('woodD'), x1 - 9, h + 0.4, z1 - 14, 0.1, 0.8, 0.1);
+    B.inter(x1 - 9, z1 - 12.6, 2.4, '觀光景點：昭旭城古蹟（說明牌・觀光章）', () => az().stamp('huangling', 'hl_ruin'), '#E8C04A').sight = 'hl_ruin';
+    B.walk([[-111, -52], [-111, -40], [-150, -40]], 2);
+  }
+  // ---- 山城神社：台地（高 6）＋長石階＋千本鳥居、拜殿、本殿、狛犬、繪馬、籤 ----
+  function shrine(B, r) {
+    const M = CK.M, g = B.g, P = B.part, [x0, z0, x1, z1] = r, h = 6, sz = 18;
+    B.terrace(x0, z0, x1, z1, h, { wall: 'ishi', top: 'gravel', open: [[x1 - 0.4, sz - 3, x1 + 0.4, sz + 3]] });
+    // 石階：從人行道（-101.5）往西爬到台地（x1）；中間平台
+    B.stairs(-108, sz - 3, -101.5, sz + 3, 'w', 0.12, 2.6, { mat: 'gran' });
+    B.terrace(-112, sz - 4, -108, sz + 4, 2.6, { wall: 'ishi', top: 'gran', open: [[-112.4, sz - 3, -111.6, sz + 3], [-108.4, sz - 3, -107.6, sz + 3]] });
+    B.stairs(x1, sz - 3, -112, sz + 3, 'w', 2.6, h, { mat: 'gran' });
+    // 千本鳥居（沿著石階）
+    for (let x = -103; x > x1 - 1; x -= 1.9) { const y = CK.heightAt ? 0 : 0; const t = B.torii; void y; t(x, sz, Math.PI / 2, 4.4, 3.6, 'verm'); }
+    // 鳥居要站在石階上：上面的那幾座要抬高——用框蓋（直接改 y 比較麻煩：重做一次）
+    // 拜殿、本殿
+    const sx = x0 + 22; hall(B, sx, sz, 14, 9, h, 'copper', 4.6);
+    B.solid(sx - 7.6, sz - 5.1, sx + 7.6, sz + 5.1, 'house'); B.foot([sx - 7.6, sz - 5.1, sx + 7.6, sz + 5.1], 'temple', 10);
+    hall(B, x0 + 8, sz, 8, 7, h + 0.6, 'copper', 4);
+    B.solid(x0 + 3.4, sz - 4.1, x0 + 12.6, sz + 4.1, 'house');
+    // 賽錢箱、鈴
+    P(g.box, M('woodD'), sx + 8.2, h + 0.5, sz, 0.9, 0.8, 2.2); B.solid(sx + 7.7, sz - 1.1, sx + 8.7, sz + 1.1, 'deco');
+    P(g.cyl8, M('verm'), sx + 8.0, h + 2.6, sz, 0.06, 2.2, 0.06); P(g.sph, M('gold'), sx + 8.0, h + 3.8, sz, 0.45, 0.45, 0.45);
+    B.inter(sx + 9.6, sz, 2.4, '觀光景點：山城神社（參拜・觀光章）', () => az().stamp('huangling', 'hl_shrine'), '#E8C04A').sight = 'hl_shrine';
+    // 狛犬、石燈籠、繪馬架、籤
+    [-3.4, 3.4].forEach(dz => { P(g.box, M('ashlar'), x1 - 3, h + 0.5, sz + dz, 1.2, 1.0, 1.2); P(g.ico, M('ashlar'), x1 - 3, h + 1.5, sz + dz, 0.9, 1.2, 0.8); B.solid(x1 - 3.6, sz + dz - 0.6, x1 - 2.4, sz + dz + 0.6, 'deco'); });
+    [x1 - 8, x1 - 14].forEach(x => [-4.5, 4.5].forEach(dz => B.lantern(x, sz + dz, 1)));
+    P(g.box, M('woodD'), sx - 2, h + 1.2, sz + 7.5, 4, 1.2, 0.2); P(g.box, M('wood'), sx - 2, h + 1.2, sz + 7.4, 3.6, 0.9, 0.1); B.solid(sx - 4, sz + 7.3, sx, sz + 7.7, 'deco');
+    B.inter(sx - 2, sz + 6.2, 2, '抽籤（1 費拉）', () => { const s = S(); if (s.gold < 1) { R.toast('錢不夠。'); return; } s.gold -= 1; R.save(); const L = [['大吉', '「萬事如意。旅途平安。」'], ['吉', '「遇到的人會幫你。」'], ['中吉', '「慢慢來。雪會停的。」'], ['小吉', '「別急著下遺跡，先吃飽。」'], ['末吉', '「現在不順，之後會好。」'], ['凶', '「把籤綁在架子上，壞運氣就留在這裡。」']], o = L[Math.floor(Math.random() * L.length)]; R.townTalk('山城神社・籤', ['抽到了「' + o[0] + '」。', o[1]]); });
+    // 杉樹林（台地上、後面）
+    for (let i = 0; i < 18; i++) { const x = x0 + 2 + B.rnd() * (x1 - x0 - 4), z = B.rnd() < 0.5 ? z0 + 2 + B.rnd() * 8 : z1 - 2 - B.rnd() * 8; B.tree(x, z, 'cedar', 1.1 + B.rnd() * 0.4); }
+    B.walk([[-102, sz + 1.2], [x1 - 4, sz + 1.2], [sx + 10, sz + 1.2]], 3);
+  }
+  // ---- 山嶺遊樂場：摩天輪、旋轉木馬、售票亭（會轉） ----
+  function amusement(B, r) {
+    const M = CK.M, g = B.g, P = B.part, [x0, z0, x1, z1] = r, TH = THREE, tw = W.town;
+    B.plaza(x0, z0, x1, z1, 'pav', { noCurb: true });
+    B.fence(x0 + 0.5, z0 + 0.5, x1 - 0.5, z0 + 0.5, 1.3, 'verm'); B.fence(x1 - 0.5, z0 + 0.5, x1 - 0.5, z1 - 0.5, 1.3, 'verm'); B.fence(x0 + 0.5, z1 - 0.5, x1 - 0.5, z1 - 0.5, 1.3, 'verm');
+    B.solid(x0 + 0.5, z0 + 0.4, x1 - 0.5, z0 + 0.6, 'wall'); B.solid(x1 - 0.6, z0 + 0.5, x1 - 0.4, z1 - 0.5, 'wall'); B.solid(x0 + 0.5, z1 - 0.6, x1 - 0.5, z1 - 0.4, 'wall');
+    // 摩天輪
+    const wx = x1 - 12, wz = z0 + 16, R0 = 11, cy = 13;
+    [-1.8, 1.8].forEach(dz => { P(g.box, M('white'), wx - 4, cy / 2, wz + dz, 0.4, cy + 1, 0.4, 0, 0, -0.3); P(g.box, M('white'), wx + 4, cy / 2, wz + dz, 0.4, cy + 1, 0.4, 0, 0, 0.3); });
+    B.solid(wx - 6, wz - 2.5, wx + 6, wz + 2.5, 'deco');
+    const wheel = new TH.Group(); wheel.position.set(wx, cy, wz); B.group.add(wheel);
+    const wm = CK.M('white'), gm = [CK.M('red'), CK.M('blue'), CK.M('yellow'), CK.M('green')], neonW = CK.mat('wheelNeon', { col: '#FFE8F4', em: '#FF8AD8', ei: 1.6, neon: true }); neonW.userData.ei0 = 1.6;
+    const ring = new TH.Mesh(new TH.TorusGeometry(R0, 0.18, 6, 48), neonW); wheel.add(ring);
+    for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2, sp = new TH.Mesh(g.box, wm); sp.scale.set(0.12, R0, 0.12); sp.position.set(Math.sin(a) * R0 / 2, Math.cos(a) * R0 / 2, 0); sp.rotation.z = -a; wheel.add(sp); }
+    const gond = []; for (let i = 0; i < 12; i++) { const c = new TH.Mesh(g.box, gm[i % 4]); c.scale.set(1.4, 1.6, 1.4); c.castShadow = true; B.group.add(c); gond.push(c); }
+    tw.anim.push((dt, t) => { const a = t * 0.08; wheel.rotation.z = a; gond.forEach((c, i) => { const b = a + i / 12 * Math.PI * 2; c.position.set(wx + Math.sin(b) * R0, cy - Math.cos(b) * R0 - 1.0, wz); }); });
+    // 旋轉木馬
+    const cx = x0 + 12, cz = z1 - 14; P(g.cyl24, M('cream'), cx, 0.3, cz, 10, 0.6, 10); P(g.cone, M('red'), cx, 5.6, cz, 11, 2.4, 11); P(g.cyl, M('gold'), cx, 2.6, cz, 0.6, 5, 0.6);
+    B.solid(cx - 5, cz - 5, cx + 5, cz + 5, 'deco');
+    const car = new TH.Group(); car.position.set(cx, 0, cz); B.group.add(car);
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, hs = new TH.Mesh(g.box, i % 2 ? CK.M('white') : CK.M('cream')); hs.scale.set(0.5, 0.9, 1.4); hs.position.set(Math.sin(a) * 3.6, 1.6, Math.cos(a) * 3.6); hs.rotation.y = a + Math.PI / 2; const pole = new TH.Mesh(g.cyl8, CK.M('gold')); pole.scale.set(0.08, 4.2, 0.08); pole.position.set(Math.sin(a) * 3.6, 2.6, Math.cos(a) * 3.6); car.add(hs, pole); }
+    tw.anim.push((dt, t) => { car.rotation.y = t * 0.6; car.children.forEach((c, i) => { if (i % 2 === 0) c.position.y = 1.6 + Math.sin(t * 2 + i) * 0.35; }); });
+    // 售票亭、招牌
+    B.bld({ r: [x0 + 2, z0 + 3, x0 + 8, z0 + 8], h: 3.6, style: 'house', face: 'e', name: '售票', top: false, roof: 'flat' });
+    B.sign('山嶺遊樂場', 'w', x0 - 0.1, (z0 + z1) / 2, 5, { size: 1.1, bg: '#E83A6A', fg: '#FFFFFF', neon: 1 });
+    P(g.box, M('steelD'), x0 - 0.3, 3.4, (z0 + z1) / 2, 0.3, 6.8, 0.3);
+    B.inter(x0 + 9.4, z0 + 5.5, 2.4, '山嶺遊樂場（搭摩天輪）', () => az().fac('huangling', 'park'), '#E83A6A');
+    B.walk([[x0 + 3, z0 + 12], [x1 - 4, z0 + 12]], 3); B.walk([[x0 + 22, z0 + 30], [x0 + 22, z1 - 4]], 2);
+  }
+  // ---- 皇嶺站：玻璃的大廳、雨棚、站名 ----
+  function station(B, r) {
+    const M = CK.M, g = B.g, P = B.part, [x0, z0, x1, z1] = r, cx = (x0 + x1) / 2;
+    B.bld({ r: [x0, z0 + 2, x1, z1], h: 16, style: 'glass', face: 'n', col: '#C8D4DC', top: false });
+    // 大廳的正面：高的玻璃牆＋鋼架
+    B.box(M('glass'), cx - 18, 0.3, z0 + 1.9, cx + 18, 15, z0 + 2.0);
+    for (let x = cx - 18; x <= cx + 18.01; x += 3) B.box(M('metal'), x - 0.1, 0.3, z0 + 1.8, x + 0.1, 15, z0 + 2.1);
+    for (let y = 3.5; y < 15; y += 3.8) B.box(M('metal'), cx - 18, y - 0.08, z0 + 1.8, cx + 18, y + 0.08, z0 + 2.1);
+    B.box(M('shopLit'), cx - 17.8, 0.3, z0 + 2.05, cx + 17.8, 3.6, z0 + 2.1);
+    // 雨棚
+    B.box(M('metal'), cx - 22, 4.6, z0 - 5, cx + 22, 4.9, z0 + 2); [-20, -10, 0, 10, 20].forEach(dx => P(g.cyl8, M('metal'), cx + dx, 2.3, z0 - 4.4, 0.3, 4.6, 0.3));
+    [-20, -10, 0, 10, 20].forEach(dx => B.solid(cx + dx - 0.2, z0 - 4.6, cx + dx + 0.2, z0 - 4.2, 'deco'));
+    B.sign('皇嶺站', 'n', z0 + 1.8, cx, 17.6, { size: 2.2, bg: '#1A2A4A', fg: '#FFFFFF', box: 1, lit: 1 });
+    B.inter(cx, z0 - 1.2, 3, '皇嶺站：售票口（回東鶴、轉往他城）', () => CK.ticket(), '#5A8AC8');
+    B.inter(cx - 10, z0 - 1.2, 2.4, '皇嶺站的時刻表', () => R.townTalk('皇嶺站的時刻表', ['往東鶴：每天六班（魔導電車，一天）', '往奉主：每小時一班', '往吉山、府廳：每天四班', '往北州（古森、岳北）：接西見的渡輪', '山嶺國際機場：接駁巴士在站前廣場的西邊']));
+  }
+  // ---- 向日塔：塔底的大樓＋細長的白塔、展望台（朝東）、紅白的天線 ----
+  function tower(B, x, z) {
+    const M = CK.M, g = B.g, P = B.part, TH = THREE;
+    B.bld({ r: [x - 11, z - 9, x + 11, z + 9], h: 31.5, style: 'office', face: 'n', col: '#E8E4DC', top: false });
+    const y0 = 32.3; B.box(M('white'), x - 11.2, 31.4, z - 9.2, x + 11.2, y0, z + 9.2);
+    P(g.cyl24, M('white'), x, y0 + 30, z, 6, 60, 6); P(g.cone, M('white'), x, y0 + 4, z, 12, 8, 12);
+    P(g.cyl24, M('white'), x, y0 + 58, z, 13, 7, 13); P(g.cyl24, M('glass'), x, y0 + 58.3, z, 13.2, 3.8, 13.2);
+    P(g.cyl24, CK.mat('towerWin', { col: '#FFF0D0', em: '#FFE0A8', ei: 0, lamp: true, snow: 0 }), x, y0 + 58.3, z, 12.6, 3.6, 12.6);
+    P(g.cyl24, M('white'), x, y0 + 62.5, z, 8, 2, 8); P(g.cone, M('red'), x, y0 + 64.5, z, 6.4, 2.4, 6.4);
+    for (let i = 0; i < 6; i++) P(g.cyl8, i % 2 ? M('white') : M('red'), x, y0 + 66.5 + i * 2.2, z, 0.9 - i * 0.1, 2.2, 0.9 - i * 0.1);
+    const beacon = new TH.Mesh(g.sph, CK.mat('beacon', { col: '#FF2A1A', em: '#FF2A1A', ei: 3, snow: 0 })); beacon.position.set(x, y0 + 80, z); beacon.scale.setScalar(0.8); B.group.add(beacon);
+    W.town.anim.push((dt, t) => { beacon.visible = Math.sin(t * 3) > 0; });
+    B.sign('向日塔', 'n', z - 9, x, 28, { size: 1.6, bg: '#E8E4DC', fg: '#B8202A', box: 1, lit: 1 });
+    B.inter(x - 4, z - 10.4, 2.6, '觀光景點：向日塔（觀光章）', () => az().stamp('huangling', 'hl_tower'), '#E8C04A').sight = 'hl_tower';
+    B.inter(x + 4, z - 10.4, 2.4, '登向日塔（15 費拉）', () => az().act('huangling'), '#E8A03A');
+    B.inter(x + 9, z - 10.4, 2, '塔下喫茶「向日」（喝咖啡）', () => az().food('huangling'), '#E8A03A');
+    B.label('向日塔', x, z);
+    // 飛機（山嶺國際機場）
+    const pg = new TH.Group(), wm = CK.M('white'); [[0, 0, 0, 3, 3, 30], [0, 0, 2, 34, 0.4, 5], [0, 2.4, 13, 0.4, 5, 3], [0, 0.6, 13, 10, 0.3, 2.5]].forEach(([a, b, c, sx, sy, sz]) => { const m = new TH.Mesh(g.box, wm); m.position.set(a, b, c); m.scale.set(sx, sy, sz); pg.add(m); });
+    B.group.add(pg); W.town.plane = { g: pg, t: 20 };
+  }
+  // ---- 遠景：四周的山（雪頂）、山脊上的山城 ----
+  function mountains(B) {
+    const TH = THREE, N = 120, pos = [], idx = [], col = [], rad0 = 330, rad1 = 900;
+    const hAt = (a, rad) => { const n = CK.fbm(a / (Math.PI * 2) * 32, rad / 160, 77, 32, 4), k = (rad - rad0) / (rad1 - rad0); const south = Math.max(0, Math.cos(a - Math.PI / 2)); return Math.max(0, (60 + n * 190) * Math.sin(Math.min(1, k * 1.6) * Math.PI / 2) * (1 - south * 0.65)); };
+    const NR = 16; for (let j = 0; j <= NR; j++) for (let i = 0; i <= N; i++) { const a = i / N * Math.PI * 2, rad = rad0 + (rad1 - rad0) * j / NR, h = hAt(a, rad); pos.push(Math.cos(a) * rad, h - 2, Math.sin(a) * rad * 0.95); const snow = h > 175 ? 1 : h > 135 ? (h - 135) / 40 : 0, tone = CK.fbm(i / N * 64, j, 91, 64, 2), c = [0.13 + tone * 0.05 + snow * 0.72, 0.17 + tone * 0.06 + snow * 0.7, 0.13 + tone * 0.04 + snow * 0.78]; col.push(c[0], c[1], c[2]); }
+    for (let j = 0; j < NR; j++) for (let i = 0; i < N; i++) { const a = j * (N + 1) + i, b = a + 1, c = a + N + 1, d = c + 1; idx.push(a, c, b, b, c, d); }
+    const geo = new TH.BufferGeometry(); geo.setAttribute('position', new TH.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new TH.Float32BufferAttribute(col, 3)); geo.setIndex(idx); geo.computeVertexNormals();
+    const m = new TH.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0, side: TH.DoubleSide }); m.userData.shared = false;
+    const mesh = new TH.Mesh(geo, m); mesh.receiveShadow = false; B.group.add(mesh);
+    // 山城：三座（北、西北、東北的山脊上）
+    [[-Math.PI / 2, 420], [-Math.PI * 0.78, 470], [-Math.PI * 0.2, 450]].forEach(([a, rad]) => { const x = Math.cos(a) * rad, z = Math.sin(a) * rad * 0.95, y = hAt(((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2), rad) - 2; B.box(CK.M('ishi'), x - 14, y - 6, z - 10, x + 14, y + 4, z + 10); yagura(B, x, z, y + 4, 3, 1.4); });
+  }
+})(window.R);

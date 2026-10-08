@@ -406,6 +406,8 @@
 
   // ---------- 據點主畫面 ----------
   const hub = (id) => {
+    // 2026-10-08：有精緻 3D 城的城市（citykit.js），「回據點」就是關掉視窗、回到街上
+    if (R.inCity3D && R.inCity3D()) { R.closeSheet(); return; }
     const city = byId(id); if (!city) return;
     const g = st(), visited = Object.keys(g.visit || {}).length;
     const ruin = (R.SITES || []).filter(s => s.kind === 'ruin' && Math.hypot((s.x || 0) - ((R.SITES.find(x => x.id === id) || {}).x || 0), (s.z || 0) - ((R.SITES.find(x => x.id === id) || {}).z || 0)) < 0.55);
@@ -450,6 +452,8 @@
     $('az-other').onclick = () => ticketSheet(city.id);
   };
   R.cityHub = hub;
+  // 給 3D 城用（citykit2.js、city_*.js）：觀光章、設施、小吃、地方委託、招牌活動、造訪紀錄
+  R.azuki = { byId, stamp: (id, sid) => { const c = byId(id), sg = c && c.sights.find(x => x[0] === sid); if (sg) stamp(c, sg); }, fac: (id, fid) => { const c = byId(id), f = c && c.fac.find(x => x[0] === fid); if (f) facSheet(c, f); }, food: id => { const c = byId(id); if (c) foodSheet(c); }, quest: id => { const c = byId(id); if (c) questSheet(c); }, act: id => { const c = byId(id); if (c) { R.sheet('<p class="kicker">' + esc(c.name) + '</p><h2>' + esc(c.act.name) + '</h2><p>' + esc(c.act.desc) + '</p>' + (c.act.cost ? '<p class="note">' + c.act.cost + ' 費拉</p>' : ''), '<div class="row"><button type="button" class="btn pri" id="az-goact">參加</button><button type="button" class="btn" id="az-back">算了</button></div>'); $('az-back').onclick = R.closeSheet; $('az-goact').onclick = () => doAct(c); } } };
 
   // ---------- 旅行 ----------
   const markVisit = (id) => {
@@ -468,6 +472,14 @@
     // 錢不夠也比照奉主：勇者可先上車——但這裡仍要求付得起，避免白嫖刷日子；與 hosu 不同城際較遠
     R.closeSheet();
     R.fade(() => {
+      // 2026-10-08：有精緻 3D 城的（citykit.js），直接進城走路（不先回到東鶴的街上：exitInterior 會晚一點把場景換回東鶴）
+      if (R.CK && R.CK.cities && R.CK.cities[id]) {
+        s.gold -= city.fare; R.advanceDays(city.days); markVisit(id); R.save();
+        R.CK.enter(id);
+        const how = city.island ? '渡輪與接駁' : '魔導電車';
+        R.banner && R.banner(city.name, '搭' + how + '抵達・' + city.role + (fromId ? '（自' + ((byId(fromId) || {}).name || '') + '）' : ''));
+        return;
+      }
       if (W.inside && R.exitInterior) R.exitInterior();
       s.gold -= city.fare;
       R.advanceDays(city.days);
