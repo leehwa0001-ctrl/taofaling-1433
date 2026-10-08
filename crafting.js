@@ -60,7 +60,7 @@
     { id: 'lucky', name: '好運', roll: [4, 12], txt: v => v + '% 機率寶箱多開出一樣東西' },
     { id: 'ember', name: '餘燼', roll: [8, 20], txt: v => v + '% 機率讓敵人燃燒' },
     { id: 'chill', name: '冰霜', roll: [8, 20], txt: v => v + '% 機率讓敵人減速' },
-    { id: 'spark', name: '電光', roll: [6, 15], txt: v => v + '% 機率放出連鎖閃電' },
+    { id: 'spark', name: '電光', roll: [6, 15], txt: v => v + '% 機率放出連鎖閃電（跳到附近最多 5 隻）' },
     { id: 'pen2', name: '穿透', roll: [5, 15], txt: v => '無視敵人 ' + v + '% 的護甲' },
     { id: 'mpregen2', name: '回魔', roll: [2, 8], txt: v => '每秒回復 ' + (v / 10) + ' 魔力' }
   ];

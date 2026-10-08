@@ -93,7 +93,7 @@
     return dmg;
   };
   R.chain = (from, dmg) => {
-    const others = W().enemies.filter(e => !e.dead && e !== from && dist(e, from) < 6).slice(0, 2);
+    const others = W().enemies.filter(e => !e.dead && e !== from && dist(e, from) < 6).sort((a, b) => dist(a, from) - dist(b, from)).slice(0, 5);   // 2026-10-08 作者：連鎖從 2 隻提升到 5 隻（近的先跳）
     others.forEach(e => { R.fx('bolt', from.x, 1, from.z, { to: e }); R.hurtEnemy(e, dmg / W().P.dmgMult, { elem: null }); });
   };
   R.killEnemy = (e, by) => {

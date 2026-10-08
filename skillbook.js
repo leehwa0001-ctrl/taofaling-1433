@@ -367,7 +367,7 @@
     (R.keyName ? R.keyName('skill1') : 'R') + '／右鍵', R.keyName ? R.keyName('skill2') : '3', R.keyName ? R.keyName('skill3') : '4', R.keyName ? R.keyName('skill4') : '5', R.keyName ? R.keyName('skill5') : '6'
   ]);
   let pickSlot = 0;
-  R.SB_FOOT = R.SB_FOOT || [];   // 技能卡片最下面那一格：fn(格子, 技能編號)，自己往裡面放東西（skillvar.js 的變化、souyu.js 的奏域選項）
+  R.SB_FOOT = R.SB_FOOT || []; R.SB_HEAD = R.SB_HEAD || [];   // SB_HEAD：fn(職業, 職業存檔) 回傳放在技能列表最上面的 HTML（ultpath.js 的大招卡片）   // 技能卡片最下面那一格：fn(格子, 技能編號)，自己往裡面放東西（skillvar.js 的變化、souyu.js 的奏域選項）
   const book = (host, close) => {
     const S = R.S, cls = S.cls, st = S.classes[cls], lo = R.loadoutOf(cls), keys = KEYS();
     const ids = allOf(cls), learned = ids.filter(id => known(cls, st, id)), locked = ids.filter(id => !known(cls, st, id));
@@ -393,7 +393,7 @@
         + '<span>' + esc(sk.desc) + '</span></button>' + (ok ? '<div class="sb-foot" data-foot="' + id + '"></div>' : '') + '</div>'; };   // 2026-10-08 作者：技能變化放在說明那格最下面（skillvar.js、souyu.js 往 .sb-foot 裡填）
     host.innerHTML = '<h2>技能書・' + esc(R.clsName(cls)) + ' Lv ' + st.lv + '</h2><p class="note">每一格技能都可以換。先點上面的一格，再點下面學會的技能。第二到第五格在職業等級 ' + R.SKILL_UNLOCK.slice(1).join('、') + ' 打開。進了遺跡就不能換。</p>'
       + '<div class="row sb-slots">' + Array.from({ length: NSLOT() }, (_, i) => i).map(i => { const open = i === 0 || st.lv >= R.SKILL_UNLOCK[i]; return '<button type="button" class="btn' + (pickSlot === i ? ' pri' : '') + '" data-slot="' + i + '"' + (open ? '' : ' disabled') + '>' + keys[i] + '：' + (open ? esc(R.SKILLS[lo[i]].name) : 'Lv ' + R.SKILL_UNLOCK[i] + ' 打開') + '</button>'; }).join('') + '<button type="button" class="btn" data-reset="1">恢復預設</button></div>'
-      + '<p class="note">學會 ' + learned.length + '／' + ids.length + ' 種。依轉職路線分類，可展開各區查看學習條件。</p>' + groups(ids)
+      + '<p class="note">學會 ' + learned.length + '／' + ids.length + ' 種。依轉職路線分類，可展開各區查看學習條件。</p>' + R.SB_HEAD.map(f => { try { return f(cls, st) || ''; } catch (e) { return ''; } }).join('') + groups(ids)
       + '<div class="row"><button type="button" class="btn pri" data-close="1">好了</button></div>';
     host.querySelectorAll('.sb-foot').forEach(f => { R.SB_FOOT.forEach(fn => { try { fn(f, f.dataset.foot); } catch (e) { } }); if (!f.childElementCount) f.remove(); });
     host.querySelectorAll('[data-slot]').forEach(b => { b.onclick = () => { pickSlot = +b.dataset.slot; book(host, close); }; });
