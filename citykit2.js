@@ -451,7 +451,7 @@
     slowT += dt || 0; if (!force && slowT < 0.2) return; slowT = 0;
     const P = W.P, s = S(), tw = W.town, name = areaAt(P.x, P.z), date = R.shortDate ? R.shortDate() : '', clk = (R.timeLabel ? R.timeLabel() : '') + '・' + (R.weatherNow ? R.weatherNow() : '');
     if (name + date + clk !== lastLbl || force) { lastLbl = name + date + clk; $('r-where').innerHTML = '<b>' + esc(tw.city.name) + (name !== tw.city.name ? '・' + esc(name) : '') + '</b><small>' + esc(date) + '　' + esc(R.clsName(s.cls)) + ' Lv ' + s.classes[s.cls].lv + '</small><small id="r-clock">' + esc(clk) + '</small>'; }
-    $('r-town').innerHTML = '<span>費拉 <b>' + s.gold + '</b></span><span>回復藥 <b>' + s.potions.hp + '</b></span><span>魔力藥 <b>' + s.potions.mp + '</b></span>';
+    $('r-town').innerHTML = '<span>費拉 <b>' + s.gold + '</b></span><span>回復藥 <b>' + s.potions.hp + '</b></span><span>魔力藥 <b>' + s.potions.mp + '</b></span>' + (R.crimeHud ? R.crimeHud() : '');   // 通緝、視線條、警戒（props.js、vigilance.js；ckcrime.js 接上）
     const it = R.townNear(); $('r-prompt').hidden = !it; if (it) $('r-prompt').innerHTML = '<kbd>' + (R.touch ? '互動' : '空白') + '</kbd>' + esc(it.label);
     const wp = $('r-wp'); if (wp) wp.hidden = true;
   }
@@ -485,6 +485,7 @@
     x.imageSmoothingEnabled = true; x.drawImage(mc, 0, 0); x.restore();
     const pt = (wx, wz) => { const dx = (wx - P.x) * zoom, dz = (wz - P.z) * zoom, c = Math.cos(yaw), sn = Math.sin(yaw); return [s / 2 + dx * c - dz * sn, s / 2 + dx * sn + dz * c]; };
     tw.inter.forEach(it => { if (!it.icon) return; const m = pt(it.x, it.z); if (m[0] < 4 || m[1] < 4 || m[0] > s - 4 || m[1] > s - 4) return; x.fillStyle = it.icon; x.strokeStyle = '#141018'; x.lineWidth = 1.5; x.beginPath(); x.arc(m[0], m[1], 4, 0, Math.PI * 2); x.fill(); x.stroke(); });
+    if (R.crimeMinimap) R.crimeMinimap(x, pt);   // 通緝中：衛兵的位置
   };
   const stampDone = (city, it) => { const g = S().cityHub, sid = it.sight; return !!(sid && g && g.stamps && g.stamps[city.id + ':' + sid]); };
   const bigMap = () => {

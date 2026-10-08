@@ -26,7 +26,7 @@
       '前科 ' + (prior + 1) + ' 次。名聲大降；這幾天向店家購物，價格提高三成。'
     ];
     if (left.length) lines.push(left.join('、') + '離開了隊伍：「我不跟有前科的人一起下遺跡。」');
-    R.sheet('<p class="kicker">東鶴衛兵所</p><h2>被押走了</h2><ul class="loot">' + lines.map(l => '<li>' + esc(l) + '</li>').join('') + '</ul><p class="note">接下來幾天，衛兵和街坊都認得你的臉（戴兜帽可以遮住）。</p>',
+    R.sheet('<p class="kicker">' + esc(((W.town && W.town.ck && W.town.city) ? (W.town.room ? W.town.outer.town.city.name : W.town.city.name) : '東鶴') + '衛兵所') + '</p><h2>被押走了</h2><ul class="loot">' + lines.map(l => '<li>' + esc(l) + '</li>').join('') + '</ul><p class="note">接下來幾天，衛兵和街坊都認得你的臉（戴兜帽可以遮住）。</p>',
       '<div class="row"><button type="button" class="btn pri" id="pn-x">走出衛兵所</button></div>');
     $('pn-x').onclick = () => {
       R.closeSheet();

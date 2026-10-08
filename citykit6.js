@@ -24,7 +24,7 @@
     o = o || {}; const ov = o.o == null ? 0.8 : o.o, ring = !!o.ring, sori = o.sori || 0, th = o.th || 0.16, fine = !!o.fine;
     const Wh = w / 2 + ov, Dh = d / 2 + ov, H = o.h == null ? (ring ? ov * 0.5 : Dh * 0.5) : o.h, rl = Math.max(0, Wh - Dh) * (ring ? 0 : 1);
     const key = [w, d, ov, H, sori, th, ring ? 1 : 0, fine ? 1 : 0].map(v => (+v).toFixed(2)).join('|'); if (HIP.has(key)) return HIP.get(key);
-    const TH = T(), S = fine ? [0, 0.04, 0.1, 0.2, 0.35, 0.5, 0.65, 0.8, 0.9, 0.96, 1] : [0, 0.1, 0.5, 0.9, 1], TT = ring ? [0, 1] : fine ? [0, 0.3, 0.62, 1] : [0, 0.5, 1];
+    const TH = T(); let S = fine ? [0, 0.04, 0.1, 0.2, 0.35, 0.5, 0.65, 0.8, 0.9, 0.96, 1] : [0, 0.1, 0.5, 0.9, 1], TT = ring ? [0, 1] : fine ? [0, 0.3, 0.62, 1] : [0, 0.5, 1];
     const sag = ring ? 0 : H * 0.07, reach = ov * 1.8 + 0.8;
     // 四面：屋簷那一邊（e0→e1）、上面那一邊（t0→t1）
     const iw = w / 2, id = d / 2;
@@ -55,7 +55,7 @@
       }
       const g = new TH.BufferGeometry(); g.setAttribute('position', new TH.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new TH.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals(); return g;
     };
-    const top = mk(0, false), under = mk(-th, true);
+    const top = mk(0, false), SF = S, TF = TT; S = [0, 0.1, 0.5, 0.9, 1]; TT = ring ? [0, 1] : [0, 0.5, 1]; const under = mk(-th, true); S = SF; TT = TF;   // 底面粗一點（2026-10-09：三角形少很多；保留角的起翹、中間的下凹，才不會穿出屋頂）
     // 屋簷的邊（往外）
     const ep = [], eu = [], ei = [];
     F.forEach(f => {
@@ -151,7 +151,7 @@
   const treeGeo = TH => {
     if (TREE) return TREE;
     const P2 = [], N2 = [], U2 = [];
-    [[0.18, 0.5, 1], [0.42, 0.42, 0.76], [0.64, 0.36, 0.5]].forEach(([yy, hh, rk]) => { const c = new TH.ConeGeometry(0.5 * rk, hh, 7).translate(0, yy + hh / 2, 0).toNonIndexed(); P2.push(...c.attributes.position.array); N2.push(...c.attributes.normal.array); U2.push(...c.attributes.uv.array); });
+    [[0.18, 0.5, 1], [0.42, 0.42, 0.76], [0.64, 0.36, 0.5]].forEach(([yy, hh, rk]) => { const c = new TH.ConeGeometry(0.5 * rk, hh, 6, 1, true).translate(0, yy + hh / 2, 0).toNonIndexed(); P2.push(...c.attributes.position.array); N2.push(...c.attributes.normal.array); U2.push(...c.attributes.uv.array); });
     TREE = new TH.BufferGeometry(); TREE.setAttribute('position', new TH.Float32BufferAttribute(P2, 3)); TREE.setAttribute('normal', new TH.Float32BufferAttribute(N2, 3)); TREE.setAttribute('uv', new TH.Float32BufferAttribute(U2, 2)); TREE.userData.shared = true;
     return TREE;
   };
@@ -344,10 +344,17 @@
         mats.push([m4, rr(0.78, 1.12)]);
       }
       if (!mats.length) return;
-      const mesh = new TH.InstancedMesh(treeGeo(TH), CK.mat('forestTree', { tex: 'grass', col: '#FFFFFF', rough: 0.95, snow: 1.3 }), mats.length);
-      mats.forEach(([m4, k], i) => { mesh.setMatrixAt(i, m4); mesh.setColorAt(i, tmp.copy(base).multiplyScalar(k)); });
-      mesh.instanceMatrix.needsUpdate = true; if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-      mesh.frustumCulled = false; mesh.castShadow = false; mesh.receiveShadow = true; B.group.add(mesh);
+      // 分區塊：每一塊自己的外接球（看不到的區塊不畫；倒影裡遠的區塊也不畫）
+      const CH = 160, chunks = new Map(), p = new TH.Vector3();
+      mats.forEach(q => { p.setFromMatrixPosition(q[0]); const k = Math.floor(p.x / CH) + ',' + Math.floor(p.z / CH); let c = chunks.get(k); if (!c) chunks.set(k, c = []); c.push(q); });
+      const mat = CK.mat('forestTree', { tex: 'grass', col: '#FFFFFF', rough: 0.95, snow: 1.3 });
+      chunks.forEach((list, k) => {
+        const [ix, iz] = k.split(',').map(Number), geo = treeGeo(TH).clone(); geo.boundingSphere = new TH.Sphere(new TH.Vector3((ix + 0.5) * CH, 12, (iz + 0.5) * CH), CH * 0.72 + 12);
+        const mesh = new TH.InstancedMesh(geo, mat, list.length);
+        list.forEach(([m4, kk], i) => { mesh.setMatrixAt(i, m4); mesh.setColorAt(i, tmp.copy(base).multiplyScalar(kk)); });
+        mesh.instanceMatrix.needsUpdate = true; if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+        mesh.castShadow = false; mesh.receiveShadow = true; mesh.userData.forest = true; mesh.matrixAutoUpdate = false; mesh.updateMatrix(); B.group.add(mesh);
+      });
     };
   };
 

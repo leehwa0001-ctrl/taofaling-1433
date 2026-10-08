@@ -40,7 +40,7 @@
     g.x += dx / d * st; g.z += dz / d * st; const o = { x: g.x, z: g.z }; R.collide(o, 0.35); g.x = o.x; g.z = o.z;
     const moved = Math.hypot(g.x - ox, g.z - oz);
     V.stuck = moved < st * 0.35 ? (V.stuck || 0) + dt : Math.max(0, (V.stuck || 0) - dt);
-    if (V.stuck > 0.4 && !V.path && R.navPath) { V.stuck = 0; const p = R.navPath(toS(g.x), toS(g.z), toS(V.gx), toS(V.gz)); if (p && p.length > 1) { V.path = p.map(([a, b]) => [toW(a), toW(b)]); V.pi = 0; } }
+    if (V.stuck > 0.4 && !V.path && R.navPath && !W().town.ck) { V.stuck = 0; const p = R.navPath(toS(g.x), toS(g.z), toS(V.gx), toS(V.gz)); if (p && p.length > 1) { V.path = p.map(([a, b]) => [toW(a), toW(b)]); V.pi = 0; } }
     g.rot = Math.atan2(dx, dz); g.h.g.position.set(g.x, 0, g.z); g.h.g.rotation.y = g.rot; R.animHero(g.h, sp, dt, false);
     return d;
   };
@@ -69,12 +69,12 @@
   };
   // 增援：從衛兵詰所、崗亭、城門派人來
   const spawnGuard = (tw, P) => {
-    const C2 = R.CITY, F = C2.FAC, posts = [F.guardHQ, F.koban].filter(Boolean).map(([sx, sy]) => [toW(sx), toW(sy)]).concat((tw.watchers || []).filter(g => g.guard && g.vg && g.vg.home).map(g => [g.vg.home[0], g.vg.home[1]]));
+    const C2 = R.CITY, F = C2.FAC, posts = (tw.guardPosts || [F.guardHQ, F.koban].filter(Boolean).map(([sx, sy]) => [toW(sx), toW(sy)])).concat((tw.watchers || []).filter(g => g.guard && g.vg && g.vg.home).map(g => [g.vg.home[0], g.vg.home[1]]));
     const far = posts.filter(p => Math.hypot(p[0] - P.x, p[1] - P.z) > 22).sort((a, b) => Math.hypot(a[0] - P.x, a[1] - P.z) - Math.hypot(b[0] - P.x, b[1] - P.z));
     const p = far[0]; if (!p) return;
     const h = R.makeHero('knight', 'spear', { top: '#3E4A5A', hair: '#2A2420', cloak: '#2E3A48', shield: true, weapon: 'spear' });
     h.g.position.set(p[0], 0, p[1]); tw.group.add(h.g);
-    const n = { h, x: p[0], z: p[1], rot: 0, name: '東鶴的衛兵', guard: true, extra: true, watch: { range: 13, fov: 1.2, guard: 1 }, chase: true, lastX: P.x, lastZ: P.z };
+    const n = { h, x: p[0], z: p[1], rot: 0, name: (tw.city ? tw.city.name : '東鶴') + '的衛兵', guard: true, extra: true, watch: { range: 13, fov: 1.2, guard: 1 }, chase: true, lastX: P.x, lastZ: P.z };
     tw.npcs.push(n); tw.watchers.push(n);
   };
   // 追完了：衛兵走回崗位；增援的人走掉
@@ -152,11 +152,17 @@
     tw.npcs.forEach(n => { if (n.walk && !n.patrol && !n.guard && !n.name && !n.person) tw.inter.push({ get x() { return n.x; }, get z() { return n.z; }, r: 1.4, label: '和路人說話', when: () => !n.off && n.h.g.visible && !behind(n, W().P) && !(n.flee > 0), act: () => chat(n) }); });
     if (P) { pv.px = P.x; pv.pz = P.z; }
   };
+  R.vigChat = chat;   // 精緻城市（ckcrime.js）也用
   const ts = R.townStep;
   R.townStep = dt => {
     updateK();
     ts(dt);
     const w0 = W(), tw = w0.town, P = w0.P, S = R.S; if (!tw || !P || !S || w0.inside) return;
+    if (tw.ck) return;   // 精緻城市：ckcrime.js 呼叫 R.vigTick
+    R.vigTick(dt, tw, P);
+  };
+  R.vigTick = (dt, tw, P) => {
+    const S = R.S; updateK();
     // 偷到了、扒到了、被看見了：街坊的警戒往上
     const wv = wary(), st = (S.stats && S.stats.stolen) || 0, pk = (S.stats && S.stats.picked) || 0;
     if (st > wv.stolen) { bump((st - wv.stolen) * 1); wv.stolen = st; }

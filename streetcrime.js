@@ -53,6 +53,7 @@
     if (pp.t >= pp.time) done(n);
   };
 
+  R.pickInter = pickInter; R.pickStep = step; R.pickReset = () => { pp = null; };   // 精緻城市（ckcrime.js）也用同一套
   // ---------- 接上城裡 ----------
   const enter0 = R.enterTownNow;
   R.enterTownNow = (from, at) => {

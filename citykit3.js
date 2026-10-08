@@ -400,11 +400,12 @@
   CK.stepLife = (dt, tw, P) => {
     // 路人
     tw.npcs.forEach(n => {
-      if (n.walk) return;
+      if (n.walk || n.guard || n.off) return;   // 衛兵（ckcrime.js 自己動）
       if (n.near) { const d = Math.hypot(P.x - n.x, P.z - n.z); n.h.g.rotation.y = d < 3.5 ? Math.atan2(P.x - n.x, P.z - n.z) : n.rot; }
       if (Math.abs(n.x - P.x) + Math.abs(n.z - P.z) < 70) R.animHero(n.h, 0, dt, false);
     });
     (tw.walkers || []).forEach(n => {
+      if (n.off || n.flee > 0 || n.back) return;   // 嚇跑中、走回路上（ckcrime.js 自己動）
       const far = Math.abs(n.x - P.x) + Math.abs(n.z - P.z) > 90;
       const [x, z, ang] = along(n.path, n.acc, n.L, n.s, false), dir = (((n.s % (2 * n.L)) + 2 * n.L) % (2 * n.L)) > n.L ? -1 : 1;
       const blocked = !far && Math.hypot(P.x - n.x, P.z - n.z) < 1.1 && ((P.x - n.x) * Math.sin(ang) + (P.z - n.z) * Math.cos(ang)) * dir > 0;
