@@ -92,7 +92,7 @@
       // 公會配給登記的那把武器（不是每一類固定的那把）
       const w = R.makeItem({ kind: 'weapon', base: st.weapon, ilvl: 1, rarity: 0, identified: true }); R.S.stash.push(w); R.S.equip[st.cls].weapon = w.id;
       R.ensureKit(st.cls); if (R.ensureWorld) R.ensureWorld();
-      if (st.race === 'demon') { R.S.watched = true; R.addDeed && R.addDeed('公會東鶴分館登記了一名魔族勇者，列為受監視對象。'); }
+      if (st.race === 'demon') { R.S.watched = true; R.addDeed && R.addDeed('公會東鶴分館登記了一名純魔族勇者，列為受監視對象。'); }
       R.save(); R.enterTown();
     };
   };
@@ -120,7 +120,7 @@
       const r = R.RACES[id]; S.gold -= R.RACE_CHANGE_FEE; S.race = id; S.look = S.look || defaultLook(id);
       if (r.hairCol) S.look.hair = r.hairCol; if (!r.skins.includes(S.look.skin)) S.look.skin = r.skins[0]; S.look.eye = r.eye || '#1A1714';
       // 魔族：列為受監視對象；驗出來不是魔族了，監視也跟著撤掉
-      if (id === 'demon') { S.watched = true; R.addDeed && R.addDeed('公會東鶴分館登記了一名魔族勇者，列為受監視對象。'); } else if (S.watched) S.watched = false;
+      if (id === 'demon') { S.watched = true; R.addDeed && R.addDeed('公會東鶴分館登記了一名純魔族勇者，列為受監視對象。'); } else if (S.watched) S.watched = false;
       R.addDeed && R.addDeed('勇者證的種族欄重新登記為「' + r.name + '」。');
       R.save(); if (R.restyleSelf) R.restyleSelf();
       done && done('種族重新登記為「' + r.name + '」（手續費 ' + R.RACE_CHANGE_FEE + ' 費拉）。');

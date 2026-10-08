@@ -32,7 +32,7 @@
     if (!S.look) S.look = { hs: r.look && r.look.bald ? 'bald' : 'short', hair: r.hairCol || (r.hairs ? r.hairs[0] : '#2A2420'), skin: r.skins[0], eye: r.eye || '#1A1714', top: '#3E5A6E', cloak: '#4A3A30', acc: 'none', accCol: '#C8323A' };
     if (r.hairCol) S.look.hair = r.hairCol; if (!r.skins.includes(S.look.skin)) S.look.skin = r.skins[0]; S.look.eye = r.eye || '#1A1714';
     S.name = S.name || R.randomName(id);
-    if (id === 'demon') { S.watched = true; R.addDeed && R.addDeed('公會東鶴分館登記了一名魔族勇者，列為受監視對象。'); } else if (S.watched) S.watched = false;
+    if (id === 'demon') { S.watched = true; R.addDeed && R.addDeed('公會東鶴分館登記了一名純魔族勇者，列為受監視對象。'); } else if (S.watched) S.watched = false;
     R.addDeed && R.addDeed('勇者證的種族欄重新登記為「' + r.name + '」。');
     R.save(); if (R.restyleSelf) R.restyleSelf();
   };

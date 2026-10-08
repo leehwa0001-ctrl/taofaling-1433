@@ -145,7 +145,7 @@
       const d = mk(fam, base); if (!d) return;
       d.name = hn; d.tier = 'UR'; d.xeno = 3; d.hd = 1; d.eye = '#C8323A'; d.from = '魔界與人界之間・半魔族（' + fam.replace('族種', '魔族種') + '）';
       d.b = add(d.b, { mp: 0.1, dmg: 0.06 }); if (!d.look.horns) d.look = Object.assign({}, d.look, { horns: 'small' });
-      d.line = '半魔族：' + d.line + '東鶴的人怕半魔族，跟怕魔族一樣。';
+      d.line = '半魔族：' + d.line + '東鶴的人怕半魔族，跟怕純魔族一樣。';
       HD.push(fam === '純潔族種' ? null : d);   // 純潔族刪掉：留一個空位，編號不變
     });
   });

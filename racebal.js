@@ -36,6 +36,7 @@
   const V = { hp: 100, mp: 40, def: 4, speed: 150, dmg: 150, melee: 90, magic: 90, crit: 150, critMult: 50, dodge: 45, skillCd: 130, regen: 25, calm: 35, xp: 40, vamp: 350, ignite: 50, thorns: 60, guard: 60, crystal: 15, night: 40, back: 50, ore: 15, luck: 4, range: 70, arc: 35, rate: 130, pierce: 15, mpRegen: 12, kb: 6, pen: 120 };
   const CAP = { hp: 0.6, mp: 0.7, def: 16, speed: 0.3, dmg: 0.35, melee: 0.5, magic: 0.5, crit: 0.25, critMult: 0.8, dodge: 0.55, skillCd: 0.35, regen: 2.5, calm: 0.6, xp: 0.5, vamp: 0.06, ignite: 0.4, thorns: 0.6, guard: 0.4, crystal: 1, night: 0.4, back: 0.6, ore: 1, luck: 8, range: 0.5, arc: 0.7, rate: 0.5, pierce: 2, mpRegen: 3, kb: 4, pen: 0.3 };
   const TARGET = { N: 50, R: 58, SR: 66, SSR: 74, UR: 86 };
+  const RT = { demon: 200 };   // 2026-10-09 作者：魔族改名「純魔族」、改強——自己的強度分數（一般 UR 86、SSR 74）
   const score = b => Object.keys(b).reduce((s, k) => s + (k === 'immune' ? Object.keys(b.immune || {}).length * 8 : V[k] && b[k] > 0 ? V[k] * b[k] : 0), 0);
   const round = (k, v) => (k === 'def' || k === 'luck' ? Math.round(v) : k === 'regen' || k === 'mpRegen' || k === 'kb' ? Math.round(v * 10) / 10 : Math.round(v * 1000) / 1000);
   // 招牌照設計的數值（不縮放）；其他原本的加成照比例調（多了縮、少了放大到 1.6 倍）；還差的用「生命、傷害」各補一半
@@ -45,7 +46,7 @@
     const base = r.mixed ? R.RACES[r.mixed] : null; let sig = {};
     if (!r.mixed) sig = NAME[r.name] ? Object.assign({}, NAME[r.name]) : r.fam && FAM[r.fam] ? Object.assign({}, FAM[r.fam]) : {};   // 子族自己的招牌取代族種的（不疊加）
     else if (base && NAME[base.name]) sig = Object.fromEntries(Object.entries(NAME[base.name]).map(([k, v]) => [k, typeof v === 'number' ? v / 2 : v]));   // 混血：招牌減半
-    const tgt = (TARGET[r.tier] || 50) * (r.mixed ? 0.6 : 1), sS = score(sig), b0 = Object.assign({}, r.b), sB = score(b0), room = tgt - sS;
+    const tgt = (RT[id] || TARGET[r.tier] || 50) * (r.mixed ? 0.6 : 1), sS = score(sig), b0 = Object.assign({}, r.b), sB = score(b0), room = tgt - sS;
     const f = sB > 0 ? Math.max(0.15, Math.min(1.6, room / sB)) : 1;
     const b = {}; Object.keys(b0).forEach(k => { if (k === 'immune') b.immune = b0.immune; else b[k] = b0[k] > 0 ? b0[k] * f : b0[k]; });
     let out = merge(b, sig);
