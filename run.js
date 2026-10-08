@@ -46,6 +46,8 @@
     document.getElementById('r-modal').hidden = true; W.paused = false; R.input.keys = {}; R.input.fire = false;
     R.loadFloor(0, { fresh: true });
   };
+  // 每秒回魔：術士、牧師 3.5，其他 2，加上回魔詞綴、天賦（角色總數值的「每秒回魔」也用這個）
+  R.mpRegenOf = P => (P.cls === 'mage' || P.cls === 'priest' ? 3.5 : 2) + (P.mpRegen || 0);
   R.loadFloor = (f, o) => {
     o = o || {};
     if (!o.fresh) R.stashAllies();
@@ -359,7 +361,7 @@
     if (P.buff.shieldT <= 0) P.shield = 0;
     if (P.reloadT > 0) { P.reloadT -= dt; if (P.reloadT <= 0) { P.reloadT = 0; P.ammo = P.ws.mag; } }
     if (!P.dead) {
-      P.mp = Math.min(P.mpMax, P.mp + dt * ((P.cls === 'mage' || P.cls === 'priest' ? 3.5 : 2) + (P.mpRegen || 0)));   // 回魔詞綴   // 魔力回得慢：技能要省著用
+      P.mp = Math.min(P.mpMax, P.mp + dt * R.mpRegenOf(P));   // 回魔詞綴   // 魔力回得慢：技能要省著用
       if (P.regen) R.healP(P.regen * dt * (R.regenMul ? R.regenMul(P) : 1), true);   // hpflow.js：每秒回血 ×0.3
       if (P.adv === 'druid' || P.buff.regen > 0) R.healP(P.hpMax * (P.buff.regen > 0 ? 0.03 : 0.01) * dt * (R.regenMul ? R.regenMul(P) : 1), true);
     }

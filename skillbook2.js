@@ -107,7 +107,7 @@
           if (tg) { cd = s.rate; const a = Math.atan2(tg.x - x, tg.z - z), n = s.n || 1; g.rotation.y = a; for (let i = 0; i < n; i++) { const sh = R.fire({ kind: s.kind || 'bullet', owner: 'p', x, z, a: a + (n > 1 ? (i - (n - 1) / 2) * 0.25 : 0), speed: s.sp || 24, dmg: pw * s.k, life: 0.8, homing: s.homing || 0, primary: false }); sh.y = 1.6; } R.sfx && R.sfx(s.kind === 'bullet' ? 'gun' : 'magic'); }
         }
         const near = Math.hypot(P.x - x, P.z - z) < (s.r || 3.5);
-        if (s.heal && near) R.healP(P.hpMax * s.heal * dt, true);
+        if (s.heal && near) R.healP(P.hpMax * s.heal * dt * (R.regenMul ? R.regenMul(P) : 1), true);
         if (s.mpHeal && near) P.mp = Math.min(P.mpMax, P.mp + P.mpMax * s.mpHeal * dt);
         if ((s.buffDmg || s.buffDef) && near) { P.sb = P.sb || {}; P.sb[s._id + ':zone'] = { left: 0.3, dmg: s.buffDmg, def: s.buffDef }; }
         if ((s.aura || s.slowAura) && tick <= 0) { tick = 0.5; if (s.aura) R.aoe(x, z, s.r || 3.5, pw * s.aura, { props: false }); if (s.slowAura) slowIn(x, z, s.r || 3.5, 1); R.fx('ring', x, 0.1, z, { r: s.r || 3.5, color: s.color || '#FFFFFF' }); }
@@ -195,7 +195,7 @@
         if (tick <= 0) {
           tick = s.gap || 0.5;
           if (s.r) { R.fx('ring', P.x, 0.1, P.z, { r: s.r, color: s.color || '#FFFFFF' }); let got = 0; R.vampSkill = s.vamp || 0; w.enemies.forEach(e => { if (e.dead || e.under || dist(e, P) > s.r + e.def.size * 0.5) return; if (s.k) { const h0 = e.hp; R.hurtEnemy(e, pw * s.k, { primary: false }); got += Math.max(0, h0 - Math.max(0, e.hp)); } status(e, s); }); R.vampSkill = 0; if (s.vamp && got && !R.vampProc) R.healP(got * s.vamp, true); }
-          if (s.heal) R.healP(P.hpMax * s.heal, true);
+          if (s.heal) R.healP(P.hpMax * s.heal * (R.regenMul ? R.regenMul(P) : 1), true);
           if (s.mp) P.mp = Math.min(P.mpMax, P.mp + P.mpMax * s.mp);
         }
         return left > 0;
