@@ -16,7 +16,7 @@
   // ---------- 新的護具 ----------
   Object.assign(R.ARMOR, {
     head_mitre: { slot: 'head', w: 'light', name: '法冠', def: 0.5, spd: 0, icon: 'head_light', fx: { mp: 0.15 }, note: '魔力 +15%' },
-    head_horn: { slot: 'head', w: 'heavy', name: '角盔', def: 1.8, spd: -0.01, icon: 'head_heavy', fx: { stagger: 0.5 }, note: '被擊退、踉蹌的時間減半' },
+    head_horn: { slot: 'head', w: 'heavy', name: '角盔', def: 1.8, spd: -0.01, icon: 'head_heavy', fx: { stagger: 0.5 }, note: '受到的控制類負面效果時間減半' },
     body_robe: { slot: 'body', w: 'light', name: '法袍', def: 1.1, spd: 0, icon: 'body_light', fx: { skillCd: 0.08 }, note: '技能冷卻 −8%' },
     body_hunt: { slot: 'body', w: 'light', name: '獵裝', def: 1.4, spd: 0, icon: 'body_light', fx: { ranged: 0.08 }, note: '遠程傷害 +8%' },
     body_dou: { slot: 'body', w: 'medium', name: '武者胴', def: 2.6, spd: -0.01, icon: 'body_medium', fx: { melee: 0.06 }, note: '近戰傷害 +6%', str: 4 },
@@ -64,11 +64,11 @@
     } catch (e) { }
     return P;
   };
-  // 角盔：被擊退、踉蹌的時間減半
+  // 角盔：受到的控制類負面效果（被擊退、踉蹌、緩速、看不見）時間減半
   const hp0 = R.hurtPlayer;
   R.hurtPlayer = (raw, src, o) => {
-    const P = W().P, k0 = P ? P.knockT : 0, s0 = P ? P.stumble : 0, r = hp0(raw, src, o);
-    if (P && P.stagger) { if (P.knockT > k0) P.knockT = k0 + (P.knockT - k0) * (1 - P.stagger); if (P.stumble > s0) P.stumble = s0 + (P.stumble - s0) * (1 - P.stagger); }
+    const P = W().P, k0 = P ? P.knockT : 0, s0 = P ? P.stumble : 0, sl0 = P ? P.slowT || 0 : 0, b0 = P ? P.blindT || 0 : 0, r = hp0(raw, src, o);
+    if (P && P.stagger) { if (P.knockT > k0) P.knockT = k0 + (P.knockT - k0) * (1 - P.stagger); if (P.stumble > s0) P.stumble = s0 + (P.stumble - s0) * (1 - P.stagger); if (P.slowT > sl0) P.slowT = sl0 + (P.slowT - sl0) * (1 - P.stagger); if (P.blindT > b0) P.blindT = b0 + (P.blindT - b0) * (1 - P.stagger); }   // 2026-10-08：緩速、看不見也算（說明改成「受到的控制類負面效果」）
     return r;
   };
   // 出發的時候提醒：身上有太重的

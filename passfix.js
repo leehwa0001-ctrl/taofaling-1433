@@ -7,9 +7,12 @@
 (function (R) {
   const W = R.W, PV = R.PASSIVES; if (!PV) return;
   const set = (id, o) => { if (PV[id]) Object.assign(PV[id], o); };
-  set('kn6', { name: '鋼鐵意志', desc: '踉蹌、緩速、被擊退、看不見的時間減半；生命低於一半時，受到的傷害再少 6 點。', fx: { tenacity: 0.5, lowDef: 6 } });
+  set('kn6', { name: '鋼鐵意志', desc: '受到的控制類負面效果時間減半；生命低於一半時，受到的傷害再少 6 點。', fx: { tenacity: 0.5, lowDef: 6 } });
   set('kn4', { name: '號令', desc: '隊友造成的傷害 +15%；技能冷卻 −8%。', fx: { allyDmg: 0.15, skillCd: 0.08 } });
-  set('pr8', { name: '神佑', desc: '每一層一次：受到致命傷時留下 1 點生命。' });
+  // 2026-10-08 作者：「靠北怎麼騎士的被動也有復活」——戰士、牧師、騎士的「致命傷留下 1 點生命」全部換掉，復活只留主教
+  set('pr8', { name: '神佑', desc: '治療效果 +15%；每秒回復生命 0.5。', fx: { heal: 0.15, regen: 0.5 } });
+  set('wa8', { name: '不屈', desc: '防禦 +4；生命低於一半時，受到的傷害再少 6 點。', fx: { def: 4, lowDef: 6 } });
+  set('kn8', { name: '不倒', desc: '生命 +10%；受到的控制類負面效果時間 −30%。', fx: { hp: 0.1, tenacity: 0.3 } });
   set('wa4', { name: '殺氣' });
   set('pr4', { name: '靜心' });
   // 鋼鐵意志：每一格看壞狀態的時間有沒有變長，變長的部分砍半
@@ -18,7 +21,7 @@
   R.step = dt => {
     st0(dt);
     const P = W.P, f = P && P.pv; if (!P) return;
-    const ten = f && f.tenacity || 0;
+    const ten = Math.min(0.8, f && f.tenacity || 0);   // 鋼鐵意志＋不倒：最多 −80%
     KEYS.forEach(k => { const v = P[k] || 0, l = last[k] || 0; if (ten && v > l + 0.01) P[k] = l + (v - l) * (1 - ten); last[k] = P[k] || 0; });
   };
   const hp0 = R.hurtPlayer;

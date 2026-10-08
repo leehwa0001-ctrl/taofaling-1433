@@ -141,7 +141,6 @@
     if (o.blind) P.blindT = Math.max(P.blindT, o.blind);
     if (o.knock) { P.knockT = o.knock; }
     if (P.hp <= 0) {
-      if (P.adv === 'bishop' && !W().F.saved) { W().F.saved = true; P.hp = Math.round(P.hpMax * 0.3); R.toast('聖光留住了你（這一層只有一次）'); return; }
       P.hp = 0; R.onPlayerDown && R.onPlayerDown();
     }
   };
