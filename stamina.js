@@ -11,10 +11,11 @@
 // - 鍛鍊（2026-10-04 作者：加可以鍛鍊體力，在熟練那邊）：用掉的體力每 15 點，熟練度的「體力的鍛鍊」+1（prof.js）；每級體力上限 +5、回復 +4%（下一趟遺跡開始算）。
 //   作者：跑久了或經常受傷都會增加體力——城裡跑步（不扣體力）每跑 4 秒 +1；受傷：掉的生命每一管（滿血那麼多）+40。
 // - 體力條在技能列的上緣（手機在畫面最下面）；快沒了變黃、扣光變紅。
+// 2026-10-08 作者：跑步的消耗 +10%（22 → 24.2），讓「體力回復」天賦更值得點。
 // 放在 run.js、combat.js、keybinds.js、hud2.js、hud3.js、adv2more.js 後面（包 R.dodge、R.running、R.hurtPlayer、R.attack、R.step、R.tact）。
 (function (R) {
   const W = () => R.W, $ = id => document.getElementById(id), TH = () => window.THREE;
-  const MAX = 100, REGEN = 25, DELAY = 0, DODGE = 30, RUN = 22, RESUME = 30, ARC = 1.3;
+  const MAX = 100, REGEN = 25, DELAY = 0, DODGE = 30, RUN = 24.2, RESUME = 30, ARC = 1.3;
   const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
   const live = () => { const w = W(); return !!(w && w.run && !w.town && w.P && !w.run.done); };
   const trained = () => (R.profLv && R.profLv.stam ? R.profLv.stam() : 0), maxOf = () => MAX + 5 * trained();
