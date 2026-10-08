@@ -157,7 +157,7 @@
     if (hit && raw * (P ? P.dmgMult || 1 : 1) < hit * 0.6 && o.elem !== 'fire') k *= 0.4;   // 細碎的攻擊被毛擋掉
     if (o.elem === 'fire' || o.burn) k *= 2; if (e.st && e.st.burn > 0) k *= 1.3;
     const r = he0(e, raw * k, o);
-    if (P && o.primary && P.ws && (P.ws.kind === 'melee' || P.ws.kind === 'thrust') && Math.hypot(P.x - e.x, P.z - e.z) < 4 && thornCd <= 0) { thornCd = 0.5; R.hurtPlayer(e.dmg * (e.howl > 0 ? 0.5 : 0.25), e); R.num && R.num(P.x, 2.8, P.z, '被刺到了', 'hurt'); }
+    if (P && o.primary && P.ws && (P.ws.kind === 'melee' || P.ws.kind === 'thrust') && Math.hypot(P.x - e.x, P.z - e.z) < (e.BR || 1.5) + 2.5 && thornCd <= 0) { thornCd = 0.5; R.hurtPlayer(e.dmg * (e.howl > 0 ? 0.5 : 0.25), e); R.num && R.num(P.x, 2.8, P.z, '被刺到了', 'hurt'); }
     return r;
   };
   const st0 = R.step;
