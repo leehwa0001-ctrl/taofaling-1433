@@ -28,7 +28,7 @@ window.R = window.R || {};
   // 上位職業：每個基礎職業三條路——強化原本打法／換個玩法／昭旭與遺跡的路線（作者定案，2026-09-30）
   R.ADV = {
     gunner: [
-      { id: 'sniper', name: '狙擊手', path: '強化', skill: 'snipe', desc: '技能「穿心」：蓄力後射出貫穿一切的子彈。被動：暴擊率 +15%。' },
+      { id: 'sniper', name: '狙擊手', path: '強化', skill: 'snipe', desc: '技能「穿心」：蓄力後射出貫穿一切的子彈。被動：暴擊率 +5%、攻擊射程 +30%。' },
       { id: 'magigun', name: '魔導槍手', path: '變化', skill: 'element', desc: '技能「元素彈匣」：接下來 12 發子彈輪流帶火、冰、雷。被動：25% 的子彈附帶隨機元素。' },
       { id: 'bomber', name: '爆破手', path: '昭旭・遺跡', skill: 'grenade', desc: '技能「爆裂核心」：丟出礦坑用的爆裂核心，大範圍爆炸。被動：爆炸傷害 +40%，但每次爆炸都讓佩特拉的注意上升。' }],
     archer: [
@@ -162,7 +162,7 @@ window.R = window.R || {};
     { id: 'vamp', name: '嗜血', roll: [1, 3], txt: v => '吸血 ' + v + '%' },
     { id: 'fire', name: '焚燒', roll: [15, 40], txt: v => v + '% 機率讓敵人燃燒' },
     { id: 'frost', name: '霜寒', roll: [15, 40], txt: v => v + '% 機率讓敵人減速' },
-    { id: 'shock', name: '雷鳴', roll: [10, 30], txt: v => v + '% 機率放出連鎖閃電' },
+    { id: 'shock', name: '雷鳴', roll: [10, 30], txt: v => v + '% 機率放出連鎖閃電（跳到附近最多 5 隻）' },
     { id: 'pierce', name: '貫穿', roll: [1, 1], ranged: 1, txt: () => '投射物多貫穿 1 個敵人' },
     { id: 'multi', name: '多重', roll: [1, 1], ranged: 1, txt: () => '每次多射出 1 發' },
     { id: 'heavy', name: '沉重', roll: [30, 80], txt: v => '擊退 +' + v + '%' },

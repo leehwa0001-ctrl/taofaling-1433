@@ -180,6 +180,7 @@
     if (L.shield && !side) { const sx = back ? 12 : 0, s = '#5E6E80'; p(sx, 10, 4, 6, s); p(sx, 10, 4, 1, lt(s)); p(sx + 3, 11, 1, 5, dk(s)); p(sx + 1, 11, 2, 4, '#C9A13A'); p(sx + 1, 12, 1, 2, lt('#C9A13A')); }
     // 武器（不能超出這一格：寬 24）
     const wp = L.weapon; if (!wp) return;
+    if (R.drawHeldIcon && R.drawHeldIcon(x, ox, oy, dir, fr, L, pose, swingP)) return;   // 2026-10-08 作者：手上的武器跟背包的圖示長一樣（heldicon.js）
     const k = R.WEAPONS[wp] ? R.WEAPONS[wp].kind : 'melee', metal = '#D8DEE6', wood = '#7A5A36', dark = '#3A3A44';
     const hx = side ? (atk && k !== 'gun' && k !== 'bow' && k !== 'magic' ? 11 : 8) : 12, hy = side ? (atk ? 11 : 15) : atk ? 5 : 14;
     // 揮出去的刀身：從 (x0, y0) 往 (sx, sy) 一格一格畫 n 格，回傳尾端

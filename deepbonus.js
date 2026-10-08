@@ -1,7 +1,11 @@
 // 深度加成（2026-10-07 作者：不要再照絕對「第幾層」算，改成照這座遺跡已經走到總樓層的幾 %；
 //   這樣短遺跡和長遺跡都會從淺層一路拉到該分級應有的最深層強度。）
-// - 深度進度＝目前樓層 ÷ 這座遺跡總樓層。例：20 層的阿彌勒級，最深生命增幅 +50%；
-//   第 1 層 +2.5%、第 10 層 +25%、第 15 層 +37.5%、第 20 層 +50%。
+// - 深度進度＝目前樓層 ÷ 這座遺跡總樓層。
+// - 2026-10-08 作者：增幅改成複利（原本照進度線性加，越後面每層多的比例越小、不平均；生命應該指數成長），第 1 層 +0%。
+//   每層倍率＝(1＋最深增幅)^(1÷(總樓層−1))，第 n 層＝(1＋最深增幅)^((n−1)÷(總樓層−1)) − 1；最深層還是剛好到最深增幅。
+//   例：20 層的阿彌勒級（最深 +50%）每層 ×1.022：第 1 層 +0%、第 10 層 +21.2%、第 15 層 +34.8%、第 20 層 +50%。
+//   20 層的克森特級（最深 +200%）每層 ×1.060：第 10 層 +68.3%、第 20 層 +200%。傷害一樣是複利，最深是生命的一半。
+//   寶物數量、稀有度、經驗照本層的生命增幅算，所以第 1 層也是 +0%。
 // - 各分級最深層的「生命增幅」：阿彌勒 +50%、摩爾斯 +100%、克森特 +200%、卡索 +300%。
 //   傷害增幅維持生命的一半：+25%／+50%／+100%／+150%。哈米莉亞級不加。
 // - 寶物數量、稀有度、經驗也改跟同一個深度百分比走；克森特最深層仍約等同舊制第 60 層的獎勵。
@@ -17,11 +21,15 @@
   R.depthBonus = run => {
     if (!run || !run.grade || !run.site || run.grade.id === 'hamilia' || run.grade.id === 'hunt' || run.site.id === 'kanko' || run.site.outdoor) return NONE;
     const cap = TOTAL[run.grade.id] || 0; if (!cap) return NONE;
-    const n = Math.max(0, shown(run)), total = totalFloors(run), p = Math.max(0, Math.min(1, n / total)), amp = cap * p;
+    const n = Math.max(0, shown(run)), total = totalFloors(run), p = Math.max(0, Math.min(1, n / total));
+    // 複利：第 1 層 +0%，之後每層乘同一個倍率，最深層剛好到這個分級的最深增幅
+    const steps = Math.max(1, total - 1), i = Math.max(0, Math.min(steps, n - 1));
+    const grow = top => (total > 1 ? Math.pow(1 + top, i / steps) - 1 : 0);
+    const amp = grow(cap), rate = total > 1 ? Math.pow(1 + cap, 1 / steps) - 1 : 0;
     return {
-      n, total, p, k: p, amp, cap,
+      n, total, p, k: p, amp, cap, rate,
       hp: amp,
-      dmg: amp * 0.5,
+      dmg: grow(cap * 0.5),   // 傷害也是複利，最深層是生命增幅的一半
       qty: Math.min(1, amp * 0.3),
       rare: Math.min(1, amp * 0.4),
       xp: Math.min(3, amp * 0.75)
@@ -68,7 +76,7 @@
       const run = W().run, b = R.depthBonus(run); let el = $('deep-box');
       if (!run || !b.k || b.n < 1) { if (el) el.hidden = true; return r; }
       if (!el) { const where = $('r-where'); if (!where) return r; el = document.createElement('div'); el.id = 'deep-box'; el.className = 'glass dungeon-only'; where.after(el); }
-      const col = colOf(b.k), html = '<b style="color:' + col + '">深度・第 ' + b.n + '／' + b.total + ' 層</b><span>本層增幅 <em style="color:' + col + '">' + pc(b.amp) + '</em>（最深 ' + pc(b.cap) + '）</span><span>遺跡生物 生命 <em style="color:' + col + '">' + pc(b.hp) + '</em>・傷害 <em style="color:' + col + '">' + pc(b.dmg) + '</em></span><span>寶物數量 <em>' + pc(b.qty) + '</em>・寶物稀有度 <em>' + pc(b.rare) + '</em></span><span>經驗 <em style="color:#9AE07A">' + pc(b.xp) + '</em></span>';
+      const col = colOf(b.cap ? b.amp / b.cap : 0), html = '<b style="color:' + col + '">深度・第 ' + b.n + '／' + b.total + ' 層</b><span>本層增幅 <em style="color:' + col + '">' + pc(b.amp) + '</em>（每層 ×' + (1 + (b.rate || 0)).toFixed(3) + '，最深 ' + pc(b.cap) + '）</span><span>遺跡生物 生命 <em style="color:' + col + '">' + pc(b.hp) + '</em>・傷害 <em style="color:' + col + '">' + pc(b.dmg) + '</em></span><span>寶物數量 <em>' + pc(b.qty) + '</em>・寶物稀有度 <em>' + pc(b.rare) + '</em></span><span>經驗 <em style="color:#9AE07A">' + pc(b.xp) + '</em></span>';
       el.hidden = false; el.style.setProperty('--dc', col); if (html !== last) { el.innerHTML = html; last = html; }
     } catch (e) { }
     return r;

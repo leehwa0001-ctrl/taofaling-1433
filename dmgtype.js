@@ -34,7 +34,9 @@
       const eq = R.equipped(cls), items = R.GEAR_KEYS.map(k => eq[k]), sum = id => R.affixSum(items, id);
       P.def = (P.def || 0) + sum('pdef');
       let light = 0; R.SLOTS.forEach(s => { const it = eq[s.id], a = it && R.ARMOR[it.base]; if (a) light += R.armorStats(it).def * (WF[a.w] || 0); });
-      P.mdef = Math.round(((P.def || 0) * 0.5 + light + (MAG_CLS[cls] ? 3 : 0) + sum('mdef')) * 10) / 10;
+      // 2026-10-08：之前加的魔防（天賦雙防、護體、生機）要留著——原本這裡整個重算，天賦的魔防全部不見
+      const m0 = +P.mdef || 0;
+      P.mdef = Math.round((m0 + (P.def || 0) * 0.5 + light + (MAG_CLS[cls] ? 3 : 0) + sum('mdef')) * 10) / 10;
       P.patk = 1 + sum('patk') / 100; P.matk = 1 + sum('matk') / 100;
     } catch (e) { P.mdef = P.mdef || 0; P.patk = P.patk || 1; P.matk = P.matk || 1; }
     return P;

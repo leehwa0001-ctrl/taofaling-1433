@@ -2,6 +2,7 @@
 // - 技能書（skillbook.js 的「型」組成的技能）每一招有三種變化，照這招做的事挑。
 // - 2026-10-05 作者：變化改成全部淨增益（不要增減益參半，不然很多變化不想選）；選變化要熟練度 ★3 以上；
 //   變化選項直接放在技能書每一格技能的下方（跟裝備詞綴那樣，點了就能換），不再另外一大段。
+//   2026-10-08 作者：改放在技能書每一張技能卡片（說明那格）的最下面，上面換技能的那排只管換技能。
 // - 存在 R.S.skillVar[技能編號]；放技能的時候改那一次的參數（包 R.SKILL_TYPES 的每一種「型」，組合技的每一段也會改），冷卻在放出去之後乘。
 // 放在所有加技能、技能「型」的檔案後面（skillbal2.js、buildfx.js 後面）。
 (function (R) {
@@ -78,69 +79,33 @@
   if (R.castSlot) R.castSlot = wrapCast(R.castSlot, a => a[0] || 0);
   if (R.useSkill) R.useSkill = wrapCast(R.useSkill, () => 0);
 
-  // ---------- 技能書：每一格技能下方的變化選項 ----------
+  // ---------- 技能書：變化選項放在每一張技能卡片的最下面（2026-10-08 作者：不要放在上面換技能的地方） ----------
   const css = document.createElement('style');
-  css.textContent = '.sb-slots.sv-ready{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px}'
-    + '.sv-slot{display:flex;flex-direction:column;gap:4px;flex:1 1 140px;min-width:130px;max-width:220px}'
-    + '.sv-slot > [data-slot]{width:100%}'
-    + '.sv-vars{display:flex;flex-wrap:wrap;gap:3px;padding:4px;border:1px dashed var(--line);border-radius:8px;background:rgba(0,0,0,.16);min-height:28px}'
-    + '.sv-vars button{font-size:11px;padding:2px 6px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:inherit;cursor:pointer;line-height:1.3}'
+  css.textContent = '.sv-vars{display:flex;flex-wrap:wrap;align-items:center;gap:3px}'
+    + '.sv-vars .sv-h{font-size:11px;color:var(--gold);margin-right:2px}'
+    + '.sv-vars button{font-size:11px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:inherit;cursor:pointer;line-height:1.3}'
     + '.sv-vars button.on{outline:2px solid #E8C04A;background:rgba(232,192,74,.2);border-color:transparent}'
-    + '.sv-vars button:disabled{opacity:.45;cursor:default}'
-    + '.sv-vars .sv-lock{font-size:10.5px;opacity:.75;padding:2px 4px;line-height:1.3}'
-    + '.sv-vars .sv-none{font-size:10.5px;opacity:.55;padding:2px 4px}'
-    + '.sb-slots.sv-ready > [data-reset]{align-self:flex-start;margin-top:2px}';
+    + '.sv-vars .sv-lock{font-size:11px;opacity:.7;line-height:1.35}'
+    + '.sb-foot .sv-d{font-size:11.5px;line-height:1.4;color:var(--dim)}.sb-foot .sv-d b{color:#E8D8B0;font-weight:700}';
   document.head.appendChild(css);
-
-  const chipsHtml = id => {
-    if (!id || !R.SKILLS[id]) return '<span class="sv-none">（空）</span>';
-    const vs = R.skillVariants(id), cur = chosen(id), r = rankOf(id), ok = unlocked(id);
-    if (!vs.length) return '<span class="sv-none">無變化</span>';
-    if (!ok) return '<span class="sv-lock" title="這一招熟練到 ★' + NEED + ' 才能選變化">變化・要 ★' + NEED + '（目前 ★' + r + '）</span>';
-    return '<button type="button" class="mini' + (cur ? '' : ' on') + '" data-sv="' + id + '" data-v="" title="原版">原版</button>'
-      + vs.map(v => '<button type="button" class="mini' + (cur === v ? ' on' : '') + '" data-sv="' + id + '" data-v="' + v + '" title="' + esc(VAR[v].d) + '">' + esc(VAR[v].n) + '</button>').join('');
-  };
-  const stampOf = () => {
-    const s = S(); if (!s) return '';
-    const cls = s.cls, lo = R.loadoutOf ? R.loadoutOf(cls) : [];
-    const sv = s.skillVar || {};
-    return cls + '|' + lo.join(',') + '|' + lo.map(id => (id || '') + ':' + (sv[id] || '') + ':' + rankOf(id)).join(';');
-  };
-  const inject = () => {
-    const slots = document.querySelector('.sb-slots'); if (!slots || !S()) return;
-    const stamp = stampOf();
-    if (slots.dataset.sv === stamp) return;
-    // 清掉舊的一大段「技能變化」框（舊版）
-    const host = slots.parentNode; if (host) host.querySelectorAll('.sv-box').forEach(el => el.remove());
-    // 若已經包過，先把按鈕拿回 .sb-slots，拆掉舊的 .sv-slot
-    slots.querySelectorAll('.sv-slot').forEach(w => {
-      const b = w.querySelector('[data-slot]'); if (b) slots.insertBefore(b, w);
-      w.remove();
+  const fill = (foot, id) => {
+    if (!id || !R.SKILLS[id]) return;
+    const vs = R.skillVariants(id); if (!vs.length) return;
+    let box = foot.querySelector('.sv-box');
+    if (!box) { box = document.createElement('div'); box.className = 'sv-box'; foot.insertBefore(box, foot.firstChild); }
+    const cur = chosen(id), r = rankOf(id);
+    if (!unlocked(id)) { box.innerHTML = '<div class="sv-vars"><span class="sv-lock">變化（這招練到 ★' + NEED + ' 才能選，目前 ★' + r + '）：' + vs.map(v => esc(VAR[v].n)).join('・') + '</span></div>'; return; }
+    box.innerHTML = '<div class="sv-vars"><span class="sv-h">變化</span><button type="button" class="' + (cur ? '' : 'on') + '" data-v="">原版</button>'
+      + vs.map(v => '<button type="button" class="' + (cur === v ? 'on' : '') + '" data-v="' + v + '" title="' + esc(VAR[v].d) + '">' + esc(VAR[v].n) + '</button>').join('') + '</div>'
+      + '<div class="sv-d">' + (cur ? '<b>' + esc(VAR[cur].n) + '</b>：' + esc(VAR[cur].d) : '原版：不改這招。') + '</div>';
+    box.querySelectorAll('[data-v]').forEach(b => {
+      b.onclick = e => {
+        e.stopPropagation();
+        const st = S(); st.skillVar = st.skillVar || {};
+        if (b.dataset.v) st.skillVar[id] = b.dataset.v; else delete st.skillVar[id];
+        R.save(); fill(foot, id);
+      };
     });
-    slots.classList.add('sv-ready');
-    const s = S(), cls = s.cls, lo = R.loadoutOf ? R.loadoutOf(cls) : [];
-    const btns = [...slots.querySelectorAll(':scope > [data-slot]')];
-    btns.forEach(btn => {
-      const i = +btn.dataset.slot, id = lo[i] || null;
-      const wrap = document.createElement('div'); wrap.className = 'sv-slot';
-      slots.insertBefore(wrap, btn); wrap.appendChild(btn);
-      const vars = document.createElement('div'); vars.className = 'sv-vars'; vars.innerHTML = chipsHtml(id);
-      wrap.appendChild(vars);
-      vars.querySelectorAll('[data-sv]').forEach(b => {
-        b.onclick = e => {
-          e.stopPropagation();
-          const sk = b.dataset.sv; if (!unlocked(sk)) return;
-          const st = S(); st.skillVar = st.skillVar || {};
-          if (b.dataset.v) st.skillVar[sk] = b.dataset.v; else delete st.skillVar[sk];
-          R.save();
-          slots.dataset.sv = '';   // 強制下一輪重畫（顯示目前選中）
-          inject();
-        };
-      });
-    });
-    // 把「恢復預設」留在最後
-    const rs = slots.querySelector(':scope > [data-reset]'); if (rs) slots.appendChild(rs);
-    slots.dataset.sv = stampOf();
   };
-  setInterval(() => { try { inject(); } catch (e) { } }, 400);
+  (R.SB_FOOT = R.SB_FOOT || []).push(fill);
 })(window.R);

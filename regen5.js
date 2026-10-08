@@ -16,7 +16,10 @@
     return hp0(v, q);
   };
   R.regenBank = v => { const P = W().P; if (P && v > 0) P.regenBank = (P.regenBank || 0) + v; };
-  const pay = P => { const b = P.regenBank || 0; P.regenBank = 0; if (!(b > 0) || P.dead) return; const h0 = P.hp; hp0(b, true); const got = P.hp - h0; if (got >= 1 && R.num) R.num(P.x, 2.4, P.z, '+' + Math.round(got), 'heal'); };
+  // 上限衰減（2026-10-08 作者）：每 5 秒一次最多回最大生命的 1%（回復增益之前），超過的部分只剩 1/5 效果；回復增益在 healP 裡才乘
+  //   例：最大生命 200、原本每 5 秒回 12 → 2 ＋ 10 × 1/5 ＝ 4；有 25% 回復增益 → 5
+  R.regenCap = (P, raw) => { const cap = Math.max(0, (P && P.hpMax) || 0) * 0.01; return raw <= cap ? raw : cap + (raw - cap) / 5; };
+  const pay = P => { let b = P.regenBank || 0; P.regenBank = 0; if (!(b > 0) || P.dead) return; b = R.regenCap(P, b); const h0 = P.hp; hp0(b, true); const got = P.hp - h0; if (got >= 1 && R.num) R.num(P.x, 2.4, P.z, '+' + Math.round(got), 'heal'); };
   const tick = dt => { const P = W().P; if (!P) return; P.regenT = (P.regenT || 0) + dt; if (P.regenT >= PERIOD) { P.regenT -= PERIOD; pay(P); } };
   const st0 = R.step; if (st0) R.step = dt => { const r = st0(dt); tick(dt); return r; };
   const ts0 = R.townStep; if (ts0) R.townStep = dt => { const r = ts0(dt); if (!W().run) tick(dt); return r; };

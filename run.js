@@ -359,7 +359,7 @@
     ['atkCd', 'skillCd', 'dodgeCd', 'iframe', 'stumble', 'slowT', 'blindT', 'knockT', 'stance', 'atkHold', 'invis', 'hurtT'].forEach(k => { if (P[k] > 0) P[k] = Math.max(0, P[k] - dt); });
     Object.keys(P.buff).forEach(k => { P.buff[k] = Math.max(0, P.buff[k] - dt); });
     if (P.buff.shieldT <= 0) P.shield = 0;
-    if (P.reloadT > 0) { P.reloadT -= dt; if (P.reloadT <= 0) { P.reloadT = 0; P.ammo = P.ws.mag; } }
+    if (P.reloadT > 0) { P.reloadT -= dt; if (P.reloadT <= 0) { P.reloadT = 0; P.ammo = P.ws.mag + (P._ammoBonus || 0); P._ammoBonus = 0; } }   // _ammoBonus：換彈中翻滾射擊多裝的（combat.js）
     if (!P.dead) {
       P.mp = Math.min(P.mpMax, P.mp + dt * R.mpRegenOf(P));   // 回魔詞綴   // 魔力回得慢：技能要省著用
       if (P.regen) R.healP(P.regen * dt * (R.regenMul ? R.regenMul(P) : 1), true);   // hpflow.js：每秒回血 ×0.3

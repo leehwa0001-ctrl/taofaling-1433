@@ -86,6 +86,10 @@
       Object.keys(R.CHARM2 || {}).forEach(b => give('charm', b));
       const ab = Object.keys(R.ARMOR); Object.keys(R.SETS || {}).forEach((k, i) => { if (s.stash.some(it => it && it.set === k)) return; const it = R.makeItem({ kind: 'armor', base: ab[i % ab.length], ilvl, rarity: 5, identified: true }); it.set = k; s.stash.push(it); });
       s.gifts = s.gifts || {}; Object.keys(R.GIFTS || {}).forEach(g => { s.gifts[g] = Math.max(s.gifts[g] || 0, 5); });
+      // 2026-10-05 又補（作者：什麼東西都有什麼東西都解鎖）：每一種傳說武器各一把（含 buildfx.js 的 26 把）、
+      // 每個職業天賦點 +300（整棵樹點得滿）、第二格奧義直接開好
+      (R.LEGENDS || []).forEach(l => { if (!R.WEAPONS[l.base] || s.stash.some(it => it.legend === l.id)) return; try { const it = R.makeItem({ kind: 'weapon', base: l.base, ilvl, rarity: 5, identified: true }); it.legend = l.id; s.stash.push(it); } catch (e) { } });
+      R.CLASS_IDS.forEach(c => { const st = s.classes[c]; if (!st) return; st.spBonus = Math.max(st.spBonus || 0, 300); if (R.talentSlots) R.talentSlots(c); st.sp.t.T_slot2 = st.sp.t.T_slot2 || 10; });   // talentSlots：先讓天賦樹做完舊點數的退回，第二格才不會被退掉
     } catch (e) { console.warn('[admin]', e); }
     R.save();
   };

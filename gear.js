@@ -74,7 +74,8 @@
     x.putImageData(img, 0, 0);
     return c;
   };
-  const cache = {};
+  const cache = {}, cvCache = {};
+  R.itemIconCanvas = (base, tier) => { const k = base + ':' + (tier || 0); return cvCache[k] || (cvCache[k] = draw(base, tier || 0)); };   // 2026-10-08：手上拿的武器直接畫這張（heldicon.js）
   R.itemIconURL = (it, k) => {
     k = k || 3; const tier = it.kind === 'charm' ? Math.min(2, Math.floor((it.rarity || 0) / 2)) : R.tierOf(it.ilvl), key = it.base + ':' + tier + ':' + k;
     if (cache[key]) return cache[key];

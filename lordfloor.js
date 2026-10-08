@@ -78,7 +78,9 @@
     //   也沒看那裡是不是已經有別的東西；一圈最多 16 根，窄的兩邊擠在一起。現在：每根柱子要那一塊是空的、離別根柱子 2.4 公尺以上，一圈 6～12 根；外圈放不夠，就看外圈、內圈哪一圈放得多，只放那一圈。
     const clear = (x, z) => ![...R.boxesNear(x, z)].some(c => x + 0.6 > c.x0 && x - 0.6 < c.x1 && z + 0.6 > c.z0 && z - 0.6 < c.z1);
     const plan = k => { const ring = []; for (let i = 0; i < N; i++) { const a = (i + 0.5) / N * Math.PI * 2, x = r.x + Math.sin(a) * hx * k, z = r.z + Math.cos(a) * hz * k; if (floorAt(x, z) && !nearDoor(x, z) && clear(x, z) && !ring.some(o => Math.hypot(o.x - x, o.z - z) < 2.4)) ring.push({ x, z }); } return ring; };
-    const outer = plan(0.78), cols = outer.length >= N * 0.5 ? outer : [outer, plan(0.62)].sort((p1, p2) => p2.length - p1.length)[0];   // 外圈放不夠（房間的形狀不規則）就看內圈，放得比較多的那一圈（只放一圈）
+    const outer = plan(0.78), cols = outer.length >= N * 0.5 ? outer : [outer, plan(0.62)].sort((p1, p2) => p2.length - p1.length)[0];
+    // 2026-10-08 領主長廊（lordwing.js）的大廳：柱子沿著長邊排兩排，每 4.5 公尺一根（第 20 章：兩側數十根柱子）
+    if (r.wingHall) { cols.length = 0; const along = r.hx >= r.hz, Lh = (along ? r.hx : r.hz) - 4, Wd = (along ? r.hz : r.hx) * 0.62; for (let u = -Lh; u <= Lh + 0.01; u += 4.5) [-1, 1].forEach(sd => { const x = r.x + (along ? u : sd * Wd), z = r.z + (along ? sd * Wd : u); if (floorAt(x, z) && !nearDoor(x, z) && clear(x, z)) cols.push({ x, z }); }); }   // 外圈放不夠（房間的形狀不規則）就看內圈，放得比較多的那一圈（只放一圈）
     cols.forEach(({ x, z }) => {
       const p = new T.Mesh(new T.CylinderGeometry(0.42, 0.5, 4.2, 10), white); p.position.set(x, 2.1, z); p.castShadow = true; g.add(p);
       [0.25, 2.1, 3.95].forEach(y => { const b = new T.Mesh(new T.CylinderGeometry(0.54, 0.54, 0.16, 10), gold); b.position.set(x, y, z); g.add(b); });
@@ -94,6 +96,7 @@
     for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2, c = new T.Mesh(new T.OctahedronGeometry(0.22, 0), cry); c.position.set(Math.sin(a) * 1.3, -0.3 - (i % 2) * 0.3, Math.cos(a) * 1.3); ch.add(c); }
     const hub = new T.Mesh(new T.ConeGeometry(0.6, 1, 8), gold); hub.rotation.x = Math.PI; ch.add(hub); const rim = new T.Mesh(new T.TorusGeometry(1.3, 0.06, 6, 24), gold); rim.rotation.x = Math.PI / 2; ch.add(rim);
     ch.position.set(r.x, 6.2, r.z); g.add(ch); F.lights && F.lights.push({ x: r.x, y: 5, z: r.z, col: '#CFE8FF', I: 1.6, flick: 0 });
+    if (r.wingHall) { const along = r.hx >= r.hz, off = (along ? r.hx : r.hz) * 0.55; [-1, 1].forEach(sd => { const c2 = ch.clone(), x = r.x + (along ? sd * off : 0), z = r.z + (along ? 0 : sd * off); c2.position.set(x, 6.2, z); g.add(c2); F.lights && F.lights.push({ x, y: 5, z, col: '#CFE8FF', I: 1.3, flick: 0 }); }); }   // 長廊的大廳：多兩盞吊燈
     F.group.add(g); F.hall = { g, ch };
   };
   const bf0 = R.buildFloor;
@@ -154,7 +157,7 @@
     if (hit && raw * (P ? P.dmgMult || 1 : 1) < hit * 0.6 && o.elem !== 'fire') k *= 0.4;   // 細碎的攻擊被毛擋掉
     if (o.elem === 'fire' || o.burn) k *= 2; if (e.st && e.st.burn > 0) k *= 1.3;
     const r = he0(e, raw * k, o);
-    if (P && o.primary && P.ws && (P.ws.kind === 'melee' || P.ws.kind === 'thrust') && Math.hypot(P.x - e.x, P.z - e.z) < 4 && thornCd <= 0) { thornCd = 0.5; R.hurtPlayer(e.dmg * (e.howl > 0 ? 0.5 : 0.25), e); R.num && R.num(P.x, 2.8, P.z, '被刺到了', 'hurt'); }
+    if (P && o.primary && P.ws && (P.ws.kind === 'melee' || P.ws.kind === 'thrust') && Math.hypot(P.x - e.x, P.z - e.z) < (e.BR || 1.5) + 2.5 && thornCd <= 0) { thornCd = 0.5; R.hurtPlayer(e.dmg * (e.howl > 0 ? 0.5 : 0.25), e); R.num && R.num(P.x, 2.8, P.z, '被刺到了', 'hurt'); }
     return r;
   };
   const st0 = R.step;

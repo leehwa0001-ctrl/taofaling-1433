@@ -32,7 +32,7 @@
   const gone = Object.keys(L).filter(id => /^hm_/.test(id) && id !== ID && L[id].cls === 'mage');
   gone.forEach(id => { delete L[id]; if (R.SKILLS) delete R.SKILLS[id]; });
   L[ID] = Object.assign(L[ID] || { id: ID, cls: 'mage', adv2: 'harmonic' }, { name: '奏域', lv: 40, cd: 18, mp: 28, type: 'souyu', p: { r: 5, life: 8 } });
-  R.SKILLS[ID] = Object.assign(R.SKILLS[ID] || {}, { name: '奏域', cd: 18, mp: 28, desc: '（二轉・諧鳴）用共振圍出閉環：準心處展開 8 秒的奏域。可以練到 ★9，★0、★3、★6、★9 各選一種諧鳴（共鳴、鎮頻、定頻、轉調……），在技能書裡奏域的下面選。' });
+  R.SKILLS[ID] = Object.assign(R.SKILLS[ID] || {}, { name: '奏域', cd: 18, mp: 28, desc: '（二轉・諧鳴）用共振圍出閉環：準心處展開 8 秒的奏域。可以練到 ★9，★0、★3、★6、★9 各選一種諧鳴（共鳴、鎮頻、定頻、轉調……），在技能書這張卡片最下面選。' });
   const op0 = R.ADV2_OPTS;
   if (op0) R.ADV2_OPTS = cls => op0(cls).filter(o => !HF.includes(o.id)).map(o => (o.id === 'harmonic' ? Object.assign({}, o, { name: '諧鳴', desc: '用共振圍出閉環的「奏域」，在裡面改寫法術的頻率。學會「奏域」（40 級）：可以練到 ★9，★0、★3、★6、★9 各從四種諧鳴選一種（共鳴、鎮頻、定頻、轉調……），再選輕便、沉穩或拓展。常駐：魔攻 +10%、魔力 +15%、技能冷卻 −5%。' }) : o));
   const sv0 = R.skillVariants;
@@ -122,7 +122,7 @@
 
   // ---------- 技能書：奏域下面的選項 ----------
   const css = document.createElement('style');
-  css.textContent = '.sy-box{margin:8px 0;padding:8px;border:1px solid var(--line);border-radius:10px;background:rgba(255,184,224,.06)}'
+  css.textContent = '.sy-box{margin:2px 0 0;padding:8px;border:1px solid var(--line);border-radius:10px;background:rgba(255,184,224,.06)}'
     + '.sy-box h4{margin:0 0 6px;font-size:13px}.sy-row{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:4px 0}'
     + '.sy-row .sy-st{min-width:64px;font-size:11px;color:#E8C04A;letter-spacing:-1px}.sy-row .sy-st i{color:var(--muted,#888);font-style:normal}'
     + '.sy-row button{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:inherit;cursor:pointer}'
@@ -138,13 +138,12 @@
       + '<div class="sy-row"><span class="sy-st">形態</span><button type="button" data-sy="form" data-v="" class="' + (p.form ? '' : 'on') + '" title="不選">不選</button>' + FORMS.map(f => '<button type="button" data-sy="form" data-v="' + f[0] + '" class="' + (p.form === f[0] ? 'on' : '') + '" title="' + esc(f[2]) + '">' + esc(f[1]) + '</button>').join('') + '</div>'
       + '<div class="sy-desc">' + esc([].concat(...TIERS.map(t => t.opts)).concat(FORMS).filter(o => p.has(o[0]) || p.form === o[0]).map(o => o[1] + '：' + o[2]).join('；')) + '</div>';
   };
-  const inject = () => {
-    const slots = document.querySelector('.sb-slots'); const old = document.querySelector('.sy-box');
-    if (!slots || !learned()) { if (old && !slots) old.remove(); return; }
-    const h = html(); if (old && old.dataset.h === h) return;
-    const box = old || document.createElement('div'); box.className = 'sy-box'; box.innerHTML = h; box.dataset.h = h;
-    if (!old) slots.parentNode.insertBefore(box, slots.nextSibling);
-    box.querySelectorAll('[data-sy]').forEach(b => { b.onclick = () => { const c = conf(); c[b.dataset.sy] = b.dataset.v; R.save && R.save(); box.dataset.h = ''; inject(); }; });
+  // 2026-10-08 作者：選項放在技能書裡奏域那張卡片的最下面（不放在上面換技能的地方）
+  const fill = (foot, id) => {
+    if (id !== ID || !learned()) return;
+    let box = foot.querySelector('.sy-box'); if (!box) { box = document.createElement('div'); box.className = 'sy-box'; foot.appendChild(box); }
+    box.innerHTML = html();
+    box.querySelectorAll('[data-sy]').forEach(b => { b.onclick = e => { e.stopPropagation(); const c = conf(); c[b.dataset.sy] = b.dataset.v; R.save && R.save(); fill(foot, id); }; });
   };
-  new MutationObserver(() => { try { inject(); } catch (e) { } }).observe(document.body, { childList: true, subtree: true });
+  (R.SB_FOOT = R.SB_FOOT || []).push(fill);
 })(window.R);

@@ -39,7 +39,7 @@
     F.rooms.forEach(r => {
       if (!known(F, r)) return;
       const lab = r.type === 'start' ? ['入', '#F4E9CD'] : r.type === 'stairs' ? [F.stairs && F.stairs.sealed ? '✕' : '▼', '#FFE08A'] : r.type === 'boss' ? ['◉', '#FF6A7A'] : r.type === 'lord' ? ['領', '#FF8A6A'] : r.type === 'deep' ? ['◆', '#C8A0FF'] : r.type === 'puzzle' ? ['?', '#B8E07A'] : r.type === 'ore' ? ['◇', '#9AE0FF'] : r.type === 'trap' ? ['！', '#FF8A3A'] : null;
-      if (lab && (r.visited || r.type === 'stairs' || r.type === 'boss' || r.type === 'lord')) icon(r.x, r.z, lab[0], lab[1]);
+      if (lab && !r.wingHide && (r.visited || r.type === 'stairs' || r.type === 'boss' || r.type === 'lord')) icon(r.x, r.z, lab[0], lab[1]);   // wingHide：領主長廊的出口，領主體倒下之前不標（lordwing.js）
     });
     (F.puzzles || []).forEach(pz => { if (pz.r.visited && pz.solved) icon(pz.r.x + 2.5, pz.r.z - 2.5, '✓', '#B8E07A'); });
     (F.chests || []).forEach(c => { if (!F.rooms[c.room] || !F.rooms[c.room].visited) return; icon(c.x, c.z, '▣', c.state === 'closed' ? ['#C8A060', '#D8B060', '#FFD84A'][c.tier] || '#D8B060' : '#7A7068'); });

@@ -123,7 +123,8 @@
         R.healP(P.hpMax * f.killHealUp * (1 + Math.min(1, 0.01 * (P._kuN || 0))), true); P._kuN = (P._kuN || 0) + 1;
       }
       if (f.killMp) P.mp = Math.min(P.mpMax, P.mp + f.killMp);
-      if (f.killAmmo && P.ws && P.ws.mag) P.ammo = Math.min(P.ws.mag, (P.ammo || 0) + f.killAmmo);
+      if (f.killAmmo && P.ws && P.ws.mag) P.ammo = Math.max(P.ammo || 0, Math.min(P.ws.mag, (P.ammo || 0) + f.killAmmo));
+      if (f.killAmmoP && P.ws && P.ws.mag) P.ammo = Math.max(P.ammo || 0, Math.min(P.ws.mag, (P.ammo || 0) + Math.max(1, Math.round(P.ws.mag * f.killAmmoP))));   // 2026-10-08：照彈匣的 %（最少 1 發）
       if (f.rage) P.pvRage = 3;
     }
     return r;
@@ -175,7 +176,7 @@
     host.querySelector('[data-close]').onclick = close;
   };
   R.passiveSheet = where => {
-    if (W().run && !W().run.train) { R.toast('遺跡裡不能換被動。'); return; }   // 訓練場可以換（2026-10-08）
+    if (W().run && !W().run.train && !(R.inTraining && R.inTraining())) { R.toast('遺跡裡不能換被動。'); return; }   // 訓練場可以換（2026-10-08）
     if (W().run) { R.sheet('<div id="pv-host"></div>'); sheet($('pv-host'), 'town', () => { R.closeSheet(); if (R.trainRefresh) R.trainRefresh(); }); return; }
     if (where === 'hub') { const host = $('hub-sheet'), el = $('hub-modal'); el.hidden = false; sheet(host, 'hub', () => { el.hidden = true; R.hub(); }); host.scrollTop = 0; return; }
     R.sheet('<div id="pv-host"></div>'); sheet($('pv-host'), 'town', () => R.closeSheet());
