@@ -29,7 +29,7 @@
     P.calm = sum('calm') / 100 + (st.adv === 'shinkan' ? 0.4 : 0);
     P.greed = sum('greed') / 100;
     P.item = eq.weapon; P.ws = R.weaponStats(eq.weapon);
-    if (st.adv === 'sniper') P.ws.crit += 0.15;
+    if (st.adv === 'sniper') { P.ws.crit += 0.05; if (P.ws.range) P.ws.range *= 1.3; }   // 2026-10-08 作者：原本暴擊率 +15%
     if (st.adv === 'gladiator') P.ws.rate *= 1.2;
     if (st.adv === 'dragoon' && P.ws.kind === 'thrust') P.ws.range *= 1.25;
     if (st.adv === 'fistsaint') { P.ws.rate *= 1.2; P.ws.crit += 0.05; }   // 拳聖
@@ -353,7 +353,7 @@
     const aimIn = max => { const d = Math.hypot(ax - P.x, az - P.z); const k = d > max ? max / d : 1; return [P.x + (ax - P.x) * k, P.z + (az - P.z) * k]; };
     R.sfx && R.sfx('skill');
     switch (P.skill) {
-      case 'roll': R.dash(a + Math.PI, 5, 0.25, { iframe: true }); if (ws.mag) { P.ammo = Math.min(ws.mag, (P.ammo || 0) + Math.ceil(ws.mag * 0.3)); P.reloadT = 0; } if (R.skillVarOf && R.skillVarOf('roll') === 'rollcrit') P.crits = 3; break;   // 2026-10-08：補 30%、★3「要害」才必定暴擊（guns1008.js）
+      case 'roll': R.dash(a + Math.PI, 5, 0.25, { iframe: true }); if (ws.mag) { const add = Math.ceil(ws.mag * 0.3); if (P.reloadT > 0) P._ammoBonus = Math.max(P._ammoBonus || 0, add); else P.ammo = Math.max(P.ammo || 0, Math.min(ws.mag, (P.ammo || 0) + add)); }   // 2026-10-08 作者：換彈中翻滾不打斷換彈，下一匣 ×1.3 if (R.skillVarOf && R.skillVarOf('roll') === 'rollcrit') P.crits = 3; break;   // 2026-10-08：補 30%、★3「要害」才必定暴擊（guns1008.js）
       case 'volley': { const [x, z] = aimIn(12); [0, 0.35, 0.7].forEach(t => later(() => { R.fx('rain', x, 0, z, { r: 2.8 }); R.aoe(x, z, 2.8, base * 0.9); }, t * 1000)); R.fx('mark', x, 0, z, { r: 2.8, t: 1 }); break; }
       case 'whirl': P.buff.whirl = 1.2; break;
       case 'fireball': R.fire({ kind: 'fire', owner: 'p', x: P.x, z: P.z, a, speed: 14, dmg: base * 2.4, life: 1.4, radius: 3, primary: false }); break;

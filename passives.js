@@ -123,7 +123,8 @@
         R.healP(P.hpMax * f.killHealUp * (1 + Math.min(1, 0.01 * (P._kuN || 0))), true); P._kuN = (P._kuN || 0) + 1;
       }
       if (f.killMp) P.mp = Math.min(P.mpMax, P.mp + f.killMp);
-      if (f.killAmmo && P.ws && P.ws.mag) P.ammo = Math.min(P.ws.mag, (P.ammo || 0) + f.killAmmo);
+      if (f.killAmmo && P.ws && P.ws.mag) P.ammo = Math.max(P.ammo || 0, Math.min(P.ws.mag, (P.ammo || 0) + f.killAmmo));
+      if (f.killAmmoP && P.ws && P.ws.mag) P.ammo = Math.max(P.ammo || 0, Math.min(P.ws.mag, (P.ammo || 0) + Math.max(1, Math.round(P.ws.mag * f.killAmmoP))));   // 2026-10-08：照彈匣的 %（最少 1 發）
       if (f.rage) P.pvRage = 3;
     }
     return r;
