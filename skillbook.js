@@ -75,7 +75,7 @@
     // ---------- 轉職路線的技能 ----------
     ['s_headshot', '爆頭', 'gunner', 8, 9, 14, 'line', { len: 18, width: 0.4, k: 5, crit: 1, delay: 600, color: '#FFE08A' }, '瞄準 0.6 秒，射出必定暴擊的一槍。', 'sniper'],
     ['s_camo', '偽裝', 'gunner', 14, 16, 12, 'buff', { t: 4, crit: 0.3, invis: 3, color: '#6A7A5A' }, '披上偽裝隱身 3 秒；4 秒內暴擊率 +30%。', 'sniper'],
-    ['mg_storm', '元素風暴', 'gunner', 8, 11, 20, 'shots', { n: 9, spread: 1.2, k: 0.8, elem: 'cycle' }, '一口氣打出九發元素彈：火、冰、雷輪流。', 'magigun'],
+    ['mg_storm', '元素風暴', 'gunner', 8, 11, 20, 'shots', { n: 1, burst: 9, gap: 55, sp: 32, life: 'ws', k: 0.8, elem: 'cycle' }, '朝準心方向連射九發元素彈，一直線、射程跟普攻一樣：火、冰、雷輪流。', 'magigun'],   // 2026-10-08 作者：扇形改直線
     ['mg_cannon', '魔導砲', 'gunner', 14, 12, 26, 'shots', { k: 4, kind: 'fire', sp: 16, radius: 3.5, life: 1.4 }, '射出一發巨大的魔導砲彈，打中就大範圍爆炸、燃燒。', 'magigun'],
     ['bo_cluster', '集束彈', 'gunner', 8, 10, 16, 'at', { range: 11, r: 2, k: 1.6, waves: 4, gap: 120, scatter: 2.5, fx: 'boom', color: '#FFB45A', aware: 3 }, '丟出會散開的集束彈：準心附近連炸四下（佩特拉會注意到）。', 'bomber'],
     ['bo_demo', '定向爆破', 'gunner', 14, 14, 20, 'line', { len: 7, width: 1.6, k: 3.5, kb: 2, color: '#FFB45A', aware: 4 }, '把爆裂核心的威力往前方集中炸出去（佩特拉會注意到）。', 'bomber'],
@@ -219,7 +219,7 @@
     shots(s, P, w, pw) {
       const n = s.n || 1, kind = s.kind || KIND[P.cls] || 'bullet', b = s.burst || 1;
       for (let j = 0; j < b; j++) later(() => {
-        for (let i = 0; i < n; i++) { const aa = P.aimA + (n > 1 ? (i - (n - 1) / 2) * (s.spread || 0.3) / (n - 1) * 2 : 0); R.fire({ kind, owner: 'p', x: P.x, z: P.z, a: aa, speed: s.sp || 28, dmg: pw * s.k, life: s.life || 0.9, pierce: s.pierce || 0, homing: s.homing || 0, root: s.root, stun: s.stun, crit: s.crit, radius: s.radius, elem: s.elem === 'cycle' ? ['fire', 'frost', 'shock'][i % 3] : s.elem, primary: false }); }
+        for (let i = 0; i < n; i++) { const aa = P.aimA + (n > 1 ? (i - (n - 1) / 2) * (s.spread || 0.3) / (n - 1) * 2 : 0); R.fire({ kind, owner: 'p', x: P.x, z: P.z, a: aa, speed: s.sp || 28, dmg: pw * s.k, life: s.life === 'ws' ? (P.ws && P.ws.range ? P.ws.range / (s.sp || 28) : 0.9) : s.life || 0.9, pierce: s.pierce || 0, homing: s.homing || 0, root: s.root, stun: s.stun, crit: s.crit, radius: s.radius, elem: s.elem === 'cycle' ? ['fire', 'frost', 'shock'][(i + j) % 3] : s.elem, primary: false }); }
         P.h.recoil = 1; if (kind === 'bullet') R.fx('muzzle', P.x + Math.sin(P.aimA) * 0.9, 1.15, P.z + Math.cos(P.aimA) * 0.9, {});
         R.sfx && R.sfx(kind === 'bullet' ? 'gun' : kind === 'arrow' ? 'bow' : 'magic');
       }, j * (s.gap || 100));
