@@ -380,7 +380,7 @@
     // 路人：沿著折線來回走
     D.walks.forEach(wk => {
       const { acc, L } = accOf(wk.pts, false); if (L < 2) return;
-      for (let k = 0; k < wk.n; k++) { const n = B.person(wk.pts[0][0], wk.pts[0][1], 0, { extra: { walk: 1 } }); n.path = wk.pts; n.acc = acc; n.L = L; n.s = B.rnd() * L * 2; n.sp = B.rr(1.2, 1.9); n.off = B.rr(-0.6, 0.6); tw.walkers.push(n); }
+      for (let k = 0; k < wk.n; k++) { const n = B.person(wk.pts[0][0], wk.pts[0][1], 0, { extra: { walk: 1 } }); n.path = wk.pts; n.acc = acc; n.L = L; n.s = B.rnd() * L * 2; n.sp = B.rr(1.2, 1.9); n.lane = B.rr(-0.6, 0.6); /* 走在路線的左右（n.off 是「別的檔案接手了、不要動」） */ tw.walkers.push(n); }
     });
     // 車
     const CC = B.city.carCols || ['#E8E4DC', '#2A2A30', '#8A2A24', '#3A5A8A', '#C8C0B0', '#5A6A4A', '#B8BCC2', '#1E3A2A'];
@@ -411,7 +411,7 @@
       const [x, z, ang] = along(n.path, n.acc, n.L, n.s, false), dir = (((n.s % (2 * n.L)) + 2 * n.L) % (2 * n.L)) > n.L ? -1 : 1;
       const blocked = !far && Math.hypot(P.x - n.x, P.z - n.z) < 1.1 && ((P.x - n.x) * Math.sin(ang) + (P.z - n.z) * Math.cos(ang)) * dir > 0;
       if (!blocked) n.s += n.sp * dt;
-      const ox = Math.cos(ang) * n.off * dir, oz = -Math.sin(ang) * n.off * dir;
+      const ox = Math.cos(ang) * n.lane * dir, oz = -Math.sin(ang) * n.lane * dir;
       n.x = x + ox; n.z = z + oz; n.h.g.visible = !far;
       if (far) return;
       n.h.g.position.set(n.x, CK.heightAt(n.x, n.z), n.z); n.h.g.rotation.y = dir > 0 ? ang : ang + Math.PI; R.animHero(n.h, blocked ? 0 : n.sp, dt, false);

@@ -10,7 +10,10 @@
 // 追逐的時候上面有計時和距離、目標頭上有紅色箭頭、雷達上是紅點。
 (function (R) {
   const W = R.W, rnd = Math.random, pick = a => a[Math.floor(rnd() * a.length)];
-  const C = R.CITY, toS = v => v / C.S + 500, toW = s => (s - 500) * C.S;
+  const C = R.CITY, toS = v => (CKT() ? v : v / C.S + 500), toW = s => (CKT() ? s : (s - 500) * C.S);
+  // 2026-10-09：在精緻城市（W.town.ck）用世界座標、精緻城市的路網（ckmove.js）；路人是 W.town.walkers；巷子是城的設定 alleys、吵架的地方是 brawl（ckextra.js）
+  const CKT = () => !!(W.town && W.town.ck), NAV = () => (CKT() ? W.town.nav : R.NAV), navPath = (a, b, c, d) => (CKT() ? (R.CK && R.CK.navPath ? R.CK.navPath(a, b, c, d) : null) : (R.navPath ? R.navPath(a, b, c, d) : null));
+  const walkers = () => (CKT() ? (W.town.walkers || []) : W.town.npcs.filter(n => n.walk));
   const TOPS = ['#3A4A5A', '#5A3A3A', '#3A5A4A', '#6A5A3A', '#4A3A5A', '#7A6A5A', '#2E2E38', '#8A4A3A'], HAIRS = ['#1A1410', '#2A2420', '#4A3424', '#6A4A2E', '#8A8A88'];
   const hour = () => (R.hourNow ? ((R.hourNow() % 24) + 24) % 24 : 12);
   const S = () => R.S, P = () => W.P, tw = () => W.town;
@@ -33,17 +36,17 @@
     if (d < 0.25) { R.animHero(n.h, 0, dt, false); return d; }
     const st = Math.min(d, sp * dt), ox = n.x, oz = n.z; n.x += dx / d * st; n.z += dz / d * st; const o = { x: n.x, z: n.z }; R.collide(o, 0.35); n.x = o.x; n.z = o.z;
     const moved = Math.hypot(n.x - ox, n.z - oz); n.stuck = moved < st * 0.35 ? (n.stuck || 0) + dt : Math.max(0, (n.stuck || 0) - dt);
-    if (n.stuck > 0.4 && !n.path && R.navPath) { n.stuck = 0; const p = R.navPath(toS(n.x), toS(n.z), toS(n.gx != null ? n.gx : tx), toS(n.gz != null ? n.gz : tz)); if (p && p.length > 1) { n.path = p.map(([a, b]) => [toW(a), toW(b)]); n.pi = 0; } }
+    if (n.stuck > 0.4 && !n.path) { n.stuck = 0; const p = navPath(toS(n.x), toS(n.z), toS(n.gx != null ? n.gx : tx), toS(n.gz != null ? n.gz : tz)); if (p && p.length > 1) { n.path = p.map(([a, b]) => [toW(a), toW(b)]); n.pi = 0; } }
     n.rot = Math.atan2(dx, dz); n.h.g.position.set(n.x, 0, n.z); n.h.g.rotation.y = n.rot; R.animHero(n.h, sp, dt, false);
     return d;
   };
   // 逃：往離你遠的路口跑（照路網）
   const fleeTarget = n => {
-    const Pl = P(), nodes = R.NAV && R.NAV.nodes; if (!nodes) return;
+    const Pl = P(), nodes = NAV() && NAV().nodes; if (!nodes) return;
     const ax = n.x - Pl.x, az = n.z - Pl.z, al = Math.hypot(ax, az) || 1, cand = [];
     for (let k = 0; k < 40; k++) { const q = pick(nodes), wx = toW(q[0]), wz = toW(q[1]), dx = wx - n.x, dz = wz - n.z, d = Math.hypot(dx, dz); if (d < 30 || d > 70) continue; if ((dx * ax + dz * az) / (d * al) < 0.2) continue; cand.push([wx, wz]); }
     const t = cand[0] || [n.x + ax / al * 30, n.z + az / al * 30]; n.gx = t[0]; n.gz = t[1];
-    const p = R.navPath && R.navPath(toS(n.x), toS(n.z), toS(t[0]), toS(t[1])); n.path = p && p.length > 1 ? p.map(([a, b]) => [toW(a), toW(b)]) : null; n.pi = 0;
+    const p = navPath(toS(n.x), toS(n.z), toS(t[0]), toS(t[1])); n.path = p && p.length > 1 ? p.map(([a, b]) => [toW(a), toW(b)]) : null; n.pi = 0;
   };
   const say = (who, lines) => R.townTalk(who, lines);
   const rep = v => { const s = S(); s.rep = (s.rep || 0) + v; };
@@ -75,7 +78,7 @@
   const KINDS = {
     // 扒手盯上你
     pick: {
-      ok: h => h >= 9 && h < 21 && tw().npcs.filter(n => n.walk && !n.off && Math.hypot(n.x - P().x, n.z - P().z) < 36).length >= 2 && S().gold >= 20,
+      ok: h => h >= 9 && h < 21 && walkers().filter(n => !n.off && Math.hypot(n.x - P().x, n.z - P().z) < 36).length >= 2 && S().gold >= 20,
       start: () => {
         const Pl = P(), a = Pl.yaw + Math.PI + (rnd() - 0.5), p = freeNear(Pl.x + Math.sin(a) * 9, Pl.z + Math.cos(a) * 9); if (!p) return false;
         const t = mk(p[0], p[1], { top: '#2E2E38', hair: '#1A1410', cloak: '#2A2A30', acc: 'scarf', accCol: '#3A3A44' }, { pool: 'thief', full: 1 });
@@ -100,7 +103,7 @@
     snatch: {
       ok: h => h >= 8 && h < 22,
       start: () => {
-        const Pl = P(), vs = tw().npcs.filter(n => n.walk && !n.off && !n.guard && !n.patrol && !n.name && n.h.g.visible).map(n => [n, dist(n, Pl)]).filter(([, d]) => d > 8 && d < 36).sort((a, b) => a[1] - b[1]);
+        const Pl = P(), vs = walkers().filter(n => !n.off && !n.guard && !n.patrol && !n.name && n.h.g.visible).map(n => [n, dist(n, Pl)]).filter(([, d]) => d > 8 && d < 36).sort((a, b) => a[1] - b[1]);
         if (!vs.length) return false; const v = vs[0][0];
         const p = freeNear(v.x + 2, v.z + 2); if (!p) return false;
         const t = mk(p[0], p[1], { top: '#3A3A44', hair: '#2A2420', cloak: '#1E1E26' }, { pool: 'snatch', full: 1 });
@@ -158,7 +161,7 @@
     brawl: {
       ok: h => h >= 19 || h < 1,
       start: () => {
-        const Pl = P(), spots = [[600, 330], [C.FAC.tavern && C.FAC.tavern[0], C.FAC.tavern && C.FAC.tavern[1] + 16]].filter(s => s[0] != null).map(([sx, sy]) => [toW(sx), toW(sy)]).filter(([x, z]) => Math.hypot(x - Pl.x, z - Pl.z) < 40);
+        const Pl = P(), spots = (CKT() ? (W.town.city.brawl || []).map(([x, z]) => [toS(x), toS(z)]) : [[600, 330], [C.FAC.tavern && C.FAC.tavern[0], C.FAC.tavern && C.FAC.tavern[1] + 16]]).filter(s => s[0] != null).map(([sx, sy]) => [toW(sx), toW(sy)]).filter(([x, z]) => Math.hypot(x - Pl.x, z - Pl.z) < 40);
         const b = spots[0] ? freeNear(spots[0][0], spots[0][1]) : freeNear(Pl.x + Math.sin(Pl.yaw) * 10, Pl.z + Math.cos(Pl.yaw) * 10); if (!b) return false;
         const a = mk(b[0], b[1], { top: '#5A3A3A', hair: '#2A2420' }, { pool: 'drunk0' }), c = mk(b[0] + 1.2, b[1], { top: '#3A4A5A', hair: '#6A4A2E' }, { pool: 'drunk1' });
         ev = { kind: 'brawl', st: 'fight', t: 0, npcs: [a, c], a, c };
@@ -214,7 +217,8 @@
   // ---------- 巷子：離最近的路是窄巷，而且不在大路旁邊 ----------
   const segD = (px, py, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy, t = L ? Math.max(0, Math.min(1, ((px - a[0]) * dx + (py - a[1]) * dy) / L)) : 0; return Math.hypot(px - a[0] - dx * t, py - a[1] - dy * t); };
   const inAlley = () => {
-    const Pl = P(); if (!Pl || !C.roads) return false; const sx = toS(Pl.x), sy = toS(Pl.z); let lane = 1e9, big = 1e9;
+    const Pl = P(); if (Pl && CKT()) return (W.town.city.alleys || []).some(r => Pl.x > r[0] && Pl.x < r[2] && Pl.z > r[1] && Pl.z < r[3]);
+    if (!Pl || !C.roads) return false; const sx = toS(Pl.x), sy = toS(Pl.z); let lane = 1e9, big = 1e9;
     C.roads.forEach(r => { let d = 1e9; for (let i = 1; i < r.pts.length; i++) d = Math.min(d, segD(sx, sy, r.pts[i - 1], r.pts[i])); if (r.kind === 'lane' || r.kind === 'olane') lane = Math.min(lane, d - r.w / 2); else if (r.kind === 'main' || r.kind === 'sub' || r.kind === 'arcade') big = Math.min(big, d - r.w / 2); });
     return lane < 3 && big > 18;
   };
@@ -283,7 +287,7 @@
     R.sheet('<p class="kicker">街上</p><h2>哭著的小孩</h2><p>「嗚……找不到媽媽了……」</p><p class="note">大概六、七歲，手套掉了一隻。</p>',
       '<div class="row"><button type="button" class="btn pri" id="lk-yes">「我帶你去找。」</button><button type="button" class="btn" id="lk-no">「在這裡等，別亂跑。」</button></div>');
     document.getElementById('lk-yes').onclick = () => {
-      R.closeSheet(); const Pl = P(), nodes = R.NAV.nodes; let m = null;
+      R.closeSheet(); const Pl = P(), nodes = NAV().nodes; let m = null;
       for (let k = 0; k < 60 && !m; k++) { const q = pick(nodes), wx = toW(q[0]), wz = toW(q[1]), d = Math.hypot(wx - Pl.x, wz - Pl.z); if (d > 40 && d < 90) { const p = freeNear(wx, wz); if (p) m = p; } }
       if (!m) { end('小孩突然指著遠處：「啊，媽媽！」然後跑走了。'); return; }
       const mom = mk(m[0], m[1], { top: '#C8A888', hair: '#2A2420' }, { pool: 'mom' }); ev.npcs.push(mom); ev.mom = mom; ev.st = 'follow'; ev.t = 0;
@@ -302,8 +306,8 @@
     for (const k of order) { try { if (KINDS[k].ok(h) && KINDS[k].start()) return; } catch (e) { console.warn('[streetevents]', k, e); ev = null; } }
   };
   const step0 = R.townStep;
-  R.townStep = dt => {
-    step0(dt);
+  R.townStep = dt => { step0(dt); tick(dt); };
+  const tick = dt => {
     const t = tw(); if (!t || !P() || !R.S) return;
     if (W.inside) { if (ev) end(); return; }
     if (R.sheetOpen && R.sheetOpen()) return;
@@ -321,5 +325,7 @@
     let px = s / 2 + dx * c - dz * sn, py = s / 2 + dx * sn + dz * c; const r = s / 2 - 5, ox = px - s / 2, oy = py - s / 2, d = Math.hypot(ox, oy); if (d > r) { px = s / 2 + ox / d * r; py = s / 2 + oy / d * r; }
     x.fillStyle = '#FF3A3A'; x.strokeStyle = '#FFFFFF'; x.lineWidth = 1.5; x.beginPath(); x.arc(px, py, Math.max(3, s / 40), 0, 7); x.fill(); x.stroke();
   };
+  R.streetEventTick = tick;   // 精緻城市（ckextra.js）
+  R.streetEventReset = () => { if (ev) end(); ev = null; arrow = null; showHud(''); cd = 50 + rnd() * 40; };
   R.streetEventDebug = { get ev() { return ev; }, start: k => { if (ev) end(); return KINDS[k].start(); }, KINDS, inAlley, end, get fight() { return fight; }, stepFight, set cd(v) { cd = v; } };
 })(window.R);
