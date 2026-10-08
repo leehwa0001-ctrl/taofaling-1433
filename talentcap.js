@@ -9,7 +9,10 @@
   R.hurtEnemy = (e, raw, o) => {
     const c = caps(), P = W().P, run = W().run; if (!c || !e || e.dead) return he0(e, raw, o);
     if (c.A2 && e.def && (e.def.elite || e.def.boss)) raw *= 1.25;
+    if (c.A2 && e.hp < e.hpMax * 0.5) raw *= 1.25;   // 2026-10-08：斬鐵對半血以下 +25%
     const h0 = e.hp, r = he0(e, raw, o), dealt = Math.max(0, h0 - Math.max(0, e.hp));
+    // 斬鐵：一下打掉當前生命 80% 以上 → 直接斬殺（傷害補到當前生命的 100%、無視減傷；走擊倒的流程，不是再打一下，荊棘這類反應不會多觸發）
+    if (c.A2 && !e.dead && dealt > 0 && dealt >= h0 * 0.8 && !(o && (o.reflect || o.noVamp && o.thorns))) { e.hp = 0; R.num && R.num(e.x, 2.6, e.z, '斬殺', 'crit'); if (R.killEnemy) R.killEnemy(e, o && o.by); }
     if (dealt > 0 && c.B1 && P && run && (run.t || 0) >= (P.ttMountainAt || 0)) {
       P.ttMountainAt = (run.t || 0) + 8;
       P.shield = Math.min(P.hpMax * 0.5, (P.shield || 0) + P.hpMax * 0.12);
