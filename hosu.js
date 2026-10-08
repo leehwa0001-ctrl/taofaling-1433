@@ -345,7 +345,9 @@
       });
       for (let x2 = -95; x2 < 158; x2 += 6) { if (BRIDGES.some(b => x2 > b[0] - 1 && x2 < b[1] + 1)) continue; [21.4, 34.6].forEach(z => { add(g3.box, M.lamp, x2, 1.4, z, 0.1, 2.8, 0.1); add(g3.sph, M.lantern, x2, 2.6, z, 0.55, 0.7, 0.55); }); }
       inter(-30, 19.5, 2.4, '觀光景點：燈籠堀（觀光章）', () => visit('canal'), '#E8C04A');
-      const boat = new TH.Group(), hull = new TH.Mesh(g3.box, lam('#E8E4DC', { tex: 0 })); hull.scale.set(9, 0.9, 3); hull.position.y = 0.3; const cab = new TH.Mesh(g3.box, lam('#3A5A8A', { tex: 0 })); cab.scale.set(5, 1.2, 2.4); cab.position.set(-0.5, 1.3, 0); const rf = new TH.Mesh(g3.box, lam('#C83A3A', { tex: 0 })); rf.scale.set(5.6, 0.15, 2.8); rf.position.set(-0.5, 2.0, 0); boat.add(hull, cab, rf); group.add(boat); tw.boat = { g: boat, x: -80, d: 1 };
+      const boat = new TH.Group(), hull = new TH.Mesh(g3.box, lam('#E8E4DC', { tex: 0 })); hull.scale.set(9, 0.9, 3); hull.position.y = 0.3; const cab = new TH.Mesh(g3.box, lam('#3A5A8A', { tex: 0 })); cab.scale.set(5, 1.2, 2.4); cab.position.set(-0.5, 1.3, 0); const rf = new TH.Mesh(g3.box, lam('#C83A3A', { tex: 0 })); rf.scale.set(5.6, 0.15, 2.8); rf.position.set(-0.5, 2.0, 0); boat.add(hull, cab, rf);
+      // 2026-10-08 作者：船經過橋會穿模——橋是平的、跟地面一樣高，船不能從底下過。改成兩艘，各在兩座橋之間來回（船長 9，橋前 1 公尺掉頭）
+      tw.boats = [[-85, -53], [95, SEA_X - 2]].map(([a, b], i) => { const g = i ? boat.clone() : boat; group.add(g); return { g, lo: a + 5.5, hi: b - 5.5, x: i ? b - 6 : a + 6, d: i ? -1 : 1 }; });
     }
 
     // ---------- 燈籠堀南岸：長屋町、新町、奉主塔 ----------
@@ -604,7 +606,7 @@
     // 環狀線的電車
     tw.trains.forEach(tr => { tr.s += 15 * dt; tr.cars.forEach((g, k) => { const f = pathPos(tw, tr.s - k * 14.8), b = pathPos(tw, tr.s - k * 14.8 - 13.6); g.position.set((f[0] + b[0]) / 2, DECK + 0.75, (f[1] + b[1]) / 2); g.rotation.y = Math.atan2(f[0] - b[0], f[1] - b[1]); }); });
     // 遊覽船、大章魚、大看板、霓虹
-    if (tw.boat) { const bt = tw.boat; bt.x += bt.d * 3 * dt; if (bt.x > 150 || bt.x < -95) bt.d *= -1; bt.g.position.set(bt.x, 0.1 + Math.sin(tw.t * 1.4) * 0.05, 28); bt.g.rotation.y = bt.d > 0 ? Math.PI / 2 : -Math.PI / 2; }
+    (tw.boats || []).forEach(bt => { bt.x += bt.d * 3 * dt; if (bt.x > bt.hi) { bt.x = bt.hi; bt.d = -1; } else if (bt.x < bt.lo) { bt.x = bt.lo; bt.d = 1; } bt.g.position.set(bt.x, 0.1 + Math.sin(tw.t * 1.4) * 0.05, 28); bt.g.rotation.y = bt.d > 0 ? Math.PI : 0; });   // 船身沿 x，船頭（駕駛艙偏的那一邊）朝前
     if (tw.octo) tw.octo.legs.forEach((l, k) => { l.rotation.x = Math.sin(tw.t * 2 + k) * 0.35; });
     if (tw.bb) { const k = Math.floor(tw.t / 0.7) % 2; if (k !== tw.bb.k) { tw.bb.k = k; tw.bb.m.map = k ? tw.bb.t2 : tw.bb.t1; tw.bb.m.needsUpdate = true; } }
     tw.neonT = (tw.neonT || 0) - dt; if (tw.neonT <= 0) { tw.neonT = 0.12; tw.neon.forEach(n => { const on = Math.sin(tw.t * 3 + n.ph) > -0.92 || Math.random() < 0.5; n.m.visible = on; }); }
