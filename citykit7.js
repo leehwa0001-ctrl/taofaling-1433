@@ -108,6 +108,98 @@
       if (fx != null) BOX(M('shopLit'), Math.min(fx, fx + (f === 'e' ? 0.06 : -0.06)), 0.5, z0 + 1, Math.max(fx, fx + (f === 'e' ? 0.06 : -0.06)), 4.2, z1 - 1);
       return { r: o.r, h: y + 3.2 };
     };
+    // ---------- 更多樣的大樓（2026-10-09 作者：吉山的大樓可以更多樣性） ----------
+    const GT = ['#9AB0C0', '#8AA8B8', '#7A98B0', '#B89A70', '#5A606C', '#8AB0A0', '#D0D6DC', '#8A7A9A', '#A0B8B0'];
+    const NC = ['#4AE8FF', '#FF4A9A', '#C86AFF', '#8AFF6A', '#FFE24A', '#FF7A3A'];
+    const winBand = () => CK.mat('cylWin', { col: '#B8C8D4', em: '#FFE0A8', ei: 0, lamp: true, snow: 0 });
+    const glassOf = col => M('glass', { col: col || '#3A4A58' });
+    const beacon = (x, y, z) => { const bc = new TH.Mesh(g.sph, CK.mat('beacon', { col: '#FF2A1A', em: '#FF2A1A', ei: 3, snow: 0 })); bc.position.set(x, y, z); bc.scale.setScalar(0.6); B.group.add(bc); anim((dt, tt) => { bc.visible = Math.sin(tt * 3 + x + z) > 0; }); };
+    // 圓柱的玻璃塔：每層一圈燈帶（晚上亮）、隔幾層一圈樓板、頂上一圈霓虹和尖塔
+    B.cylTower = o => {
+      const [x0, z0, x1, z1] = o.r, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, R0 = Math.min(x1 - x0, z1 - z0) / 2 - 0.4, H = o.h || 60, neon = o.neon || pk(NC), gm = glassOf(o.tint || pk(['#2E3A48', '#3A4A58', '#2A3A3A']));
+      P(g.cyl24, M('concD'), cx, 0.25, cz, R0 * 2 + 0.8, 0.5, R0 * 2 + 0.8);
+      P(g.cyl24, gm, cx, H / 2, cz, R0 * 2, H, R0 * 2);
+      for (let y = 4.5; y < H - 1; y += 3.6) P(g.cyl24, winBand(), cx, y, cz, R0 * 2 + 0.06, 1.1, R0 * 2 + 0.06);
+      for (let y = 3.6; y < H; y += 10.8) P(g.cyl24, M('steel'), cx, y, cz, R0 * 2 + 0.5, 0.3, R0 * 2 + 0.5);
+      P(g.cyl24, M('steelD'), cx, H + 0.6, cz, R0 * 2 + 0.6, 1.2, R0 * 2 + 0.6);
+      P(g.torus, NEON(neon, 2.2), cx, H + 1.3, cz, R0 * 2.04, R0 * 2.04, R0 * 2.04, Math.PI / 2, 0, 0);
+      P(g.cone8, M('steel'), cx, H + 1.2 + (o.spire || 14) / 2, cz, 1.4, o.spire || 14, 1.4); beacon(cx, H + 1.4 + (o.spire || 14), cz);
+      BOX(M('shopLit'), cx - R0 * 0.6, 0.5, cz + R0 - 0.3, cx + R0 * 0.6, 4.2, cz + R0 + 0.1);
+      B.solid(x0, z0, x1, z1, 'house'); B.foot([x0, z0, x1, z1], 'glass', H + 2);
+      return { r: o.r, h: H };
+    };
+    // 扭轉的堆疊塔：一段一段的玻璃盒子，每段轉一個角度、顏色不一樣，每段的頂一圈霓虹
+    B.twistTower = o => {
+      const [x0, z0, x1, z1] = o.r, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, H = o.h || 60, n = o.segs || 5, s0 = Math.min(x1 - x0, z1 - z0) * 0.7, neon = o.neon || pk(NC);
+      let y = 0;
+      for (let i = 0; i < n; i++) {
+        const sh = Math.round(H / n / 3.6) * 3.6, s = s0 * (1 - i * 0.06), a = (o.twist || 0.22) * i, wall = CK.facMat('glass', pk(GT));
+        P(g.box, wall, cx, y + sh / 2, cz, s, sh, s, 0, a, 0);
+        P(g.box, NEON(neon, 1.8), cx, y + sh - 0.1, cz, s + 0.12, 0.16, s + 0.12, 0, a, 0);
+        P(g.box, M('steelD'), cx, y + sh + 0.15, cz, s + 0.3, 0.3, s + 0.3, 0, a, 0);
+        y += sh + 0.3;
+      }
+      P(g.cyl8, M('steelD'), cx, y + 5, cz, 0.4, 10, 0.4); beacon(cx, y + 10.2, cz);
+      B.solid(x0, z0, x1, z1, 'house'); B.foot([x0, z0, x1, z1], 'glass', y);
+      return { r: o.r, h: y };
+    };
+    // 斜頂的塔：玻璃盒子，頂上一塊斜切的玻璃（像刀切過去），斜邊一條霓虹
+    let WEDGE = null;
+    const wedge = () => { if (WEDGE) return WEDGE; const sh = new TH.Shape([new TH.Vector2(-0.5, 0), new TH.Vector2(0.5, 0), new TH.Vector2(-0.5, 1)]); WEDGE = new TH.ExtrudeGeometry(sh, { depth: 1, bevelEnabled: false }); WEDGE.translate(0, 0, -0.5); WEDGE.userData.shared = true; return WEDGE; };
+    B.slantTower = o => {
+      const [x0, z0, x1, z1] = o.r, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, w = x1 - x0, d = z1 - z0, H = o.h || 50, hw = o.wedge || Math.min(w, d) * 0.7, tint = o.tint || pk(GT), neon = o.neon || pk(NC);
+      BOX(M('concD'), x0 - 0.2, 0, z0 - 0.2, x1 + 0.2, 0.5, z1 + 0.2);
+      BOX(CK.facMat('glass', tint), x0, 0, z0, x1, H, z1);
+      P(wedge(), glassOf('#2A3440'), cx, H, cz, w, hw, d, 0, o.flip ? Math.PI : 0, 0);
+      const L = Math.hypot(w, hw), an = Math.atan2(hw, w) * (o.flip ? -1 : 1);
+      [-1, 1].forEach(sd => P(g.box, NEON(neon, 2), cx, H + hw / 2, cz + sd * d / 2, L, 0.2, 0.2, 0, 0, o.flip ? an : -an));
+      BOX(M('shopLit'), x0 + 1, 0.5, z1, x1 - 1, 4.2, z1 + 0.06);
+      B.solid(x0, z0, x1, z1, 'house'); B.foot([x0, z0, x1, z1], 'glass', H + hw);
+      return { r: o.r, h: H + hw };
+    };
+    // 雙塔＋空中走廊（玻璃的橋、霓虹的線）
+    B.twinTower = o => {
+      const [x0, z0, x1, z1] = o.r, w = x1 - x0, d = z1 - z0, along = w >= d, gap = o.gap || 8, H = o.h || 70;
+      const a = along ? [x0, z0, x0 + (w - gap) / 2, z1] : [x0, z0, x1, z0 + (d - gap) / 2], b = along ? [x1 - (w - gap) / 2, z0, x1, z1] : [x0, z1 - (d - gap) / 2, x1, z1];
+      B.tower({ r: a, h: H, face: o.face, neon: o.neon, col: o.col, crown: o.crown });
+      B.tower({ r: b, h: H * (o.k2 || 0.86), face: o.face, neon: o.neon, col: o.col });
+      [H * 0.45, H * 0.7].forEach((by, i) => { const bw = 4.2; if (along) { const cz = (z0 + z1) / 2 + (i ? 3 : -3); BOX(M('glassL'), a[2], by, cz - bw / 2, b[0], by + 3.4, cz + bw / 2); BOX(M('steelD'), a[2], by - 0.4, cz - bw / 2 - 0.2, b[0], by, cz + bw / 2 + 0.2); B.neon(a[2], by - 0.45, cz + bw / 2 + 0.2, b[0], by - 0.3, cz + bw / 2 + 0.3, o.neon || '#FFE24A'); } else { const cx = (x0 + x1) / 2 + (i ? 3 : -3); BOX(M('glassL'), cx - bw / 2, by, a[3], cx + bw / 2, by + 3.4, b[1]); BOX(M('steelD'), cx - bw / 2 - 0.2, by - 0.4, a[3], cx + bw / 2 + 0.2, by, b[1]); B.neon(cx + bw / 2 + 0.2, by - 0.45, a[3], cx + bw / 2 + 0.3, by - 0.3, b[1], o.neon || '#FFE24A'); } });
+      return { r: o.r, h: H };
+    };
+    // 賽博和式：玻璃塔的頂上蓋三層和風的塔頂（瓦、金鯱，屋簷下一圈霓虹）
+    B.pagodaTower = o => {
+      const [x0, z0, x1, z1] = o.r, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, H = o.h || 70, neon = o.neon || pk(NC), RM = M('kawara', { col: '#3A3E48' });
+      const r0 = B.tower({ r: o.r, h: H, face: o.face, neon, col: o.col, segs: 2, mast: 0.01 });
+      let y = r0.h - 3.2, w = Math.min(x1 - x0, z1 - z0) - 2 * (o.setback || 1.8) - 3, wall = CK.facMat('wafu', '#F2EEE6');
+      for (let i = 0; i < 3; i++) {
+        const hh = 4.2, ov = 1.6, last = i === 2;
+        BOX(wall, cx - w / 2, y, cz - w / 2, cx + w / 2, y + hh, cz + w / 2);
+        const rf = CK.hipGeo(w, w, last ? { o: ov, h: (w / 2 + ov) * 0.7, sori: 0.8, fine: true } : { o: ov + 1.0, ring: true, h: (ov + 1.0) * 0.55, sori: 0.6, fine: true });
+        if (last) { const ye = y + hh - rf.slope * ov + 0.05; B.hip(cx, ye, cz, w, w, 0, RM, { o: ov, h: rf.H, sori: 0.8, fine: true, edge: 'verm', under: 'woodD' }); P(g.cyl8, M('gold'), cx, ye + rf.H + 2.2, cz, 0.35, 4.4, 0.35); [0, 1, 2].forEach(k => P(g.torus, M('gold'), cx, ye + rf.H + 1 + k * 1.1, cz, 1.2 - k * 0.2, 1.2 - k * 0.2, 1.2 - k * 0.2, Math.PI / 2, 0, 0)); }
+        else { B.hip(cx, y + hh - ov * 0.55, cz, w - 2, w - 2, 0, RM, { o: ov + 1.0, ring: true, h: (ov + 1.0) * 0.55, sori: 0.6, fine: true, edge: 'verm', under: 'woodD' }); }
+        const e = w / 2 + ov - 0.2; [[cx - e, cz - e, cx + e, cz - e + 0.12], [cx - e, cz + e - 0.12, cx + e, cz + e], [cx - e, cz - e, cx - e + 0.12, cz + e], [cx + e - 0.12, cz - e, cx + e, cz + e]].forEach(q => B.neon(q[0], y + hh - 1.05, q[1], q[2], y + hh - 0.95, q[3], neon));
+        y += hh; w -= 2;
+      }
+      return { r: o.r, h: y + 6 };
+    };
+    // 住宅巨樓：密密麻麻的陽台、冷氣機、側面一條巨大的霓虹直招牌、屋頂的看板
+    B.megaBlock = o => {
+      const [x0, z0, x1, z1] = o.r, f = o.face || 's', H = o.h || 36;
+      const r = B.bld({ r: o.r, h: H, style: 'apt', face: f, col: o.col || pk(['#A8A49C', '#B8B0A4', '#9AA0A4', '#C0B8A8', '#8A8A90']), top: false });
+      const along = f === 's' || f === 'n', c = { s: z1, n: z0, e: x1, w: x0 }[f], sg = f === 's' || f === 'e' ? 1 : -1;
+      // 冷氣機
+      for (let k = 0; k < 14; k++) { const a = rr(along ? x0 + 1 : z0 + 1, along ? x1 - 1 : z1 - 1), y = 3 + Math.floor(rr(0, (H - 4) / 2.9)) * 2.9 + 0.4; if (along) BOX(M('metal'), a - 0.4, y, Math.min(c + sg * 1.15, c + sg * 1.6), a + 0.4, y + 0.6, Math.max(c + sg * 1.15, c + sg * 1.6)); else BOX(M('metal'), Math.min(c + sg * 1.15, c + sg * 1.6), y, a - 0.4, Math.max(c + sg * 1.15, c + sg * 1.6), y + 0.6, a + 0.4); }
+      // 側面的巨大霓虹直招牌
+      const txt = o.sign || pk(['德克斯凡', '機械町', '能量罐', '吉山證券', '朝日', '拉麵', '遊戲中心']), sx = along ? x1 + 0.6 : c + sg * 2.4, sz = along ? c + sg * 2.4 : z1 + 0.6;
+      B.neonSign(txt, along ? x0 + 0.6 : sx, Math.min(H - 4, 6 + [...txt].length * 1.4), along ? sz : z0 + 0.6, along ? Math.PI / 2 : 0, { size: 1.5 });
+      // 屋頂的看板
+      if (o.board !== false && rnd() < 0.7) { const bx = (x0 + x1) / 2, bz = (z0 + z1) / 2; [-3, 3].forEach(dx => BOX(M('steel'), bx + dx - 0.1, H, bz - 0.1, bx + dx + 0.1, H + 4, bz + 0.1)); B.screen(bx, H + 6, bz + (along ? sg * 0.2 : 0), along ? (f === 's' ? 0 : Math.PI) : (f === 'e' ? Math.PI / 2 : -Math.PI / 2), 10, 4.6, { ads: [[pk(['德克斯凡', '能量罐', '朝日科技', '機械町拉麵', '魔導懸浮車']), pk(['#1A0A3A', '#0A2A3A', '#3A0A1A']), pk(NC)]], light: false }); }
+      return r;
+    };
+    // 讓 B.row 也能用這幾種（style：'mega'、'cyl'、'twist'、'slant'、'neonTower'）
+    const bld1 = B.bld;
+    B.bld = o => (!o ? bld1(o) : o.style === 'mega' ? B.megaBlock(o) : o.style === 'cyl' ? B.cylTower(o) : o.style === 'twist' ? B.twistTower(o) : o.style === 'slant' ? B.slantTower(o) : o.style === 'neonTower' ? B.tower(o) : bld1(o));
+
     // ---------- 煙 ----------
     B.smoke = (x, y, z, o) => {
       o = o || {}; const n = o.n || 6, puffs = [], col = o.col || '#C8C8CC', s0 = o.s || 6, rise = o.rise || 40, drift = o.drift || 12, per = o.per || 14;
@@ -191,7 +283,7 @@
     };
     // ---------- 懸浮車 ----------
     B.hover = (pts, o) => {
-      o = o || {}; const n = o.n || 4, y = o.y || 7, loop = o.loop !== false, { acc, L } = CK.accOf(pts, loop), cars = [], under = NEON(o.glow || '#4AE8FF', 2.6);
+      o = o || {}; const n = o.n || 4, y = o.y || 7, loop = o.loop !== false, { acc, L } = CK.accOf(pts, loop), cars = [], under = NEON(o.glow || '#4AE8FF', 1.3);   // 車底的光不要太亮（鏡頭在車底下會被泛光洗白）
       for (let i = 0; i < n; i++) {
         const grp = new TH.Group(), col = pk(['#E8E4DC', '#1A1A20', '#C83A3A', '#2E4A8A', '#E8B830']), body = CK.mat('paint|' + col, { tex: 'paint', col, rough: 0.35, metal: 0.4 });
         const add = (geo, mat, px, py, pz, sx, sy, sz) => { const m = new TH.Mesh(geo, mat); m.position.set(px, py, pz); m.scale.set(sx, sy, sz); m.castShadow = true; grp.add(m); };

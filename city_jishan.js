@@ -41,8 +41,8 @@
       B.plaza(-136, -165, -134, 165, 'gran', { noCurb: true }); B.plaza(-154, -165, -152, 165, 'gran', { noCurb: true });
       [-50, 50].forEach(z => B.bridge(-152, z - 2.5, -136, z + 2.5, { rise: 1.1, deck: 0.12, mat: 'woodD', railMat: 'verm', rail: true }));
       // ---------- 北：吉山神社（台地）、住宅 ----------
-      B.row('s', -104, -134, -10, 12, { style: 'wafu', h: 14 }, 9, 13, () => ({ h: rr(10, 22) }));
-      B.row('s', -104, 10, 88, 12, { style: 'wafu', h: 14 }, 9, 13, () => ({ h: rr(12, 26) }));
+      B.row('s', -104, -134, -10, 12, { style: 'wafu', h: 14 }, 9, 13, () => (rnd() < 0.3 ? { style: 'mega', h: 2.9 * Math.round(rr(5, 9)), board: false } : { h: rr(10, 22) }));
+      B.row('s', -104, 10, 88, 12, { style: 'wafu', h: 14 }, 9, 13, () => (rnd() < 0.35 ? { style: 'mega', h: 2.9 * Math.round(rr(6, 10)) } : { h: rr(12, 26) }));
       B.plaza(-6, -122, 6, -104, 'gran');
       B.terrace(-34, -163, 34, -128, 5, { wall: 'ishi', top: 'gravel', open: [[-4, -128.4, 4, -127.6]] });
       B.ishigaki(-34, -163, 34, -128, 0, 5, { batter: 0.2, sides: 'nwe' });
@@ -51,19 +51,19 @@
       shrine(B);
       B.area('吉山神社', [-36, -165, 36, -104]); B.label('吉山神社', 0, -146);
       // ---------- 西北：商務區 ----------
-      B.tower({ r: [-76, -44, -54, -13], h: 66, face: 's', neon: '#4AE8FF' });
+      B.cylTower({ r: [-76, -44, -54, -13], h: 70, neon: '#4AE8FF', tint: '#2E3A48', spire: 18 });
       guild(B, [-51, -40, -35, -13]);
-      B.tower({ r: [-32, -44, -13, -13], h: 76, face: 's', neon: '#FF4A9A', crown: '吉山' });
+      B.pagodaTower({ r: [-32, -44, -13, -13], h: 72, face: 's', neon: '#FF4A9A', col: '#A8B8C8' });   // 賽博和式：玻璃塔頂上的和風塔頂
       asahi(B, [-44, -86, -13, -52]);
       rental(B, [-88.5, -86, -48, -47]);
-      B.row('w', -88.5, -44, -13, 10, { style: 'glass', h: 18 }, 10, 16, () => ({ h: rr(14, 24) }));
+      B.row('w', -88.5, -44, -13, 10, { style: 'mega', h: 30 }, 10, 16, () => ({ h: 2.9 * Math.round(rr(8, 12)), board: false }));
       B.area('商務區', [-90, -90, -12, -12]); B.label('公會吉山分館', -43, -27); B.label('朝日科技', -28, -69);
       // ---------- 東北：金融區 ----------
       stock(B, [18, -52, 62, -13]);
       bank(B, [13, -88, 40, -56]);
-      B.tower({ r: [60, -88, 88.5, -56], h: 128, face: 's', neon: '#4AE8FF', crown: '德克斯凡', segs: 4 });
-      B.tower({ r: [64, -52, 88.5, -13], h: 52, face: 's', neon: '#C86AFF' });
-      B.tower({ r: [42, -88, 58, -56], h: 44, face: 'w', neon: '#8AFF6A' });
+      B.tower({ r: [60, -88, 88.5, -56], h: 128, face: 's', neon: '#4AE8FF', crown: '德克斯凡', segs: 4, col: '#7A98B0' });
+      B.twistTower({ r: [64, -52, 88.5, -13], h: 58, segs: 6, neon: '#C86AFF', twist: 0.32 });
+      B.slantTower({ r: [42, -88, 58, -56], h: 40, tint: '#B89A70', neon: '#FFE24A' });
       B.area('金融區', [12, -90, 90, -12]); B.label('股票交易所', 40, -32); B.label('德克斯凡大樓', 74, -72);
       // ---------- 西南：機械町 ----------
       machi(B);
@@ -72,7 +72,7 @@
       neonStreet(B);
       B.area('霓虹商店街', [12, 12, 90, 93]); B.label('霓虹橫丁', 52, 52);
       // ---------- 西：吉川兩岸的住宅 ----------
-      [[-88, -13], [13, 92]].forEach(([a, b]) => { B.row('e', -103.5, a, b, 14, { style: 'wafu', h: 18 }, 10, 15, () => ({ h: rr(12, 30) })); B.row('w', -134, a, b, 12, { style: 'apt', h: 17.4 }, 12, 16, () => ({ h: 2.9 * Math.round(rr(4, 8)) })); });
+      [[-88, -13], [13, 92]].forEach(([a, b]) => { B.row('e', -103.5, a, b, 14, { style: 'wafu', h: 18 }, 10, 15, () => ({ h: rr(12, 30) })); B.row('w', -134, a, b, 12, { style: 'apt', h: 17.4 }, 12, 16, () => (rnd() < 0.4 ? { style: 'mega', h: 2.9 * Math.round(rr(7, 11)), board: false } : { h: 2.9 * Math.round(rr(4, 8)) })); });
       B.row('e', -154, -160, 160, 12, { style: 'machiya', h: 6.4 }, 6, 8, () => ({}));
       B.area('吉川', [-156, -165, -132, 165]); B.label('吉川', -144, 0);
       // ---------- 東：重工業區、峽谷、礦場 ----------
@@ -84,7 +84,7 @@
       B.plaza(-122, 108, -62, 150, 'asph');   // 巴士總站
       [-110, -96, -82].forEach(x => B.busStop(x, 112, 0, pk(['往礦場', '往工業區', '往吉山神社'])));
       B.inter(-96, 114, 2.4, '巴士總站的時刻表', () => R.townTalk('吉山巴士總站', ['往礦場：每十五分鐘一班（工人專車優先）', '往工業區：二十四小時', '往吉山神社：白天每小時一班', '「夜班車上睡著的人，司機會叫醒你。」']), '#5A8AC8');
-      B.tower({ r: [62, 112, 88, 150], h: 62, face: 'n', neon: '#FFE24A', crown: '吉山酒店' });
+      B.twinTower({ r: [62, 112, 88, 150], h: 66, face: 'n', neon: '#FFE24A', crown: '吉山酒店', col: '#B89A70', gap: 9 });
       B.row('n', 108, -134, -124, 14, { style: 'wafu', h: 16 }, 9, 10, () => ({}));
       B.viaduct([[-700, 158], [700, 158]], 10, { neon: '#4AE8FF', skip: (x, z) => Math.abs(x) < 52 });
       B.rail([[-700, 158], [700, 158]], { y: 10, col: '#1A1A22', stripe: '#4AE8FF', cars: 6, v: 18 });
@@ -97,8 +97,8 @@
       B.holo(26, 34, 24, -Math.PI / 4, 10, 10, '吉', '#FF4A9A');
       B.holo(-24, 48, -24, Math.PI / 4, 8, 8, '山', '#4AE8FF');
       B.drone(0, 0, 18, 26); B.drone(30, -40, 22, 38); B.drone(-40, 40, 16, 22);
-      B.hover([[-4, 90], [-4, -90], [-90, -90], [-90, 90]], { n: 4, y: 9, glow: '#4AE8FF' });
-      B.hover([[4, -90], [4, 90], [90, 90], [90, -90]], { n: 4, y: 12, glow: '#FF4A9A' });
+      B.hover([[-4, 90], [-4, -90], [-90, -90], [-90, 90]], { n: 4, y: 15, glow: '#4AE8FF' });
+      B.hover([[4, -90], [4, 90], [90, 90], [90, -90]], { n: 4, y: 19, glow: '#FF4A9A' });
       B.inter(11, 11, 2.6, '觀光景點：霓虹十字路口（觀光章）', () => az().stamp('jishan', 'js_neon'), '#E8C04A').sight = 'js_neon';
       // ---------- 街上的東西 ----------
       for (let z = -84; z <= 84; z += 14) { if (Math.abs(z) < 16) continue; B.lamp(-8.6, z, Math.PI / 2); B.lamp(8.6, z + 7, -Math.PI / 2); }
@@ -266,7 +266,8 @@
     B.bld({ r: [13, 13, 40, 34], h: 26, style: 'glass', face: 'n', col: '#2A3440', top: false });
     B.screen(26.5, 16, 12.85, Math.PI, 22, 12, { ads: [['德克斯凡', '#1A0A4A', '#4AE8FF', '讓明天提早到來'], ['吉山重工', '#4A1A0A', '#FFB04A', '爐火不熄'], ['朝日科技', '#3A0A3A', '#FF8AE8', '外骨骼新型號'], ['昭旭鐵道', '#0A2A4A', '#FFFFFF', '吉山—皇嶺 一天四班']], every: 5 });
     // 沿著朝日通（南邊，面朝北）：和風高樓＋霓虹
-    const neonT = () => ({ h: 3.6 * Math.round(4 + rnd() * 5), vsign: pk(['遊戲中心', '卡拉OK', '居酒屋', '藥妝', '網咖', '柏青哥', '烤肉', '咖啡']), neon: 1 });
+    const neonT = () => { const k = rnd(); if (k < 0.28) return { style: 'mega', h: 2.9 * Math.round(rr2(7, 12)) }; if (k < 0.42) return { style: 'neonTower', h: 3.6 * Math.round(rr2(8, 13)), neon: pk(['#4AE8FF', '#FF4A9A', '#C86AFF', '#FFE24A']) }; return { h: 3.6 * Math.round(4 + rnd() * 5), vsign: pk(['遊戲中心', '卡拉OK', '居酒屋', '藥妝', '網咖', '柏青哥', '烤肉', '咖啡']), neon: 1 }; };
+    function rr2(a, b) { return a + (b - a) * rnd(); }
     B.row('n', 13, 42, 52, 16, { style: 'wafu', h: 22 }, 10, 10, () => neonT());
     B.row('n', 13, 62, 88.5, 16, { style: 'wafu', h: 22 }, 10, 14, () => neonT());
     // 沿著大通（東邊，面朝西）
