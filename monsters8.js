@@ -53,7 +53,7 @@
     const w = W(), run = w.run, P = w.P; if (!run || run.done || !P || !w.enemies) return;
     acc += dt;
     w.enemies.forEach(e => {
-      if (!e.afx || e.dead) return; const A = e.afx;
+      if (!e.afx || e.dead || e.mirror) return; const A = e.afx;
       if (e.afxRing) { const hide = R.fogHides && R.fogHides(e.x, e.z); e.afxRing.visible = !hide; if (!hide) { e.afxRing.rotation.z += dt * 1.5; e.afxRing.material.opacity = 0.4 + 0.2 * Math.sin(run.t * 4); } }
       if (!e.aggro || e.dormant) return;
       const d = dist(e, P);

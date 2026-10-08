@@ -384,7 +384,7 @@
     });
     goo = goo.filter(g => { g.life -= dt; g.m.material.opacity = 0.45 * Math.min(1, g.life / 1.5); if (Math.hypot(P.x - g.x, P.z - g.z) < g.r && !(P.air > 0)) P.slowT = Math.max(P.slowT || 0, 0.4); if (g.life <= 0) { if (g.m.parent) g.m.parent.remove(g.m); g.m.geometry.dispose(); g.m.material.dispose(); return false; } return true; });
     stepB(dt);
-    if (!w.paused) director(dt);
+    if (!w.paused && !(R.net && R.net.inRoom() && w.run.coop && !w.run.coop.solo && !w.run.coop.host)) director(dt);
   };
   const lf0 = R.loadFloor;
   R.loadFloor = (...a) => { clearGoo(); steer = []; comboT = 5; return lf0(...a); };

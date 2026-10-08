@@ -70,7 +70,7 @@
   const se = R.spawnEnemy;
   R.spawnEnemy = (id, x, z, room, o) => {
     const run = W.run, h = home[id];
-    if (run && VAR[id] && h && !(o && (o.human || o.role))) { const dep = Math.max(0, Math.min(1, (run.floor || 0) / Math.max(1, ((run.floors || 1) - 1) * (run.depthK && run.depthK < 1 ? run.depthK : 1)))),   /* depth.js 生怪時把 run.floor 換算成舊的層數，總層數也要一起換算 */ v = R.variantAt(dep, Math.max(0, (run.grade.lv || 1) - h)); let diff = v.tier; while (diff > 0 && !VAR[id][diff]) diff--; if (diff >= 1 && rnd() < v.chance) { const e = se(VAR[id][diff], x, z, room, o); if (e) { e.vbase = id; const k = TIER[diff].sc; if (k !== 1 && e.m && e.m.g) e.m.g.scale.multiplyScalar(k); } return e; } }
+    if (run && VAR[id] && h && !(o && (o.human || o.role || o.netMirror))) { const dep = Math.max(0, Math.min(1, (run.floor || 0) / Math.max(1, ((run.floors || 1) - 1) * (run.depthK && run.depthK < 1 ? run.depthK : 1)))),   /* depth.js 生怪時把 run.floor 換算成舊的層數，總層數也要一起換算 */ v = R.variantAt(dep, Math.max(0, (run.grade.lv || 1) - h)); let diff = v.tier; while (diff > 0 && !VAR[id][diff]) diff--; if (diff >= 1 && rnd() < v.chance) { const e = se(VAR[id][diff], x, z, room, o); if (e) { e.vbase = id; const k = TIER[diff].sc; if (k !== 1 && e.m && e.m.g) e.m.g.scale.multiplyScalar(k); } return e; } }
     return se(id, x, z, room, o);
   };
   // 打倒的次數也算在原本那一種上（圖鑑、之後的寵物）

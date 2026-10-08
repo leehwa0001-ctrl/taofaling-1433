@@ -13,7 +13,7 @@
   const later = (f, ms) => { const run = W().run; setTimeout(() => { if (W().run === run && run && !run.done) f(); }, ms); };
   const floorAt = (x, z) => (R.nearestFloor ? R.nearestFloor(x, z) : [x, z]);
   const targets = () => { const w = W(); return [w.P].concat((w.allies || []).filter(a => !a.downed), R.netTargets ? R.netTargets() : []).filter(t => t && !t.dead); };   // 多人連線：房主這邊也算別人（net2.js）
-  const hurtAny = (t, dmg, e, o) => (t.ally ? R.hurtAlly(t, dmg, e) : R.hurtPlayer(dmg, e, o));
+  const hurtAny = (t, dmg, e, o) => (t.ally ? R.hurtAlly(t, dmg, e, o) : R.hurtPlayer(dmg, e, o));
   const near = (x, z, r) => targets().filter(t => Math.hypot(t.x - x, t.z - z) < r);
   const setAi = (id, ai) => Object.keys(R.ENEMIES).forEach(k => { const d = R.ENEMIES[k]; if (k === id || d.vbase === id || k.indexOf(id + '_v') === 0) d.ai = ai; });
   const side = e => e.side || (e.side = rnd() < 0.5 ? 1 : -1);
@@ -655,7 +655,7 @@
   const hl0 = AI.healer;
   if (hl0) AI.healer = (e, P, d, a, sp, dt, walk, H) => { const c0 = e.cd, r = hl0(e, P, d, a, sp, dt, walk, H); if (e.cd > c0 + 1) e.healT = 3; if (e.healT > 0) e.healT -= dt; return r; };
   const protect = dt => {
-    const w = W(), P = w.P; if (!w.run || !P || !w.enemies) return;
+    const w = W(), P = w.P; if (!w.run || !P || !w.enemies || (R.net && R.net.inRoom() && w.run.coop && !w.run.coop.solo && !w.run.coop.host)) return;
     const healers = w.enemies.filter(e => !e.dead && e.def.ai === 'healer' && e.aggro);
     w.enemies.forEach(e => { if (e.guardOf && (e.guardOf.dead || !healers.includes(e.guardOf) || e.dead)) { e.guardOf = null; } });
     healers.forEach(h => {
