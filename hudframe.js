@@ -165,7 +165,7 @@
     // 樓層效果
     '#rv-mod.hf-chip{display:grid;gap:1px}#rv-mod.hf-chip small{color:#D6CCB8}',
     '.hf-mod-fog{--cc:#AEB8C2}.hf-mod-fog::after{inset:0;background:radial-gradient(ellipse 40px 10px at 30% 60%,rgba(220,230,240,.22),transparent 70%),radial-gradient(ellipse 50px 12px at 80% 40%,rgba(220,230,240,.18),transparent 70%);background-size:160px 100%;animation:hfSand 6s linear infinite}',
-    '.hf-mod-treasure{--cc:#E8C860;background:linear-gradient(90deg,rgba(90,70,20,.85),rgba(14,10,6,.8))!important}.hf-mod-treasure::after{inset:0;background:radial-gradient(circle,#FFF4C0 0 1px,transparent 1.5px) 0 0/27px 17px,radial-gradient(circle,#FFE08A 0 .8px,transparent 1.3px) 13px 8px/33px 21px;animation:hfTw 1.4s steps(3) infinite}',
+    '.hf-mod-treasure{--cc:#E8C860;background:linear-gradient(90deg,rgba(90,70,20,.85),rgba(14,10,6,.8))!important}',
     '@keyframes hfTw{0%{opacity:.2}50%{opacity:1}100%{opacity:.35}}',
     '.hf-mod-crystal{--cc:#7FE8FF;background:linear-gradient(135deg,rgba(30,90,110,.8),rgba(10,16,24,.85) 60%)!important}.hf-mod-crystal::after{right:0;top:0;bottom:0;width:40px;background:linear-gradient(115deg,transparent 30%,rgba(160,240,255,.35) 31% 40%,transparent 41% 55%,rgba(160,240,255,.25) 56% 62%,transparent 63%)}',
     '.hf-mod-nest{--cc:#D8584A;background:radial-gradient(ellipse at 0 100%,rgba(110,20,20,.7),rgba(14,6,8,.85) 70%)!important}.hf-mod-nest::after{inset:0;background:radial-gradient(circle at 50% 50%,rgba(216,88,74,.35) 0 2px,transparent 3px) 0 0/14px 12px;animation:hfTw 1.8s ease-in-out infinite}',
