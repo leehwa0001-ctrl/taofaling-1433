@@ -64,7 +64,8 @@
   const st0 = R.step;
   R.step = dt => { const r = st0(dt), P = W().P, run = W().run; if (P && run && P.ttUndyingLv && !P.dead && P.hp > 0 && P.hp < P.hpMax * 0.5) { const half = (run.t || 0) < (run.ttUndying || 0) ? 0.5 : 1; (R.regenBank ? R.regenBank(P.hpMax * 0.016 * P.ttUndyingLv * half * dt) : R.healP(P.hpMax * 0.016 * P.ttUndyingLv * half * dt, true)); } return r; };
 
-  // 無念 + 天啟。天啟免費重放不消耗魔力、不保留新冷卻，也不增加熟練度；最多連鎖五次，避免極端亂數鎖死遊戲。
+  // 2026-10-08 作者：無念點滿＝25% 再施放一次（原本天啟的效果，下面的 echo）；天啟點滿改成「天啟狀態」（talentapo.js）。
+  // 無念 + 天啟。（舊說明）天啟免費重放不消耗魔力、不保留新冷卻，也不增加熟練度；最多連鎖五次，避免極端亂數鎖死遊戲。
   // 2026-10-08 作者回饋：
   // - 修正大 bug：以前每放一招最後都把魔力設回「放之前」的值（mp0），等於所有人的技能都不花魔力。現在只有天啟的重放免費。
   // - 冷卻在施放完才開始算：位移、架勢、跳躍、旋轉還在進行的那段時間冷卻不走（P.cdHold）；法術類沒有施放時間，立刻開始。
@@ -92,7 +93,7 @@
       t -= dt; if (t > 0) return true;
       const keepCd = cdOf(P, i), mp = P.mp, keepHold = P.cdHold && P.cdHold[i];
       busy++; P._apEcho = (P._apEcho || 0) + 1;
-      try { setCd(P, i, 0); P.mp = P.mpMax; f(...a); R.num && R.num(P.x, 2.8 + n * 0.12, P.z, '天啟', 'crit'); }
+      try { setCd(P, i, 0); P.mp = P.mpMax; f(...a); R.num && R.num(P.x, 2.8 + n * 0.12, P.z, '無念・再一次', 'crit'); }
       finally { P._apEcho--; busy--; P.mp = mp; setCd(P, i, keepCd); if (P.cdHold) { if (keepHold) P.cdHold[i] = keepHold; else delete P.cdHold[i]; } }
       echo(f, a, i, castTime(P) + 0.4, n + 1);
       return false;
@@ -102,11 +103,9 @@
     const P = W().P; if (!P || busy) return f(...a);
     const i = slotOf(a), c0 = cdOf(P, i), mp0 = P.mp, ret = f(...a), casted = cdOf(P, i) > c0 + 0.01;
     if (!casted) return ret;
-    let finalCd = cdOf(P, i);
-    if (has('C1') && rnd() < 0.25) { finalCd = 0; P.mp = Math.min(P.mpMax, P.mp + Math.max(0, mp0 - P.mp)); R.num && R.num(P.x, 2.8, P.z, '無念', 'heal'); }
-    setCd(P, i, finalCd);
+    const finalCd = cdOf(P, i);
     const d = castTime(P); if (finalCd > 0) hold(P, i, d);
-    if (has('C2')) echo(f, a, i, d + 0.4, 0);
+    if (has('C1')) echo(f, a, i, d + 0.4, 0);   // 2026-10-08 作者：無念點滿改成原本天啟的「25% 再施放一次」（原本的 25% 不進冷卻＋退魔力拿掉）
     return ret;
   };
   if (R.castSlot) R.castSlot = wrapCast(R.castSlot, a => a[0] || 0);

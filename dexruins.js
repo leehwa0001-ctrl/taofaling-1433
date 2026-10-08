@@ -154,18 +154,19 @@
     return '<p class="note dr-tip">總覽・全部領主體 ' + L.length + ' 種。領主體不是只在深層：第 3～5 層起每隔 3～5 層有一隻。異變放在本體正下方（遇過才亮）。</p>'
       + '<div class="dr-lords">' + L.map(card).join('') + '</div>';
   };
+  // 照地區分開：東鶴一帶排第一，其他照地區名字
+  const byRegion = list => { const g = {}, order = []; list.forEach(x => { const rg = regionOf(x), k = rg ? rg.n : x.map === 'donghe' ? '東鶴' : String(x.name || '其他').split('・')[0]; /* 沒有地區資料的：用名字前面的地名（皇嶺南郊・觀光遺跡 → 皇嶺南郊） */ if (!g[k]) { g[k] = []; order.push(k); } g[k].push(x); }); order.sort((a, b) => (b.indexOf('東鶴') >= 0) - (a.indexOf('東鶴') >= 0)); return order.map(k => '<p class="dr-rg">' + esc(k) + '<small>' + g[k].length + ' 座</small></p><div class="dr-sites">' + g[k].map(siteBtn).join('') + '</div>').join(''); };
   const allInfoTab = () => {
-    return '<p class="note dr-tip">各個分級的詳細情報，以及東鶴目前有哪些那一級的遺跡（點了跳到那座遺跡的圖鑑）。</p>'
+    return '<p class="note dr-tip">各個分級的詳細情報，以及全國有哪些那一級的遺跡（照地區分開；點了跳到那座遺跡的圖鑑）。</p>'
       + ORDER.map(gid => {
         const g = G(gid); if (!g) return '';
-        const dh = ruins(gid).filter(s => s.map === 'donghe');
         const all = ruins(gid);
         return '<div class="dr-ginfo" style="--gc:' + gcol(gid) + '"><h4 class="dr-h" style="--gc:' + gcol(gid) + '">' + esc(g.name) + '<small>' + esc(g.letter || '') + '・' + esc(g.zone || '') + (g.floors ? '・約 ' + g.floors + ' 層' : '') + '</small></h4>'
           + '<p>' + esc(g.desc || g.locked || '') + '</p>'
           + (g.locked && g.desc ? '<p class="note">' + esc(g.locked) + '</p>' : '')
-          + '<p class="note"><b>東鶴的遺跡</b>' + (dh.length ? '（' + dh.length + ' 座）' : '：東鶴目前沒有這一級的遺跡。') + '</p>'
-          + (dh.length ? '<div class="dr-sites">' + dh.map(siteBtn).join('') + '</div>' : '')
-          + (all.length && all.length !== dh.length ? '<p class="note">全國一共 ' + all.length + ' 座這一級的遺跡（要看其他地區的，到上面「' + esc(g.name) + '」分頁）。</p>' : '')
+          // 2026-10-08 作者：總覽的每一級都列出全國的遺跡（原本只列東鶴的），照地區分開
+          + '<p class="note"><b>全國的遺跡</b>' + (all.length ? '（' + all.length + ' 座）' : '：目前沒有這一級的遺跡。') + '</p>'
+          + byRegion(all)
           + '</div>';
       }).join('');
   };
@@ -336,6 +337,7 @@
     '.dr-gtabs{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 8px}',
     '.dr-gt{padding:5px 10px;border-radius:999px;border:1px solid var(--gc);background:transparent;color:inherit;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}.dr-gt.on{background:var(--gc);color:#140E0A}',
     '.dr-sites{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-bottom:10px}',
+    '.dr-rg{margin:8px 0 3px;font-size:12.5px;font-weight:700;color:var(--gc,#C9A13A)}.dr-rg small{margin-left:6px;font-weight:400;color:var(--dim)}',
     '.dr-site{display:grid;gap:1px;text-align:left;padding:6px 9px;border-radius:8px;border:1px solid var(--line);border-left:4px solid var(--rc);background:rgba(255,255,255,.04);color:inherit;font:inherit;cursor:pointer}',
     '.dr-site b{font-size:13px}.dr-site small{font-size:11px;opacity:.75}.dr-site.on{background:color-mix(in srgb,var(--rc) 22%,transparent);border-color:var(--rc)}.dr-site.lock{opacity:.7}.dr-site.sm{padding:4px 8px}',
     '.dr-ruin{display:grid;gap:0;border-radius:10px;overflow-x:auto;overflow-y:hidden;border:1px solid var(--line);scrollbar-width:thin;cursor:grab;user-select:none}.dr-ruin.drag{cursor:grabbing}',

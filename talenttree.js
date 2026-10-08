@@ -52,10 +52,10 @@
       subs: [
         { id: 'swift', n: '迅思', d: '技能一直放。', nodes: [N('T_med2', '疾思', 5, '技能冷卻 −3%', (P, v) => { P.skillCdMult *= 1 - 0.03 * v; }), N('T_mpr2', '湧泉', 5, '每秒回復魔力 +0.6', (P, v) => { P.mpRegen = (P.mpRegen || 0) + 0.6 * v; }),
           N('T_trC1', '急咒', 5, '技能冷卻 −6%｜魔力 −6%', (P, v) => { P.skillCdMult *= 1 - 0.06 * v; P.mpMax = Math.round(P.mpMax * (1 - 0.06 * v)); }, 1)],
-          cap: N('T_capC1', '奧義・無念', 5, '技能急速 +10、每秒回復魔力 +0.4；點滿：放技能有 25% 不進冷卻，而且退回魔力', (P, v) => { P.skillCdMult *= 1 - 0.04 * v; P.mpRegen = (P.mpRegen || 0) + 0.4 * v; if (v >= 5) capOn(P, 'C1'); }) },   // 技能冷卻 ×(1 − 0.04) 會被 haste.js 記成技能急速 +10
+          cap: N('T_capC1', '奧義・無念', 5, '技能急速 +10、每秒回復魔力 +0.4；點滿：每次施放技能有 25% 機率再施放一次，重放也能繼續觸發', (P, v) => { P.skillCdMult *= 1 - 0.04 * v; P.mpRegen = (P.mpRegen || 0) + 0.4 * v; if (v >= 5) capOn(P, 'C1'); }) },   // 技能冷卻 ×(1 − 0.04) 會被 haste.js 記成技能急速 +10
         { id: 'abyss', n: '深淵', d: '一發比一發重。', nodes: [N('T_wis2', '深魔', 5, '魔力 +6%', (P, v) => { P.mpMax = Math.round(P.mpMax * (1 + 0.06 * v)); }), N('T_amp2', '增幅', 5, '技能書技能的傷害 +4.5%', (P, v) => { P.ttSkill = (P.ttSkill || 0) + 0.045 * v; }),
           N('T_trC2', '專精', 5, '技能書技能的傷害 +9%｜普攻的傷害 −4.5%', (P, v) => { P.ttSkill = (P.ttSkill || 0) + 0.09 * v; P.ttPrimary = (P.ttPrimary || 0) + 0.045 * v; }, 1)],
-          cap: N('T_capC2', '奧義・天啟', 5, '技能書技能的傷害 +6%、魔力 +4%；點滿：每次施放技能有 25% 機率再施放一次，重放也能繼續觸發', (P, v) => { P.ttSkill = (P.ttSkill || 0) + 0.06 * v; P.mpMax = Math.round(P.mpMax * (1 + 0.04 * v)); if (v >= 5) capOn(P, 'C2'); }) }
+          cap: N('T_capC2', '奧義・天啟', 5, '技能書技能的傷害 +6%、魔力 +4%；點滿：魔力填滿時進入「天啟」——下一招額外消耗最大魔力的 50%（不夠就用放完剩下的），每多消耗 1 點魔力，那一招的傷害、持續時間、範圍、效果 +1%；另外每秒回復 3% 最大魔力', (P, v) => { P.ttSkill = (P.ttSkill || 0) + 0.06 * v; P.mpMax = Math.round(P.mpMax * (1 + 0.04 * v)); if (v >= 5) capOn(P, 'C2'); }) }
       ] },
     { id: 'mend', n: '恢復之道', c: '#6AE08A', d: '回復：每秒回血、吸血、恢復量、體力。',
       nodes: [N('T_rec', '調息', 5, '每 5 秒回復生命 +1.5（超過最大生命 1% 的部分只剩 1/5 效果）', (P, v) => { P.regen = (P.regen || 0) + 1.0 * v; }), N('T_heal', '癒合', 5, '恢復量 +4%（每秒回血、吸血都算）', (P, v) => { P.recovAmp = (P.recovAmp || 0) + 0.04 * v; }), N('T_stam', '喘息', 5, '體力回復 +6%', (P, v) => { P.ttStam = (P.ttStam || 0) + 0.06 * v; })],
