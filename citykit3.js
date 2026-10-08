@@ -351,6 +351,7 @@
     [[-0.78, -1.4], [0.78, -1.4], [-0.78, 1.4], [0.78, 1.4]].forEach(([x, z]) => add(g.cyl, m.tire, x, 0.33, z, 0.66, 0.24, 0.66).rotation.z = Math.PI / 2);
     [[-0.6, -2.18], [0.6, -2.18]].forEach(([x, z]) => add(g.box, m.head, x, 0.7, z, 0.36, 0.14, 0.04));
     [[-0.65, 2.18], [0.65, 2.18]].forEach(([x, z]) => add(g.box, m.tail, x, 0.72, z, 0.3, 0.14, 0.04));
+    grp.userData.kind = kind || 'car';   // 搶車的時候看（ckmove.js）
     return grp;
   };
   CK.makeTrain = (col, n, o) => {

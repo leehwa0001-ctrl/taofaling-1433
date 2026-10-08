@@ -7,7 +7,9 @@
 // 星星退光了：巡邏車開走、路障收掉。下車用走的：巡邏車停下來，靠太近一樣會被抓。
 (function (R) {
   const W = R.W, rnd = Math.random, pick = a => a[Math.floor(rnd() * a.length)];
-  const C = R.CITY, toS = v => v / C.S + 500, toW = s => (s - 500) * C.S;
+  const C = R.CITY, toS = v => (CKT() ? v : v / C.S + 500), toW = s => (CKT() ? s : (s - 500) * C.S);
+  // 2026-10-09：在精緻城市（W.town.ck）用世界座標、精緻城市的路網（ckmove.js 的 W.town.nav、R.CK.navPath）
+  const CKT = () => !!(W.town && W.town.ck), NAV = () => (CKT() ? W.town.nav : R.NAV), navPath = (a, b, c, d) => (CKT() ? (R.CK && R.CK.navPath ? R.CK.navPath(a, b, c, d) : null) : (R.navPath ? R.navPath(a, b, c, d) : null));
   const P = () => W.P, tw = () => W.town, V = () => R.VEH;
   const PU = { cars: [], blocks: [], spawnT: 4, blockT: 8, bustT: 0, sirenT: 0, msgT: 0 };
 
@@ -18,7 +20,7 @@
     g.userData.lights = [red, blue]; return g;
   };
   const sees = (a, b) => { const L = Math.hypot(b.x - a.x, b.z - a.z), n = Math.ceil(L / 1.5); for (let i = 1; i < n; i++) { const x = a.x + (b.x - a.x) * i / n, z = a.z + (b.z - a.z) * i / n; for (const c of R.boxesNear(x, z)) if (c.on !== false && (c.tag === 'house' || c.tag === 'wall') && x > c.x0 && x < c.x1 && z > c.z0 && z < c.z1) return false; } return true; };
-  const nodeNear = (fn) => { const nodes = R.NAV && R.NAV.nodes; if (!nodes) return null; const Pl = P(); let best = null; for (let k = 0; k < 80; k++) { const q = pick(nodes), x = toW(q[0]), z = toW(q[1]); if (fn(x, z, Math.hypot(x - Pl.x, z - Pl.z))) { best = [x, z, q]; break; } } return best; };
+  const nodeNear = (fn) => { const nodes = NAV() && NAV().nodes; if (!nodes) return null; const Pl = P(); let best = null; for (let k = 0; k < 80; k++) { const q = pick(nodes), x = toW(q[0]), z = toW(q[1]); if (fn(x, z, Math.hypot(x - Pl.x, z - Pl.z))) { best = [x, z, q]; break; } } return best; };
 
   // ---------- 巡邏車 ----------
   const spawnCar = () => {
@@ -34,7 +36,7 @@
     const d = Math.hypot(tgt.x - pc.x, tgt.z - pc.z), see = d < 22 && sees(pc, tgt);
     let tx = tgt.x, tz = tgt.z;
     if (!see) {
-      pc.pathT -= dt; if (!pc.path || pc.pathT <= 0) { pc.pathT = 1.2; const p = R.navPath && R.navPath(toS(pc.x), toS(pc.z), toS(tgt.x), toS(tgt.z)); pc.path = p && p.length > 1 ? p.map(([a, b]) => [toW(a), toW(b)]) : null; pc.pi = 0; }
+      pc.pathT -= dt; if (!pc.path || pc.pathT <= 0) { pc.pathT = 1.2; const p = navPath(toS(pc.x), toS(pc.z), toS(tgt.x), toS(tgt.z)); pc.path = p && p.length > 1 ? p.map(([a, b]) => [toW(a), toW(b)]) : null; pc.pi = 0; }
       if (pc.path) { let q = pc.path[pc.pi]; while (q && Math.hypot(q[0] - pc.x, q[1] - pc.z) < 3 && pc.pi < pc.path.length - 1) { pc.pi++; q = pc.path[pc.pi]; } if (q) { tx = q[0]; tz = q[1]; } }
     }
     if (!car && d < 6) { pc.v *= Math.max(0, 1 - 4 * dt); }   // 你下車了：巡邏車停在旁邊
@@ -60,8 +62,8 @@
 
   // ---------- 路障 ----------
   const placeBlock = () => {
-    const t = tw(), car = V().cur, Pl = P(); if (!t || !car || !R.NAV) return;
-    const fx = -Math.sin(car.yaw), fz = -Math.cos(car.yaw), nodes = R.NAV.nodes, adj = R.NAV.adj;
+    const t = tw(), car = V().cur, Pl = P(); if (!t || !car || !NAV()) return;
+    const fx = -Math.sin(car.yaw), fz = -Math.cos(car.yaw), nodes = NAV().nodes, adj = NAV().adj;
     let pickI = -1; for (let k = 0; k < 120; k++) { const i = Math.floor(rnd() * nodes.length), x = toW(nodes[i][0]), z = toW(nodes[i][1]), d = Math.hypot(x - Pl.x, z - Pl.z); if (d < 35 || d > 65) continue; if (((x - Pl.x) * fx + (z - Pl.z) * fz) / d < 0.7) continue; if (!adj[i] || !adj[i].length) continue; if (PU.blocks.some(b => Math.hypot(b.x - x, b.z - z) < 30)) continue; if (C.RAIL && Math.abs(nodes[i][1] - C.RAIL.y) < 22) continue; pickI = i; break; }
     if (pickI < 0) return;
     const [sx, sy] = nodes[pickI], nb = nodes[adj[pickI][0]], x = toW(sx), z = toW(sy), ra = Math.atan2(toW(nb[0]) - x, toW(nb[1]) - z), px = Math.cos(ra), pz = -Math.sin(ra);   // 路的方向 ra，柵欄沿著垂直方向 (px, pz)

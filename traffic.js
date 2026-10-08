@@ -57,8 +57,9 @@
   // 看自己的車的速度：一格之內速度掉很多＝撞到東西了（撞牆、撞車、被巡邏車撞）
   let lastV = 0, cool = 0;
   const ts0 = R.townStep;
-  R.townStep = dt => {
-    ts0(dt); cool -= dt;
+  R.townStep = dt => { ts0(dt); R.crashTick(dt); };
+  R.crashTick = dt => {   // 精緻城市（ckmove.js）也呼叫
+    cool -= dt;
     const V = R.VEH, v = V && V.cur && V.cur.type === 'car' ? V.cur : null;
     if (!v || W.inside || (W.town && W.town.hosu)) { lastV = 0; return; }
     const now = v.v || 0, dv = Math.abs(lastV - now);

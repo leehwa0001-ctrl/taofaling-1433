@@ -210,4 +210,6 @@
     el.hidden = !V.cur || !!W.inside;
   };
   R.vehDebug = { V, mount, dismount, park, MODELS, carjack, spawnOwnCar };
+  R.vehTick = dt => { if (!V.cur || !P()) return; if (R.sheetOpen && R.sheetOpen()) return; if (V.cur.type === 'car') drive(V.cur, dt); else ride(V.cur, dt); };   // 精緻城市（ckmove.js）
+  R.vehReset = () => { if (V.cur && V.cur.type === 'car' && V.zoom0 != null) W.cam.zoomT = V.zoom0; if (V.cur && P()) { P().busy = false; if (P().h) { P().h.g.visible = true; P().h.sit = false; } if (V.speed0) P().speed = V.speed0; } V.cur = null; V.list = []; };
 })(window.R);

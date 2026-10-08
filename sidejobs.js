@@ -6,15 +6,17 @@
 // 上面有提示：要去哪裡、多遠、剩幾秒、這一趟賺多少。
 (function (R) {
   const W = R.W, rnd = Math.random, pick = a => a[Math.floor(rnd() * a.length)];
-  const C = R.CITY, toS = v => v / C.S + 500, toW = s => (s - 500) * C.S;
+  const C = R.CITY, toS = v => (CKT() ? v : v / C.S + 500), toW = s => (CKT() ? s : (s - 500) * C.S);
+  // 2026-10-09：在精緻城市（W.town.ck）用世界座標、精緻城市的路網（ckmove.js 的 W.town.nav、R.CK.navPath）
+  const CKT = () => !!(W.town && W.town.ck), NAV = () => (CKT() ? W.town.nav : R.NAV), navPath = (a, b, c, d) => (CKT() ? (R.CK && R.CK.navPath ? R.CK.navPath(a, b, c, d) : null) : (R.navPath ? R.navPath(a, b, c, d) : null));
   const S = () => R.S, P = () => W.P, tw = () => W.town;
   let J = null, hud = null;
   const PLACES = ['米店', '鐘錶行', '中村家', '二丁目的公寓', '豆腐店', '佐藤家', '洗衣店', '老醫生的家', '神社的社務所', '小學的教職員室', '公會的宿舍', '花店', '舊城的長屋', '河邊的倉庫'];
   const PASS = [['上班族', '「麻煩到$，快遲到了！」', '「謝啦，零錢不用找。」'], ['老奶奶', '「年輕人，到$，慢慢開就好。」', '「哎呀，比公車舒服多了。」'], ['勇者', '「去$。剛從遺跡出來，身上有點臭，抱歉。」', '「下次還坐你的車。」'], ['學生', '「到$！我只有這些錢……夠嗎？」', '「謝謝！」'], ['德克斯凡的技師', '「到$，零件很重，小心點。」', '「開得不錯。」']];
 
-  const node = (fn) => { const nodes = R.NAV && R.NAV.nodes, Pl = P(); if (!nodes || !Pl) return null; for (let k = 0; k < 120; k++) { const q = pick(nodes), x = toW(q[0]), z = toW(q[1]), d = Math.hypot(x - Pl.x, z - Pl.z); if (fn(x, z, d) && !R.col.list.some(b => b.on !== false && b.tag === 'house' && x > b.x0 - 1 && x < b.x1 + 1 && z > b.z0 - 1 && z < b.z1 + 1)) return [x, z]; } return null; };
+  const node = (fn) => { const nodes = NAV() && NAV().nodes, Pl = P(); if (!nodes || !Pl) return null; for (let k = 0; k < 120; k++) { const q = pick(nodes), x = toW(q[0]), z = toW(q[1]), d = Math.hypot(x - Pl.x, z - Pl.z); if (fn(x, z, d) && !R.col.list.some(b => b.on !== false && b.tag === 'house' && x > b.x0 - 1 && x < b.x1 + 1 && z > b.z0 - 1 && z < b.z1 + 1)) return [x, z]; } return null; };
   const wp = (x, z, name) => { if (R.setWaypoint) R.setWaypoint(toS(x), toS(z), name); };
-  const clearWp = () => { if (R.clearWaypoint && S() && S().waypoint && /^打工：/.test(S().waypoint.name || '')) R.clearWaypoint(); };
+  const clearWp = () => { const w = S() && (CKT() ? S().ckWaypoint : S().waypoint); if (R.clearWaypoint && w && /^打工：/.test(w.name || '')) R.clearWaypoint(); };
   const showHud = h => { if (!hud) { hud = document.createElement('div'); hud.className = 'hud se-hud sj-hud'; const run = document.getElementById('run'); (run || document.body).appendChild(hud); } hud.hidden = !h; if (h && hud.innerHTML !== h) hud.innerHTML = h; };
   const car = () => { const v = R.inVehicle && R.inVehicle(); return v && v.type === 'car' ? v : null; };
   const pay = v => { const s = S(); s.gold += v; s.stats = s.stats || {}; s.stats.jobGold = (s.stats.jobGold || 0) + v; R.save && R.save(); };
@@ -44,7 +46,7 @@
 
   // ---------- 計程車 ----------
   const startTaxi = () => {
-    if (!S().car) { R.townTalk('計程車行', ['「開計程車要有自己的車喔。新商區的德克斯凡中古車行有在賣。」']); return; }
+    if (!S().car && !(CKT() && R.VEH && R.VEH.list.some(v => v.type === 'car' && (v.rent || v.own)))) { R.townTalk('計程車行', ['「開計程車要有自己的車喔。新商區的德克斯凡中古車行有在賣。」']); return; }
     J = { kind: 'taxi', st: 'idle', t: 0, got: 0, fares: 0, outT: 0, wait: 2 };
     R.townTalk('計程車行', ['「車頂的燈我幫你裝上了。客人在哪裡會告訴你。」', '（開自己的車載客。下車太久就收工。）']);
   };
@@ -100,4 +102,6 @@
   const enter0 = R.enterTownNow;
   R.enterTownNow = (from, at) => { if (J) { clearWp(); J = null; } showHud(''); enter0(from, at); const t = tw(); if (t) { try { build(t); } catch (e) { console.warn('[sidejobs]', e); } } };
   R.sideJobDebug = { get J() { return J; }, startPost, startTaxi, spawnPass, end };
+  R.sideJobTick = dt => { if (!J || !P() || !tw()) return; if (R.sheetOpen && R.sheetOpen()) return; try { if (J.kind === 'post') stepPost(dt); else stepTaxi(dt); } catch (e) { console.warn('[sidejobs]', e); end(); } };   // 精緻城市（ckmove.js）
+  R.sideJobReset = () => { if (J) { clearWp(); J = null; } showHud(''); };
 })(window.R);
