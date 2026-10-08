@@ -156,10 +156,11 @@
   };
 
   // ======================= 附魔師：刻印切換 =======================
-  const RUNE = { flame: ['焰', '#FF7A3A'], frost: ['霜', '#9AD8FF'], storm: ['雷', '#FFE070'] }, RU = ['flame', 'frost', 'storm'];
+  const RUNE = { flame: ['焰', '#FF7A3A'], frost: ['霜', '#9AD8FF'], storm: ['雷', '#FFE070'], wind: ['風', '#BFF0D0'], metal: ['金', '#D8D8E0'] }, RU = ['flame', 'frost', 'storm', 'wind', 'metal'];   // 2026-10-08 作者：多風、金
+  R.RUNES = RUNE;
   CORE.enchanter = {
     name: '刻印', col: '#FF9A6A',
-    help: P => '刻印切換（恩特安派）：X 換武器上的刻印（焰、霜、雷）。普攻打中攢刻印的力量；換掉的時候舊的刻印釋放——焰＝前方火焰爆、霜＝身邊冰封定身、雷＝連鎖閃電打五隻，攢越滿越痛。焰普攻會燒、霜普攻會減速、雷普攻會電到旁邊。'
+    help: P => '刻印（恩特安派）：X 換武器上的刻印（焰→霜→雷→風→金）。刻著的刻印會改變你的技能：焰＝技能傷害 +25%、打中的燃燒；霜＝技能讓敵人變慢、範圍技定身；雷＝技能冷卻 −20%、攻速 +20%；風＝普攻放出劍氣、技能範圍 +25%；金＝打中的破甲、技能範圍 −25% 但傷害 +40%。普攻打中攢刻印的力量；換掉的時候舊的刻印釋放——焰＝前方火焰爆、霜＝身邊冰封定身、雷＝連鎖閃電打五隻、風＝前方颶風吹飛、金＝身邊金屬碎片破甲，攢越滿越痛。'
       + ({ runesmith: '刻印師：釋放 ×1.5、攢得快一半。', spellblade: '魔劍士：釋放時多打出一道劍氣（前方一直線）。', entian: '恩特安的傳人：釋放打到的敵人破防（5 秒你的傷害 +20%）。' }[adv(P)] || ''),
     floor: P => { P._rune = P._rune || 'flame'; },
     mod(e, raw, o, P) {
@@ -167,8 +168,10 @@
       if (o.primary && !o.reflect) {
         P._runeCh = Math.min(100, (P._runeCh || 0) + (adv(P) === 'runesmith' ? 6 : 4) * ((R.legOf ? R.legOf(P) : null) === 'lg_quickrune' ? 2 : 1));
         const r = P._rune || 'flame';
-        if (r === 'flame' && rnd() < 0.2) e.st.burn = 3;
-        if (r === 'frost') e.st.slow = Math.max(e.st.slow || 0, 1.5);
+        if (r === 'flame' && rnd() < 0.25) e.st.burn = 3;
+        if (r === 'frost') e.st.slow = Math.max(e.st.slow || 0, 2);
+        if (r === 'wind' && R.elemWind) R.elemWind(P, e, raw * (P.dmgMult || 1), 0.45, true);   // 風：普攻附帶劍氣
+        if (r === 'metal' && R.elemBreak && rnd() < 0.35) R.elemBreak(e);
         if (r === 'storm' && rnd() < 0.15) { const n = (W().enemies || []).find(x => !x.dead && x !== e && dist(x, e) < 5); if (n) { R.fx && R.fx('bolt', e.x, 1, e.z, { to: n }); R.coreHit(n, raw * 0.4, {}); } }
       }
       return raw;
@@ -179,13 +182,15 @@
       const hitAt = (x, z, rad, dmg, o) => (W().enemies || []).forEach(e => { if (!e.dead && Math.hypot(e.x - x, e.z - z) < rad + e.def.size * 0.5) { R.coreHit(e, dmg, o || {}); hitList.push(e); } });
       if (r === 'flame') { const x = P.x + Math.sin(P.aimA) * 2.5, z = P.z + Math.cos(P.aimA) * 2.5; R.fx && R.fx('boom', x, 0.4, z, { r: 2.8, color: '#FF7A3A' }); hitAt(x, z, 2.8, k * ch / 25); hitList.forEach(e => { e.st.burn = 3; }); }
       else if (r === 'frost') { R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 3.5, color: '#9AD8FF' }); hitAt(P.x, P.z, 3.5, k * ch / 40); hitList.forEach(e => { e.st.root = Math.max(e.st.root || 0, 2); }); }
+      else if (r === 'wind') { const x = P.x + Math.sin(P.aimA) * 3, z = P.z + Math.cos(P.aimA) * 3; R.fx && R.fx('ring', x, 0.2, z, { r: 3.4, color: '#BFF0D0' }); hitAt(x, z, 3.4, k * ch / 30, { kb: 3 }); }
+      else if (r === 'metal') { R.fx && R.fx('boom', P.x, 0.4, P.z, { r: 2.8, color: '#D8D8E0' }); hitAt(P.x, P.z, 2.8, k * ch / 22); hitList.forEach(e => { if (R.elemBreak) R.elemBreak(e); }); }
       else { const L = (W().enemies || []).filter(e => !e.dead && dist(e, P) < 9).sort((a, b) => dist(a, P) - dist(b, P)).slice(0, 5); let from = P; L.forEach(e => { R.fx && R.fx('bolt', from.x, 1.2, from.z, { to: e }); R.coreHit(e, k * ch / 30, { stun: 0.5 }); hitList.push(e); from = e; }); }
       if (adv(P) === 'spellblade') [2, 4, 6].forEach(d => hitAt(P.x + Math.sin(P.aimA) * d, P.z + Math.cos(P.aimA) * d, 1.3, k * ch / 50));
       if (sund) hitList.forEach(e => { e._sunder = CT() + 5; });
       R.shake && R.shake(0.2); say(P, RUNE[r][0] + '・釋放', 'crit');
     },
-    act(P) { this.release(P); const i = RU.indexOf(P._rune || 'flame'); P._rune = RU[(i + 1) % 3]; R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 1.4, color: RUNE[P._rune][1] }); },
-    gauge(P) { const r = P._rune || 'flame', ch = P._runeCh || 0; return { name: '刻印：' + RUNE[r][0], col: RUNE[r][1], v: ch, max: 100, full: ch >= 100, text: Math.floor(ch) + '／100', sub: '普攻攢力量', x: (ch >= 20 ? '釋放＋' : '') + '換成' + RUNE[RU[(RU.indexOf(r) + 1) % 3]][0] }; }
+    act(P) { this.release(P); const i = RU.indexOf(P._rune || 'flame'); P._rune = RU[(i + 1) % RU.length]; R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 1.4, color: RUNE[P._rune][1] }); },
+    gauge(P) { const r = P._rune || 'flame', ch = P._runeCh || 0; return { name: '刻印：' + RUNE[r][0], col: RUNE[r][1], v: ch, max: 100, full: ch >= 100, text: Math.floor(ch) + '／100', sub: '普攻攢力量', x: (ch >= 20 ? '釋放＋' : '') + '換成' + RUNE[RU[(RU.indexOf(r) + 1) % RU.length]][0] }; }
   };
 
   // ======================= 符卷師：卷軸組 =======================

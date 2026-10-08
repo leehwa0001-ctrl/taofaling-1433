@@ -439,9 +439,10 @@
       const st = e.st; for (const k in st) st[k] = Math.max(0, st[k] - dt);
       if (e.dishT > 0) { e.dishT -= dt; if (e.dishT <= 0 && e.m.dish) e.m.dish.visible = true; }
       if (e.fade > 0) e.fade -= dt;
-      if (st.burn > 0) { e.burnT = (e.burnT || 0) + dt; if (e.burnT > 0.5) { e.burnT = 0; R.hurtEnemy(e, 2.5 + w.run.grade.lv * 1.5, {}); if (e.dead) continue; } }
+      if (R.elemTick) { if (R.elemTick(e, dt)) continue; }   // 2026-10-08：燃燒、中毒（elements1008.js）
+      else if (st.burn > 0) { e.burnT = (e.burnT || 0) + dt; if (e.burnT > 0.5) { e.burnT = 0; R.hurtEnemy(e, 2.5 + w.run.grade.lv * 1.5, {}); if (e.dead) continue; } }
       R.flash(e.m, e.flash);
-      const d = dist(e, P), a = angTo(e, P), sp = e.speed * (st.slow > 0 ? 0.55 : 1) * (P.buff.kekkai > 0 && d < 4.5 ? 0.6 : 1);
+      const d = dist(e, P), a = angTo(e, P), sp = e.speed * (st.slow > 0 && !R.slowAll ? 0.55 : 1) * (P.buff.kekkai > 0 && d < 4.5 ? 0.6 : 1);
       const can = st.stun <= 0 && !P.dead, walk = can && st.root <= 0;
       const target = !P.invis || P.invis <= 0;
       // 哈米莉亞級（passive）：遺跡生物不會主動攻擊人——走近也不會，被打了才還手（e.provoked）

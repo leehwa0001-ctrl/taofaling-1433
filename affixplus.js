@@ -10,7 +10,7 @@
   if (R.RARITY[4]) R.RARITY[4].affix = Math.max(R.RARITY[4].affix, 4);
   if (R.RARITY[5]) R.RARITY[5].affix = Math.max(R.RARITY[5].affix, 6);
   const rint = (a, b) => a + Math.floor(rnd() * (b - a + 1));
-  const poolOf = it => (it.kind === 'weapon' ? R.W_AFFIX : R.A_AFFIX).filter(a => !(a.ranged && !['gun', 'bow', 'magic'].includes(R.WEAPONS[it.base] && R.WEAPONS[it.base].kind)) && !(a.melee && !['melee', 'thrust'].includes(R.WEAPONS[it.base] && R.WEAPONS[it.base].kind)) && !a.curse);
+  const poolOf = it => (it.kind === 'weapon' ? R.W_AFFIX : R.A_AFFIX).filter(a => !a.enchOnly && !(a.ranged && !['gun', 'bow', 'magic'].includes(R.WEAPONS[it.base] && R.WEAPONS[it.base].kind)) && !(a.melee && !['melee', 'thrust'].includes(R.WEAPONS[it.base] && R.WEAPONS[it.base].kind)) && !a.curse);
   const newAffix = it => { const have = new Set(it.affixes.map(a => a.id)), c = poolOf(it).filter(a => !have.has(a.id)); if (!c.length) return null; const a = c[Math.floor(rnd() * c.length)]; return { id: a.id, v: rint(a.roll[0], a.roll[1]) }; };
   const locked = (it, i) => (i === 0 && it.legend) || (it.enchant && it.affixes[i] && it.affixes[i].id === it.enchant);
   const maxOf = it => ((R.RARITY[it.rarity] && R.RARITY[it.rarity].affix) || 0) + 2;

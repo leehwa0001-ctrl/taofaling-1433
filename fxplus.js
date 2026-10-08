@@ -117,7 +117,9 @@
     sT -= dt; if (sT <= 0) { sT = 0.08;
       (w.enemies || []).forEach(e => {
         if (e.dead || !e.st || Math.abs(e.x - P.x) > 22 || Math.abs(e.z - P.z) > 22) return; const s = (e.def && e.def.size) || 1, h = 0.6 + s * 0.5;
-        if (e.st.burn > 0) emit(fine, e.x + (rnd() - 0.5) * s * 0.6, h * 0.6, e.z + (rnd() - 0.5) * s * 0.6, (rnd() - 0.5) * 0.5, 1.8 + rnd(), (rnd() - 0.5) * 0.5, 0.5, rnd() < 0.5 ? '#FF8A3A' : '#FFD04A', 0);
+        if (e.st.burn > 0) { for (let k = 0; k < 2; k++) emit(fine, e.x + (rnd() - 0.5) * s * 0.9, h * (0.3 + rnd() * 0.6), e.z + (rnd() - 0.5) * s * 0.9, (rnd() - 0.5) * 0.5, 1.8 + rnd(), (rnd() - 0.5) * 0.5, 0.6, rnd() < 0.5 ? '#FF8A3A' : '#FFD04A', 0); emit(big, e.x + (rnd() - 0.5) * s * 0.5, h * 0.7, e.z + (rnd() - 0.5) * s * 0.5, 0, 1.4, 0, 0.45, '#FF5A1A', 0); }   // 2026-10-08：燒起來看得到
+        if (e._psn && e._psn.n > 0) emit(fine, e.x + (rnd() - 0.5) * s * 0.7, h * 0.5, e.z + (rnd() - 0.5) * s * 0.7, 0, 0.9, 0, 0.7, rnd() < 0.5 ? '#8ACF3A' : '#5A9A2A', 0);
+        if ((e._brk || 0) > performance.now() / 1000) emit(fine, e.x + (rnd() - 0.5) * s * 0.6, h * 0.9, e.z + (rnd() - 0.5) * s * 0.6, 0, -0.4, 0, 0.4, '#D8D8E0', 0);
         if (e.st.slow > 0) emit(fine, e.x + (rnd() - 0.5) * s * 0.7, h * 0.8, e.z + (rnd() - 0.5) * s * 0.7, 0, -0.6, 0, 0.6, '#BFE6FF', 0);
         if (e.st.curse > 0) emit(big, e.x + (rnd() - 0.5) * s * 0.5, h * 0.7, e.z + (rnd() - 0.5) * s * 0.5, 0, 0.8, 0, 0.6, '#8A4AC8', 0);
         if (e.st.stun > 0) { const a = performance.now() / 160 + e.t; for (let k = 0; k < 3; k++) { const A = a + k * 2.09; emit(fine, e.x + Math.cos(A) * 0.45, h + 0.5, e.z + Math.sin(A) * 0.45, 0, 0, 0, 0.1, '#FFE070', 0); } }

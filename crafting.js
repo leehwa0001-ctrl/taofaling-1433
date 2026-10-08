@@ -19,6 +19,9 @@
     flamecry: { name: '炎晶', color: '#FF8A4A', value: 22, desc: '火山環境的遺跡生物體內的魔力水晶，裡面像有火在燒。' },
     sandcry: { name: '砂晶', color: '#E8C878', value: 22, desc: '沙漠環境的遺跡生物體內的魔力水晶，摸久了指尖會麻。' },
     tidecry: { name: '潮晶', color: '#5FC8E0', value: 22, desc: '深海環境的遺跡生物體內的魔力水晶，貼在耳邊聽得到潮聲。' },
+    windcry: { name: '風晶', color: '#BFF0D0', value: 22, desc: '輕得像會飄走的魔力水晶，握在手裡有風從指縫穿過。附魔：疾風。' },
+    venomcry: { name: '毒晶', color: '#8ACF3A', value: 22, desc: '長在遺跡植物根部的魔力水晶，帶著青草和腐葉的味道。附魔：蝕毒。' },
+    metalcry: { name: '金晶', color: '#D8D8E0', value: 22, desc: '像金屬一樣沉的魔力水晶，敲起來有鐵的聲音。附魔：破甲。' },
     purecry: { name: '高純度魔力水晶', color: '#E8F6FF', value: 40, desc: '精英、領主體體內的魔力水晶，幾乎沒有雜質。' },
     silver: { name: '銀礦', color: '#D8DEE6', value: 16, desc: '阿彌勒級以上的礦殼，背上偶爾長著銀礦。' },
     redgold: { name: '赤金', color: '#E0603A', value: 45, desc: '摩爾斯級以上的礦殼背上才掘得到。真的赤金敲一下，鳴文是紅色的漩渦。' },
@@ -32,7 +35,7 @@
     silverbar: { name: '銀錠', color: '#E8EEF6', value: 30, desc: '兌換所熔好的銀錠。' }
   });
   // 鐵匠鋪調得到的東西（價錢一定比公會收購高，買了再賣不會賺）
-  const BUY = [['cloth', 8], ['leather', 14], ['thread', 18], ['washi', 6], ['lacquer', 26], ['silverbar', 70], ['pearl', 120], ['iron', 15], ['crystal', 28]];
+  const BUY = [['cloth', 8], ['leather', 14], ['thread', 18], ['washi', 6], ['lacquer', 26], ['silverbar', 70], ['pearl', 120], ['iron', 15], ['crystal', 28], ['windcry', 45], ['venomcry', 45], ['metalcry', 45]];
 
   // ---------- 飾品、護符的種類 ----------
   // imp：本身的效果（第一個詞綴，數值照物品等級變大）
@@ -202,7 +205,7 @@
     if (ench) it.affixes.push(ench);
     R.save(); return true;
   };
-  const ENCH = { flamecry: 'fire', frostcry: 'frost', sandcry: 'shock', tidecry: 'swift' };
+  const ENCH = { flamecry: 'fire', frostcry: 'frost', sandcry: 'shock', tidecry: 'swift', windcry: 'wind', venomcry: 'poison', metalcry: 'metal' };   // 2026-10-08：多風、毒、金；元素詞綴只從附魔來
   R.enchantPrice = () => ({ gold: 100, n: 3 });
   R.enchant = (it, cry) => {
     const id = ENCH[cry]; if (!it || it.kind !== 'weapon' || !it.identified || !id) return false;
