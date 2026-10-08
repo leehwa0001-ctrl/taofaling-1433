@@ -136,7 +136,7 @@
   // ---------- 技能書：最上面的「大招」卡片，最下面選 ----------
   (R.SB_HEAD = R.SB_HEAD || []).push((cls, st) => {
     const u = U[cls]; if (!u) return '';
-    const ic = R.skillIconURL && R.skillIconURL('ult_' + cls);
+    const ic = R.ultIconURL ? R.ultIconURL(cls) : R.skillIconURL && R.skillIconURL('ult_' + cls);
     return '<details class="sb-group" open><summary><b>大招</b> <small>遺跡裡集滿量表按 V（或點大招鈕）</small></summary><div class="recipes sb-list"><div class="recipe sb-card sb-ult"><div class="sb-pick">'
       + (ic ? '<img class="sb-ico" src="' + ic + '" alt="" draggable="false">' : '<span class="sb-ico sb-ico-ult" aria-hidden="true">★</span>')
       + '<b>' + esc(u.baseName ? u.baseName() : u.name) + '</b><small>' + esc(R.CLASSES[cls].name) + '的大招</small><span>' + esc(u.baseSub ? u.baseSub() : u.sub) + '</span></div><div class="sb-foot" data-foot="ult:' + cls + '"></div></div></div></details>';
@@ -153,7 +153,12 @@
     const pk = pickOf(cls), on = pk !== 'base';
     box.innerHTML = '<div class="sv-vars"><span class="sv-h">大招</span><button type="button" class="' + (on ? '' : 'on') + '" data-up="base">原版・' + esc(u.baseName ? u.baseName() : '') + '</button><button type="button" class="' + (on ? 'on' : '') + '" data-up="path">' + esc(advName(cls, adv)) + '・' + esc(mine.name) + '</button></div>'
       + '<div class="up-d">' + (on ? '<b>' + esc(mine.name) + '</b>：原本的大招照放，再加上——' + esc(mine.d) : '<b>原版</b>：用' + esc(R.CLASSES[cls].name) + '原本的大招。') + '</div>';
-    box.querySelectorAll('[data-up]').forEach(b => { b.onclick = e => { e.stopPropagation(); const s = S(); s.ultPick = s.ultPick || {}; s.ultPick[cls] = b.dataset.up; R.save && R.save(); fill(foot, id); }; });
+    const card = foot.closest('.sb-ult'), art = card && card.querySelector('.sb-ico');
+    if (art && R.ultIconURL) art.src = R.ultIconURL(cls);
+    box.querySelectorAll('[data-up]').forEach(b => {
+      if (R.skillIconURL) { const im = document.createElement('img'); im.src = R.skillIconURL(b.dataset.up === 'base' ? 'ult:' + cls : 'ultpath:' + cls + ':' + adv); im.alt = ''; im.width = im.height = 28; im.style.cssText = 'vertical-align:middle;margin-right:5px;border-radius:4px'; b.prepend(im); }
+      b.onclick = e => { e.stopPropagation(); const s = S(); s.ultPick = s.ultPick || {}; s.ultPick[cls] = b.dataset.up; R.save && R.save(); fill(foot, id); };
+    });
   });
   const css = document.createElement('style');
   css.textContent = '.sb-ult{border-color:#C9A13A;background:linear-gradient(180deg,rgba(201,161,58,.12),transparent 70%),var(--bg2)}'
