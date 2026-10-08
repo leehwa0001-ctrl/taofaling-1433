@@ -68,7 +68,7 @@
     const block = (x, z, r) => R.addBox(x - r, x + r, z - r, z + r, 'deco');
     const PATCH = { forest: ['#2A4422', '#34522A'], plain: ['#5E8038', '#6A8A40'], cave: ['#232A30', '#2A3238'], crystal: ['#4A3478', '#3A2E66'], lava: ['#FF5A1A', '#E8440A'], snow: ['#F4F8FC', '#E6EEF6'], deep: ['#245A5A', '#1E4E52'], sand: ['#D8BE8A', '#CAB07C'], ruin: ['#5E5A50', '#6A655A'] };
     F.rooms.forEach(r => {
-      if (r.type === 'puzzle' || r.spec || (r.type === 'start' && run.floor === 0)) return;
+      if (r.type === 'puzzle' || r.spec || r.wingHall || (r.type === 'start' && run.floor === 0)) return;   // wingHall：領主長廊的城堡大廳不擺環境的樹、石頭（lordwing.js）
       const area = (r.hx || 8) * (r.hz || 8), n = Math.round(Math.min(26, area / 6));
       const fight = r.type === 'boss' || r.type === 'lord';   // 領主、佩特拉核心的房間：不擺會擋路的
       // 地上一塊一塊的顏色（草地、苔、積水、結晶、熔岩），從上面看最明顯

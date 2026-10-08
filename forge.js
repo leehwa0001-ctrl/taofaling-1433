@@ -81,7 +81,7 @@
     const block = (x, z, hx, hz) => R.addBox(x - hx, x + hx, z - hz, z + hz, 'deco');
     const STEEL = '#5A5E66', DARK = '#2E3036', WOOD = '#6A5434', BRASS = '#C8A040';
     F.rooms.forEach(r => {
-      if (r.type === 'puzzle' || r.spec || r.rest || (r.type === 'start' && run.floor === 0)) return;
+      if (r.type === 'puzzle' || r.spec || r.rest || r.wingHall || (r.type === 'start' && run.floor === 0)) return;
       const fight = r.type === 'boss' || r.type === 'lord', area = (r.hx || 8) * (r.hz || 8), n = fight ? 3 : Math.round(Math.min(18, area / 8));
       let furnace = 0;
       // 天花板垂下來的吊鉤（只是畫面）
