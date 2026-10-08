@@ -111,6 +111,29 @@
     setTimeout(back, 100);
   };
   R.trainLeave = leave;
+  // 訓練場：Esc 選單直接換技能、換被動（2026-10-08 作者：不用離開才能換技能測試）；換完重新算一次身上的技能和數值
+  R.trainRefresh = () => {
+    const w = W(), P = w.P; if (!P || !isTrain(w.run) || !R.S) return;
+    const F = R.calcPlayer(R.S.cls);
+    ['skill', 'pv', 'hpMax', 'mpMax', 'def', 'speed', 'dmgMult', 'critMult', 'skillCdMult', 'dodgeCdMax', 'regen', 'calm', 'mpRegen', 'patk', 'matk', 'pen', 'recovAmp'].forEach(k => { if (F[k] !== undefined) P[k] = F[k]; });
+    if (F.ws) P.ws = F.ws;
+    P.skillCd = 0; if (P.skCd) P.skCd = P.skCd.map(() => 0); if (P.cdHold) P.cdHold = {};
+    P.hp = Math.min(P.hpMax, Math.max(P.hp, 1)); P.mp = P.mpMax;
+    if (R.hudFloor) try { R.hudFloor(); } catch (e) { }
+    R.toast && R.toast('技能、被動換好了');
+  };
+  const ps0t = R.pauseSheet;
+  if (ps0t) R.pauseSheet = (...a) => {
+    const r = ps0t(...a);
+    if (isTrain(W().run)) {
+      const row = document.querySelector('#r-sheet .row'); if (row && !row.querySelector('[data-train-sb]')) {
+        const mk = (t, f, k) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn pri'; b.textContent = t; b.setAttribute(k, '1'); b.onclick = f; row.insertBefore(b, row.firstChild); };
+        if (R.passiveSheet) mk('換被動', () => R.passiveSheet('town'), 'data-train-pv');
+        if (R.skillBook) mk('換技能', () => R.skillBook('town'), 'data-train-sb');
+      }
+    }
+    return r;
+  };
 
   const sr0 = R.startRun;
   R.startRun = id => {

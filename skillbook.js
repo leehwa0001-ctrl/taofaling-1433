@@ -405,7 +405,8 @@
     host.querySelector('[data-close]').onclick = close;
   };
   R.skillBook = where => {
-    if (W().run) { R.toast('遺跡裡不能換技能。'); return; }
+    if (W().run && !W().run.train) { R.toast('遺跡裡不能換技能。'); return; }   // 訓練場可以換（2026-10-08）
+    if (W().run) { R.sheet('<div id="sb-host"></div>'); book($('sb-host'), () => { R.closeSheet(); if (R.trainRefresh) R.trainRefresh(); }); return; }
     if (where === 'hub') { const host = $('hub-sheet'), el = $('hub-modal'); el.hidden = false; book(host, () => { el.hidden = true; R.hub(); }); host.scrollTop = 0; return; }
     R.sheet('<div id="sb-host"></div>'); book($('sb-host'), () => R.closeSheet());
   };
