@@ -12,10 +12,15 @@
   const hex = c => { const r = /^rgb\((\d+),(\d+),(\d+)\)$/.exec(String(c || '')); if (r) return [+r[1], +r[2], +r[3]]; const m = /^#?([0-9a-f]{6})$/i.exec(String(c || '')); const n = m ? parseInt(m[1], 16) : 0xC8C0B0; return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
   const mix = (a, b, k) => { const A = hex(a), B = hex(b); return 'rgb(' + A.map((v, i) => Math.round(v + (B[i] - v) * k)).join(',') + ')'; };
   const rgba = (c, a) => { const A = hex(c); return 'rgba(' + A.join(',') + ',' + a + ')'; };
-  // 太灰的顏色拉鮮豔一點（參考圖每一張都很飽和）
-  const vivid = c => { let [r, g, b] = hex(c); const mx = Math.max(r, g, b), mn = Math.min(r, g, b); if (mx - mn < 40) return mix(c, '#E8C060', 0.35); const k = 1.25, avg = (r + g + b) / 3; [r, g, b] = [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(avg + (v - avg) * k)))); return 'rgb(' + r + ',' + g + ',' + b + ')'; };
   const hash = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
   const rng = seed => () => { seed = (seed + 0x6D2B79F5) >>> 0; let t = seed; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  // HSL（色相 0～360、飽和、亮度 0～1）
+  const toHsl = c => { const [r, g, b] = hex(c).map(v => v / 255), mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn; if (!d) return [0, 0, l]; const s = d / (1 - Math.abs(2 * l - 1)); let h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return [(h * 60 + 360) % 360, s, l]; };
+  const fromHsl = (h, s, l) => { h = ((h % 360) + 360) % 360; const C = (1 - Math.abs(2 * l - 1)) * s, X = C * (1 - Math.abs((h / 60) % 2 - 1)), m = l - C / 2; const [a, e, f] = [[C, X, 0], [X, C, 0], [0, C, X], [0, X, C], [X, 0, C], [C, 0, X]][Math.floor(h / 60) % 6]; return 'rgb(' + [a, e, f].map(v => Math.round((v + m) * 255)).join(',') + ')'; };
+  const hueShift = (c, deg) => { const [h, s, l] = toHsl(c); return s ? fromHsl(h + deg, s, l) : c; };
+  // 技能的顏色大多是粉粉的淡色（2026-10-08 作者：要像英雄聯盟那樣）：拉成飽和、亮度中間的顏色；白、灰的照圖示種類給一個色相
+  //   同一個職業的招顏色都一樣，照種類再偏 ±35 度，技能列上一排才不會全部同一個色（元素類的固定色不偏）
+  const vivid = (c, key, shift) => { let [h, s, l] = toHsl(c); if (s < 0.15) { h = hash(String(key || '')) % 360; s = 0.85; } else if (shift) h += hash(String(key || '') + '~') % 71 - 35; return fromHsl(h, Math.max(0.82, s), Math.min(0.56, Math.max(0.46, l * 0.7))); };
   const KIND_COL = { fireball: '#FF6A1A', rage: '#FF3A1A', meteor: '#FF7A2A', heal: '#46D86A', frost: '#5FC0FF', bolt: '#4A8CFF', storm: '#4A7CFF', drain: '#E8203A', fang: '#E8203A', revive: '#FFC83A', ghost: '#8A6AE8', breath: '#FF7A2A' };
   const cv = () => { const c = document.createElement('canvas'); c.width = c.height = N; return c; };
   const rr = (x, a, b, w, h, r) => { x.beginPath(); if (x.roundRect) x.roundRect(a, b, w, h, r); else x.rect(a, b, w, h); };
@@ -91,10 +96,16 @@
       case 'pole': ln(3, 21, 21, 3, mix(base, '#8A6A44', 0.4), 3.2); ln(3, 21, 21, 3, lt, 1.4); circ(3, 21, 2.4, col); circ(21, 3, 2.4, col); circ(12, 12, 1.7, W); break;
       default: star(12, 12, 10, lt); star(12, 12, 5.5, col); circ(12, 12, 1.8, W);
     }
-    // 光澤：上亮下暗
+    // 體積（2026-10-08 作者：要像英雄聯盟那樣）：主題是發光體——照技能色重新上色（中間白熱→技能色→暗邊，
+    // 保留一部分原本的明暗），再加內緣的厚度（右下壓暗、左上打亮），不再是平平的白色剪影
     y.setTransform(1, 0, 0, 1, 0, 0); y.globalCompositeOperation = 'source-atop';
-    const gl = y.createLinearGradient(0, 0, N * 0.6, N); gl.addColorStop(0, 'rgba(255,255,255,.35)'); gl.addColorStop(0.5, 'rgba(255,255,255,0)'); gl.addColorStop(1, 'rgba(0,0,0,.18)');
-    y.fillStyle = gl; y.fillRect(0, 0, N, N); y.globalCompositeOperation = 'source-over';
+    const gl = y.createRadialGradient(N * 0.45, N * 0.42, N * 0.02, N * 0.5, N * 0.5, N * 0.62);
+    gl.addColorStop(0, '#FFFFFF'); gl.addColorStop(0.16, mix(base, '#FFFFFF', 0.6)); gl.addColorStop(0.42, mix(base, '#FFFFFF', 0.12)); gl.addColorStop(0.75, base); gl.addColorStop(1, mix(base, '#000000', 0.5));
+    y.globalAlpha = 0.78; y.fillStyle = gl; y.fillRect(0, 0, N, N); y.globalAlpha = 1;
+    const h = cv(), hx = h.getContext('2d'); hx.fillStyle = '#000'; hx.fillRect(0, 0, N, N); hx.globalCompositeOperation = 'destination-out'; hx.drawImage(g, 0, 0);
+    y.save(); y.shadowColor = rgba(mix(base, '#000000', 0.6), 0.85); y.shadowBlur = 5; y.shadowOffsetX = -2.5; y.shadowOffsetY = -3; y.globalAlpha = 0.9; y.drawImage(h, 0, 0); y.restore();
+    y.save(); y.shadowColor = 'rgba(255,255,255,.9)'; y.shadowBlur = 2; y.shadowOffsetX = 1.2; y.shadowOffsetY = 1.5; y.globalAlpha = 0.7; y.drawImage(h, 0, 0); y.restore();
+    y.globalCompositeOperation = 'source-over';
     return g;
   };
 
@@ -123,20 +134,36 @@
   // ---------- 整張 ----------
   const draw = o => {
     const c = cv(), x = c.getContext('2d'), rnd = rng(hash(o.key));
-    const base = vivid(KIND_COL[o.kind] || o.color), bright = mix(base, '#FFFFFF', 0.55);
+    const base = vivid(KIND_COL[o.kind] || o.color, o.kind, !KIND_COL[o.kind]), bright = mix(base, '#FFFFFF', 0.55);
     x.save(); rr(x, 0, 0, N, N, 13); x.clip();
     // 底：放射漸層
     const fx = N * (0.42 + rnd() * 0.16), fy = N * (0.36 + rnd() * 0.18);
     let g = x.createRadialGradient(fx, fy, 1, N / 2, N / 2, N * 0.78);
-    g.addColorStop(0, mix(base, '#FFFFFF', 0.42)); g.addColorStop(0.2, mix(base, '#FFFFFF', 0.08)); g.addColorStop(0.5, mix(base, '#000000', 0.18)); g.addColorStop(0.8, mix(base, '#000000', 0.66)); g.addColorStop(1, mix(base, '#05030A', 0.92));
+    // 底比原本暗一點，主題才跳得出來；第二個顏色（色相偏一點）只用在筆觸上
+    const alt = hueShift(base, rnd() < 0.5 ? 30 : -30);
+    g.addColorStop(0, mix(base, '#FFFFFF', 0.22)); g.addColorStop(0.22, mix(base, '#000000', 0.05)); g.addColorStop(0.5, mix(base, '#000000', 0.45)); g.addColorStop(0.8, mix(base, '#000000', 0.78)); g.addColorStop(1, mix(base, '#05030A', 0.94));
     x.fillStyle = g; x.fillRect(0, 0, N, N);
     x.globalCompositeOperation = 'lighter';
+    // 能量的筆觸：繞著光源打轉的一縷一縷（參考圖背景那種刷出來的氣流），一半糊開、一半銳利
+    for (let i = 0; i < 22; i++) {
+      const a = rnd() * Math.PI * 2, r0 = N * (0.12 + rnd() * 0.45), sw = (0.6 + rnd() * 1.3) * (rnd() < 0.7 ? 1 : -1), r1 = r0 * (0.75 + rnd() * 0.6);
+      const p0 = [fx + Math.cos(a) * r0, fy + Math.sin(a) * r0], p1 = [fx + Math.cos(a + sw) * r1, fy + Math.sin(a + sw) * r1];
+      const cr = (r0 + r1) / 2 / Math.cos(sw / 2), cp = [fx + Math.cos(a + sw / 2) * cr, fy + Math.sin(a + sw / 2) * cr];
+      const c0 = i % 3 ? bright : mix(alt, '#FFFFFF', 0.3), lg = x.createLinearGradient(p0[0], p0[1], p1[0], p1[1]);
+      lg.addColorStop(0, rgba(c0, 0)); lg.addColorStop(0.55, rgba(c0, 0.18 + rnd() * 0.3)); lg.addColorStop(1, rgba(c0, 0));
+      x.save(); if (i % 2) x.filter = 'blur(' + (1 + rnd() * 2.5).toFixed(1) + 'px)';
+      x.strokeStyle = lg; x.lineWidth = i % 2 ? 4 + rnd() * 9 : 1 + rnd() * 2.5; x.lineCap = 'round';
+      x.beginPath(); x.moveTo(p0[0], p0[1]); x.quadraticCurveTo(cp[0], cp[1], p1[0], p1[1]); x.stroke(); x.restore();
+    }
+    // 主題後面的白熱光心
+    const hc = x.createRadialGradient(N / 2, N / 2, 0, N / 2, N / 2, N * 0.36); hc.addColorStop(0, rgba('#FFFFFF', 0.32)); hc.addColorStop(0.4, rgba(bright, 0.18)); hc.addColorStop(1, rgba(bright, 0));
+    x.fillStyle = hc; x.fillRect(0, 0, N, N);
     // 光芒
     const nr = 7 + Math.floor(rnd() * 5);
     for (let i = 0; i < nr; i++) {
       const a = rnd() * Math.PI * 2, w = 0.04 + rnd() * 0.12, L = N * (0.7 + rnd() * 0.5);
       const rg = x.createRadialGradient(fx, fy, 0, fx, fy, L); rg.addColorStop(0, rgba(bright, 0.26)); rg.addColorStop(1, rgba(bright, 0));
-      x.fillStyle = rg; x.globalAlpha = 0.35 + rnd() * 0.5; x.beginPath(); x.moveTo(fx, fy); x.arc(fx, fy, L, a - w, a + w); x.closePath(); x.fill();
+      x.fillStyle = rg; x.globalAlpha = 0.18 + rnd() * 0.3; x.beginPath(); x.moveTo(fx, fy); x.arc(fx, fy, L, a - w, a + w); x.closePath(); x.fill();
     }
     x.globalAlpha = 1;
     // 能量弧線
