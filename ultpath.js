@@ -22,7 +22,14 @@
   // 把敵人往某一點吸（領主體、核心不動）
   const pull = (getXZ, r, t, sp) => { let left = t; dyn(dt => { left -= dt; const [x, z] = getXZ(); (W().enemies || []).forEach(e => { if (!alive(e) || (e.def && (e.def.boss || e.def.lordPlus)) || e.id === 'petra') return; const dx = x - e.x, dz = z - e.z, d = Math.hypot(dx, dz); if (d > r || d < 1.2) return; e.x += dx / d * Math.min(d - 1.1, sp * dt); e.z += dz / d * Math.min(d - 1.1, sp * dt); }); return left > 0; }); };
   // 一圈 360 度斬擊
-  const spin = (P, r, dmg, o, c) => { R.fx('swing', P.x, 0, P.z, { a: P.aimA || 0, arc: 6.28, range: r, color: c }); R.fx('ring', P.x, 0.1, P.z, { r, color: c }); R.aoe(P.x, P.z, r, dmg, Object.assign({ primary: false }, o)); R.sfx && R.sfx('swing'); };
+  // 2026-10-08 作者：360 度斬擊不像斬擊——原本是一圈 0.08 秒就閃完的月牙＋一圈光點。改成：角色轉一圈，四道刀光接著繞一圈掃過去，最後留一道整圈的刀痕
+  const spin = (P, r, dmg, o, c) => {
+    const a0 = P.aimA || 0, dir = rnd() < 0.5 ? 1 : -1, x = P.x, z = P.z;
+    for (let k = 0; k < 4; k++) later(P => { R.fx('swing', P.x, 0, P.z, { a: a0 + dir * k * Math.PI / 2, arc: 2.1, range: r, big: true, dir: -dir, color: c }); if (k % 2 === 0) R.sfx && R.sfx('swing'); }, k * 45);
+    later(P => R.fx('swing', P.x, 0, P.z, { a: a0 + dir * Math.PI, arc: 6.28, range: r + 0.3, color: '#FFFFFF' }), 170);
+    let t = 0; const g = P.h && P.h.g, y0 = g ? g.rotation.y : 0; if (g) dyn(dt => { t += dt; const k = Math.min(1, t / 0.2); g.rotation.y = y0 + dir * k * Math.PI * 2; return k < 1; });
+    R.aoe(x, z, r, dmg, Object.assign({ primary: false }, o)); if (R.swingAnim && P.h) R.swingAnim(P.h, 0.02, 0.2);
+  };
   // 一條直線
   const line = (P, len, width, dmg, o, c) => { const a = P.aimA || 0, sx = P.x, sz = P.z, ca = Math.sin(a), sa = Math.cos(a); R.fx('slash', sx, 1, sz, { a, len }); R.fx('line', sx, 1, sz, { a, len, color: c }); near(sx, sz, len + 2).forEach(e => { const dx = e.x - sx, dz = e.z - sz, along = dx * ca + dz * sa, side = Math.abs(dx * sa - dz * ca), rad = ((e.def && e.def.size) || 1) * 0.5; if (along < -0.3 || along > len + rad || side > width + rad) return; R.hurtEnemy(e, dmg, Object.assign({ primary: false }, o)); if (o && o.brk && R.elemBreak) R.elemBreak(e); }); };
   // 一段時間內的區域：每 gap 秒打一次
@@ -45,7 +52,7 @@
       bomber: { name: '焦土風暴', d: '掃射結束時，準心方向一路連炸五次（每次傷害 ×2.5）；爆炸會讓佩特拉注意到。', go: (P, b) => later(P => { const a = P.aimA || 0, x0 = P.x, z0 = P.z; for (let i = 1; i <= 5; i++) later(() => { const [x, z] = fl(x0 + Math.sin(a) * i * 2.6, z0 + Math.cos(a) * i * 2.6); R.fx('boom', x, 0.4, z, { r: 3, color: '#FF8A3A' }); R.aoe(x, z, 3, b * 2.5, { kb: 3, burn: true }); shake(0.3); }, i * 120); R.addAware && R.addAware(6, 'boom'); }, 3100) }
     },
     archer: {
-      arcane: { name: '星軌追跡', d: '箭雨落下的時候，自動朝身邊 14 公尺內的敵人放出 12 支追蹤魔箭（每支傷害 ×0.9）。', go: (P, b) => { for (let i = 0; i < 12; i++) later(P => { const L = near(P.x, P.z, 14); if (!L.length) return; const e = L[Math.floor(rnd() * L.length)]; R.fx('bolt', P.x, 1.2, P.z, { to: e, color: '#C8A8FF' }); R.hurtEnemy(e, b * 0.9, { primary: false }); }, 400 + i * 180); } },
+      arcane: { name: '星軌追跡', d: '箭雨落下的時候，自動朝身邊 14 公尺內的敵人放出 20 支追蹤魔箭（每支傷害 ×1.8）。', go: (P, b) => { for (let i = 0; i < 20; i++) later(P => { const L = near(P.x, P.z, 14); if (!L.length) return; const e = L[Math.floor(rnd() * L.length)]; R.fx('bolt', P.x, 1.2, P.z, { to: e, color: '#C8A8FF' }); R.hurtEnemy(e, b * 1.8, { primary: false }); }, 400 + i * 110); } },   // 2026-10-08 實測 12 支×0.9 只多 4%，加強
       ranger: { name: '獵場箭雨', d: '落點的敵人先被捕獸夾定住 2 秒；翻滾馬上能用，8 秒內移動 +25%。', go: P => { const [x, z] = aim(P, 13); later(() => near(x, z, 6.5).forEach(e => { st(e, 'root', 2); R.fx('ring', e.x, 0.1, e.z, { r: 0.9, color: '#C8A86A' }); }), 450); P.dodgeCd = 0; buff(P, 'ranger', { t: 8, speed: 1.25, color: '#8AE07A' }); } },
       hama: { name: '破魔流星', d: '最後落下一支巨大的破魔矢：落點 7 公尺內的敵人再受傷害 ×4，而且破甲 5 秒（受到的傷害 +15%）。', go: (P, b) => { const [x, z] = aim(P, 13); later(() => { R.fx('pillar', x, 0, z, { r: 2.2, color: '#FFFFFF' }); R.fx('ring', x, 0.1, z, { r: 7, color: '#FFE8A0' }); near(x, z, 7).forEach(e => { if (R.elemBreak) R.elemBreak(e); }); R.aoe(x, z, 7, b * 4, { primary: false }); shake(0.5); }, 2650); } }
     },
@@ -75,8 +82,8 @@
       dragoon: { name: '龍墜城塞', d: '城塞結束時高高跳起，落在準心處把周圍 6 公尺的敵人擊飛（傷害 ×6）。', go: (P, b) => later(P => { const [x, z] = aim(P, 10); P.jump = { t: 0, dur: 0.6, x0: P.x, z0: P.z, x1: x, z1: z }; P.air = 0.6; P.iframe = Math.max(P.iframe || 0, 0.8); later(() => { R.fx('boom', x, 0.4, z, { r: 6, color: '#8AB8FF' }); R.fx('ring', x, 0.1, z, { r: 8, color: '#FFFFFF' }); R.aoe(x, z, 6, b * 6, { stun: 1 }); R.knockUp && R.knockUp(x, z, 6); shake(0.8); }, 600); }, 4300) }
     },
     monk: {
-      fistsaint: { name: '百裂天崩', d: '每一拳變成一陣連打：閃身期間身邊 3 公尺的敵人每 0.1 秒挨一拳（12 拳、每拳傷害 ×0.7）。', go: (P, b) => { for (let i = 0; i < 12; i++) later(P => { const e = near(P.x, P.z, 3)[0]; if (!e) return; R.hurtEnemy(e, b * 0.7, { primary: false }); R.fx('spark', e.x, 1.2, e.z, { a: P.aimA || 0 }); }, 200 + i * 100); } },
-      staffmonk: { name: '風車天崩', d: '最後一擊之後長棍掄三圈（每圈 4.5 公尺、傷害 ×2、擊退）。', go: (P, b) => { const n = Math.min(6, near(P.x, P.z, 12).length); [0, 200, 400].forEach(ms => later(P => spin(P, 4.5, b * 2, { kb: 3 }, '#FFC85A'), 500 + n * 160 + ms)); } },
+      fistsaint: { name: '百裂天崩', d: '每一拳變成一陣連打：閃到每隻遺跡生物面前時多打三拳（每拳傷害 ×1.5）。', go: (P, b) => { near(P.x, P.z, 12).sort((p, q) => Math.hypot(p.x - P.x, p.z - P.z) - Math.hypot(q.x - P.x, q.z - P.z)).slice(0, 6).forEach((e, i) => { for (let k = 0; k < 3; k++) later(P => { if (!alive(e)) return; R.hurtEnemy(e, b * 1.5, { primary: false }); R.fx('spark', e.x, 1.2, e.z, { a: P.aimA || 0, crit: k === 2 }); }, 150 + i * 160 + 30 + k * 40); }); } },   // 2026-10-08 實測：每一拳都會擊退，原本「身邊 3 公尺」的連打幾乎打不到，改成跟著原本的目標打
+      staffmonk: { name: '風車天崩', d: '最後一擊的同時長棍掄三圈，一圈比一圈大（5、7、9 公尺，每圈傷害 ×2.5、擊退）。', go: (P, b) => { const n = Math.min(6, near(P.x, P.z, 12).length); [[0, 5], [200, 7], [400, 9]].forEach(([ms, r]) => later(P => spin(P, r, b * 2.5, { kb: 3 }, '#FFC85A'), 220 + n * 160 + ms)); } },   // 2026-10-08 實測：最後一擊會把敵人擊退 5 公尺，原本在那之後才掄 4.5 公尺打不到
       inner: { name: '氣海天崩', d: '施放時回 20% 生命、30% 魔力；最後一擊讓 6 公尺內的敵人暈 2 秒，打中的行壁直接碎掉。', go: P => { R.healP(P.hpMax * 0.2); P.mp = Math.min(P.mpMax, P.mp + P.mpMax * 0.3); const n = Math.min(6, near(P.x, P.z, 12).length); later(P => { near(P.x, P.z, 6).forEach(e => st(e, 'stun', 2)); ((W().F && W().F.props) || []).forEach(p => { if (p.alive && p.kind === 'plug' && Math.hypot(p.x - P.x, p.z - P.z) < 6 && R.hitProp) R.hitProp(p, 1e9, false); }); }, 320 + n * 160); } }
     },
     bard: {
@@ -85,10 +92,10 @@
       serane: { name: '奏域狂想', d: '腳下展開 10 秒的奏域：裡面回血、灼傷敵人。', go: (P, b) => { if (R.addZone) R.addZone({ kind: 'sanct', x: P.x, z: P.z, r: 6, life: 10, dmg: b * 0.5 }); R.fx('ring', P.x, 0.1, P.z, { r: 6, color: '#FFB8E0' }); } }
     },
     summoner: {
-      beastlord: { name: '萬獸夜行', d: '多捏三隻土狼；這次的召喚物多留 5 秒。', go: (P, b) => { if (T().pet) T().pet({ _id: 'ultp:beast' + rnd(), beast: 'okuriinu', n: 3, t: 20, k: 0.7 }, P, W(), b); } },
+      beastlord: { name: '萬獸夜行', d: '多捏三隻土狼，一起咬 12 秒。', go: (P, b) => { if (T().pet) T().pet({ _id: 'ultp:beast' + rnd(), beast: 'okuriinu', n: 3, t: 12, k: 0.35 }, P, W(), b); } },   // 2026-10-08 實測太強（3 秒內 +185%），調低
       medium: { name: '百鬼附身', d: '怨靈纏住 8 公尺內所有敵人 8 秒，一直咬、讓牠們變慢；回 20% 生命。', go: (P, b) => { R.healP(P.hpMax * 0.2); const L = near(P.x, P.z, 8); let left = 8, tick = 0; dyn(dt => { left -= dt; tick -= dt; if (tick <= 0) { tick = 0.5; L.forEach(e => { if (!alive(e)) return; R.hurtEnemy(e, b * 0.3, { primary: false }); st(e, 'slow', 0.6); R.fx('poof', e.x, 1, e.z, { color: '#8A7AAA', n: 3 }); }); } return left > 0; }); } },
-      tamer: { name: '百獸馴服', d: '再捏出兩隻這一層的遺跡生物替你打 15 秒。', go: (P, b) => { if (T().pet) T().pet({ _id: 'ultp:tame' + rnd(), beast: 'floor', n: 2, t: 15, k: 0.9 }, P, W(), b); } },
-      shikigami: { name: '式神夜行', d: '放出六隻紙式神環繞你、自動攻擊 15 秒。', go: P => { P.orbit = Math.max(P.orbit || 0, 15); P.orbitN = Math.max(P.orbitN || 0, 6); } }
+      tamer: { name: '百獸馴服', d: '再捏出一隻這一層的遺跡生物替你打 15 秒。', go: (P, b) => { if (T().pet) T().pet({ _id: 'ultp:tame' + rnd(), beast: 'floor', n: 1, t: 15, k: 0.6 }, P, W(), b); } },   // 2026-10-08 實測太強（+270%），兩隻→一隻
+      shikigami: { name: '式神夜行', d: '放出五隻紙式神環繞你、自動攻擊 10 秒。', go: P => { P.orbit = Math.max(P.orbit || 0, 10); P.orbitN = Math.max(P.orbitN || 0, 5); } }   // 2026-10-08 實測：六隻 15 秒太強（前面的召喚物沒清掉，數字偏高），四隻 8 秒又比原版弱；五隻 10 秒
     },
     arraymage: {
       grandarray: { name: '天地大陣・極', d: '大陣最後再爆一次，範圍大四成（10 公尺、傷害 ×3）。', go: (P, b) => { const x = P.x, z = P.z; later(() => { R.fx('ring', x, 0.1, z, { r: 10, color: '#7AC8E8' }); R.fx('boom', x, 0.5, z, { r: 10, color: '#BFE8FF' }); R.aoe(x, z, 10, b * 3, {}); shake(0.6); }, 2200); } },
@@ -98,10 +105,10 @@
     enchanter: {
       runesmith: { name: '萬象刻印', d: '再刻上毒和金：附魔期間普攻打中的敵人會中毒、破甲。', go: P => whileHit(12, (e, raw, P) => { if (R.elemPoison) R.elemPoison(e, P); if (R.elemBreak) R.elemBreak(e); }) },
       spellblade: { name: '萬象劍氣', d: '附魔期間普攻打中時，順手把劍氣打出去（穿過一整排敵人）。', go: P => whileHit(12, (e, raw, P) => { if (R.elemWind) R.elemWind(P, e, raw, 0.6); }) },
-      entian: { name: '萬象撕裂', d: '施放時朝準心撕開一道 14 公尺的直線（傷害 ×7、必定暴擊、破甲）。', go: (P, b) => later(P => { line(P, 14, 1, b * 7, { crit: true, brk: true }, '#FF8A4A'); shake(0.5); }, 200) }
+      entian: { name: '萬象撕裂', d: '施放時朝準心撕開一道 14 公尺的直線（傷害 ×5、必定暴擊、破甲）。', go: (P, b) => later(P => { line(P, 14, 1, b * 5, { crit: true, brk: true }, '#FF8A4A'); shake(0.5); }, 200) }
     },
     scroll: {
-      scribe: { name: '萬卷疊爆', d: '準心處再連爆五張火卷（每張傷害 ×2.5、燃燒）。', go: (P, b) => { if (T().at) T().at({ _id: 'ultp:scribe', range: 12, r: 3, k: 2.5, waves: 5, gap: 250, delay: 500, burn: 1, color: '#FF8A3A' }, P, W(), b); } },
+      scribe: { name: '萬卷疊爆', d: '準心處再連爆五張火卷（每張傷害 ×1.8、燃燒）。', go: (P, b) => { if (T().at) T().at({ _id: 'ultp:scribe', range: 12, r: 3, k: 1.8, waves: 5, gap: 250, delay: 500, burn: 1, color: '#FF8A3A' }, P, W(), b); } },
       sealer: { name: '萬卷封印', d: '準心 6 公尺內的敵人被封住 3 秒，詛咒 6 秒（受到的傷害變多）。', go: P => { const [x, z] = aim(P, 12); R.fx('ring', x, 0.1, z, { r: 6, color: '#F2D88A' }); near(x, z, 6).forEach(e => { st(e, 'stun', 3); st(e, 'curse', 6); }); } },
       noxa: { name: '預載・萬卷', d: '預載的卷軸再全部放一輪；回 30% 魔力。', go: (P, b) => { P.mp = Math.min(P.mpMax, P.mp + P.mpMax * 0.3); later(P => { if (T().shots) T().shots({ _id: 'ultp:noxa', n: 24, spread: 6.28, k: 1.1, kind: 'orb', sp: 18, burst: 2, gap: 200 }, P, W(), b); }, 1300); } }
     }
