@@ -108,9 +108,21 @@
       const old = el.querySelector(':scope > .hi-q'); if (old) old.remove();
     });
   };
+  // 2026-10-09 作者回報：樓層效果那一格的問號跑到左邊、蓋到字——hudframe.js 的樓層裝飾（寶藏的閃光點點等）也用 ::after，
+  // 它的 inset:0 把問號拉到左邊。問號固定在右邊；那幾種裝飾搬到 ::before（那一種沒有用 ::before 的話）。
+  let moved = false;
+  const moveDeco = () => {
+    if (moved) return; moved = true;
+    const rules = []; for (const sh of document.styleSheets) { try { for (const r of sh.cssRules) if (r.selectorText) rules.push([sh, r]); } catch (e) { } }
+    const has = sel => rules.some(([, r]) => r.selectorText === sel);
+    const css2 = document.createElement('style'); let txt = '';
+    rules.forEach(([, r]) => { const m = /^\.(hf-mod-[\w-]+)::after$/.exec(r.selectorText); if (m && !has('.' + m[1] + '::before')) txt += '.' + m[1] + '.hi-click::before{' + r.style.cssText + '}'; });
+    txt += '.hi-click.hf-chip::after{inset:auto!important;left:auto!important;right:5px!important;top:50%!important;bottom:auto!important;width:15px!important;height:15px!important;transform:translateY(-50%)!important;background:rgba(255,236,190,.9)!important;z-index:2!important;animation:none!important;opacity:1!important;filter:none!important}';
+    css2.textContent = txt; document.head.appendChild(css2);
+  };
   let t = 0;
   const st0 = R.step;
-  R.step = dt => { const r = st0(dt); if ((t -= dt) <= 0) { t = 0.25; try { hook(); } catch (e) { } } return r; };
+  R.step = dt => { const r = st0(dt); if ((t -= dt) <= 0) { t = 0.25; try { moveDeco(); hook(); } catch (e) { } } return r; };
 
   const css = document.createElement('style');
   css.textContent = '.hi-click{pointer-events:auto!important;cursor:pointer;position:relative;padding-right:24px!important;transition:filter .15s}'

@@ -166,7 +166,7 @@
     grpL = document.createElement('div'); grpL.className = 'st-grp l dungeon-only'; grpR = document.createElement('div'); grpR.className = 'st-grp r dungeon-only';
     host.appendChild(grpL); host.appendChild(grpR); return true;
   };
-  const tipHtml = it => '<b style="color:' + it.color + '">' + esc(it.name) + (it.bad ? '<span style="color:#FF8A8A;font-size:11px">　壞狀態</span>' : '') + '</b>'
+  const tipHtml = it => '<b style="color:' + it.color + '">' + esc(it.name) + (it.bad ? '<span style="color:#FF8A8A;font-size:11px">　負面狀態</span>' : '') + '</b>'
     + (it.lines.length ? '<ul>' + it.lines.map(l => '<li>' + esc(l) + '</li>').join('') + '</ul>' : '')
     + '<small>' + (it.note ? esc(it.note) : it.left != null ? '還剩 ' + (it.left >= 10 ? Math.ceil(it.left) : it.left.toFixed(1)) + ' 秒' : '') + '</small>';
   const showTip = (cell, it) => {

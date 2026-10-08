@@ -15,7 +15,7 @@
   set('kn8', { name: '不倒', desc: '生命 +10%；受到的控制類負面效果時間 −30%。', fx: { hp: 0.1, tenacity: 0.3 } });
   set('wa4', { name: '殺氣' });
   set('pr4', { name: '靜心' });
-  // 鋼鐵意志：每一格看壞狀態的時間有沒有變長，變長的部分砍半
+  // 鋼鐵意志：每一格看負面狀態的時間有沒有變長，變長的部分砍半
   const KEYS = ['stumble', 'slowT', 'knockT', 'blindT'], last = {};
   const st0 = R.step;
   R.step = dt => {
