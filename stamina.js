@@ -12,6 +12,7 @@
 //   作者：跑久了或經常受傷都會增加體力——城裡跑步（不扣體力）每跑 4 秒 +1；受傷：掉的生命每一管（滿血那麼多）+40。
 // - 體力條在技能列的上緣（手機在畫面最下面）；快沒了變黃、扣光變紅。
 // 2026-10-08 作者：跑步的消耗 +10%（22 → 24.2），讓「體力回復」天賦更值得點。
+// 2026-10-08 作者：防禦（格擋）改成騎士專屬——有翻滾這種無敵的動作，其他職業舉盾的效益很低；騎士完美格擋會自動盾擊（classcore.js）。
 // 放在 run.js、combat.js、keybinds.js、hud2.js、hud3.js、adv2more.js 後面（包 R.dodge、R.running、R.hurtPlayer、R.attack、R.step、R.tact）。
 (function (R) {
   const W = () => R.W, $ = id => document.getElementById(id), TH = () => window.THREE;
@@ -111,7 +112,7 @@
       init(P);
       if (P.guardLock > 0) P.guardLock -= dt;
       // 防禦：按住 Z（或手機的鈕）
-      const I = R.input || { keys: {} }, want = (!!I.keys.z || touchGuard) && !P.dead && !(P.knockT > 0) && !P.jump && !(P.dashT > 0) && !(P.guardLock > 0) && !w.paused;
+      const I = R.input || { keys: {} }, want = (!!I.keys.z || touchGuard) && P.cls === 'knight' && !P.dead && !(P.knockT > 0) && !P.jump && !(P.dashT > 0) && !(P.guardLock > 0) && !w.paused;
       if (want && !P.guard) { if (P.stam > 0) { P.guard = true; P.guardT0 = w.run.t; P.charging = false; } else warn(); }
       if (!want) P.guard = false;
       // 跑步扣體力
@@ -127,7 +128,7 @@
       if (m) { m.visible = !!P.guard; if (P.guard) { m.position.set(P.x, 0.95, P.z); m.rotation.y = P.aimA || 0; glow = Math.max(0, glow - dt * 3); m.material.opacity = 0.28 + glow * 0.5; m.material.color.set(glow > 0.8 ? '#FFE08A' : '#9AD8FF'); } }
       // 畫面
       hudT -= dt; if (hudT <= 0) {
-        hudT = 0.05; ensureBtn(); const el = ensureBar();
+        hudT = 0.05; ensureBtn(); document.querySelectorAll('[data-tact="guard"]').forEach(b => { b.style.display = P.cls === 'knight' ? '' : 'none'; }); const el = ensureBar();
         if (el) { const k = P.stam / P.stamMax, s = Math.round(k * 1000) / 10 + '|' + (P.stamOut ? 'o' : k < 0.3 ? 'l' : '') + (P.guard ? 'g' : ''); if (s !== last) { last = s; el.firstChild.style.width = (k * 100).toFixed(1) + '%'; el.classList.toggle('low', !P.stamOut && k < 0.3); el.classList.toggle('out', !!P.stamOut); el.classList.toggle('guard', !!P.guard); } }
       }
     } catch (e) { console.warn('[stamina]', e); }

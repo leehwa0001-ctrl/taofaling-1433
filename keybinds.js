@@ -8,7 +8,7 @@
   const $ = id => document.getElementById(id);
   const ACTS = [
     ['up', '往上走', 'w', 'KeyW'], ['left', '往左走', 'a', 'KeyA'], ['down', '往下走', 's', 'KeyS'], ['right', '往右走', 'd', 'KeyD'],
-    ['dodge', '翻滾（點一下）／跑步（按住）', 'shift', 'ShiftLeft'], ['guard', '防禦（按住）', 'z', 'KeyZ'], ['use', '互動', ' ', 'Space'],
+    ['dodge', '翻滾（點一下）／跑步（按住）', 'shift', 'ShiftLeft'], ['guard', '防禦（按住；騎士）', 'z', 'KeyZ'], ['use', '互動', ' ', 'Space'],
     ['skill1', '技能一（右鍵也可以）', 'r', 'KeyR'], ['skill2', '技能二', '3', 'Digit3'], ['skill3', '技能三', '4', 'Digit4'], ['skill4', '技能四', '5', 'Digit5'], ['skill5', '技能五', '6', 'Digit6'],
     ['auto', '自動打最近的敵人（按住）', 'f', 'KeyF'], ['reload', '職業鍵（槍手：換彈）', 'x', 'KeyX'],
     ['hp', '回復藥', '1', 'Digit1'], ['mp', '魔力藥', '2', 'Digit2'], ['bag', '背包', 'i', 'KeyI'], ['map', '地圖', 'tab', 'Tab'], ['bigmap', '城裡的大地圖', 'm', 'KeyM'],

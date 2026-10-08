@@ -313,19 +313,19 @@
   // ======================= 騎士：格擋 =======================
   CORE.knight = {
     name: '格擋', col: '#C9A13A',
-    help: P => '格擋：按住 Z 防禦的頭 0.3 秒被打＝完美格擋（不受傷、對方暈 1.5 秒、盾反擊、回 20 體力）。防禦的時候身邊 3.5 公尺的隊友受到的傷害 −40%。X 盾擊往前衝；完美格擋後 2 秒內是「反制」，三倍傷害。'
+    help: P => '格擋（騎士專屬）：按住 Z 防禦的頭 0.3 秒被打＝完美格擋（不受傷、對方暈 1.5 秒、回 20 體力），而且自動盾擊反制（三倍傷害、暈眩）。防禦的時候身邊 3.5 公尺的隊友受到的傷害 −40%。X 也可以自己盾擊往前衝。'
       + ({ templar: '殿堂騎士：完美格擋把傷害整個彈回去。', paladin: '聖騎士：完美格擋回 8% 生命。', dragoon: '龍騎士：完美格擋後的盾擊變成龍躍（跳到準心處砸下）。' }[adv(P)] || ''),
     onHurt(raw, src, o, P) {
       const run = W().run; if (!P.guard || !run || P.guardT0 == null || run.t - P.guardT0 > ((R.legOf ? R.legOf(P) : null) === 'lg_vow' ? 0.5 : 0.3) || !src || src.dead) return;
       say(P, '完美格擋', 'crit'); R.fx && R.fx('block', P.x, 1.2, P.z); R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 2, color: '#FFE08A' });
       if (src.st) src.st.stun = Math.max(src.st.stun || 0, 1.5);
-      if (src.hp != null && src.def) R.coreHit(src, pw(P) * 1.5 + (adv(P) === 'templar' ? raw : 0), R.markNoVamp ? R.markNoVamp({ kb: 2 }) : { kb: 2, reflect: true, noVamp: true });   // 盾反擊：不觸發吸血
+      if (adv(P) === 'templar' && src.hp != null && src.def) R.coreHit(src, raw, R.markNoVamp ? R.markNoVamp({}) : { reflect: true, noVamp: true });   // 殿堂騎士：傷害整個彈回去
       if (P.stam != null) P.stam = Math.min(P.stamMax || 100, P.stam + 20);
       if (adv(P) === 'paladin') R.healP(P.hpMax * 0.08);
-      P._riposte = CT + 2; return false;
+      P._riposte = CT + 2; this.act(P, true); return false;   // 2026-10-08 作者：盾擊改成完美格擋後自動觸發（反制）
     },
-    act(P) {
-      if ((P._bashCd || 0) > CT) return; P._bashCd = CT + 4;
+    act(P, auto) {
+      if (!auto) { if ((P._bashCd || 0) > CT) return; P._bashCd = CT + 4; }
       const rip = (P._riposte || 0) > CT, a = P.aimA;
       if (rip && adv(P) === 'dragoon') {
         const ax = P.aimX != null ? P.aimX : P.x + Math.sin(a) * 6, az = P.aimZ != null ? P.aimZ : P.z + Math.cos(a) * 6, d = Math.min(8, Math.hypot(ax - P.x, az - P.z)), q = R.nearestFloor ? R.nearestFloor(P.x + Math.sin(a) * d, P.z + Math.cos(a) * d) : [ax, az];
@@ -333,11 +333,11 @@
         R.coreAoe(P.x, P.z, 3.2, pw(P) * 3, R.markNoVamp ? R.markNoVamp({ stun: 1, kb: 2 }) : { stun: 1, kb: 2, reflect: true, noVamp: true }); P._riposte = 0; say(P, '龍躍', 'crit'); return;   // 反制龍躍：不觸發吸血
       }
       const jd = rip && (R.legOf ? R.legOf(P) : null) === 'lg_judge'; front(P, jd ? 5 : 3.5, jd ? 2.6 : 1.8).forEach(e => R.coreHit(e, pw(P) * (rip ? 3 : 1.2), rip ? (R.markNoVamp ? R.markNoVamp({ stun: jd ? 3 : 1, kb: 2 }) : { stun: jd ? 3 : 1, kb: 2, reflect: true, noVamp: true }) : { stun: jd ? 3 : 1, kb: 2 }));   // 反制盾擊不吸血；一般盾擊照常
-      if (R.dash) R.dash(a, 2.4, 0.18, { iframe: true });
+      if (R.dash && !auto) R.dash(a, 2.4, 0.18, { iframe: true });   // 自動的反制原地出手（舉著盾不往前衝）
       R.fx && R.fx('swing', P.x, 1.1, P.z, { a, range: 3.5, arc: 1.8, color: rip ? '#FFE08A' : '#C9A13A' });
       say(P, rip ? '反制' : '盾擊', rip ? 'crit' : 'heal'); P._riposte = 0;
     },
-    gauge(P) { const rip = (P._riposte || 0) > CT, cd = Math.max(0, (P._bashCd || 0) - CT); return { name: rip ? '反制！' : P.guard ? '防禦中' : '格擋', col: rip ? '#FFE08A' : '#C9A13A', text: P.guard ? '頭 0.3 秒被打＝完美' : '按住 Z 防禦', x: cd > 0 ? '冷卻 ' + cd.toFixed(1) : rip ? '反制（三倍）' : '盾擊' }; }
+    gauge(P) { const rip = (P._riposte || 0) > CT, cd = Math.max(0, (P._bashCd || 0) - CT); return { name: rip ? '反制！' : P.guard ? '防禦中' : '格擋', col: rip ? '#FFE08A' : '#C9A13A', text: P.guard ? '頭 0.3 秒被打＝完美（自動反制）' : '按住 Z 防禦', x: cd > 0 ? '冷卻 ' + cd.toFixed(1) : '盾擊' }; }
   };
   // 防禦的時候護著身邊的隊友
   const ha0 = R.hurtAlly;
