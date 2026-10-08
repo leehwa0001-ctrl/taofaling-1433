@@ -367,6 +367,7 @@
     (R.keyName ? R.keyName('skill1') : 'R') + '／右鍵', R.keyName ? R.keyName('skill2') : '3', R.keyName ? R.keyName('skill3') : '4', R.keyName ? R.keyName('skill4') : '5', R.keyName ? R.keyName('skill5') : '6'
   ]);
   let pickSlot = 0;
+  R.SB_FOOT = R.SB_FOOT || [];   // 技能卡片最下面那一格：fn(格子, 技能編號)，自己往裡面放東西（skillvar.js 的變化、souyu.js 的奏域選項）
   const book = (host, close) => {
     const S = R.S, cls = S.cls, st = S.classes[cls], lo = R.loadoutOf(cls), keys = KEYS();
     const ids = allOf(cls), learned = ids.filter(id => known(cls, st, id)), locked = ids.filter(id => !known(cls, st, id));
@@ -385,15 +386,16 @@
       }).join('');
     };
     const card = (id, ok) => { const sk = R.SKILLS[id], at = lo.indexOf(id), s = info(id), ic = R.skillIconURL && R.skillIconURL(id);
-      return '<button type="button" class="recipe sb-card' + (at >= 0 ? ' on' : '') + (ok ? '' : ' lock') + '" data-sk="' + id + '"' + (ok ? '' : ' disabled') + '>'
+      return '<div class="recipe sb-card' + (at >= 0 ? ' on' : '') + (ok ? '' : ' lock') + '"><button type="button" class="sb-pick" data-sk="' + id + '"' + (ok ? '' : ' disabled') + '>'
         + (ic ? '<img class="sb-ico" src="' + ic + '" alt="" draggable="false">' : '<span class="sb-ico sb-ico-empty" aria-hidden="true"></span>')
         + '<b>' + esc(sk.name) + (s.adv ? ' <small class="sb-adv">' + esc(R.ADV[cls].find(a => a.id === s.adv).name) + '</small>' : '') + (at >= 0 ? ' <small class="sb-at">裝在「' + keys[at] + '」</small>' : '') + '</b>'
         + '<small>' + (R.skillTag && R.skillTag(id) ? esc(R.skillTag(id)) + '・' : '') + '冷卻 ' + sk.cd + ' 秒・魔力 ' + sk.mp + (ok ? '' : '・' + esc(req(id))) + '</small>'
-        + '<span>' + esc(sk.desc) + '</span></button>'; };
+        + '<span>' + esc(sk.desc) + '</span></button>' + (ok ? '<div class="sb-foot" data-foot="' + id + '"></div>' : '') + '</div>'; };   // 2026-10-08 作者：技能變化放在說明那格最下面（skillvar.js、souyu.js 往 .sb-foot 裡填）
     host.innerHTML = '<h2>技能書・' + esc(R.clsName(cls)) + ' Lv ' + st.lv + '</h2><p class="note">每一格技能都可以換。先點上面的一格，再點下面學會的技能。第二到第五格在職業等級 ' + R.SKILL_UNLOCK.slice(1).join('、') + ' 打開。進了遺跡就不能換。</p>'
       + '<div class="row sb-slots">' + Array.from({ length: NSLOT() }, (_, i) => i).map(i => { const open = i === 0 || st.lv >= R.SKILL_UNLOCK[i]; return '<button type="button" class="btn' + (pickSlot === i ? ' pri' : '') + '" data-slot="' + i + '"' + (open ? '' : ' disabled') + '>' + keys[i] + '：' + (open ? esc(R.SKILLS[lo[i]].name) : 'Lv ' + R.SKILL_UNLOCK[i] + ' 打開') + '</button>'; }).join('') + '<button type="button" class="btn" data-reset="1">恢復預設</button></div>'
       + '<p class="note">學會 ' + learned.length + '／' + ids.length + ' 種。依轉職路線分類，可展開各區查看學習條件。</p>' + groups(ids)
       + '<div class="row"><button type="button" class="btn pri" data-close="1">好了</button></div>';
+    host.querySelectorAll('.sb-foot').forEach(f => { R.SB_FOOT.forEach(fn => { try { fn(f, f.dataset.foot); } catch (e) { } }); if (!f.childElementCount) f.remove(); });
     host.querySelectorAll('[data-slot]').forEach(b => { b.onclick = () => { pickSlot = +b.dataset.slot; book(host, close); }; });
     host.querySelectorAll('[data-sk]').forEach(b => { b.onclick = () => {
       const id = b.dataset.sk, cur = R.loadoutOf(cls).slice(), from = cur.indexOf(id);
@@ -424,9 +426,10 @@
   };
 
   const css = document.createElement('style');
-  css.textContent = '.sb-card{display:grid;grid-template-columns:44px 1fr;column-gap:10px;row-gap:2px;align-items:start}'
+  css.textContent = '.sb-card{padding:0;gap:0;overflow:hidden}.sb-pick{display:grid;grid-template-columns:44px 1fr;column-gap:10px;row-gap:2px;align-items:start;width:100%;margin:0;padding:10px 12px;background:none;border:0;text-align:left}.sb-pick:disabled{cursor:default}'
+    + '.sb-foot{display:grid;gap:4px;padding:6px 12px 10px;border-top:1px dashed var(--line)}'
     + '.sb-card .sb-ico{grid-row:1/span 3;width:44px;height:44px;image-rendering:pixelated;border-radius:6px;align-self:center;background:rgba(0,0,0,.2)}'
     + '.sb-card .sb-ico-empty{display:block;border:1px dashed var(--line)}'
-    + '.sb-card b,.sb-card small,.sb-card span{grid-column:2;min-width:0}';
+    + '.sb-pick > b,.sb-pick > small,.sb-pick > span{grid-column:2;min-width:0}';
   document.head.appendChild(css);
 })(window.R);
