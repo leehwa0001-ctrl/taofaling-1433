@@ -282,6 +282,8 @@
     sc.add(sun); sc.add(sun.target); W.moon = sun; W.torch = null;
     sc.fog = new TH.FogExp2(0xffffff, 0.0008);
     const pts = []; const np = R.touch ? 4 : 8; for (let i = 0; i < np; i++) { const p = new TH.PointLight(new TH.Color('#FFD8A8').convertSRGBToLinear(), 0, 18, 1.8); p.position.set(0, -50, 0); sc.add(p); pts.push(p); }
+    CK.lampLights = (L0, qq) => { const n = qq >= 2 ? L0.length : qq === 1 ? Math.min(L0.length, 4) : 0; L0.forEach((p, i) => { p.visible = i < n; }); };   // 2026-10-10：路燈照地的光——低畫質不開（每個像素都要算每一盞）、中 4 盞、高 8 盞
+    CK.lampLights(pts, q);
     tw.L = { sky, skyM, envSc, hemi, sun, pts, pm: new TH.PMREMGenerator(W.renderer), env: null, envKey: '', lastH: -1 };
     // 雪（或雨）：在鏡頭附近的一個盒子裡循環，頂點著色器自己算位置
     const N = 9000, pos = new Float32Array(N * 3), rr = CK.rng(9); for (let i = 0; i < N; i++) { pos[i * 3] = rr() * 80 - 40; pos[i * 3 + 1] = rr() * 34; pos[i * 3 + 2] = rr() * 80 - 40; }

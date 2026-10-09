@@ -383,7 +383,7 @@
     F.wallMeshes = [body, cap, cap2].filter(Boolean);
     // 擋住人物時換上的半透明牆（平常縮成 0）
     const ghostMat = new TH.MeshLambertMaterial({ color: '#FFFFFF', transparent: true, opacity: 0.2, depthWrite: false }), zeroM = new TH.Matrix4().makeScale(0, 0, 0);
-    F.ghosts = F.wallMeshes.map(src => { const gm = new TH.InstancedMesh(unit, ghostMat, src.count); for (let i = 0; i < src.count; i++) { gm.setMatrixAt(i, zeroM); if (src.instanceColor) { src.getColorAt(i, col); gm.setColorAt(i, col); } } gm.frustumCulled = false; group.add(gm); return gm; });
+    F.ghosts = F.wallMeshes.map(src => { const gm = new TH.InstancedMesh(unit, ghostMat, src.count); for (let i = 0; i < src.count; i++) { gm.setMatrixAt(i, zeroM); if (src.instanceColor) { src.getColorAt(i, col); gm.setColorAt(i, col); } } gm.count = 0; gm.visible = false; gm.frustumCulled = false; group.add(gm); return gm; });   // 2026-10-10：平常不畫（縮成 0 的也要一個一個算頂點）；擋住的那幾格才排進來（updateCutaway）
     [floorMesh, ...F.wallMeshes].forEach(m => { m.frustumCulled = false; });
     if (wins.length) {
       const wm = new TH.InstancedMesh(new TH.BoxGeometry(0.8, 0.9, 0.06), new TH.MeshBasicMaterial({ color: '#FFD08A' }), wins.length);
@@ -729,7 +729,7 @@
 
   // ---------- 擋住人物的牆會暫時變矮（轉視角也看得到自己） ----------
   const cutM = () => new (T().Matrix4)(), cutQ = () => new (T().Quaternion)();
-  let _m, _q, _p, _s, _zero, _up;
+  let _m, _q, _p, _s, _zero, _up, _c;
   R.updateCutaway = dt => {
     const W = R.W, F = W.F, P = W.P; if (!F || !F.wallMeshes || !P) return;
     if (!_m) { _m = cutM(); _q = cutQ(); _p = new (T().Vector3)(); _s = new (T().Vector3)(); }
@@ -779,10 +779,15 @@
       _q.identity(); if (F.wallRotY) _q.setFromAxisAngle(_up || (_up = new (T().Vector3)(0, 1, 0)), F.wallRotY[i]); return _m.compose(_p, _q, _s);
     };
     let dirty = false;
-    const swap = (i, ghost) => { F.wallMeshes.forEach((solid, j) => { solid.setMatrixAt(i, ghost ? _zero : full(j, i)); F.ghosts[j].setMatrixAt(i, ghost ? full(j, i) : _zero); }); dirty = true; };
+    // 2026-10-10：ruinterrain.js 的地形每種形狀只放用它的那幾格（F.wallSlot：這一格在那個 mesh 的第幾個）；替身只放擋住的那幾格
+    const slot = (j, i) => (F.wallSlot ? (F.wallPick[i] === j ? F.wallSlot[i] : -1) : i);
+    const swap = (i, ghost) => { F.wallMeshes.forEach((solid, j) => { const s = slot(j, i); if (s >= 0) solid.setMatrixAt(s, ghost ? _zero : full(j, i)); }); dirty = true; };
     F.cut.forEach((v, i) => { if (!want.has(i)) { swap(i, false); F.cut.delete(i); } });
     want.forEach(i => { if (!F.cut.has(i)) { swap(i, true); F.cut.set(i, 1); } });
-    if (dirty) { F.wallMeshes.forEach(m => { m.instanceMatrix.needsUpdate = true; }); F.ghosts.forEach(m => { m.instanceMatrix.needsUpdate = true; }); }
+    if (dirty) {
+      F.wallMeshes.forEach(m => { m.instanceMatrix.needsUpdate = true; });
+      F.ghosts.forEach((g, j) => { const src = F.wallMeshes[j]; let k = 0; F.cut.forEach((v, i) => { const s = slot(j, i); if (s < 0 || k >= g.instanceMatrix.count) return; g.setMatrixAt(k, full(j, i)); if (g.instanceColor && src && src.instanceColor) { src.getColorAt(s, _c || (_c = new (T().Color)())); g.setColorAt(k, _c); } k++; }); g.count = k; g.visible = k > 0 && !!src && src.visible; g.instanceMatrix.needsUpdate = true; if (g.instanceColor) g.instanceColor.needsUpdate = true; });
+    }
     if (F.winMesh && dirty) { let wd = false; F.wins.forEach((w, j) => { const show = !F.cut.has(w.i); if (w.hidden === !show) return; w.hidden = !show; _p.set(w.x, show ? w.y : -20, w.z); _s.set(1, 1, 1); _q.setFromAxisAngle(new (T().Vector3)(0, 1, 0), w.rot); _m.compose(_p, _q, _s); F.winMesh.setMatrixAt(j, _m); _q.identity(); wd = true; }); if (wd) F.winMesh.instanceMatrix.needsUpdate = true; }
   };
 

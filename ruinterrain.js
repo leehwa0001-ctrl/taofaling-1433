@@ -136,8 +136,11 @@
       if (F.winMesh) { group.remove(F.winMesh); F.winMesh = null; F.wins = []; }
       const pix = R.pixelOn && R.pixelOn(), mat = pix && R.pixMat ? R.pixMat(cfg.tex) : new TH.MeshLambertMaterial({ color: '#FFFFFF' }); mat.flatShading = cfg.geo === 'rock';
       const gm = new TH.MeshLambertMaterial({ color: '#FFFFFF', transparent: true, opacity: 0.2, depthWrite: false });
-      const bodies = [0, 1, 2].map(v => new TH.InstancedMesh(geoOf(cfg.geo, v), mat, n)), ghosts = [0, 1, 2].map(v => new TH.InstancedMesh(geoOf(cfg.geo, v), gm, n));
-      F.wallPick = new Uint8Array(n); F.wallRotY = new Float32Array(n); F.wallSX = new Float32Array(n);
+      // 2026-10-10：每種形狀只放選到它的那幾格（以前三個 mesh 都放滿、沒選到的縮成 0——縮成 0 一樣要算頂點，草丘一層 50 幾萬個三角形）
+      F.wallPick = new Uint8Array(n); F.wallRotY = new Float32Array(n); F.wallSX = new Float32Array(n); F.wallSlot = new Int32Array(n);
+      const cnt = [0, 0, 0]; for (let i = 0; i < n; i++) { const k = F.wallTile[i], tx = k % t.nx, tz = (k - tx) / t.nx, pk = Math.floor(hash('p', tx, tz) * 3) % 3; F.wallSlot[i] = cnt[pk]++; }
+      const bodies = [0, 1, 2].map(v => new TH.InstancedMesh(geoOf(cfg.geo, v), mat, Math.max(1, cnt[v]))), ghosts = [0, 1, 2].map(v => new TH.InstancedMesh(geoOf(cfg.geo, v), gm, Math.max(1, cnt[v])));
+      bodies.forEach((b, j) => { b.count = cnt[j]; }); ghosts.forEach(g => { g.count = 0; g.visible = false; });
       const base = new TH.InstancedMesh(geoOf('box'), pix && R.pixMat ? R.pixMat(cfg.tex) : new TH.MeshLambertMaterial({ color: '#FFFFFF' }), n);
       const m4 = new TH.Matrix4(), q = new TH.Quaternion(), p = new TH.Vector3(), sc = new TH.Vector3(), col = new TH.Color(), zero = new TH.Matrix4().makeScale(0, 0, 0);
       F.wallVisH = new Float32Array(n);
@@ -149,7 +152,7 @@
         F.wallPick[i] = pk; F.wallRotY[i] = ry; F.wallSX[i] = sx; q.setFromAxisAngle(new TH.Vector3(0, 1, 0), ry);
         p.set(x, h / 2, z); sc.set(TS * sx, h, TS * sx); m4.compose(p, q, sc); q.identity();
         col.set(cfg.col[Math.floor(hash(tx, tz) * cfg.col.length)]).offsetHSL(0, 0, (v - 0.5) * 0.08);
-        bodies.forEach((b, j) => { b.setMatrixAt(i, j === pk ? m4 : zero); b.setColorAt(i, col); }); ghosts.forEach(g => { g.setMatrixAt(i, zero); g.setColorAt(i, col); });
+        bodies[pk].setMatrixAt(F.wallSlot[i], m4); bodies[pk].setColorAt(F.wallSlot[i], col); ghosts[pk].setColorAt(F.wallSlot[i], col);
         p.set(x, 0.04, z); sc.set(TS, 0.08, TS); m4.compose(p, q, sc); base.setMatrixAt(i, m4); base.setColorAt(i, col.set(cfg.base));
         const nt = cfg.trees ? cfg.trees(e) : 0;
         for (let j = 0; j < nt; j++) trees.push({ i, x: x + (Math.random() - 0.5) * TS * 0.7, z: z + (Math.random() - 0.5) * TS * 0.7, y: h * 0.55, kind: cfg.kinds[Math.floor(Math.random() * cfg.kinds.length)], n: 1 + Math.floor(Math.random() * 3) });

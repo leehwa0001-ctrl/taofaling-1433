@@ -304,7 +304,7 @@
   CK.mats = MATS;
 
   // ---------- 合併繪製（照材質、照 96 公尺的區塊合起來（2026-10-08：48 → 96，繪製次數少很多）；uv 照公尺算，外牆照每一面置中） ----------
-  const CHUNK = 96;
+  const CHUNK = 96, MERGE_V = 60000;
   CK.chunkSize = () => CHUNK;   // 2026-10-09：低畫質合成大一點的區塊（繪製次數少；ckperf.js 換掉）
   CK.batch = () => {
     const TH = T(), map = new Map(), m4 = new TH.Matrix4(), nm = new TH.Matrix3(), q = new TH.Quaternion(), e = new TH.Euler(), p = new TH.Vector3(), s = new TH.Vector3();
@@ -352,11 +352,17 @@
       },
       flush(par, o) {
         o = o || {};
-        map.forEach((bucket, mat) => bucket.forEach(A => {
-          if (!A.P.length) return;
-          const geo = new TH.BufferGeometry(); geo.setAttribute('position', new TH.BufferAttribute(new Float32Array(A.P), 3)); geo.setAttribute('normal', new TH.BufferAttribute(new Float32Array(A.N), 3)); geo.setAttribute('uv', new TH.BufferAttribute(new Float32Array(A.U), 2)); geo.computeBoundingSphere();
+        // 2026-10-10 作者：替電腦比較慢的玩家優化——用得少的材質（整批加起來不到 MERGE_V 個頂點）不分區塊、合成一塊（繪製次數少很多）；
+        // 透明的照舊分區塊（合成一大塊，前後的排序會亂）
+        const cat = (G, k) => { let n = 0; G.forEach(A => { n += A[k].length; }); const out = new Float32Array(n); let off = 0; G.forEach(A => { const a = A[k]; for (let i = 0; i < a.length; i++) out[off + i] = a[i]; off += a.length; }); return out; };
+        map.forEach((bucket, mat) => {
+          const parts = [...bucket.values()].filter(A => A.P.length); let tot = 0; parts.forEach(A => { tot += A.P.length / 3; });
+          (tot < MERGE_V && !mat.transparent ? [parts] : parts.map(A => [A])).forEach(G => {
+          if (!G.length) return;
+          const geo = new TH.BufferGeometry(); geo.setAttribute('position', new TH.BufferAttribute(cat(G, 'P'), 3)); geo.setAttribute('normal', new TH.BufferAttribute(cat(G, 'N'), 3)); geo.setAttribute('uv', new TH.BufferAttribute(cat(G, 'U'), 2)); geo.computeBoundingSphere();
           const mesh = new TH.Mesh(geo, mat); mesh.castShadow = !o.noShadow && !mat.userData.noShadow && !mat.transparent && !(mat.emissive && mat.emissiveIntensity > 0 && !mat.userData.win); mesh.receiveShadow = !mat.userData.noReceive; mesh.matrixAutoUpdate = false; mesh.updateMatrix(); par.add(mesh);
-        }));
+          });
+        });
         map.clear();
       }
     };

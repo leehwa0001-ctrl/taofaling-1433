@@ -55,7 +55,7 @@
     const seen = new Set();
     sc.traverse(o => { if (!o.isMesh || !o.material) return; (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => { if (!m || seen.has(m) || !m.emissive) return; seen.add(m); const hx = m.emissive.getHexString(); if (m.userData.dayKind === 'win' || hx === col('#FFB050', L.tmp).getHexString()) { m.userData.dayKind = 'win'; m.userData.ei0 = m.userData.ei0 || m.emissiveIntensity; L.win.push(m); } else if (m.userData.dayKind === 'lamp' || hx === col('#FFE0A0', L.tmp).getHexString()) { m.userData.dayKind = 'lamp'; m.userData.ei0 = m.userData.ei0 || m.emissiveIntensity; L.lamp.push(m); } }); });
     // 路燈的光：只在人物附近的幾盞點上真的燈（燈的數量固定，不會一直重編著色器）
-    for (let i = 0; i < 8; i++) { const p = new TH.PointLight(new TH.Color('#FFD8A0').convertSRGBToLinear(), 0, 13, 1.6); p.position.set(0, -50, 0); sc.add(p); L.pts.push(p); }
+    for (let i = 0; i < 8; i++) { const p = new TH.PointLight(new TH.Color('#FFD8A0').convertSRGBToLinear(), 0, 13, 1.6); p.position.set(0, -50, 0); p.userData.pool = 1; sc.add(p); L.pts.push(p); }   // pool：gfxq.js 照畫質留幾盞
     // 雪或雨
     const tw = W.town; if (tw && tw.snow) { tw.snow.visible = wx.flakes > 0 && !wx.rain; tw.snow.userData.wind = wx.wind; }
     if (tw && wx.rain) {

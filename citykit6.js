@@ -345,7 +345,7 @@
       }
       if (!mats.length) return;
       // 分區塊：每一塊自己的外接球（看不到的區塊不畫；倒影裡遠的區塊也不畫）
-      const CH = 160, chunks = new Map(), p = new TH.Vector3();
+      const CH = 480, chunks = new Map(), p = new TH.Vector3();   // 2026-10-10：160 → 480（一塊才幾棵，繪製次數太多）
       mats.forEach(q => { p.setFromMatrixPosition(q[0]); const k = Math.floor(p.x / CH) + ',' + Math.floor(p.z / CH); let c = chunks.get(k); if (!c) chunks.set(k, c = []); c.push(q); });
       const mat = CK.mat('forestTree', { tex: 'grass', col: '#FFFFFF', rough: 0.95, snow: 1.3 });
       chunks.forEach((list, k) => {

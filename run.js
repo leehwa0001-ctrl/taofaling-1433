@@ -10,7 +10,7 @@
   R.initGL = () => {
     if (W.renderer) return;
     const TH = T();
-    W.renderer = new TH.WebGLRenderer({ canvas: $('gl'), antialias: !R.touch, powerPreference: 'high-performance' });
+    W.renderer = new TH.WebGLRenderer({ canvas: $('gl'), antialias: false, powerPreference: 'high-performance' });   // 2026-10-10：不用畫布的反鋸齒——像素風是小畫布放大、精緻城市自己有多重取樣，畫布的反鋸齒只是白花顯示卡
     W.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, R.touch ? 1.3 : 1.75));
     W.renderer.shadowMap.enabled = true; W.renderer.shadowMap.type = TH.PCFSoftShadowMap;
     W.renderer.outputEncoding = TH.sRGBEncoding;

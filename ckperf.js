@@ -9,7 +9,7 @@
   const QN = ['低', '中', '高'];
   let auto = false, last = 0, acc = 0, n = 0, warm = 0, key = null, done = false;
   // 陰影跟著畫質（暫停選單的「畫質」那一顆也是這樣）
-  const applyLight = q => { const L = W.town && W.town.L; if (!L || !L.sun) return; L.sun.castShadow = q > 0; const sz = q >= 2 ? 4096 : 2048; if (L.sun.shadow.mapSize.x !== sz) { L.sun.shadow.mapSize.set(sz, sz); if (L.sun.shadow.map) { L.sun.shadow.map.dispose(); L.sun.shadow.map = null; } } };
+  const applyLight = q => { const L = W.town && W.town.L; if (!L || !L.sun) return; L.sun.castShadow = q > 0; if (L.pts && CK.lampLights) CK.lampLights(L.pts, q); const sz = q >= 2 ? 4096 : 2048; if (L.sun.shadow.mapSize.x !== sz) { L.sun.shadow.mapSize.set(sz, sz); if (L.sun.shadow.map) { L.sun.shadow.map.dispose(); L.sun.shadow.map = null; } } };
   // 2026-10-09 作者：調低畫質還是會卡——低畫質拿掉材質的凹凸貼圖、粗糙度貼圖（每個像素少讀兩張貼圖、少算很多），換回中、高再裝回去；
   // 進城以後先把看不到的東西（遠處的路人、晚上才亮的燈……）也編譯好，走到的時候才不會頓一下。
   const stripOne = (m, on) => {
