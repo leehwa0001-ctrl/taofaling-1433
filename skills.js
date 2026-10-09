@@ -71,7 +71,7 @@
         R.sfx && R.sfx('bow'); break;
       case 'quake':
         P.stance = 0.3; R.swingAnim(P.h, 0.2, 0.45);
-        later(() => { for (let k = 1; k <= 3; k++) later(() => { const x = x0 + Math.sin(a) * k * 1.6, z = z0 + Math.cos(a) * k * 1.6; R.fx('ring', x, 0.1, z, { r: 1.9, color: '#C8B08A' }); R.fx('dust', x, 0.15, z, { n: 10 }); R.fx('rock', x, 0.4, z, {}); R.aoe(x, z, 1.9, pow * 1.5, { stun: 0.7 }); w.enemies.forEach(e => { if (!e.dead && Math.hypot(e.x - x, e.z - z) < 1.9 + e.def.size * 0.5) e.st.slow = Math.max(e.st.slow, 2); }); if (k === 1) R.shake(0.35); }, (k - 1) * 90); }, 200);
+        later(() => { for (let k = 1; k <= 3; k++) later(() => { const x = x0 + Math.sin(a) * k * 1.6, z = z0 + Math.cos(a) * k * 1.6; R.fx('groundwave', x, 0.06, z, { a, r: 1.9, color: '#C8B08A' }); R.fx('dust', x, 0.15, z, { n: 6 }); R.aoe(x, z, 1.9, pow * 1.5, { stun: 0.7 }); w.enemies.forEach(e => { if (!e.dead && Math.hypot(e.x - x, e.z - z) < 1.9 + e.def.size * 0.5) e.st.slow = Math.max(e.st.slow, 2); }); if (k === 1) R.shake(0.35); }, (k - 1) * 90); }, 200);
         break;
       case 'warcry':
         P.buff.warcry = 6; R.fx('ring', P.x, 0.1, P.z, { r: 6, color: '#E8603A' }); R.fx('ring', P.x, 0.1, P.z, { r: 3, color: '#FFB45A' });

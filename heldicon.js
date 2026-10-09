@@ -20,7 +20,7 @@
     const icon = R.itemIconCanvas(base, tier); if (!icon) return false;
     const W = R.WEAPONS[look] || R.WEAPONS[base] || {}, kind = W.kind || 'melee';
     const side = dir === 2, atk = fr >= 3;
-    const s = HELD[base] || HELD[look] ? 0.62 : SIZE[base] || SIZE[look] || 0.75;
+    let s = HELD[base] || HELD[look] ? 0.62 : SIZE[base] || SIZE[look] || 0.75;
     const [gx, gy] = GRIP[base] || GRIP[look] || BY_KIND[kind] || [4, 12];
     // 手在哪裡、圖示怎麼翻
     let hx, hy, fx = 1, fy = 1;
@@ -31,6 +31,18 @@
     } else if (side) { hx = atk ? 11 : 8; hy = atk ? 11 : 15; }
     else { hx = 12; hy = atk ? 12 : 14; }
     const map = R.heroPixelRect ? R.heroPixelRect(hx, hy, 1, 1, pose === 'sit') : [hx, hy];
+    // 依握點與揮砍方向保留整把武器；不能讓刀尖落到圖格外才被裁掉。
+    const bounds = [1 - BX, FW - BX - 1, 1 - BY, FH - BY - 1];
+    const px = map[0] + 0.5, py = map[1] + 0.5;
+    for (const dx of [-gx - 0.5, icon.width - gx - 0.5]) {
+      const v = dx * fx;
+      if (v) s = Math.min(s, (v > 0 ? bounds[1] - px : px - bounds[0]) / Math.abs(v));
+    }
+    for (const dy of [-gy - 0.5, icon.height - gy - 0.5]) {
+      const v = dy * fy;
+      if (v) s = Math.min(s, (v > 0 ? bounds[3] - py : py - bounds[2]) / Math.abs(v));
+    }
+    s = Math.max(0.1, s);
     x.save();
     x.beginPath(); x.rect(ox - BX + 1, oy - BY + 1, FW - 2, FH - 2); x.clip();   // 留一格：外框描邊（sprites.js 的 outline）才不會描到隔壁那一格
     x.imageSmoothingEnabled = false;

@@ -212,6 +212,16 @@
       const m = add(new TH.Mesh(geo('cube1', () => new TH.BoxGeometry(1, 1, 1)), basic('#BFE8FF'))); m.scale.set(0.08, 0.08, Math.max(0.01, len)); m.position.copy(mid); m.lookAt(e.x, 1.2, e.z);
     } else if (kind === 'blink' || kind === 'block') {
       f.life = 0.3; const m = add(new TH.Mesh(geo('ball', () => new TH.SphereGeometry(1, 12, 8)), basic(kind === 'block' ? '#C9A13A' : '#B89AFF', 0.5))); m.scale.setScalar(kind === 'block' ? 0.6 : 1); m.position.set(x, y, z);
+    } else if (kind === 'groundwave') {
+      // 貼地的尖折震波沿施放方向展開，不使用從天空落下的岩石。
+      f.life = 0.45;
+      const shape = new TH.Shape();
+      shape.moveTo(-1.8, 0); shape.lineTo(-1.1, 0.25); shape.lineTo(-0.65, 0.1);
+      shape.lineTo(0, 0.55); shape.lineTo(0.65, 0.1); shape.lineTo(1.1, 0.25);
+      shape.lineTo(1.8, 0); shape.lineTo(0.7, -0.15); shape.lineTo(0, 0.18); shape.lineTo(-0.7, -0.15); shape.closePath();
+      const m = add(new TH.Mesh(new TH.ShapeGeometry(shape), basic(col, 0.85, true)), true);
+      m.rotation.set(-Math.PI / 2, 0, o.a + Math.PI); m.position.set(x, y, z);
+      f.tick = k => { const s = 0.55 + k * 0.65; m.scale.set(s, s, 1); };
     } else if (kind === 'rock') {
       f.life = 0.3; const m = add(new TH.Mesh(geo('rock', () => new TH.DodecahedronGeometry(0.7, 0)), new TH.MeshLambertMaterial({ color: '#6A6458' }))); m.position.set(x, y, z); m.userData.fall = true;
     }

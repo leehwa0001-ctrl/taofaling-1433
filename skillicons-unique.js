@@ -2,6 +2,10 @@
 (function (R) {
   const map = R.SKILL_ART_MAP;
   if (!map || !R.skillIconURL) return;
+  map.sheets['warrior-micro-v2'] = { file: 'warrior-micro-v2.png', cols: 2, rows: 1 };
+  for (const [id, tile] of [['warcry', 0], ['whirl', 1]]) {
+    map.icons[id] = { ...map.icons[id], sheet: 'warrior-micro-v2', tile };
+  }
   const old = R.skillIconURL, oldInfo = R.skillArtInfo;
   const sheets = new Map(), cache = new Map(), pending = new Map();
   const canonical = id => id && id.startsWith('ult_') ? 'ult:' + id.slice(4) : id;
@@ -43,10 +47,10 @@
     const ys = spec.yCuts || Array.from({ length: spec.rows + 1 }, (_, n) => n / spec.rows);
     const x = xs[col] * im.naturalWidth, y = ys[row] * im.naturalHeight;
     const w = (xs[col + 1] - xs[col]) * im.naturalWidth, h = (ys[row + 1] - ys[row]) * im.naturalHeight;
-    const canvas = document.createElement('canvas'); canvas.width = canvas.height = 96;
+    const canvas = document.createElement('canvas'); canvas.width = canvas.height = 48;
     const ctx = canvas.getContext('2d');
     // 略去圖格分隔線；不同招式直接使用自己的主圖，不再換色套模板。
-    ctx.drawImage(im, x + 2, y + 2, w - 4, h - 4, 0, 0, 96, 96);
+    ctx.drawImage(im, x + 2, y + 2, w - 4, h - 4, 0, 0, 48, 48);
     const url = canvas.toDataURL('image/png'); cache.set(id, url); return url;
   };
   R.skillArtInfo = raw => {
@@ -58,4 +62,7 @@
     loaded: [...sheets.values()].filter(s => s.loaded).length,
     failed: [...sheets.values()].filter(s => s.failed).length,
     loading: [...sheets.values()].filter(s => !s.loaded && !s.failed).length });
+  const style = document.createElement('style');
+  style.textContent = '.h2-ic,.skill-ult-art,.skill-ult-art2{image-rendering:pixelated}.ul-btn .ul-txt{position:absolute;top:100%;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10px;line-height:14px;pointer-events:none}.ul-btn{overflow:visible!important}#r-br .act.nomp::after{content:none!important}';
+  document.head.appendChild(style);
 })(window.R);
