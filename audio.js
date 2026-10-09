@@ -202,6 +202,8 @@
     death: t => { [64, 60, 57, 52].forEach((m, i) => koto(m - 12, t + i * 0.22, 1.2, 0.12, sfxBus, 0.8)); sweep('sine', 120, 40, t, 1.4, 0.15, sfxBus); }
   };
   const sfx0 = R.sfx;
+  // 吟遊詩人的旋律（bard1009.js，2026-10-09）：inst＝'pluck' 撥弦（魯特琴）、'flute' 笛、'harp' 豎琴、'bell' 鐘；notes＝[[midi, 第幾秒, 長度], …]
+  R.playMelody = (inst, notes, vol) => { if (!ctx || muted()) return; const t0 = ctx.currentTime + 0.01, v = vol || 0.1; try { notes.forEach(([m, at, d]) => { const t = t0 + at; if (inst === 'flute') fue(m, t, d || 0.25, v * 0.9, sfxBus, 0.25); else if (inst === 'harp') koto(m, t, (d || 0.3) * 2.6, v, sfxBus, 0.9); else if (inst === 'bell') bell(m, t, v * 0.6, sfxBus, d || 1.2); else koto(m, t, d || 0.3, v, sfxBus, 0.45); }); } catch (e) { } };
   R.sfx = k => { if (!ctx || muted()) { if (sfx0) sfx0(k); return; } if (FX[k]) { try { FX[k](ctx.currentTime + 0.005); } catch (e) { } } else if (sfx0) sfx0(k); };
   const play = (k, ms) => { if (!ctx || muted() || !limit(k, ms || 40)) return; try { FX[k](ctx.currentTime + 0.005); } catch (e) { } };
   R.playSfx = play;
