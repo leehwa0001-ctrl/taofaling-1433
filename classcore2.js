@@ -52,22 +52,28 @@
   };
 
   // ======================= 吟遊詩人：樂句 =======================
-  const KEY = ['R', '3', '4', '5', '6'];
+  // 2026-10-10 作者：音改成照技能的種類（攻＝打人、守＝增益和防守、治＝治療），不再照快捷欄的格子；
+  //   兩個音之間超過 6 秒，前面的音就散掉；曲譜不再要同一格按好幾次（終章的攻攻攻用三招不同的攻擊技能就湊得出來）。
+  const NOTE_T = 6;
+  const noteOf = id => { const L = R.SKILL_LIB && R.SKILL_LIB[id]; if (!L) return '攻'; const t = L.type === 'combo' ? ((L.p.parts || []).find(x => !['buff', 'guard'].includes(x[0])) || (L.p.parts || [])[0] || [L.type])[0] : L.type, p = L.type === 'combo' ? {} : (L.p || {}); if (t === 'heal' || t === 'revive' || p.pct || p.allies) return '治'; if (t === 'buff' || t === 'guard' || t === 'parry' || (t === 'zone' && p.zone === 'sanct')) return '守'; return '攻'; };
+  R.bardNoteOf = noteOf;
   const SONGS = [
-    { seq: '345', n: '進行曲', lv: 1, kind: 'buff', d: '移動 +20%、傷害 +10%，8 秒' },
-    { seq: '543', n: '安魂曲', lv: 1, kind: 'heal', d: '你和隊友回 15% 生命' },
-    { seq: '334', n: '戰歌', lv: 10, kind: 'buff', d: '傷害 +25%，6 秒' },
-    { seq: '456', n: '疾風曲', lv: 20, kind: 'buff', d: '全部技能冷卻 −3 秒' },
-    { seq: '654', n: '鎮魂鐘', lv: 30, kind: 'hit', d: '周圍 5 公尺暈 1.5 秒＋2.5 倍傷害' },
-    { seq: 'RRR', n: '終章', lv: 40, kind: 'hit', d: '周圍 6 公尺 6 倍傷害' }
+    { seq: '攻守攻', n: '進行曲', lv: 1, kind: 'buff', d: '移動 +20%、傷害 +10%，8 秒' },
+    { seq: '攻攻治', n: '安魂曲', lv: 1, kind: 'heal', d: '你和隊友回 15% 生命' },
+    { seq: '守攻攻', n: '戰歌', lv: 10, kind: 'buff', d: '傷害 +25%，6 秒' },
+    { seq: '治攻守', n: '疾風曲', lv: 20, kind: 'buff', d: '全部技能冷卻 −4 秒' },
+    { seq: '攻守治', n: '鎮魂鐘', lv: 30, kind: 'hit', d: '周圍 5 公尺暈 1.5 秒＋2.5 倍傷害' },
+    { seq: '攻攻攻', n: '終章', lv: 40, kind: 'hit', d: '周圍 6 公尺 6 倍傷害' }
   ];
   const known = P => SONGS.filter(s => (P.lv || 1) >= s.lv);
   CORE.bard = {
     name: '樂句', col: '#FFB8E0',
-    help: P => '樂句（把咒文編成曲子）：每放一招就是一個音（快捷欄的 R、3、4、5、6），最後三個音照曲譜就演奏出曲子。曲譜：' + SONGS.map(s => s.seq.split('').join('-') + ' ' + s.n + '（' + s.d + (P.lv < s.lv ? '；' + s.lv + ' 級' : '') + '）').join('、') + '。X 休止符：清掉音。'
+    help: P => '樂句（把咒文編成曲子）：每放一招就是一個音——打人的技能是「攻」、增益和防守是「守」、治療是「治」；最後三個音照曲譜就演奏出曲子（兩個音之間超過 ' + NOTE_T + ' 秒，前面的音會散掉）。曲譜：' + SONGS.map(s => s.seq.split('').join('-') + ' ' + s.n + '（' + s.d + (P.lv < s.lv ? '；' + s.lv + ' 級' : '') + '）').join('、') + '。X 休止符：清掉音。'
       + ({ aria: '詠嘆詩人：治療的曲子 ×1.5。', drummer: '戰鼓手：打人的曲子 ×1.5。', serane: '奏域師：曲子的時間兩倍。' }[adv(P)] || ''),
-    onCast(P, i) {
-      P._notes = ((P._notes || '') + KEY[i]).slice(-3);
+    step(dt, P) { if (P._notes && CT() - (P._noteT || 0) > NOTE_T) P._notes = ''; },
+    onCast(P, i, id) {
+      if (P._notes && CT() - (P._noteT || 0) > NOTE_T) P._notes = '';
+      P._noteT = CT(); P._notes = ((P._notes || '') + noteOf(id || P.skill)).slice(-3);
       const s = known(P).find(x => x.seq === P._notes); if (!s) return;
       P._notes = (R.legOf ? R.legOf(P) : null) === 'lg_echo' ? s.seq.slice(-1) : ''; this.play(P, s);
     },
@@ -77,12 +83,12 @@
       if (s.n === '進行曲') buff(P, 'march', { t: 8 * tk, speed: 1.2, dmg: 1.1, color: '#FFB8E0' });
       else if (s.n === '安魂曲') { R.healP(P.hpMax * 0.15 * heal); allies().forEach(a => { a.hp = Math.min(a.hpMax, a.hp + a.hpMax * 0.15 * heal); }); }
       else if (s.n === '戰歌') buff(P, 'warsong', { t: 6 * tk, dmg: 1.25, color: '#FF8AB8' });
-      else if (s.n === '疾風曲') { P.skillCd = Math.max(0, (P.skillCd || 0) - 3); if (P.skCd) P.skCd = P.skCd.map(v => Math.max(0, (v || 0) - 3)); }
+      else if (s.n === '疾風曲') { P.skillCd = Math.max(0, (P.skillCd || 0) - 4); if (P.skCd) P.skCd = P.skCd.map(v => Math.max(0, (v || 0) - 4)); }
       else if (s.n === '鎮魂鐘') { (W().enemies || []).forEach(e => { if (!e.dead && dist(e, P) < 5) e.st.stun = Math.max(e.st.stun || 0, 1.5); }); R.coreAoe(P.x, P.z, 5, pw(P) * 2.5 * hit, {}); }
       else if (s.n === '終章') { R.shake && R.shake(0.3); R.coreAoe(P.x, P.z, 6, pw(P) * 6 * hit, { kb: 2 }); }
     },
     act(P) { P._notes = ''; say(P, '休止符', 'heal'); },
-    gauge(P) { const n = (P._notes || '').split(''), next = known(P).filter(s => s.seq.startsWith(P._notes || '')).map(s => s.n); return { name: '樂句', text: n.length ? n.join('-') : '（還沒有音）', sub: n.length ? '接下去：' + (next.slice(0, 3).join('、') || '沒有這種曲子') : '放技能就是音', x: n.length ? '休止符' : '' }; }
+    gauge(P) { const n = (P._notes || '').split(''), next = known(P).filter(s => s.seq.startsWith(P._notes || '')).map(s => s.n); return { name: '樂句', text: n.length ? n.join('-') + '（' + Math.max(0, NOTE_T - (CT() - (P._noteT || 0))).toFixed(1) + ' 秒）' : '（還沒有音）', sub: n.length ? '接下去：' + (next.slice(0, 3).map(nm => { const sg = SONGS.find(x => x.n === nm); return nm + '（' + sg.seq.slice(n.length) + '）'; }).join('、') || '沒有這種曲子') : '攻＝打人、守＝增益防守、治＝治療', x: n.length ? '休止符' : '' }; }
   };
 
   // ======================= 召喚師：執念 =======================
