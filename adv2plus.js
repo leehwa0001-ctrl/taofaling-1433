@@ -9,7 +9,7 @@
 // - 每個職業自己的二轉（adv2more.js：槍聖、戰神……）、諧鳴五派：原本就有常駐效果和招式，再各加一個新被動。
 // - 被動照 passives.js 的寫法（p.adv2、p.adv：選了那一個二轉、走那條路線才學得會）；被動用到的新效果：
 //     guard 受到的傷害 −、boss 打精英和領主體 +、killCd 擊倒後技能冷卻 −秒、skillDmg 技能傷害 +、first 打還沒受傷的 +、
-//     status 打身上有異常狀態（燃燒、變慢、暈眩、定住、詛咒）的 +、mpRegen 每秒回魔力、killShield 擊倒後得到護盾、
+//     status 打身上有異常狀態（燃燒、變慢、暈眩、定住、詛咒）的 +、mpRegen 每秒回魔力、mpPct／hpPct 每秒回最大魔力／生命的幾 %、killShield 擊倒後得到護盾、
 //     near 3.5 公尺內 +、hurtRage 被打之後 3 秒內 +、crowd 身邊 6 公尺每一隻敵人 +（最多五隻）、petMul／petLife 召喚物的傷害／時間。
 //   其他（low、far、rage、leech、slow、stun、burn、killHeal、killMp、thorns、heal…）照 passives.js 原本的。
 // 放在 promote2.js、adv2more.js、passives.js、skillbook.js、skillbook2.js、classes2b.js 後面。
@@ -54,7 +54,7 @@
     hexer: ['詛咒加深', { status: 0.25, slow: 0.08 }, '打身上有詛咒或異常狀態的敵人傷害 +25%；普攻 8% 機率讓目標變慢', ['怨念', { killMp: 8, leech: 0.015 }, '擊倒遺跡生物回復 8 點魔力；造成傷害的 1.5% 回復成生命。'], [
       ['萬咒', 'mark', { range: 12, r: 6, t: 8, slow: 3, k: 0.8 }, 18, 28, '準心一大片的敵人被詛咒 8 秒（受到的傷害 +30%）、變慢。'],
       ['咒殺', 'drain', { range: 12, k: 4, heal: 0.4 }, 14, 24, '對準一隻敵人吸出牠的生命：重傷，傷害的 40% 回成你的生命。']]],
-    waixiu: ['氣罩外放', { guard: 0.1, skillCd: 0.06 }, '受到的傷害 −10%、技能冷卻 −6%', ['周天', { mpRegen: 1.5, regen: 1 }, '在遺跡裡每秒回復 1.5 點魔力、1 點生命。'], [
+    waixiu: ['氣罩外放', { guard: 0.1, skillCd: 0.06 }, '受到的傷害 −10%、技能冷卻 −6%', ['周天', { mpPct: 0.02, hpPct: 0.01 }, '在遺跡裡每秒回復 2% 的最大魔力、1% 的最大生命。'], [
       ['氣龍', 'wave', { n: 9, step: 1.5, r: 1.8, k: 1.5, kb: 2, gap: 60, fx: 'ring', color: '#BFE8FF' }, 14, 26, '把魔力罩擰成一條氣龍往前竄，一路撞飛敵人。'],
       ['金剛氣罩', 'heal', { shield: 0.4, buff: { t: 6, def: 0.3, color: '#BFE8FF' } }, 26, 24, '獲得可吸收相當於最大生命 40% 傷害的護盾；6 秒內受到的傷害 −30%。']]],
     // 牧師
@@ -268,6 +268,8 @@
     const r = st0(dt), w = W(), P = w.P, f = pvOf();
     if (f && P && !P.dead && !w.paused) {
       if (f.mpRegen) P.mp = Math.min(P.mpMax, P.mp + f.mpRegen * dt);
+      if (f.mpPct) P.mp = Math.min(P.mpMax, P.mp + P.mpMax * f.mpPct * dt);   // 2026-10-10 作者：周天太弱——固定點數改成照最大值的百分比
+      if (f.hpPct && P.hp < P.hpMax) P.hp = Math.min(P.hpMax, P.hp + P.hpMax * f.hpPct * dt);
       if (P.a2Rage > 0) P.a2Rage -= dt;
       if (f.crowd) { ct -= dt; if (ct <= 0) { ct = 0.4; P.a2Crowd = Math.min(5, (w.enemies || []).filter(e => !e.dead && !e.under && Math.hypot(e.x - P.x, e.z - P.z) < 6).length); } }
     }

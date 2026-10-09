@@ -428,7 +428,7 @@
     const r = W.renderer, TH = T(); if (!HQ.scene) hqInit();
     // 用一般的透視鏡頭（像素風的窄角鏡頭不用）
     const cam = W.pcam || W.camera; if (W.camera !== cam) { cam.position.copy(W.camera.position); cam.quaternion.copy(W.camera.quaternion); W.camera = cam; }
-    const dpr = window.devicePixelRatio || 1, pr = HQ.q >= 2 ? Math.min(dpr, 1.25) : HQ.q === 1 ? Math.min(dpr, 1.0) : 0.8;   // 2026-10-09 作者：皇嶺很卡——高 DPI 的螢幕像素太多（1.5 → 1.25）
+    const dpr = window.devicePixelRatio || 1, pr = (HQ.q >= 2 ? Math.min(dpr, 1.25) : HQ.q === 1 ? Math.min(dpr, 1.0) : 0.8) * (CK.dynScale || 1);   // dynScale：動態解析度（perfhud.js）   // 2026-10-09 作者：皇嶺很卡——高 DPI 的螢幕像素太多（1.5 → 1.25）
     if (Math.abs(r.getPixelRatio() - pr) > 0.01) r.setPixelRatio(pr);
     const sz = size(), w = sz.x, h = sz.y; if (w < 4 || h < 4) return;
     const far = CK.far || 4200; if (cam.far !== far || cam.near !== 0.8 || Math.abs(cam.aspect - w / h) > 1e-3) { cam.far = far; cam.near = 0.8; cam.aspect = w / h; cam.updateProjectionMatrix(); }
@@ -465,10 +465,10 @@
     '  c += sunCol * smoothstep(0.99955, 0.99985, sd) * 18.0 * (1.0 - night) * (1.0 - cloud * 0.85);',
     '  if (y > 0.0) {',
     '    vec2 uv = d.xz / (y + 0.08) * 0.9 + vec2(time * 0.004, time * 0.0015);',
-    '    vec2 q = vec2(fb(uv + vec2(1.7, 9.2)), fb(uv + vec2(8.3, 2.8)));',
+    '    vec2 q = oct > 2.5 ? vec2(fb(uv + vec2(1.7, 9.2)), fb(uv + vec2(8.3, 2.8))) : vec2(0.35);',   // 2026-10-10：低畫質（oct 2）雲不扭曲、不算明暗那一組（每個像素少算一大半）
     '    float den = fb(uv * 1.3 + q * 1.6);',
     '    float cov = smoothstep(0.62 - cloud * 0.42, 0.86 - cloud * 0.3, den);',
-    '    float den2 = fb(uv * 1.3 + q * 1.6 + sd3.xz * 0.18);',
+    '    float den2 = oct > 2.5 ? fb(uv * 1.3 + q * 1.6 + sd3.xz * 0.18) : den - 0.04;',
     '    float lit = clamp(0.55 + (den - den2) * 4.0, 0.0, 1.0);',
     '    vec3 shade = mix(hor * 0.78, vec3(0.42, 0.44, 0.50), 0.35) * (1.0 - night * 0.85);',
     '    vec3 bright = (sunCol * 1.15 + hor * 0.35) * (1.0 - night * 0.8) + vec3(0.02, 0.025, 0.04) * night;',

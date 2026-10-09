@@ -305,7 +305,7 @@
     L.hemi.color.copy(u.top.value).lerp(new TH.Color(1, 1, 1), 0.35); L.hemi.groundColor.copy(lc([0.34, 0.31, 0.28])).convertSRGBToLinear(); L.hemi.intensity = k.hemiI * (k.night > 0.5 ? 0.6 : 1);
     // 環境反光：時間、天氣變了才重算
     // 2026-10-09 作者：調低畫質還是會卡——環境反光每 15 分鐘（遊戲時間，現實約 11 秒）重算一次會頓一下：改成每小時；低畫質不用環境反光（環境光調亮補回來）
-    const lowQ = CK.quality() === 0; if (u.oct) u.oct.value = CK.quality() >= 2 ? 6 : CK.quality() === 1 ? 4 : 3;
+    const lowQ = CK.quality() === 0; if (u.oct) u.oct.value = CK.quality() >= 2 ? 6 : CK.quality() === 1 ? 4 : 2;
     const key = (lowQ ? 'low' : Math.round(h)) + '|' + wn; if (force || key !== L.envKey) { L.envKey = key; const old = L.env; if (lowQ) { L.env = null; W.scene.environment = null; } else { L.env = L.pm.fromScene(L.envSc, 0.02); W.scene.environment = L.env.texture; } if (old) old.dispose(); }
     if (lowQ) L.hemi.intensity *= 1.7;
     // 窗戶、路燈、霓虹
