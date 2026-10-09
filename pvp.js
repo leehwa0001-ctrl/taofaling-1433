@@ -19,20 +19,29 @@
   const label = d => d.type === 'gold' ? d.n + ' 費拉' : d.type === 'mat' ? ((R.MATS[d.mat] || {}).name || d.mat) + ' ×' + d.n : d.type === 'item' && d.item ? R.itemName(d.item) : '回復果實';
 
   // ---------- 房間的設定 ----------
-  const hub0 = R.hub;
-  R.hub = (...a) => {
-    const r = hub0(...a);
-    try {
-      const box = document.querySelector('.net-box'), n = N(); if (!box || !n.room || box.querySelector('#ff-row')) return r;
-      const row = document.createElement('div'); row.id = 'ff-row'; row.className = 'row';
-      row.innerHTML = n.isHost && n.isHost()
-        ? '<label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="ff-on"' + (n.ffOn ? ' checked' : '') + '>友傷（隊友打得到彼此、掉落物用搶的）</label>'
-        : '<span class="note">友傷：<b>' + (n.ffOn ? '開' : '關') + '</b>（房主決定）</span>';
-      box.appendChild(row);
-      const cb = $('ff-on'); if (cb) cb.onchange = () => { n.ffOn = cb.checked; send({ k: 'ffset', on: n.ffOn ? 1 : 0 }); R.toast && R.toast('友傷：' + (n.ffOn ? '開。下一趟出發時生效。' : '關。'), '#FFB45A'); };
-    } catch (e) { console.warn('[pvp]', e); }
-    return r;
+  // 2026-10-10 修正：在登記處按「開房」、有人加入時，net.js 會把多人連線那一格整格重畫（refresh），勾選框被洗掉、要關掉登記處再開才有。
+  // 改成登記處開著就隨時補回來；房主、隊員、開或關變了也重畫。房裡人數變了，房主再告訴大家一次現在開還是關（晚進來的隊員才看得到）。
+  const ffRow = () => {
+    const box = document.querySelector('#hub-body .net-box'), n = N(); if (!box || !n.room) return;
+    const host = !!(n.isHost && n.isHost()), key = (host ? 'h' : 'g') + (n.ffOn ? 1 : 0);
+    let row = box.querySelector('#ff-row'); if (row && row.dataset.k === key) return;
+    if (!row) { row = document.createElement('div'); row.id = 'ff-row'; row.className = 'row'; box.appendChild(row); }
+    row.dataset.k = key;
+    row.innerHTML = host
+      ? '<label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="ff-on"' + (n.ffOn ? ' checked' : '') + '>友傷（隊友打得到彼此、掉落物用搶的）</label>'
+      : '<span class="note">友傷：<b>' + (n.ffOn ? '開' : '關') + '</b>（房主決定）</span>';
+    const cb = row.querySelector('#ff-on'); if (cb) cb.onchange = () => { n.ffOn = cb.checked; row.dataset.k = 'h' + (n.ffOn ? 1 : 0); send({ k: 'ffset', on: n.ffOn ? 1 : 0 }); R.toast && R.toast('友傷：' + (n.ffOn ? '開。下一趟出發時生效。' : '關。'), '#FFB45A'); };
   };
+  const hub0 = R.hub;
+  R.hub = (...a) => { const r = hub0(...a); try { ffRow(); } catch (e) { console.warn('[pvp]', e); } return r; };
+  let seen = 0;
+  setInterval(() => {
+    try {
+      const n = N(), h = $('hub'); if (h && !h.hidden) ffRow();
+      const cnt = n.room ? (n.members || []).length : 0;
+      if (cnt !== seen) { seen = cnt; if (cnt > 1 && n.isHost && n.isHost()) send({ k: 'ffset', on: n.ffOn ? 1 : 0 }); }
+    } catch (e) { }
+  }, 400);
   // 出發：遺跡的設定裡多帶 ff
   const wrapSend = () => {
     const n = N(); if (!n.send || n.send.ffWrapped) return;
