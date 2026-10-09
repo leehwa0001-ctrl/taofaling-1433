@@ -116,7 +116,7 @@
     try {
       const eq = R.equipped(cls), items = R.GEAR_KEYS.map(k => eq[k]), s = id => R.affixSum(items, id);
       P.dmgMult *= 1 + s('might') / 100; P.speed *= 1 + s('fleet') / 100;
-      if (P.ws) { P.ws.crit += s('keen') / 100; P.ws.rate *= 1 + s('haste') / 100; P.ws.vamp = (P.ws.vamp || 0) + s('leech') / 100; P.ws.fire = (P.ws.fire || 0) + s('ember') / 100; P.ws.frost = (P.ws.frost || 0) + s('chill') / 100; P.ws.shock = (P.ws.shock || 0) + s('spark') / 100; }
+      if (P.ws) { P.ws.crit += s('keen') / 100; P.ws.rate *= 1 + s('haste') / 100; P.rateGear = (P.rateGear || 1) * (1 + s('haste') / 100); P.ws.vamp = (P.ws.vamp || 0) + s('leech') / 100; P.ws.fire = (P.ws.fire || 0) + s('ember') / 100; P.ws.frost = (P.ws.frost || 0) + s('chill') / 100; P.ws.shock = (P.ws.shock || 0) + s('spark') / 100; }
       P.pen = Math.min(0.8, (s('pen') + s('pen2')) / 100); P.mpRegen = (s('mpregen') + s('mpregen2')) / 10;   // 穿透、回魔
       P.accGuard = Math.min(0.5, s('guard') / 100); P.accLucky = Math.min(0.6, s('lucky') / 100);
     } catch (e) { }

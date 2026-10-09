@@ -45,7 +45,7 @@
     if (mul !== 1) x = Math.round(x * mul);
     return Number.isFinite(x) ? Math.max(0, x) : 0;
   };
-  const wMult = P => { const wd = P.item && R.WEAPONS[P.item.base], rate = (wd && wd.rate) || REF_RATE, base = P.item && P.item.base; let m = LONG * REF_RATE / rate; if (base === 'gauntlet' || base === 'claws') m *= 0.25; const hits = Math.max(1, (P.ws && (P.ws.pellets || P.ws.hits)) || (wd && (wd.pellets || wd.hits)) || 1); m /= hits; if (wd && wd.kind === 'magic') m *= 0.5; return Math.max(0.25, Math.min(15, m)); };   // 作者：拳套／鐵爪攻速太快，武器吸血乘數改成原本的 1/4
+  const wMult = P => { const wd = P.item && R.WEAPONS[P.item.base], rate = (wd && wd.rate) || REF_RATE, base = P.item && P.item.base; let m = LONG * REF_RATE / rate; if (base === 'gauntlet' || base === 'claws') m *= 0.75 / (base === 'gauntlet' ? 2 : 3);   /* 2026-10-09 作者：改成一下只揮一次、普攻吸血倍率 ×3（每一揮是原本的三倍：原本 0.25 再除以兩拳／三爪） */ const hits = Math.max(1, (P.ws && (P.ws.pellets || P.ws.hits)) || (wd && (wd.pellets || wd.hits)) || 1); m /= hits; if (wd && wd.kind === 'magic') m *= 0.5; return Math.max(0.25, Math.min(15, m)); };   // 作者：拳套／鐵爪攻速太快，武器吸血乘數改成原本的 1/4
   const amp = P => Math.max(0, 1 + (R.recovAmpOf ? R.recovAmpOf(P) : num(P.recovAmp)));   // 含滴血重生的恢復量%（實際乘在 healP；這裡給顯示用）
   const baseHeal = (P, x, n) => Math.max(1, Math.round(Math.ceil(wMult(P) * (1 + x / HEAL_PER)) * (1 + Math.sqrt(Math.max(1, n))) / 2));
   const healOf = (P, x, n) => Math.max(1, Math.round(baseHeal(P, x, n) * amp(P)));   // 顯示＝實際（healP 會再乘 amp）

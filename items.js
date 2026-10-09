@@ -71,7 +71,7 @@
     const aff = id => (it.identified ? it.affixes.filter(a => a.id === id).reduce((q, a) => q + a.v, 0) : 0);
     return Object.assign({}, w, {
       dmg: w.dmg * lvl * rar * plus * (1 + (aff('sharp') + aff('cursed')) / 100),
-      rate: w.rate * (1 + aff('swift') / 100) * (aff('heavy') ? 0.9 : 1),
+      rate: w.rate * (1 + aff('swift') / 100) * (aff('heavy') ? 0.9 : 1), rateGear: (1 + aff('swift') / 100) * (aff('heavy') ? 0.9 : 1),   // rateGear：裝備來的攻速（武術家換成普攻傷害，monkspeed.js）
       crit: 0.05 + aff('crit') / 100, vamp: aff('vamp') / 100, fire: aff('fire') / 100, frost: aff('frost') / 100, shock: aff('shock') / 100,
       pierce: (w.pierce || 0) + (aff('pierce') ? 1 : 0), pellets: (w.pellets || 1) + (aff('multi') ? 1 : 0), kb: (w.kb || 0.5) * (1 + aff('heavy') / 100),
       cursed: !!aff('cursed'), legend: it.identified ? it.legend : null

@@ -6,7 +6,7 @@
 // 3. 輸出太低的補上去：牧師的攻擊技能 ×1.35、騎士 ×1.25、術陣師 ×1.25。
 // 只改技能書裡的倍率（R.SKILL_LIB 的 k），說明照舊。放在所有加技能的檔案（skillbook2.js、classes2b.js、adv2plus.js、promote2.js）後面。
 (function (R) {
-  R.multiN = ws => { const n = Math.max(1, (ws && ws.pellets > 1 ? ws.pellets : 1) * ((ws && ws.hits) || 1)); return n > 1 ? 1 + 0.6 * (n - 1) : 1; };
+  R.multiN = ws => { const n = Math.max(1, (ws && ws.pellets > 1 ? ws.pellets : 1) * ((ws && ws.hits) || 1)); return (n > 1 ? 1 + 0.6 * (n - 1) : 1) * ((ws && ws.skillK) || 1); };   // skillK：普攻改了、技能不想跟著變的武器（拳套、鐵爪 2026-10-09）
   const L = R.SKILL_LIB || {};
   const mulK = (id, m) => {
     const s = L[id]; if (!s || !s.p || s._bal) return; s._bal = m;

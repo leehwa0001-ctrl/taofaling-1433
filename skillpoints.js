@@ -72,7 +72,7 @@
     try {
       const t = id => tal(id, cls);
       P.hpMax = Math.round(P.hpMax * (1 + 0.03 * t('vit'))); P.mpMax = Math.round(P.mpMax * (1 + 0.04 * t('wis'))); P.dmgMult *= 1 + 0.02 * t('str');
-      if (P.ws) { P.ws.crit += 0.01 * t('acc'); P.ws.rate *= 1 + 0.02 * t('spd'); }
+      if (P.ws) { P.ws.crit += 0.01 * t('acc'); P.ws.rate *= 1 + 0.02 * t('spd'); P.rateTal = (P.rateTal || 1) * (1 + 0.02 * t('spd')); }
       P.dodgeCdMax *= 1 - 0.04 * t('eva'); P.regen = (P.regen || 0) + 0.3 * t('rec'); P.skillCdMult *= 1 - 0.02 * t('med'); P.critMult += 0.06 * t('fat'); P.talGuard = 0.015 * t('tou');
       P.mpRegen = (P.mpRegen || 0) + 0.4 * t('mpr'); P.pen = Math.min(0.8, (P.pen || 0) + 0.04 * t('pen'));
     } catch (e) { }

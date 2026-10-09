@@ -127,7 +127,7 @@
   R.calcPlayer = cls => {
     try { if (S()) mig(stOf(cls)); } catch (e) { }
     const P = cp0(cls);
-    try { const s = S(); if (s) { const t = mig(stOf(cls)); ALL.forEach(n => { const v = t[n.id] || 0; if (v) n.f(P, v); }); } } catch (e) { console.warn('[talenttree]', e); }
+    try { const s = S(); if (s) { const t = mig(stOf(cls)); ALL.forEach(n => { const v = t[n.id] || 0; if (!v) return; const r0 = P.ws && P.ws.rate; n.f(P, v); if (r0 && P.ws.rate !== r0) P.rateTal = (P.rateTal || 1) * P.ws.rate / r0; }); /* rateTal：天賦來的攻速（monkspeed.js） */ } } catch (e) { console.warn('[talenttree]', e); }
     return P;
   };
   const hp0 = R.hurtPlayer;

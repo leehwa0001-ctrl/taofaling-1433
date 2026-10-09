@@ -123,7 +123,7 @@ window.R = window.R || {};
     katana: { name: '刀', cls: ['blade'], kind: 'melee', dmg: 15, rate: 2.7, range: 2.6, arc: 1.6, kb: 1 },
     dualblades: { name: '雙刀', cls: ['blade'], kind: 'melee', dmg: 8.5, hits: 2, rate: 3.4, range: 2, arc: 1.4 },
     spear: { name: '長槍', cls: ['knight'], kind: 'thrust', dmg: 17, rate: 1.9, range: 3.7, width: 0.9, kb: 1.5 },
-    gauntlet: { name: '拳套', cls: ['monk'], kind: 'melee', dmg: 7, hits: 2, rate: 3.5, range: 1.8, arc: 1.5, kb: 0.6 },
+    gauntlet: { name: '拳套', cls: ['monk'], kind: 'melee', dmg: 21, hits: 1, rate: 3.5, range: 3.6, arc: 1.5, kb: 0.6, skillK: 0.5333 },   // 2026-10-09 作者：一下普攻只揮一次（原本兩拳）、傷害 ×3、範圍 ×2；skillK：技能、大招的威力維持原本（7×兩拳）
     staffpole: { name: '長棍', cls: ['monk'], kind: 'melee', dmg: 12, rate: 2.3, range: 3, arc: 2.6, kb: 1.6 }
   };
   R.STARTER = { gunner: 'pistol', archer: 'shortbow', warrior: 'sword', mage: 'staff', priest: 'holystaff', blade: 'katana', knight: 'sword', monk: 'gauntlet' };
@@ -136,7 +136,7 @@ window.R = window.R || {};
     { cls: 'priest', group: '聖具', list: [['holystaff', '法彈打中會回一點生命。'], ['mace', '近身打，有機會把敵人打暈。']] },
     { cls: 'blade', group: '刀', list: [['katana', '快、準。'], ['dualblades', '一次砍兩下。']] },
     { cls: 'knight', group: '武器＋盾', list: [['sword', '平衡；正面的傷害減少。'], ['spear', '刺得遠；正面的傷害減少。'], ['mace', '會把敵人打暈；正面的傷害減少。']] },
-    { cls: 'monk', group: '拳術', list: [['gauntlet', '近身拳法，一招一式，一次兩拳。'], ['staffpole', '長棍四式輪流出招：連棍、甩棍、跳棍、怒棍（效果跟拳法、掌法、步法、腿法一樣），掃一大片、把敵人推開。']] }
+    { cls: 'monk', group: '拳術', list: [['gauntlet', '近身拳法，一招一式，一拳一拳紮實地打。'], ['staffpole', '長棍四式輪流出招：連棍、甩棍、跳棍、怒棍（效果跟拳法、掌法、步法、腿法一樣），掃一大片、把敵人推開。']] }
   ];
   R.regGroup = cls => R.REG.find(g => g.cls === cls);
   R.regName = (cls, base) => R.WEAPONS[base].name + (cls === 'knight' ? '＋盾' : '');

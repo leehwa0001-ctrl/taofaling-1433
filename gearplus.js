@@ -60,7 +60,7 @@
       if (fx.melee && (k === 'melee' || k === 'thrust')) P.ws.dmg *= 1 + fx.melee;
       P.stagger = fx.stagger || 0;
       P.str = R.strOf(cls); P.tooHeavy = heavy;
-      if (heavy) { P.speed *= Math.pow(0.92, heavy); if (P.ws) P.ws.rate *= Math.pow(0.92, heavy); }
+      if (heavy) { P.speed *= Math.pow(0.92, heavy); if (P.ws) { P.ws.rate *= Math.pow(0.92, heavy); P.rateGear = (P.rateGear || 1) * Math.pow(0.92, heavy); } }
     } catch (e) { }
     return P;
   };
