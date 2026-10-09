@@ -165,6 +165,7 @@
       Bt.add(g.plane, M(s.mat || 'pav'), (r[0] + r[2]) / 2, h + 0.004, (r[1] + r[3]) / 2, r[2] - r[0] - k * 2, r[3] - r[1] - k * 2, 1, -Math.PI / 2, 0, 0);
       hgEach(r, (x, z, v) => Math.max(v, h));
     });
+    (CK.groundHooks || []).forEach(f => { try { f(B); } catch (e) { console.error('[groundHooks]', e); } });   // 斜的、彎的路（citykit8.js）
     // 水：水面、護岸、岸邊的壓頂石；碰撞（橋下不擋）
     D.water.forEach(w => {
       const sh = new TH.Shape(w.poly.map(p => new TH.Vector2(p[0], -p[1])));
@@ -301,7 +302,10 @@
     L.sun.color.copy(u.sunCol.value); L.sun.intensity = k.sunI; L.sunDir = k.s.dir;
     L.hemi.color.copy(u.top.value).lerp(new TH.Color(1, 1, 1), 0.35); L.hemi.groundColor.copy(lc([0.34, 0.31, 0.28])).convertSRGBToLinear(); L.hemi.intensity = k.hemiI * (k.night > 0.5 ? 0.6 : 1);
     // 環境反光：時間、天氣變了才重算
-    const key = Math.round(h * 4) + '|' + wn; if (force || key !== L.envKey) { L.envKey = key; const old = L.env; L.env = L.pm.fromScene(L.envSc, 0.02); W.scene.environment = L.env.texture; if (old) old.dispose(); }
+    // 2026-10-09 作者：調低畫質還是會卡——環境反光每 15 分鐘（遊戲時間，現實約 11 秒）重算一次會頓一下：改成每小時；低畫質不用環境反光（環境光調亮補回來）
+    const lowQ = CK.quality() === 0; if (u.oct) u.oct.value = CK.quality() >= 2 ? 6 : CK.quality() === 1 ? 4 : 3;
+    const key = (lowQ ? 'low' : Math.round(h)) + '|' + wn; if (force || key !== L.envKey) { L.envKey = key; const old = L.env; if (lowQ) { L.env = null; W.scene.environment = null; } else { L.env = L.pm.fromScene(L.envSc, 0.02); W.scene.environment = L.env.texture; } if (old) old.dispose(); }
+    if (lowQ) L.hemi.intensity *= 1.7;
     // 窗戶、路燈、霓虹
     Object.values(CK.mats).forEach(m => {
       if (m.userData.win) m.emissiveIntensity = 0.05 + k.winK * 2.2;
@@ -471,6 +475,7 @@
     D.water.forEach(wt => poly(wt.poly, '#4E7C96'));
     D.terr.forEach(t => rect(t.r, t.stairs ? '#D8D0C0' : '#C0B49C'));
     (D.walkways || []).forEach(r => rect(r, '#DEDAD2')); D.slabs.forEach(s => rect(s.r, '#E2DCD0'));
+    (CK.mapBake || []).forEach(f => { try { f(g, X, Z, D); } catch (e) { console.warn('[mapBake]', e); } });   // 斜的、彎的路（citykit8.js）
     D.roads.forEach(r => rect(r.r, '#55585E'));
     D.roads.forEach(rd => { const r = rd.r, ew = r[2] - r[0] >= r[3] - r[1]; g.fillStyle = 'rgba(240,236,220,.55)'; if (ew) g.fillRect(X(r[0]), Z((r[1] + r[3]) / 2) - 0.5, (r[2] - r[0]) * MPPM, 1); else g.fillRect(X((r[0] + r[2]) / 2) - 0.5, Z(r[1]), 1, (r[3] - r[1]) * MPPM); });
     D.bridges.forEach(br => rect(br.r, '#B0A898'));

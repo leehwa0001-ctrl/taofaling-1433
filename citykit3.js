@@ -57,13 +57,40 @@
     g.fillStyle = o.fg || '#F4ECD8'; g.font = (o.weight || 'bold') + ' ' + Math.round(cw * 0.82) + 'px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle';
     if (o.neon) { g.shadowColor = o.fg || '#FFF'; g.shadowBlur = 10; }
     ch.forEach((t, i) => vert ? g.fillText(t, c.width / 2, pad + cw * i + cw / 2 + 2) : g.fillText(t, pad + cw * i + cw / 2, c.height / 2 + 2));
+    // 2026-10-09 作者：調低畫質還是會卡——每塊招牌一個材質＝一次繪製（吉山九十幾塊）。改成畫進 1024×1024 的大圖（照亮法、橫直分頁），
+    // 回傳 { isSignRef, mat: 那一頁的材質, uv: 那一格 }，合併繪製（citykit.js）換材質、換 uv。太長放不下的照舊自己一張。
+    const kind = (o.neon ? 'n' : o.lit ? 'l' : 'p') + (vert ? 'v' : 'h'), spot = atlasPut(kind, c);
+    if (spot) { const ref = { isSignRef: true, mat: spot.mat, uv: spot.uv, userData: { aspect: c.width / c.height } }; SIGNS.set(key, ref); return ref; }
     const t = new TH.CanvasTexture(c); t.encoding = TH.sRGBEncoding; t.anisotropy = 4; t.userData.shared = true;
-    const m = new TH.MeshStandardMaterial({ map: t, roughness: 0.5, metalness: 0 });
-    if (o.neon || o.lit) { m.emissive = new TH.Color('#FFFFFF'); m.emissiveMap = t; m.emissiveIntensity = o.neon ? 1.6 : 0.6; m.userData.neon = true; m.userData.ei0 = m.emissiveIntensity; }
-    m.userData.shared = true; m.userData.tile = [1, 1]; m.userData.aspect = c.width / c.height;
+    const m = signPageMat(t, o.neon ? 'n' : o.lit ? 'l' : 'p');
+    m.userData.aspect = c.width / c.height;
     CK.mats['sign|' + key] = m;
     SIGNS.set(key, m); return m;
   };
+  // 一頁的材質（亮法：p 不亮、l 店招、n 霓虹）
+  const signPageMat = (t, k) => {
+    const TH = T(), m = new TH.MeshStandardMaterial({ map: t, roughness: 0.5, metalness: 0 });
+    if (k !== 'p') { m.emissive = new TH.Color('#FFFFFF'); m.emissiveMap = t; m.emissiveIntensity = k === 'n' ? 1.6 : 0.6; m.userData.neon = true; m.userData.ei0 = m.emissiveIntensity; }
+    m.userData.shared = true; m.userData.tile = [1, 1]; return m;
+  };
+  // 大圖：橫的一列一列排（列高＝招牌高）、直的一行一行排
+  const AT = { pages: [], S: 1024, gap: 4 };
+  const atlasPut = (kind, src) => {
+    const TH = T(), S = AT.S, gap = AT.gap, vert = kind[1] === 'v', w = src.width, h = src.height;
+    if (w + gap * 2 > S || h + gap * 2 > S) return null;
+    const lane = vert ? w : h, len = vert ? h : w;   // 一列（行）的寬、沿著列放的長度
+    let pg = null, ln = null;
+    for (const p of AT.pages) { if (p.kind !== kind) continue; ln = p.lanes.find(L => L.size === lane && L.used + len + gap <= S); if (ln) { pg = p; break; } if (p.next + lane + gap <= S) { pg = p; break; } }
+    if (!pg) { const cv = document.createElement('canvas'); cv.width = S; cv.height = S; const t = new TH.CanvasTexture(cv); t.encoding = TH.sRGBEncoding; t.anisotropy = 4; t.userData.shared = true; pg = { kind, cv, g: cv.getContext('2d'), t, lanes: [], next: gap }; pg.mat = signPageMat(t, kind[0]); CK.mats['signpage|' + kind + '|' + AT.pages.length] = pg.mat; AT.pages.push(pg); }
+    if (!ln) { ln = { size: lane, at: pg.next, used: gap }; pg.lanes.push(ln); pg.next += lane + gap; }
+    const px = vert ? ln.at : ln.used, py = vert ? ln.used : ln.at; ln.used += len + gap;
+    pg.g.drawImage(src, px, py); pg.t.needsUpdate = true;
+    return { mat: pg.mat, uv: [px / S, (S - py - h) / S, (px + w) / S, (S - py) / S] };
+  };
+  // 換城的時候清掉（上一座城的招牌不帶走）
+  CK.signReset = () => { AT.pages.forEach(p => { try { p.t.dispose(); p.mat.dispose(); } catch (e) { } }); Object.keys(CK.mats).forEach(k => { if (/^signpage||^sign|/.test(k)) delete CK.mats[k]; }); AT.pages = []; SIGNS.clear(); };
+  const enter0 = CK.enter;
+  if (enter0) CK.enter = (...a) => { CK.signReset(); return enter0(...a); };
 
   // ---------- 材質的捷徑：外牆（每種外牆 × 幾種顏色） ----------
   const FAC_COL = {
@@ -339,6 +366,8 @@
   // ---------- 會動的：路人、車、電車 ----------
   const carMats = () => ({ glass: CK.M('glass'), tire: CK.M('rubber'), head: CK.mat('carHead', { col: '#FFF8E8', em: '#FFF4D8', ei: 0, lamp: true, snow: 0 }), tail: CK.mat('carTail', { col: '#8A1A1A', em: '#FF2A1A', ei: 0.6, neon: true, snow: 0 }), chrome: CK.M('metal') });
   const paint = c => CK.mat('carPaint|' + c, { col: c, rough: 0.28, metal: 0.55, env: 1.2, snow: 0.8 });
+  // 2026-10-09 作者：調低畫質還是會卡——一台車十幾個方塊＝十幾次繪製：做好以後同一個材質的合成一塊（車、電車的每一節）
+  const mergeGroup = grp => { const Bt = CK.batch(); grp.children.slice().forEach(o => { if (!o.isMesh) return; Bt.add(o.geometry, o.material, o.position.x, o.position.y, o.position.z, o.scale.x, o.scale.y, o.scale.z, o.rotation.x, o.rotation.y, o.rotation.z, { uv: 'keep' }); grp.remove(o); }); Bt.flush(grp); return grp; };
   CK.makeCar = (col, kind) => {
     const TH = T(), g = CK.geo(), grp = new TH.Group(), m = carMats(), body = paint(col), add = (geo, mat, x, y, z, sx, sy, sz, rx) => { const o = new TH.Mesh(geo, mat); o.position.set(x, y, z); o.scale.set(sx, sy, sz); if (rx) o.rotation.x = rx; o.castShadow = true; grp.add(o); return o; };
     if (kind === 'truck') {
@@ -352,7 +381,7 @@
     [[-0.6, -2.18], [0.6, -2.18]].forEach(([x, z]) => add(g.box, m.head, x, 0.7, z, 0.36, 0.14, 0.04));
     [[-0.65, 2.18], [0.65, 2.18]].forEach(([x, z]) => add(g.box, m.tail, x, 0.72, z, 0.3, 0.14, 0.04));
     grp.userData.kind = kind || 'car';   // 搶車的時候看（ckmove.js）
-    return grp;
+    return mergeGroup(grp);
   };
   CK.makeTrain = (col, n, o) => {
     o = o || {}; const TH = T(), g = CK.geo(), cars = [], body = paint(col || '#E8E4DC'), stripe = paint(o.stripe || '#2E5A9A');
@@ -361,7 +390,7 @@
       add(g.box, body, 0, 1.75, 0, 2.9, 2.9, 17.6); add(g.box, stripe, 0, 1.0, 0, 2.94, 0.35, 17.62); add(g.box, CK.M('glass'), 0, 2.15, 0, 2.95, 0.9, 16); add(g.box, CK.mat('trainWin', { col: '#FFF0D0', em: '#FFE8C0', ei: 0, lamp: true }), 0, 2.15, 0, 2.92, 0.85, 15.9);
       add(g.box, CK.M('steelD'), 0, 3.3, 0, 2.6, 0.3, 17); add(g.box, CK.M('black'), 0, 0.35, 0, 2.4, 0.5, 15);
       if (k === 0) { add(g.box, CK.M('glass'), 0, 2.3, -8.82, 2.5, 1.0, 0.06); add(g.box, CK.mat('carHead', {}), 0, 1.3, -8.82, 1.6, 0.2, 0.05); }
-      cars.push(grp);
+      cars.push(mergeGroup(grp));
     }
     return cars;
   };
@@ -398,16 +427,19 @@
     void TH;
     B.Bt.flush(B.group);   // 軌道
   };
+  CK.farLife = () => [60, 75, 90][CK.quality ? CK.quality() : 2] || 90;   // 路人多遠就不畫（曼哈頓距離；低、中畫質近一點）
   CK.stepLife = (dt, tw, P) => {
+    const LIM = CK.farLife();
     // 路人
     tw.npcs.forEach(n => {
       if (n.walk || n.guard || n.off) return;   // 衛兵（ckcrime.js 自己動）
+      const dd = Math.abs(n.x - P.x) + Math.abs(n.z - P.z); if (dd > LIM) { if (n.h.g.visible) { n.h.g.visible = false; n._lod = 1; } return; } else if (n._lod) { n.h.g.visible = true; n._lod = 0; }
       if (n.near) { const d = Math.hypot(P.x - n.x, P.z - n.z); n.h.g.rotation.y = d < 3.5 ? Math.atan2(P.x - n.x, P.z - n.z) : n.rot; }
       if (Math.abs(n.x - P.x) + Math.abs(n.z - P.z) < 70) R.animHero(n.h, 0, dt, false);
     });
     (tw.walkers || []).forEach(n => {
       if (n.off || n.flee > 0 || n.back) return;   // 嚇跑中、走回路上（ckcrime.js 自己動）
-      const far = Math.abs(n.x - P.x) + Math.abs(n.z - P.z) > 90;
+      const far = Math.abs(n.x - P.x) + Math.abs(n.z - P.z) > LIM;
       const [x, z, ang] = along(n.path, n.acc, n.L, n.s, false), dir = (((n.s % (2 * n.L)) + 2 * n.L) % (2 * n.L)) > n.L ? -1 : 1;
       const blocked = !far && Math.hypot(P.x - n.x, P.z - n.z) < 1.1 && ((P.x - n.x) * Math.sin(ang) + (P.z - n.z) * Math.cos(ang)) * dir > 0;
       if (!blocked) n.s += n.sp * dt;

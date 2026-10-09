@@ -10,8 +10,25 @@
   let auto = false, last = 0, acc = 0, n = 0, warm = 0, key = null, done = false;
   // 陰影跟著畫質（暫停選單的「畫質」那一顆也是這樣）
   const applyLight = q => { const L = W.town && W.town.L; if (!L || !L.sun) return; L.sun.castShadow = q > 0; const sz = q >= 2 ? 4096 : 2048; if (L.sun.shadow.mapSize.x !== sz) { L.sun.shadow.mapSize.set(sz, sz); if (L.sun.shadow.map) { L.sun.shadow.map.dispose(); L.sun.shadow.map = null; } } };
+  // 2026-10-09 作者：調低畫質還是會卡——低畫質拿掉材質的凹凸貼圖、粗糙度貼圖（每個像素少讀兩張貼圖、少算很多），換回中、高再裝回去；
+  // 進城以後先把看不到的東西（遠處的路人、晚上才亮的燈……）也編譯好，走到的時候才不會頓一下。
+  const stripOne = (m, on) => {
+    if (!m || !m.isMeshStandardMaterial) return; const u = m.userData;
+    if (on) { if (u.nm0 !== undefined || (!m.normalMap && !m.roughnessMap)) return; u.nm0 = m.normalMap || null; u.rm0 = m.roughnessMap || null; m.normalMap = null; m.roughnessMap = null; m.needsUpdate = true; }
+    else if (u.nm0 !== undefined) { m.normalMap = u.nm0; m.roughnessMap = u.rm0; delete u.nm0; delete u.rm0; m.needsUpdate = true; }
+  };
+  const strip = on => Object.values(CK.mats || {}).forEach(m => stripOne(m, on));
+  const mat0 = CK.mat;
+  CK.mat = (k, o) => { const m = mat0(k, o); if (CK.quality() === 0) stripOne(m, true); return m; };
+  const precompile = () => {
+    const sc = W.scene, r = W.renderer, cam = W.camera; if (!sc || !r || !cam) return; const hid = [];
+    sc.traverse(o => { if (!o.visible) { hid.push(o); o.visible = true; } });
+    try { r.compile(sc, cam); } catch (e) { } hid.forEach(o => { o.visible = false; });
+  };
+  const ce0 = CK.enter;
+  CK.enter = (...a) => { const r = ce0(...a); try { if (W.town && W.town.ck) { if (CK.quality() === 0) strip(true); precompile(); } } catch (e) { console.warn('[ckperf]', e); } return r; };
   const sq = CK.setQuality;
-  CK.setQuality = q => { sq(q); if (!auto) LS('tfl-cityq-user', '1'); applyLight(q); };
+  CK.setQuality = q => { sq(q); if (!auto) LS('tfl-cityq-user', '1'); applyLight(q); strip(q === 0); if (CK.applyTime) CK.applyTime(true); };
   const check = avg => {
     acc = 0; n = 0; warm = 0;
     if (LS('tfl-cityq-user')) { done = true; return; }

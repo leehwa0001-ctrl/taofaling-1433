@@ -305,6 +305,7 @@
 
   // ---------- 合併繪製（照材質、照 96 公尺的區塊合起來（2026-10-08：48 → 96，繪製次數少很多）；uv 照公尺算，外牆照每一面置中） ----------
   const CHUNK = 96;
+  CK.chunkSize = () => CHUNK;   // 2026-10-09：低畫質合成大一點的區塊（繪製次數少；ckperf.js 換掉）
   CK.batch = () => {
     const TH = T(), map = new Map(), m4 = new TH.Matrix4(), nm = new TH.Matrix3(), q = new TH.Quaternion(), e = new TH.Euler(), p = new TH.Vector3(), s = new TH.Vector3();
     const base = geo => geo.userData.ni || (geo.userData.ni = (() => { const g = geo.index ? geo.toNonIndexed() : geo; return { P: g.attributes.position.array, N: g.attributes.normal.array, U: g.attributes.uv ? g.attributes.uv.array : null, n: g.attributes.position.count, box: !!geo.userData.box }; })());
@@ -318,10 +319,11 @@
       // geo：基本形狀；mat；位置、大小、轉動；o.uv＝'keep' 用形狀自己的 uv
       add(geo, mat, x, y, z, sx, sy, sz, rx, ry, rz, o) {
         if (!mat) return;
+        let uvr = null; if (mat.isSignRef) { uvr = mat.uv; mat = mat.mat; }   // 招牌合在一張大圖上（citykit3.js CK.signMat）：材質換成那一頁、uv 換到那一格
         let yaw = ry || 0, wx = x, wz = z;
         if (frame) { [wx, wz] = B.toWorld(x, z); yaw += frame.a; }
         e.set(rx || 0, yaw, rz || 0); q.setFromEuler(e); p.set(wx, y + B.yOff, wz); s.set(sx, sy, sz); m4.compose(p, q, s); nm.getNormalMatrix(m4);
-        const b = base(geo), me = m4.elements, ne = nm.elements, ckey = Math.floor((wx + 2000) / CHUNK) * 10000 + Math.floor((wz + 2000) / CHUNK);
+        const b = base(geo), me = m4.elements, ne = nm.elements, CS = CK.chunkSize(), ckey = Math.floor((wx + 2000) / CS) * 10000 + Math.floor((wz + 2000) / CS);
         let bucket = map.get(mat); if (!bucket) map.set(mat, bucket = new Map());
         let A = bucket.get(ckey); if (!A) bucket.set(ckey, A = { P: [], N: [], U: [] });
         const tile = mat.userData.tile || [4, 4], fac = mat.userData.fac && b.box && !rx && !rz && !(o && o.noFac), keep = o && o.uv === 'keep', ca = Math.cos(-yaw), sa = Math.sin(-yaw);
@@ -332,7 +334,7 @@
           A.P.push(X, Y, Z);
           const nx = BN[i3], ny = BN[i3 + 1], nz = BN[i3 + 2], ox = ne[0] * nx + ne[3] * ny + ne[6] * nz, oy = ne[1] * nx + ne[4] * ny + ne[7] * nz, oz = ne[2] * nx + ne[5] * ny + ne[8] * nz, l = Math.hypot(ox, oy, oz) || 1;
           A.N.push(ox / l, oy / l, oz / l);
-          if (keep && BU) { A.U.push(BU[i * 2] * (o.us || 1), BU[i * 2 + 1] * (o.vs || 1)); continue; }
+          if (keep && BU) { if (uvr) A.U.push(uvr[0] + BU[i * 2] * (uvr[2] - uvr[0]), uvr[1] + BU[i * 2 + 1] * (uvr[3] - uvr[1])); else A.U.push(BU[i * 2] * (o.us || 1), BU[i * 2 + 1] * (o.vs || 1)); continue; }
           if (fac && Math.abs(ny) < 0.5) {
             // 外牆：沿著這一面從左邊量起、置中；高度用世界的 y（每一層對齊地面）
             const alongX = Math.abs(nz) > Math.abs(nx), L = alongX ? sx : sz, lp = (alongX ? px * sx : pz * sz) * (alongX ? (nz > 0 ? 1 : -1) : (nx > 0 ? -1 : 1)) + L / 2, bay = mat.userData.bay || 3;
@@ -447,10 +449,10 @@
   // ---------- 天空（漸層、太陽、雲；也拿來做環境反光） ----------
   const SKY_VS = 'varying vec3 vDir; void main(){ vDir = normalize(position); vec4 p = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * p; gl_Position.z = gl_Position.w * 0.99999; }';
   const SKY_FS = [
-    'uniform vec3 top; uniform vec3 hor; uniform vec3 gnd; uniform vec3 sunDir; uniform vec3 sunCol; uniform float cloud; uniform float time; uniform float night; varying vec3 vDir;',
+    'uniform vec3 top; uniform vec3 hor; uniform vec3 gnd; uniform vec3 sunDir; uniform vec3 sunCol; uniform float cloud; uniform float time; uniform float night; uniform float oct; varying vec3 vDir;',   // oct：雲的細節層數（2026-10-09：中、低畫質少算幾層）
     'float h1(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }',
     'float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h1(i), h1(i + vec2(1, 0)), f.x), mix(h1(i + vec2(0, 1)), h1(i + vec2(1, 1)), f.x), f.y); }',
-    'float fb(vec2 p){ float v = 0.0, a = 0.5; mat2 m = mat2(1.6, 1.2, -1.2, 1.6); for (int i = 0; i < 6; i++){ v += a * n2(p); p = m * p; a *= 0.5; } return v; }',
+    'float fb(vec2 p){ float v = 0.0, a = 0.5; mat2 m = mat2(1.6, 1.2, -1.2, 1.6); for (int i = 0; i < 6; i++){ if (float(i) >= oct) break; v += a * n2(p); p = m * p; a *= 0.5; } return v; }',
     'void main(){ vec3 d = normalize(vDir); float y = d.y; vec3 sd3 = normalize(sunDir); float sd = max(dot(d, sd3), 0.0);',
     '  vec3 c = y > 0.0 ? mix(hor, top, pow(clamp(y, 0.0, 1.0), 0.48)) : mix(hor, gnd, clamp(-y * 5.0, 0.0, 1.0));',
     '  c += sunCol * (pow(sd, 6.0) * 0.22 + pow(sd, 48.0) * 0.35) * (1.0 - night * 0.7) * (1.0 - cloud * 0.5);',
@@ -473,7 +475,7 @@
     '  if (night > 0.5 && y > 0.05) { vec2 st = d.xz / (y + 0.3) * 140.0; float s = step(0.9978, h1(floor(st))); c += vec3(s) * (night - 0.5) * 2.0 * (1.0 - cloud) * 0.9; }',
     '  gl_FragColor = vec4(c, 1.0); }'
   ].join('\n');
-  CK.skyMat = () => new (T().ShaderMaterial)({ uniforms: { top: { value: new (T().Color)() }, hor: { value: new (T().Color)() }, gnd: { value: new (T().Color)() }, sunDir: { value: new (T().Vector3)(0, 1, 0) }, sunCol: { value: new (T().Color)() }, cloud: { value: 0.3 }, time: { value: 0 }, night: { value: 0 } }, vertexShader: SKY_VS, fragmentShader: SKY_FS, side: T().BackSide, depthWrite: false, fog: false });
+  CK.skyMat = () => new (T().ShaderMaterial)({ uniforms: { top: { value: new (T().Color)() }, hor: { value: new (T().Color)() }, gnd: { value: new (T().Color)() }, sunDir: { value: new (T().Vector3)(0, 1, 0) }, sunCol: { value: new (T().Color)() }, cloud: { value: 0.3 }, time: { value: 0 }, night: { value: 0 }, oct: { value: 6 } }, vertexShader: SKY_VS, fragmentShader: SKY_FS, side: T().BackSide, depthWrite: false, fog: false });
 
   // ---------- 光線（照遊戲裡的時間、天氣） ----------
   // 太陽高度 → 天空、太陽的顏色；跟 daytime.js 一樣：早上 6 點日出、傍晚 18 點半日落
