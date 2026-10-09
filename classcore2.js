@@ -160,7 +160,7 @@
   R.RUNES = RUNE;
   CORE.enchanter = {
     name: '刻印', col: '#FF9A6A',
-    help: P => '刻印（恩特安派）：X 換武器上的刻印（焰→霜→雷→風→金）。刻著的刻印會改變你的技能：焰＝技能傷害 +25%、打中的燃燒；霜＝技能讓敵人變慢、範圍技定身；雷＝技能冷卻 −20%、攻速 +20%；風＝普攻放出劍氣、技能範圍 +25%；金＝打中的破甲、技能範圍 −25% 但傷害 +40%。普攻打中攢刻印的力量；換掉的時候舊的刻印釋放——焰＝前方火焰爆、霜＝身邊冰封定身、雷＝連鎖閃電打五隻、風＝前方颶風吹飛、金＝身邊金屬碎片破甲，攢越滿越痛。'
+    help: P => '刻印（恩特安派）：X 換武器上的刻印（焰→霜→雷→風→金）。刻著的刻印會改變你的技能：焰＝技能傷害 +25%、打中的燃燒；霜＝技能讓敵人變慢、範圍技定身；雷＝技能冷卻 −20%、攻速 +20%；風＝普攻每一揮都放出劍氣（不用打中、距離 +30%）、技能範圍 +25%；金＝打中的破甲、技能範圍 −25% 但傷害 +40%。普攻打中攢刻印的力量，攢滿了自動釋放現在刻著的刻印——焰＝前方火焰爆、霜＝身邊冰封定身、雷＝連鎖閃電打五隻、風＝前方颶風吹飛、金＝身邊金屬碎片破甲（換刻印不會釋放，攢的力量留著）。'
       + ({ runesmith: '刻印師：釋放 ×1.5、攢得快一半。', spellblade: '魔劍士：釋放時多打出一道劍氣（前方一直線）。', entian: '恩特安的傳人：釋放打到的敵人破防（5 秒你的傷害 +20%）。' }[adv(P)] || ''),
     floor: P => { P._rune = P._rune || 'flame'; },
     mod(e, raw, o, P) {
@@ -170,7 +170,7 @@
         const r = P._rune || 'flame';
         if (r === 'flame' && rnd() < 0.25) e.st.burn = 3;
         if (r === 'frost') e.st.slow = Math.max(e.st.slow || 0, 2);
-        if (r === 'wind' && R.elemWind) R.elemWind(P, e, raw * (P.dmgMult || 1), 0.45, true);   // 風：普攻附帶劍氣
+        // 風：普攻每一揮都放劍氣（不用打中，距離 +30%）——enchant1009.js 包 R.attack 放
         if (r === 'metal' && R.elemBreak && rnd() < 0.35) R.elemBreak(e);
         if (r === 'storm' && rnd() < 0.15) { const n = (W().enemies || []).find(x => !x.dead && x !== e && dist(x, e) < 5); if (n) { R.fx && R.fx('bolt', e.x, 1, e.z, { to: n }); R.coreHit(n, raw * 0.4, {}); } }
       }
@@ -189,8 +189,10 @@
       if (sund) hitList.forEach(e => { e._sunder = CT() + 5; });
       R.shake && R.shake(0.2); say(P, RUNE[r][0] + '・釋放', 'crit');
     },
-    act(P) { this.release(P); const i = RU.indexOf(P._rune || 'flame'); P._rune = RU[(i + 1) % RU.length]; R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 1.4, color: RUNE[P._rune][1] }); },
-    gauge(P) { const r = P._rune || 'flame', ch = P._runeCh || 0; return { name: '刻印：' + RUNE[r][0], col: RUNE[r][1], v: ch, max: 100, full: ch >= 100, text: Math.floor(ch) + '／100', sub: '普攻攢力量', x: (ch >= 20 ? '釋放＋' : '') + '換成' + RUNE[RU[(RU.indexOf(r) + 1) % RU.length]][0] }; }
+    // 2026-10-09 作者：普攻攢滿了自動釋放，不用換刻印才放；X 只換刻印（攢的力量留著）
+    step(dt, P) { if ((P._runeCh || 0) >= 100) this.release(P); },
+    act(P) { const i = RU.indexOf(P._rune || 'flame'); P._rune = RU[(i + 1) % RU.length]; R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 1.4, color: RUNE[P._rune][1] }); },
+    gauge(P) { const r = P._rune || 'flame', ch = P._runeCh || 0; return { name: '刻印：' + RUNE[r][0], col: RUNE[r][1], v: ch, max: 100, full: ch >= 100, text: Math.floor(ch) + '／100', sub: '普攻攢力量，滿了自動釋放', x: '換成' + RUNE[RU[(RU.indexOf(r) + 1) % RU.length]][0] }; }
   };
 
   // ======================= 符卷師：卷軸組 =======================

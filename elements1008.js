@@ -30,23 +30,23 @@
     if (ps) {
       ps.t -= dt;
       if (ps.t <= 0 || ps.n <= 0) e._psn = null;
-      else { ps.k = (ps.k || 0) + dt; if (ps.k >= 1) { ps.k = 0; R.hurtEnemy(e, Math.max(1, ps.pw * 0.04 * ps.n), { dot: 'poison', critChance: 0 }); if (e.dead) return true; } }
+      else { ps.k = (ps.k || 0) + dt; if (ps.k >= 1) { ps.k = 0; R.hurtEnemy(e, Math.max(1, ps.pw * 0.04 * ps.n) + (ps.pct ? (e.hpMax || 0) * ps.pct / Math.max(0.1, (P && P.dmgMult) || 1) : 0), { dot: 'poison', critChance: 0 }); if (e.dead) return true; } }   // ps.pct：附魔・毒的毒再扣最大生命的 %（enchant1009.js）
     }
     return false;
   };
 
   // ---------- 風、毒、金 ----------
-  R.elemWind = (P, e, dealt, k, rune) => {
+  R.elemWind = (P, e, dealt, k, rune, rk) => {   // rk：距離的倍率（附魔師的風刻印 1.3）
     if (!P || (P._windCd || 0) > CT()) return; P._windCd = CT() + (rune ? 0.3 : 0.25);
-    const sp = 26, range = Math.max(6, ((P.ws && P.ws.range) || 6) * 1.6);
+    const sp = 26, range = Math.max(6, ((P.ws && P.ws.range) || 6) * 1.6) * (rk || 1);
     const s = R.fire({ kind: 'hama', owner: 'p', x: P.x, z: P.z, a: P.aimA || 0, speed: sp, dmg: Math.max(1, num(dealt) * (k || 0.6) / Math.max(0.1, P.dmgMult || 1)), life: range / sp, pierce: 3 });
     if (s && s.mesh) { s.mesh.scale.set(14, 0.6, 0.3); }
   };
-  R.elemPoison = (e, P) => {
+  R.elemPoison = (e, P, o) => {   // o.cap：最多疊幾層（附魔・毒 10 層）、o.pct：每一跳再扣最大生命的比例
     if (!e || e.dead || (e._psnCd || 0) > CT()) return; e._psnCd = CT() + 0.3;
     const ps = e._psn || (e._psn = { n: 0, t: 0, k: 0, pw: 0 });
     if (!ps.n && R.num) R.num(e.x, 1.8 * ((e.def && e.def.size) || 1) + 0.9, e.z, '中毒', '');
-    ps.n = Math.min(5, ps.n + 1); ps.t = 6; ps.pw = Math.max(ps.pw || 0, powerOf(P));
+    ps.n = Math.min((o && o.cap) || Math.max(5, ps.cap || 5), ps.n + 1); ps.t = 6; ps.pw = Math.max(ps.pw || 0, powerOf(P)); if (o && o.cap) ps.cap = o.cap; if (o && o.pct) ps.pct = Math.max(ps.pct || 0, o.pct);
   };
   R.elemBreak = e => {
     if (!e || e.dead) return;
