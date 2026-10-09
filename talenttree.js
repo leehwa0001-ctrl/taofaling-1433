@@ -1,7 +1,7 @@
 // 討伐令 1433：天賦樹（作者 2026-10-04：天賦點不滿，感覺可以變成類似天賦樹的東西，有不同種分支這樣，點了一種就沒辦法點另一種）
 // 原本 skillpoints.js 的天賦是一排一排的（三階、十二種，全部點滿要 80 點），換成一棵樹：
 //   根基（體魄、力量、魔力）→ 投滿 8 點以後開三條「道」：刃（攻）、盾（守）、心（術）
-//   → 一條道投滿 10 點以後開它的兩個分支 → 一個分支投滿 8 點開它的「奧義」 → 奧義點滿以後，多出來的點數放進「歷練」（沒有上限）。
+//   → 一條道投滿 10 點以後開它的兩個分支 → 一個分支升滿 8 級（分支的節點一級 2 點，＝投入 16 點）開它的「奧義」 → 奧義點滿以後，多出來的點數放進「歷練」（沒有上限）。
 // - 2026-10-04 作者：技能樹應該要可以點其他方向的，只不過奧義只能學會一個。
 //   所以三條道、六個分支都可以點（原本選了一條道／一個分支，另外的就鎖起來）；六個奧義只能學一個，學了別的奧義就鎖起來。
 //   一條路走到底：根基 15＋道 15＋分支 10＋奧義 5＝45 點；多的點數可以點別的道、別的分支，或進歷練。
@@ -108,7 +108,7 @@
     const s = p.subs.find(x => x.nodes.includes(n) || x.cap === n);
     if (sum(t, p.nodes) < NEED_SUB) return '「' + p.n + '」要先投 ' + NEED_SUB + ' 點';
     if (s.cap !== n) return '';
-    if (sum(t, s.nodes) < NEED_CAP) return '「' + s.n + '」要先投 ' + NEED_CAP + ' 點';
+    if (sum(t, s.nodes) < NEED_CAP) return '「' + s.n + '」要先升 ' + NEED_CAP + ' 級（投入 ' + NEED_CAP * 2 + ' 點技能點）';   // 分支的節點一級 2 點（COST）
     const cs = capsOf(t); if (!cs.includes(n) && cs.length >= slotsOf(t)) return '已經學了「' + cs.map(c => c.n).join('」「') + '」（奧義只能學 ' + slotsOf(t) + ' 個' + (slotsOf(t) < 2 ? '；可以花 10 點多開一格' : '') + '）';
     return '';
   };
@@ -150,7 +150,7 @@
   const treeHtml = st => {
     const t = mig(st), c0 = capOf(t), root = sum(t, ROOT);
     return '<h3>天賦樹（投了 ' + spentCost(t) + ' 點）</h3>'
-      + '<p class="note">根基投滿 ' + NEED_PATH + ' 點以後開四條道；一條道投滿 ' + NEED_SUB + ' 點以後開它的兩個分支；分支投滿 ' + NEED_CAP + ' 點開它的奧義。道和分支都可以點好幾條，<b>奧義只能學一個</b>（技能點畫面右上角可以花 10 點多開一格；學了別的就鎖起來；要換到公會的武器登記那裡重新分配）。花費：根基與四條道每級 1 點、第二分支每級 2 點、奧義每級 3 點、歷練每級 2 點。奧義點滿以後，多的點數也可以放進「歷練」。</p>'
+      + '<p class="note">根基投滿 ' + NEED_PATH + ' 點以後開四條道；一條道投滿 ' + NEED_SUB + ' 點以後開它的兩個分支；分支升滿 ' + NEED_CAP + ' 級（投入 ' + NEED_CAP * 2 + ' 點技能點）開它的奧義。道和分支都可以點好幾條，<b>奧義只能學一個</b>（技能點畫面右上角可以花 10 點多開一格；學了別的就鎖起來；要換到公會的武器登記那裡重新分配）。花費：根基與四條道每級 1 點、第二分支每級 2 點、奧義每級 3 點、歷練每級 2 點。奧義點滿以後，多的點數也可以放進「歷練」。</p>'
       + '<div class="tt-tree"><div class="tt-root"><div class="tt-h">根基<small>' + root + '／15</small></div><div class="tt-row">' + ROOT.map(n => nodeHtml(t, n)).join('') + '</div></div>'
       + '<div class="tt-paths">' + PATHS.map(p => {
         return '<div class="tt-path' + (pathPts(t, p) ? ' pick' : '') + '" style="--tc:' + p.c + '"><div class="tt-h">' + esc(p.n) + '<small>' + esc(p.d) + '</small></div>'
