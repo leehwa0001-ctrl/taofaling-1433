@@ -309,7 +309,7 @@
     try { R.startRun(d.site); } finally { N.guestFollow = false; }
     // 後備：若仍跳出委託書（舊路徑／段位限制），點繼續／接下／不接（不要點放棄）
     let tries = 0; const accept = () => {
-      const click = id => { const b = $(id); if (b && b.offsetParent && !b.disabled) { b.click(); return true; } return false; };
+      const click = id => { const b = [...document.querySelectorAll('#' + id)].find(x => x.offsetParent && !x.disabled); if (b) { b.click(); return true; } return false; };   // 同一個 id 可能有舊的留在別的視窗裡：找看得到的那顆
       if (click('tk-cont') || click('tk-go') || click('tk-free')) return;
       if (++tries < 30 && guestGo && pending === d) setTimeout(accept, 100);
     };

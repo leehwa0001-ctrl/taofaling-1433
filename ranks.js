@@ -74,7 +74,7 @@
   };
   if (R.taskExtras) R.taskExtras.unshift({
     html: (site, sp) => { const r = rk(); if (!r || site.kind === 'hunt') return ''; return '<p class="note rk-note">你的段階：<b>' + esc(rankName(r)) + '</b>。' + (sp.blocked ? '<b style="color:#FF8A7A">' + esc(sp.blocked) + '</b>想進去的話，可以不接委託自己下去（沒有報酬）。' : '這張委託是 <b>' + esc(sp.letter) + ' 級</b>' + (sp.bonusK ? '（比 ' + esc(sp.range) + ' 的最低級高，報酬 +' + Math.round(sp.bonusK * 100) + '%）' : '') + '。') + (r.exam && EXAM[r.dan].grades && EXAM[r.dan].grades.includes(site.grade) && !sp.blocked ? '<br><b style="color:#E8C04A">這一趟是' + esc(EXAM[r.dan].name) + '：成績要 ' + EXAM[r.dan].need + '% 以上' + (EXAM[r.dan].boss ? '，而且要打倒佩特拉核心' : '') + '。</b>' : '') + (r.desig && !sp.blocked ? '<br><b style="color:#E8C04A">指定討伐：' + (r.desig.fire ? '在委託裡打倒領主體・熔顎蜥（火龍討伐）' : '在委託裡打倒一隻領主體') + '。</b>' : '') + '</p>'; },
-    bind: (box, site, sp) => { if (!sp.blocked) return; const b = $('tk-go'); if (b) { b.disabled = true; b.title = sp.blocked; b.textContent = '段位不符，接不了'; } }
+    bind: (box, site, sp) => { if (!sp.blocked) return; const b = box.querySelector('#tk-go'); if (b) { b.disabled = true; b.title = sp.blocked; b.textContent = '段位不符，接不了'; } }
   });
   // 出發：考核委託做記號
   const sr0 = R.startRun;

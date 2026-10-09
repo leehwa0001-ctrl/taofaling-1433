@@ -31,10 +31,10 @@
   R.taskExtras = [];   // 加注條款之類的：{ html(site), bind(box, site) }
   const hubOpen = () => { const h = $('hub'); return h && !h.hidden; };
   const modal = (html, foot) => {
-    if (hubOpen()) { $('hub-sheet').innerHTML = html + foot; $('hub-modal').hidden = false; return { box: $('hub-sheet'), close: () => { $('hub-modal').hidden = true; } }; }
+    if (hubOpen()) { $('hub-sheet').innerHTML = html + foot; $('hub-modal').hidden = false; const box = $('hub-sheet'); return { box, q: id => box.querySelector('#' + id), close: () => { $('hub-modal').hidden = true; box.innerHTML = ''; } }; }   // 2026-10-10：關掉就清空、按鈕只在這一張裡找——留著的舊委託書會跟下一張的按鈕同名（按了沒反應）
     const mapWasOpen = $('map') && !$('map').hidden; if (mapWasOpen && R.showScreen) R.showScreen('run');
     R.sheet(html, foot);
-    return { box: $('r-sheet'), close: () => { R.closeSheet(); if (mapWasOpen && R.showScreen && !W().run) R.showScreen('map'); } };
+    const box = $('r-sheet'); return { box, q: id => box.querySelector('#' + id), close: () => { R.closeSheet(); if (mapWasOpen && R.showScreen && !W().run) R.showScreen('map'); } };
   };
   // 外層的包裝（main.js、gtamap.js……）只傳 id，所以「已經看過委託書」用旗子記，不用第二個參數
   let okId = null, freeId = null, contId = null;   // freeId：不接委託，自己下去（沒有委託報酬、不打成績，加注條款也不算）；contId：繼續手上的委託
@@ -67,13 +67,13 @@
       if (held.siteId === id) {
         const m = modal('<p class="kicker">公會討伐令・手上的委託</p><h2>' + esc(site.name) + '</h2><p>這座遺跡的委託還在手上：' + esc(R.heldLine(held)) + '。</p><p class="note">可以再下去繼續做；回公會分館的登記處繳交，才結算五軌成績、付委託報酬（已經扣住 ' + (held.pay || 0) + ' 費拉）。</p>',
           '<div class="row"><button type="button" class="btn pri" id="tk-cont">繼續委託，出發</button><button type="button" class="btn" id="tk-free">不接委託，自己下去</button><button type="button" class="btn" id="tk-no">再想想</button></div>');
-        $('tk-no').onclick = m.close; $('tk-cont').onclick = () => { m.close(); R._pactReady = id; go('cont'); }; $('tk-free').onclick = () => { m.close(); R._pactReady = id; go('free'); };
+        m.q('tk-no').onclick = m.close; m.q('tk-cont').onclick = () => { m.close(); R._pactReady = id; go('cont'); }; m.q('tk-free').onclick = () => { m.close(); R._pactReady = id; go('free'); };
         return;
       }
       const m = modal('<p class="kicker">公會討伐令</p><h2>' + esc(site.name) + '</h2><p>手上還有「' + esc(held.site) + '」的委託沒繳交（' + esc(R.heldLine(held)) + '）。一次只能接一張委託。</p><p class="note">先回公會分館的登記處繳交；或是放棄那張委託（記為失敗、沒有報酬）再接這一張。也可以不接委託，自己下去。</p>',
         '<div class="row"><button type="button" class="btn pri" id="tk-no">先回去繳交</button><button type="button" class="btn" id="tk-free">不接委託，自己下去</button><button type="button" class="btn" id="tk-drop">放棄手上的委託</button></div>');
-      $('tk-no').onclick = m.close; $('tk-free').onclick = () => { m.close(); go('free'); };
-      $('tk-drop').onclick = () => { m.close(); R.dropHeldTask(); R.startRun(id); };
+      m.q('tk-no').onclick = m.close; m.q('tk-free').onclick = () => { m.close(); go('free'); };
+      m.q('tk-drop').onclick = () => { m.close(); R.dropHeldTask(); R.startRun(id); };
       return;
     }
     const sp = R.taskSpec(site);
@@ -82,9 +82,9 @@
       + R.taskExtras.map(x => x.html(site, sp)).join(''),
       '<div class="row"><button type="button" class="btn pri" id="tk-go">接下委託，出發</button><button type="button" class="btn" id="tk-free" title="沒有委託報酬、不打成績、沒有時限">不接委託，自己下去</button><button type="button" class="btn" id="tk-no">再想想</button></div>');
     R.taskExtras.forEach(x => x.bind && x.bind(m.box, site, sp));
-    $('tk-no').onclick = m.close;
-    $('tk-go').onclick = () => { m.close(); okId = id; R._pactReady = id; R.startRun(id); };
-    $('tk-free').onclick = () => { m.close(); okId = id; freeId = id; R._pactReady = id; R.startRun(id); };
+    m.q('tk-no').onclick = m.close;
+    m.q('tk-go').onclick = () => { m.close(); okId = id; R._pactReady = id; R.startRun(id); };
+    m.q('tk-free').onclick = () => { m.close(); okId = id; freeId = id; R._pactReady = id; R.startRun(id); };
   };
   // 真的出發了：記下委託
   const sr1 = R.startRun;

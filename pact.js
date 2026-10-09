@@ -69,7 +69,7 @@
   if (R.taskExtras) R.taskExtras.push({
     html: (site, sp) => sheet(site, sp),
     bind: (box, site, sp) => {
-      const wire = () => box.querySelectorAll('[data-pact]').forEach(b => { b.onclick = () => { const [id, v] = b.dataset.pact.split(':'); pact().sel[id] = +v; if (!+v) delete pact().sel[id]; R.save(); const old = $('pact-box'); if (old) { const t = document.createElement('div'); t.innerHTML = sheet(site, sp); old.replaceWith(t.firstChild); wire(); } }; });
+      const wire = () => box.querySelectorAll('[data-pact]').forEach(b => { b.onclick = () => { const [id, v] = b.dataset.pact.split(':'); pact().sel[id] = +v; if (!+v) delete pact().sel[id]; R.save(); const old = box.querySelector('#pact-box'); if (old) { const t = document.createElement('div'); t.innerHTML = sheet(site, sp); old.replaceWith(t.firstChild); wire(); } }; });
       wire();
     }
   });
