@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 召喚師 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 覺醒・群主 [tm_king_aw]: （二轉・覺醒）馴服整群：捏出四隻這一層的遺跡生物，15 秒。威力 ×1.5；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+2. 紙吹雪 [ss_paper]: 一把紙式神撒出去，5 秒內到處割。
+3. 狐式神 [ss_fox]: 折兩隻狐狸式神，14 秒。
+4. 紙龍 [ss_ryu]: 折一條紙龍，一路衝過去。
+5. 覺醒・紙龍 [ss_ryu_aw]: （二轉・覺醒）折一條紙龍，一路衝過去。威力 ×3.3；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+6. 群靈 [sp2_summoner_0]: （二轉・萬靈主）六隻土狼一起放出去，16 秒。
+7. 靈獸王 [sp2_summoner_1]: （二轉・萬靈主）捏出一隻特別強的頭狼，20 秒。
+8. 契約強化 [sp2_summoner_2]: （二轉・萬靈主）12 秒內傷害 +30%。
+9. 獸王咆哮 [a2_summoner_beastlord_0]: （二轉・覺醒・萬獸師）一聲咆哮震暈周圍的敵人，再叫出兩隻大狼，12 秒。
+10. 獸群狩獵 [a2_summoner_beastlord_1]: （二轉・覺醒・萬獸師）看不見的獸群在附近狩獵：6 秒內一下一下撲向敵人。
+11. 怨靈潮 [a2_summoner_medium_0]: （二轉・覺醒・靈媒師）放出十隻怨靈，四面八方追著敵人咬。
+12. 魂鎖 [a2_summoner_medium_1]: （二轉・覺醒・靈媒師）用魂鎖把一隻敵人拉到面前，打暈。
+13. 捕獲網 [a2_summoner_tamer_0]: （二轉・覺醒・遺跡馴獸師）往準心處撒一張大網：4 公尺內的敵人被纏住 2.5 秒。
+14. 同化 [a2_summoner_tamer_1]: （二轉・覺醒・遺跡馴獸師）學遺跡生物的樣子：10 秒內傷害 +25%、移動 +12%、吸血系數 +40。
+15. 式神・雷鳥 [a2_summoner_shikigami_0]: （二轉・覺醒・式神使）連放六張雷鳥式神，打中的麻一下。
+16. 式神・守門 [a2_summoner_shikigami_1]: （二轉・覺醒・式神使）在準心處立一尊守門的式神 12 秒，自動攻擊附近的敵人。

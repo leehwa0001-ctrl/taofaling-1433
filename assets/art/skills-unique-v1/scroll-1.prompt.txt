@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 符卷師 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 連發卷軸 [sc_volley]: 一口氣撕開三張卷軸，零前搖連發。
+2. 火卷 [sc_fire]: 撕開火卷：準心處立刻炸開、燒起來。
+3. 冰卷 [sc_ice]: 撕開冰卷：準心處的敵人凍住 2 秒。
+4. 風卷 [sc_wind]: 撕開風卷，一陣風把你送出去 6 公尺（不會受傷）。
+5. 癒卷 [sc_heal]: 撕開癒卷：回復 25% 生命。
+6. 雷卷 [sc_thunder]: 撕開雷卷：3 秒內雷一直劈附近的敵人。
+7. 盾卷 [sc_wall]: 撕開盾卷：獲得可吸收相當於最大生命 30% 傷害的護盾。
+8. 鎖卷 [sc_seal]: 把準心附近的敵人鎖住 1 秒，6 秒內受到的傷害變多。
+9. 隕卷 [sc_meteor]: 三張隕卷一起撕：準心處連炸三次。
+10. 疊卷 [sr_stack]: 一次撕開五張火卷，準心處連爆。
+11. 速寫 [sr_copy]: 當場抄一疊卷軸：回復 40% 魔力。
+12. 封印符 [sl_seal]: 準心處的敵人被封住 3 秒、受到的傷害 +30%。
+13. 預載・全開 [nx_burst]: 把預先寫好的卷軸一次全放出去：十六發，四面八方。
+14. 連鎖預載 [nx_chain]: 預載的卷軸一張接一張自己發動，五連發。
+15. 鏡卷 [sc_mirror]: 撕開鏡卷：1 秒內的攻擊全部彈回去。
+16. 連鎖雷卷 [sc_chain]: 撕開雷卷：雷在敵人之間跳五次。

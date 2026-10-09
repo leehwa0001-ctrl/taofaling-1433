@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 吟遊詩人 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 漸強 [bd_crescendo]: 音量一路往前漸強，一圈比一圈遠。
+2. 安可 [bd_encore]: 觀眾喊安可：你和隊友回復 40% 生命，你再回復 40% 魔力。（效果隨魔力上限變強）
+3. 聖詠 [ai_sanct]: 腳下展開 10 秒的聖詠圈：回復生命、灼傷敵人。（效果隨魔力上限變強）
+4. 合唱 [ai_choir]: 整支隊伍一起唱：12 秒內傷害 +15%、受到的傷害 −15%、慢慢回血。（效果隨魔力上限變強）
+5. 天使之聲 [ai_angel]: 讓人想起天使的歌聲：回復一半生命、1.2 秒內不受傷、解除不良狀態。（效果隨魔力上限變強）
+6. 覺醒・天使之聲 [ai_angel_aw]: （二轉・覺醒）讓人想起天使的歌聲：回復一半生命、1.2 秒內不受傷、解除不良狀態。威力 ×1.5；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。（效果隨魔力上限變強）
+7. 滾奏 [dm_roll]: 鼓棒滾奏：一圈一圈快速震周圍的敵人。
+8. 戰陣鼓 [dm_war]: 戰陣鼓點：10 秒內傷害 +25%、暴擊率 +10%。（效果隨魔力上限變強）
+9. 震地鼓 [dm_quake]: 鼓聲沿著地面一路震過去。
+10. 終章大鼓 [dm_finale]: 用盡全力的最後一擊：周圍的敵人重傷、被震飛暈眩。
+11. 覺醒・終章大鼓 [dm_finale_aw]: （二轉・覺醒）用盡全力的最後一擊：周圍的敵人重傷、被震飛暈眩。威力 ×2.3；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+12. 鎮頻 [se_suppress]: 在奏域裡改寫對手法術的「m」頻，讓它不穩定：準心附近的敵人停頓、變慢，6 秒內受到的傷害 +30%。
+13. 共振 [se_amp]: 改寫自己法術的「k」「f」頻：施法前花得少、施法後放得大——8 秒內傷害 +30%。（效果隨魔力上限變強）
+14. 轉調 [se_shift]: 改寫「a」「o」頻，把魔力帶動的元素換來換去：焰、霜、雷輪流落在準心處。
+15. 定頻 [se_lock]: 改寫「r」「e」「l」「y」頻：八道音波必定追著目標，無視方向和障礙。
+16. 覺醒・定頻 [se_lock_aw]: （二轉・覺醒）改寫「r」「e」「l」「y」頻：八道音波必定追著目標，無視方向和障礙。威力 ×3.8；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。

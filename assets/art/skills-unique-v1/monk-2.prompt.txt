@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 武術家 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 掃堂棍 [sm_sweep]: 貼地一掃：前方的敵人被絆倒（暈眩 1 秒）。
+2. 金鐘罩 [m_iron]: 運氣成罩：1.5 秒內不受傷。
+3. 旋風拳 [m_storm]: 拳風捲成旋風，4 秒內一直打周圍。
+4. 百步神拳 [m_final]: 隔著百步的一拳：一道拳勁穿過一整排。
+5. 猛虎硬爬山 [fs_tiger]: 踏步出拳，一路把敵人撞飛。
+6. 千手 [fs_thousand]: 一瞬間出了上千拳：周圍的敵人被打八下。
+7. 天地一拳 [fs_heaven]: 把全身的力氣收進一拳，打在眼前的地上。
+8. 覺醒・天地一拳 [fs_heaven_aw]: （二轉・覺醒）把全身的力氣收進一拳，打在眼前的地上。威力 ×1.7；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+9. 長棍突 [sm_pole]: 長棍往前一突，打穿一排。
+10. 龍捲棍 [sm_dragon]: 棍子轉成龍捲，4 秒內一直打周圍。
+11. 劈山棍 [sm_mountain]: 躍起，長棍從天上劈下來。
+12. 覺醒・劈山棍 [sm_mountain_aw]: （二轉・覺醒）躍起，長棍從天上劈下來。威力 ×3.4；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+13. 鐵骨功 [in_iron]: 把魔力質注進骨頭：10 秒內受到的傷害 −35%、傷害 +10%。
+14. 內勁爆發 [in_burst]: 把積在體內的魔力一口氣爆開：周圍的敵人被震退、暈眩，隔一下再爆第二波。
+15. 覺醒・內勁爆發 [in_burst_aw]: （二轉・覺醒）把積在體內的魔力一口氣爆開：周圍的敵人被震退、暈眩，隔一下再爆第二波。威力 ×3.6；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+16. 百裂拳・極 [sp2_monk_0]: （二轉・武神）一口氣打出十拳，在敵人之間穿梭。

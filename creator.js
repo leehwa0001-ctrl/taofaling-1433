@@ -80,7 +80,7 @@
     h.innerHTML = '<div class="creator"><div class="cr-prev"><canvas id="cr-cv" width="360" height="166"></canvas><p class="note"><b>' + esc(st.name) + '</b>・' + esc(R.RACES[st.race].name) + '</p>'
       + '<p class="note">登記：<b>' + esc(R.regName(st.cls, st.weapon)) + '</b>　公會分類：' + esc(g0.group) + '（' + esc(d0.name) + '）<br>生命 ' + d0.hp + '・魔力 ' + d0.mp + '・' + esc(d0.desc) + '<br><span style="color:var(--gold)">轉職：' + esc(R.ADV[st.cls].map(a => a.name).join('／')) + '</span></p></div>'
       + '<div class="cr-opts"><div class="reg-groups">'
-      + R.REG.map(g => { const d = R.CLASSES[g.cls]; return '<div class="reg-group" style="--c:' + d.color + '"><h4>' + esc(g.group) + '<small>' + esc(d.name) + '</small></h4><div class="reg-list">'
+      + R.REG.map(g => { const d = R.CLASSES[g.cls]; return '<div class="reg-group" style="--c:' + d.color + '"><h4>' + (R.classEmblemHTML ? R.classEmblemHTML(g.cls) : '') + esc(g.group) + '<small>' + esc(d.name) + '</small></h4><div class="reg-list">'
         + g.list.map(([w, line]) => '<button type="button" class="reg-card' + (st.cls === g.cls && st.weapon === w ? ' sel' : '') + '" data-cls="' + g.cls + '" data-w="' + w + '"><b>' + esc(R.regName(g.cls, w)) + '</b><span>' + esc(line) + '</span></button>').join('') + '</div></div>'; }).join('')
       + '</div></div></div><div class="row"><button type="button" class="btn" id="cr-back">回上一步</button><button type="button" class="btn pri" id="cr-go">登記完成，走出公會</button></div>';
     preview($('cr-cv'));

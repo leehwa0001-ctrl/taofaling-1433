@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 弓箭手 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 獵鷹 [a_hawk2]: 放出獵鷹：8 秒內不停俯衝，啄附近的敵人。
+2. 天穹箭雨 [a_skyrain]: 朝天空連射，八波箭雨落在準心附近一大片。
+3. 鉤索 [a_grapple]: 射出鉤索，把自己拉到準心方向的敵人身邊，順勢一腳踢暈。
+4. 滿月 [a_fullmoon]: 原地轉一圈，往四面八方射出十六支箭。
+5. 裂空 [ar_rift]: 魔箭撕開空氣，射穿直線上的敵人：打中的 4 秒內受到的傷害 +30%。
+6. 追星 [ar_seeker]: 射出五支會一直追著敵人的魔箭。
+7. 星河 [ar_galaxy]: 射向天空的魔箭化成星河，4 秒內不停落在附近的敵人身上。
+8. 覺醒・星河 [ar_galaxy_aw]: （二轉・覺醒）射向天空的魔箭化成星河，4 秒內不停落在附近的敵人身上。威力 ×1.5；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+9. 疾走 [ra_sprint]: 6 秒內移動 +35%，翻滾馬上可以再用。
+10. 爆裂陷阱 [ra_blast]: 在準心附近布下四個重型捕獸夾。
+11. 狩獵時刻 [ra_hunt]: 標記準心附近所有的獵物（受到的傷害 +30%），8 秒內暴擊率 +30%、移動 +15%。
+12. 覺醒・狩獵時刻 [ra_hunt_aw]: （二轉・覺醒）標記準心附近所有的獵物（受到的傷害 +30%），8 秒內暴擊率 +30%、移動 +15%。威力 ×1.5；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+13. 破魔結界陣 [hm_ring]: 破魔矢插在身邊圍成結界 6 秒（跟著你走）：靠近的遺跡生物受傷、變慢。
+14. 破魔矢雨 [hm_rain]: 破魔矢從天而降，在準心處落下四波。
+15. 破魔・千本 [hm_thousand]: 九支破魔矢扇形齊射，射穿直線上的一切。
+16. 覺醒・破魔・千本 [hm_thousand_aw]: （二轉・覺醒）九支破魔矢扇形齊射，射穿直線上的一切。威力 ×3.4；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。

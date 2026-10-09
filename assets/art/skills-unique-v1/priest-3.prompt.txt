@@ -1,0 +1,18 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 牧師 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 1 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 覺醒・結界柱 [sh_pillars_aw]: （二轉・覺醒）在準心處立起結界柱 12 秒：範圍裡的遺跡生物持續受傷、變慢。威力 ×1.7；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+2. 復活 [bi_revive]: 倒下的隊友立刻站起來（50% 生命、一層護盾），大家再回一點血。自己一個人的時候：20 秒內倒下會原地站起來一次。
+3. 聖光普照 [sp2_priest_0]: （二轉・聖者）放出一大圈聖光：周圍 7 公尺的敵人重傷、暈眩 0.8 秒；你和隊友回 20% 生命。
+4. 神蹟 [sp2_priest_1]: （二轉・聖者）你和隊友回 50% 生命，再多一層厚護盾。
+5. 天譴 [sp2_priest_2]: （二轉・聖者）準心處落下一道天光：重傷、暈眩。
+6. 大天使之翼 [a2_priest_bishop_0]: （二轉・覺醒・主教）你和隊友回 35% 生命、多一層護盾；周圍的敵人被聖光震暈。
+7. 光柱之刑 [a2_priest_bishop_1]: （二轉・覺醒・主教）5 秒內光柱一道一道落在附近的敵人身上。
+8. 大地之怒 [a2_priest_druid_0]: （二轉・覺醒・德魯伊）藤蔓從腳下一路往前竄出，纏住、打暈路上的敵人。
+9. 生命綻放 [a2_priest_druid_1]: （二轉・覺醒・德魯伊）你和隊友回 30% 生命；10 秒內每秒再回 2%。
+10. 八方結界 [a2_priest_shinkan_0]: （二轉・覺醒・神官）張開 5 秒的結界擋下投射物，同時把周圍的遺跡生物彈開。
+11. 大祓・極 [a2_priest_shinkan_1]: （二轉・覺醒・神官）以你為中心祓兩次：七公尺內的遺跡生物重傷、暈眩。
+12. 聖域降臨 [ult:priest]: 牧師的大招：天上降下光柱，你和隊友回滿｜20 秒內倒下會原地站起來一次
+13. 大聖域 [ultpath:priest:bishop]: 再展開一片更大的聖域（9 公尺、12 秒）；你和隊友多一層 30% 生命的護盾。
+14. 萬木回春 [ultpath:priest:druid]: 藤蔓纏住 8 公尺內的敵人 3 秒；12 秒內每秒回 3% 生命。
+15. 結界降臨 [ultpath:priest:shinkan]: 張開 6 秒的結界：擋下所有投射物，靠近的遺跡生物打你 −40%；範圍內的敵人變慢。

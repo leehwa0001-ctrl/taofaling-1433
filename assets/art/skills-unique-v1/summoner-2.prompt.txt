@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 召喚師 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 共感 [sn_link]: 和召喚物共享感官：10 秒內傷害 +20%、每秒回復 1.5% 生命。
+2. 召喚・石巨人 [sn_titan]: 捏出一尊比巨像更大的石巨人，14 秒。
+3. 召喚・軍勢 [sn_legion]: 一口氣捏出五隻泥狼組成的軍勢。
+4. 頭狼 [bl_alpha]: 捏出一隻特別大的頭狼，16 秒。
+5. 奔騰 [bl_stampede]: 一群泥做的野獸往前狂奔，撞翻一路的敵人。
+6. 野性 [bl_feral]: 和獸群一起野起來：10 秒內傷害 +20%、移動 +15%、吸血系數 +40。
+7. 百獸夜行 [bl_zoo]: 六隻土狼一次放出去。
+8. 覺醒・百獸夜行 [bl_zoo_aw]: （二轉・覺醒）六隻土狼一次放出去。威力 ×1.5；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+9. 哀嚎 [md_wail]: 怨靈一起哀嚎：周圍的敵人嚇得愣住。
+10. 憑依 [md_possess]: 讓怨靈附在準心附近的敵人身上：8 秒內變慢、受到的傷害 +30%。
+11. 魂火 [md_soulfire]: 五團魂火追著敵人燒過去。
+12. 鎮魂 [md_requiem]: 把附近的魂一口氣收回來：重傷敵人，吸血系數 +1200。
+13. 覺醒・鎮魂 [md_requiem_aw]: （二轉・覺醒）把附近的魂一口氣收回來：重傷敵人，吸血系數 +1200。威力 ×6；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+14. 泥偶哨兵 [tm_sentry]: 在準心處捏一尊遺跡生物模樣的泥偶，10 秒內對靠近的敵人吐泥彈。
+15. 趕獸 [tm_herd]: 吹一聲長長的口哨，把一群遺跡生物趕到準心處。
+16. 群主 [tm_king]: 馴服整群：捏出四隻這一層的遺跡生物，15 秒。

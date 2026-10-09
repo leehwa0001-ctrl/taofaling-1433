@@ -110,7 +110,7 @@
       + partyBox()
       + '<h3>武器登記</h3><p class="note">勇者證上登記的主要武器，可以隨時改；公會照武器的類別派委託。每一類的等級分開算；練到 ' + R.PROMOTE_LV + ' 級、交一顆魔力核心，就能轉職（三條路選一條，之後再交一顆可以重選）。</p><div class="cls-grid">'
       + R.CLASS_IDS.map(c => { const d = R.CLASSES[c], st = S.classes[c], adv = st.adv ? R.ADV[c].find(a => a.id === st.adv) : null, cur = S.cls === c;
-        return '<div class="cls-row' + (cur ? ' cur' : '') + '" style="--c:' + d.color + '"><b>' + esc(R.regGroup(c).group) + '</b><small>' + esc(d.name) + (adv ? '→' + esc(adv.name) : '') + '・Lv ' + st.lv + '</small>'
+        return '<div class="cls-row' + (cur ? ' cur' : '') + '" style="--c:' + d.color + '">' + (R.classEmblemHTML ? R.classEmblemHTML(c) : '') + '<b>' + esc(R.regGroup(c).group) + '</b><small>' + esc(d.name) + (adv ? '→' + esc(adv.name) : '') + '・Lv ' + st.lv + '</small>'
           + (cur ? '<span class="tag">現在登記的</span>' : '<button type="button" class="mini" data-cls="' + c + '">改登記這一類</button>')
           + (st.lv >= R.PROMOTE_LV ? '<button type="button" class="mini gold" data-promo="' + c + '">' + (adv ? '重選轉職' : '轉職') + '</button>' : '') + '</div>'; }).join('') + '</div>'
       + ((S.cards || []).length ? '<h3>撿到的勇者證</h3><p class="note">在遺跡裡偷襲你的人留下的勇者證。交給公會：註銷名單上的冒用證件有獎金。</p><ul class="loot">' + S.cards.map(c => '<li>' + esc(c.no) + '　' + esc(c.name) + (c.revoked ? '　<b style="color:#E04A3A">註銷名單上的號碼</b>' : '') + '</li>').join('') + '</ul><button type="button" class="btn pri" data-cards="1">全部交給公會</button>' : '')

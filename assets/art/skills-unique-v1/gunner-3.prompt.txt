@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 槍手 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 覺醒・地毯轟炸 [bo_carpet_aw]: （二轉・覺醒）一整排爆裂核心沿著準心方向接連引爆（佩特拉會注意到）。威力 ×2；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+2. 千發彈雨 [sp2_gunner_0]: （二轉・槍聖）把彈匣裡的子彈一口氣潑出去：扇形二十發。
+3. 處刑射擊 [sp2_gunner_1]: （二轉・槍聖）瞄很久的一槍：一直線穿過去，威力極大。
+4. 彈藥無限 [sp2_gunner_2]: （二轉・槍聖）8 秒內傷害 +20%、移動 +10%。
+5. 斷罪之瞳 [a2_gunner_sniper_0]: （二轉・覺醒・狙擊手）架好槍瞄 0.6 秒：一直線 24 公尺，必定暴擊。
+6. 彈道預判 [a2_gunner_sniper_1]: （二轉・覺醒・狙擊手）連開三槍，每一發穿過兩隻敵人，打中的愣一下。
+7. 三相魔導彈 [a2_gunner_magigun_0]: （二轉・覺醒・魔導槍手）火、冰、雷三發並排射出，各帶自己的元素，各穿過一隻。
+8. 魔導過載 [a2_gunner_magigun_1]: （二轉・覺醒・魔導槍手）槍口灌滿魔力：射出 2.2 秒的粗光束，跟著準心轉，打到的變慢。
+9. 連環爆破 [a2_gunner_bomber_0]: （二轉・覺醒・爆破手）往前埋一串爆裂核心，一個接一個炸開。
+10. 大爆破 [a2_gunner_bomber_1]: （二轉・覺醒・爆破手）把最大的那顆爆裂核心丟到準心處：1 秒後大爆炸（佩特拉的注意 +6）。
+11. 調校 [cr_tune]: 把槍和腳步都調順：8 秒內移動 +15%、傷害 +15%。楚璐教的。
+12. 穿甲彈 [cr_pierce]: 換上刻了咒文的穿甲彈：一發穿過一整排敵人。楚璐教的。
+13. 油彈 [cr_oil]: 把一罐機油綁上信管丟出去：落點炸開、燒起來。楚璐教的。
+14. 彈幕風暴 [ult:gunner]: 槍手的大招：三秒內朝準心方向扇形高速掃射｜整整 3 秒不會受傷；施放時裝滿彈匣，掃射結束後 5 秒射速 +25%
+15. 穿心風暴 [ultpath:gunner:sniper]: 掃射結束時朝準心補一發貫穿一切的狙擊彈（傷害 ×8、必定暴擊）。
+16. 元素風暴 [ultpath:gunner:magigun]: 掃射時前方的敵人輪流被點燃、冰住減速、電到麻痺。

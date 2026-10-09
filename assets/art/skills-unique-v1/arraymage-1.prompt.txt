@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 術陣師 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 法陣・爆 [ry_burst]: 在準心處畫一個閉環的法陣，0.6 秒後爆開。
+2. 法陣・縛 [ry_bind]: 在準心處畫一個陷阱陣：踩到的敵人被定住、受傷。
+3. 法陣・癒 [ry_heal]: 腳下畫一個癒陣 7 秒：站在裡面回復生命，敵人會被灼傷。
+4. 法陣・焰 [ry_fire]: 準心處畫一個焰陣，6 秒內一直燒踩在上面的敵人。
+5. 封印陣 [ry_seal]: 封住準心附近的敵人：暈眩、變慢，受到的傷害變多。
+6. 傳送陣 [ry_gate]: 畫一個傳送陣，一步移到準心處。
+7. 結界燈 [ry_lamp]: 立一座結界燈 10 秒，朝敵人放出陣光。
+8. 雷陣 [ry_storm]: 6 秒內雷陣一直劈附近的敵人。
+9. 大法陣 [ry_great]: 準心處畫一個巨大的法陣，0.9 秒後整片爆開。
+10. 大法陣・極 [ga_grand]: 準心處畫一個巨大的閉環，一秒後爆開。
+11. 守護陣 [wd_ward]: 腳下立一座守護陣的燈 10 秒，朝敵人放光；再加一層護盾。
+12. 守護結界 [wd_barrier]: 張開結界 5 秒：擋下投射物、受到的傷害 −30%。
+13. 抑制圈 [ed_loop]: 準心處放一個長時間的抑制圈：6 秒內把敵人往中間拉、一直傷害。
+14. 反射陣 [ry_mirror]: 腳下畫反射陣：5 秒內擋下投射物、受到的傷害 −20%。
+15. 重力陣 [ry_gravity]: 準心處的重力陣把敵人吸到中間 3 秒。
+16. 星陣 [ry_star]: 五角星的五個頂點依序落下光柱。

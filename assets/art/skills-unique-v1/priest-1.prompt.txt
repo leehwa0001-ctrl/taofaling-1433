@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 牧師 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 治癒之光 [heal]: 回復 35% 生命，並得到 4 秒護盾。
+2. 聖域 [sanctuary]: 展開 6 秒聖域：每秒回復 5% 生命並灼傷敵人。
+3. 蔓生 [wild]: 藤蔓纏住周圍敵人 2.5 秒，並持續回復生命。
+4. 結界 [kekkai]: 張開 5 秒的結界：擋下投射物，範圍內的遺跡生物變弱。
+5. 聖擊 [smite]: 在準心處落下一道光柱：0.35 秒後傷害並暈眩範圍內的敵人，回復 5% 生命。
+6. 守護之印 [ward]: 給自己和身邊的隊友一層護盾（6 秒），並解除變慢、看不清楚。
+7. 光彈 [p_light]: 祈禱，射出一發會追蹤的光彈。
+8. 祝福 [p_bless]: 8 秒內傷害 +15%，每秒回復 1.5% 生命。
+9. 群體治療 [p_prayer]: 你和身邊的隊友回復 30% 生命。
+10. 奇蹟 [bi_miracle]: 你回復 60% 生命、隊友回復 50%，解除不良狀態。
+11. 聖槍 [bi_lance]: 祈禱化成一支光之槍，貫穿一直線。
+12. 荊棘 [dr_thorns]: 腳下長出荊棘：周圍的敵人受傷、被纏住。
+13. 花開 [dr_bloom]: 腳下開出一片花：8 秒內站在裡面回復生命，灼傷進來的敵人。
+14. 祓 [sh_harae]: 揮動御幣祓除：周圍的遺跡生物受傷、被推開。
+15. 大結界 [sh_barrier]: 張開 8 秒的大結界：擋下投射物，範圍內的遺跡生物變弱。
+16. 光之鎖鏈 [p_chain]: 祈禱化成光的鎖鏈，在四隻敵人之間跳躍，每一隻都暈眩一下。

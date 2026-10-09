@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 附魔師 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 附魔・焰 [en_flame]: 把焰的咒文刻進武器：8 秒內打中的敵人燃燒、傷害 +10%。
+2. 刻印斬 [en_rune]: 一刀斬出刻著咒文的直線。
+3. 附魔・霜 [en_frost]: 把霜的咒文刻進武器：8 秒內打中的敵人變慢、受到的傷害 −10%。
+4. 破魔 [en_break]: 撕開準心附近敵人的魔力罩：8 秒內受到的傷害 +30%。
+5. 附魔・雷 [en_shock]: 把雷的咒文刻進武器：8 秒內打中的時候常常電到旁邊的敵人、暴擊率 +8%。
+6. 附魔護甲 [en_aegis]: 在護甲上刻一層咒文：獲得可吸收相當於最大生命 30% 傷害的護盾。
+7. 魔力爆發 [en_burst]: 武器裡的咒文一口氣爆開，震飛周圍的敵人。
+8. 三重附魔 [rs_triple]: 焰、霜、雷一次刻上去 10 秒。
+9. 深刻 [rs_engrave]: 把咒文刻得更深：12 秒內暴擊率 +12%、傷害 +12%。
+10. 劍氣 [sb_wave]: 把附魔的斬擊打出去，穿過一整排敵人。
+11. 劍雨 [sb_storm]: 附魔的劍氣從天上落下來，準心處連下四波。
+12. 撕裂 [et_tear]: 一刀撕開魔力罩：直線、必定暴擊。
+13. 找破綻 [et_flaw]: 看穿魔力罩的破綻：8 秒內暴擊率 +25%。
+14. 附魔・風 [en_gale]: 把風的咒文刻進鞋底和刀身：8 秒內移動 +20%、暴擊率 +10%。
+15. 十字刻印 [en_cross]: 刻出一個發光的十字，兩刀交錯斬出。
+16. 吸魔刃 [en_drainblade]: 在刀刃刻上吸魔的咒文：8 秒內吸血系數 +80。

@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 附魔師 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 傑作 [en_masterwork]: 一生一次的刻印：8 秒內焰、霜、雷一起附上，傷害 +35%。
+2. 刻印甲 [rs_armor]: 把整套護甲刻滿咒文：得到吸收 40% 生命的護盾。
+3. 爆紋 [rs_explode]: 讓刻在地上的紋一起炸開：周圍重傷、燃燒。
+4. 永刻 [rs_eternal]: 刻得最深的一次：15 秒內焰與霜一起附上，傷害 +25%、暴擊率 +10%。
+5. 覺醒・永刻 [rs_eternal_aw]: （二轉・覺醒）刻得最深的一次：15 秒內焰與霜一起附上，傷害 +25%、暴擊率 +10%。威力 ×1.5；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+6. 魔劍突 [sb_dash]: 帶著附魔的劍衝出去，撞到的敵人受傷。
+7. 魔劍十字 [sb_cross]: 附魔的劍交錯斬出兩道劍光。
+8. 劍舞 [sb_blade]: 在敵人之間閃五下，每一下都帶著附魔。
+9. 魔劍・終 [sb_final]: 把所有咒文灌進一劍：蓄力半秒，斬出一道長長的劍光。
+10. 覺醒・魔劍・終 [sb_final_aw]: （二轉・覺醒）把所有咒文灌進一劍：蓄力半秒，斬出一道長長的劍光。威力 ×1.5；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+11. 穿魔 [et_pierce]: 一道穿過魔力罩的刺擊打出去，穿五隻。
+12. 博弈 [et_gamble]: 賭一把：8 秒內暴擊率 +40%，但受到的傷害 +20%。
+13. 破盾 [et_break]: 把準心附近敵人的魔力罩整片撕掉：10 秒內受到的傷害 +30%。
+14. 最後的刻印 [et_last]: 三刀交錯，刀刀破罩。
+15. 恩特安刻紋 [et_mark]: 把恩特安的刻紋刻上武器：10 秒內傷害 +20%，再多無視 30% 的護甲。
+16. 霜之刻紋 [et_frostrune]: 刻上霜的刻紋：10 秒內打中的敵人變慢，暴擊率 +10%。

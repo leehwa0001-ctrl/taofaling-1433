@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 武術家 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 吐納 [in_breath]: 吐納遺跡裡飄散的魔力質：回復 30% 魔力、10% 生命。
+2. 崩拳 [in_palm]: 一拳把氣勁打成一直線，震退、震暈前方的敵人。
+3. 連環拳 [m_flurry]: 一口氣往前打出五拳。
+4. 縮地 [m_step]: 一步跨到 5 公尺外，順手打倒擋路的敵人（跨的時候不會受傷）。
+5. 推掌 [m_palm]: 一掌推出去，直線上的敵人被震飛。
+6. 運氣 [m_focus]: 把氣運到四肢：8 秒內傷害 +15%、移動 +10%。
+7. 化勁 [m_counter]: 架勢 0.8 秒：卸掉打過來的力道並反擊；之後 4 秒傷害 +20%。
+8. 氣功波 [m_wave]: 把氣凝成一團打出去，穿過兩隻敵人。
+9. 震腳 [m_stomp]: 一腳踏地：周圍的敵人震暈 1 秒。
+10. 調息 [m_breathe]: 調勻呼吸：回復 15% 生命、25% 魔力。
+11. 流星腳 [m_meteor]: 躍起一腳踢到準心處：落地的地方周圍敵人重傷、暈眩。
+12. 百裂拳 [fs_hundred]: 一口氣打出八拳。
+13. 昇龍拳 [fs_rising]: 一記上勾拳把身邊的敵人打飛、暈眩。
+14. 鐵布衫 [fs_iron]: 繃緊全身：6 秒內受到的傷害 −40%、傷害 +10%。
+15. 風車棍 [sm_wheel]: 長棍掄四圈，掃開身邊所有敵人。
+16. 撐竿跳 [sm_vault]: 長棍一撐跳到準心處，落地掃一圈。

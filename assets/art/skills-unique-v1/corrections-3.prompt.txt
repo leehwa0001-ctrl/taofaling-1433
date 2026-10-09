@@ -1,0 +1,18 @@
+STYLE LOCK to provided reference: clean cel-shaded graphic skill symbols with quiet dark backgrounds, smooth broad highlights and flat color. No detailed human faces, no muscular comic characters, no crowds or cinematic scenes. One dominant object/limb/featureless silhouette plus at most one clear action effect. Every cell needs a different dominant silhouette and composition, not recolored repeats. Translate skill descriptions into distinct visual metaphors. Awakened skills share source identity but substantially expand silhouette/geometry. Output a SQUARE image with exactly 4 equal square columns and 4 equal square rows covering the ENTIRE canvas. No outer margin or bottom strip. The reference is STYLE ONLY, do NOT inherit its wide aspect ratio or 8x5 layout.
+Exactly 4 by 4 atlas. Follow specific silhouettes, no generic substitutes. No lettering.
+1. [ai_angel_aw] Front-facing golden singing angel MASK with eyes closed and open mouth; three pairs of long white wings fan symmetrically from mask sides, musical ribbon exits mouth. No full-body woman.
+2. [dm_finale_aw] Top-down huge red bass drum struck dead-center by two crossed mallets; drumhead ruptures into four broad outward sound wedges. No enemies, no side-view drum.
+3. [bl_zoo_aw] Six earthen wolf heads arranged as a radial six-point hunting formation viewed from above, long paws pointing outward. Same mud-wolf identity, absolutely not another pack charging at camera.
+4. [sn_legion] Five distinct small mud-wolf silhouettes stand in a rigid horizontal V formation beneath a large angular summoning banner. No forward-running wolf faces.
+5. [bl_stampede] Close crop of three heavy cloven mud BEAST HOOVES galloping diagonally across frame, dust shown as one broad ochre streak. No wolf head.
+6. [md_requiem_aw] A huge purple spectral bell upside down pulling five white souls INTO its wide mouth, visibly curved inward flow. No person wrapped in ghosts.
+7. [sm_mountain_aw] A giant golden staff vertically splits a two-peaked blue mountain into two clean halves, viewpoint straight on, staff fills entire height. No leaping person.
+8. [in_burst_aw] Top-down tiny martial artist at center of two INTERSECTING diamond-shaped orange force fronts, one already expanded, second compact near center. No front-facing aura body.
+9. [wd_sanctum_aw] Four tall green stained-glass shield panels fold into a square sanctuary around a gold cross, large open corners and perspective depth. No round floor ring with wings.
+10. [ga_final_aw] Top-down golden gigantic eight-point polygonal array BREAKING into four luminous quadrants, vertical rays only at corners. No concentric circles or stacked platforms.
+11. [fs_heaven_aw] Extreme close-up huge red-gold fist punching downward through TWO floating stone layers, a vertical gap separating the split slabs. No ground explosion cone.
+12. [se_lock_aw] Purple tuning fork centered upright, eight thick sound paths bend into the fork opening from all sides, tiny locked target at fork center. No musical note arrows over head.
+13. [m_iron] A solid brass temple BELL enclosing a tiny calm seated silhouette visible through its bottom opening. Bell rim and crown dominate; no transparent spherical bubble.
+14. [bl_feral] A large green beast PAW gripping a broken restraint chain, three long claws extended, no running wolves.
+15. [md_wail] A single spectral open MOUTH with long purple wave bands projecting outward, two tiny ghost eyes integrated above mouth. No group of floating ghosts.
+16. [tm_king] A clay crown inset with four different creature silhouettes as chunky reliefs: boar, crab, bird and lizard; earthy gold, no pack of wolves.

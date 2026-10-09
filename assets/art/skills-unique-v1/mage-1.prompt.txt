@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 術士 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 火球 [fireball]: 射出會爆炸的火球，燒到的敵人持續燃燒。
+2. 隕石 [meteor]: 0.8 秒後在準心處落下隕石。
+3. 咒縛 [hex]: 詛咒準心附近的敵人：受到的傷害 +30%、移動變慢 5 秒。
+4. 式神 [shiki]: 三隻紙式神環繞你並自動攻擊 10 秒。
+5. 霜環 [frostnova]: 念出咒文，以自己為中心炸開一圈寒氣：周圍的敵人受傷、凍住 1.2 秒，之後變慢。
+6. 連鎖電擊 [chain]: 電流打向準心方向的敵人，再跳到附近最多四隻，每跳一次弱一點。
+7. 魔力飛彈 [m_bolt]: 念一句短咒，射出三發會追蹤的魔力飛彈。
+8. 冰槍 [m_lance]: 凝出一支冰槍：穿過三隻敵人，命中的敵人會短暫凍結。
+9. 火牆 [m_flamewall]: 在面前燒出一道火牆：直線上的敵人受傷並燃燒。
+10. 重力井 [m_gravity]: 在準心處開一個重力井：把周圍的敵人吸過去，持續受傷。
+11. 閃現 [m_blink]: 瞬間移動到準心方向 6 公尺，落點炸開一圈寒氣。
+12. 魔力護盾 [m_manashield]: 把魔力化成護盾：吸收最大生命 30% 的傷害。
+13. 暴風雪 [el_blizzard]: 在準心處召來 2.4 秒的暴風雪：敵人持續受傷、變慢。
+14. 煉獄 [el_inferno]: 以自己為中心燒出一片煉獄：周圍的敵人重傷並燃燒。
+15. 吸取 [hx_drain]: 從準心方向最近的敵人身上吸走生命：傷害的一半回到你身上。
+16. 疫咒 [hx_plague]: 大範圍的詛咒：8 秒內受到的傷害 +30%、變慢。

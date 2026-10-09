@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 術士 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 狼式神 [sk_wolf]: 放出狼形的紙式神：8 秒內撲咬附近的敵人。
+2. 千羽 [sk_swarm]: 十二隻紙鳥式神往四面八方飛出去，再追著敵人撞上去。
+3. 大式神 [sk_giant]: 在準心處立起一尊大式神 10 秒，一次放出三隻小式神攻擊敵人。
+4. 氣彈雨 [wx_rain]: 將魔力罩化成氣彈，連射四輪，每輪三發。
+5. 氣旋 [wx_storm]: 將魔力罩化為氣旋，持續 5 秒傷害周圍敵人。
+6. 覺醒・氣旋 [wx_storm_aw]: （二轉・覺醒）將魔力罩化為氣旋，持續 5 秒傷害周圍敵人。威力 ×1.5；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+7. 奏域 [hm_field]: （二轉・諧鳴）用共振圍出閉環：準心處展開 8 秒的奏域。可以練到 ★9，★0、★3、★6、★9 各選一種諧鳴（共鳴、鎮頻、定頻、轉調……），在技能書這張卡片最下面選。
+8. 三元素爆 [a2_mage_elementalist_0]: （二轉・覺醒・元素師）準心處火、冰、雷依序炸開：燃燒、變慢、暈眩。
+9. 熔岩之河 [a2_mage_elementalist_1]: （二轉・覺醒・元素師）地面裂開，一道熔岩往前竄出去，路上的敵人燃燒。
+10. 萬咒 [a2_mage_hexer_0]: （二轉・覺醒・咒術師）準心一大片的敵人被詛咒 8 秒（受到的傷害 +30%）、變慢。
+11. 咒殺 [a2_mage_hexer_1]: （二轉・覺醒・咒術師）對準一隻敵人吸出牠的生命：重傷，吸血系數 +800。
+12. 式神・雷鳥 [a2_mage_shikigami_0]: （二轉・覺醒・式神使）連放六張雷鳥式神，打中的麻一下。
+13. 式神・守門 [a2_mage_shikigami_1]: （二轉・覺醒・式神使）在準心處立一尊守門的式神 12 秒，自動攻擊附近的敵人。
+14. 氣龍 [a2_mage_waixiu_0]: （二轉・覺醒・外修者）把魔力罩擰成一條氣龍往前竄，一路撞飛敵人。
+15. 金剛氣罩 [a2_mage_waixiu_1]: （二轉・覺醒・外修者）獲得可吸收相當於最大生命 40% 傷害的護盾；6 秒內受到的傷害 −30%。
+16. 書籤 [rn_bookmark]: 在魔導書夾上書籤，咒文念得又快又準：8 秒內傷害 +15%、暴擊率 +15%。雷諾教的。

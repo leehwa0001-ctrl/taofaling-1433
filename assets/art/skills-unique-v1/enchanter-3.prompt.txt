@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 附魔師 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 雷之刻紋 [et_stormrune]: 刻上雷的刻紋：10 秒內打中的時候，三成五會電到旁邊的一隻；傷害 +10%。
+2. 迴響刻印 [et_echo]: 讓刻紋跟著刀身震：10 秒內普攻有 35% 多打一下（四成傷害）。
+3. 恩特安的傑作 [et_master]: 恩特安的傑作：焰、霜、雷一次刻上去 12 秒；傷害 +35%、暴擊率 +25%，多無視 40% 的護甲。
+4. 覺醒・傑作 [et_master_aw]: （二轉・覺醒）恩特安的傑作：焰、霜、雷一次刻上去 12 秒；傷害 +35%、暴擊率 +25%，多無視 40% 的護甲。威力 ×1.5；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+5. 萬物附魔 [sp2_enchanter_0]: （二轉・附魔宗師）12 秒內傷害 +25%、暴擊率 +10%。
+6. 符文爆裂 [sp2_enchanter_1]: （二轉・附魔宗師）身上的符文一起爆開：周圍的敵人重傷、燃燒。
+7. 魔劍解放 [sp2_enchanter_2]: （二轉・附魔宗師）一大片的魔力斬擊。
+8. 符文地雷 [a2_enchanter_runesmith_0]: （二轉・覺醒・刻印師）在準心附近刻下三個符文地雷，踩到就炸。
+9. 千刻 [a2_enchanter_runesmith_1]: （二轉・覺醒・刻印師）把刻好的符文刀片一波一波射出去，打中的燃燒。
+10. 魔劍・天穿 [a2_enchanter_spellblade_0]: （二轉・覺醒・魔劍士）三道劍氣並排射出，各穿過五隻。
+11. 魔劍風暴 [a2_enchanter_spellblade_1]: （二轉・覺醒・魔劍士）附魔的劍氣在身邊旋轉 5 秒。
+12. 破界 [a2_enchanter_entian_0]: （二轉・覺醒・恩特安的傳人）蓄力 0.5 秒，一刀撕開魔力罩：12 公尺直線，必定暴擊。
+13. 看穿 [a2_enchanter_entian_1]: （二轉・覺醒・恩特安的傳人）看穿準心附近敵人的破綻：8 秒內牠們受到的傷害 +30%；你的暴擊率 +30%。
+14. 魔力灌注 [en_infuse]: 開關式：把魔力直接灌進武器。開著的時候，普攻每一下多打一份魔法傷害（那一下的 40%，不看護甲）；代價是魔力一直流掉（每秒 3 點＋魔力上限的 2%），見底就斷。再按一次關掉。
+15. 萬象附魔 [ult:enchanter]: 附魔師的大招：焰、霜、雷一起灌進武器，周圍一圈魔力爆發｜附魔持續時間延長 6 秒（共 18 秒）
+16. 萬象刻印 [ultpath:enchanter:runesmith]: 再刻上毒和金：附魔期間普攻打中的敵人會中毒、破甲。

@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 刀客 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 妖氣 [yt_mad]: 釋放妖刀吸收的魔力質：6 秒內傷害 +35%，但受到的傷害 +15%。
+2. 十字斬 [b_cross]: 交叉斬出兩刀，形成一個十字。
+3. 亂舞 [b_dance]: 在附近的敵人之間連閃四次，一閃一刀（閃的時候不會受傷）。
+4. 月落 [b_moonfall]: 躍上半空，像月亮落下一樣斬向準心處。
+5. 虛空斬 [b_void]: 收刀靜止 0.7 秒，斬開前方 12 公尺的空間，必定暴擊。
+6. 風刃 [ks_wind]: 三道刀風扇形飛出去，每一道穿過三隻敵人。
+7. 鏡花水月 [ks_moon]: 身影像水裡的月亮一樣抓不到：在附近的敵人之間閃五次，一閃一刀。
+8. 無想 [ks_mushin]: 凝神蓄勢 0.9 秒，斬出長達 14 公尺的一刀，必定暴擊。
+9. 覺醒・無想 [ks_mushin_aw]: （二轉・覺醒）凝神蓄勢 0.9 秒，斬出長達 14 公尺的一刀，必定暴擊。威力 ×2.2；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+10. 煙玉 [sd_smoke]: 丟出煙玉：範圍內的敵人變慢，你隱身 3 秒。
+11. 飛刀扇 [sd_knives]: 一揮手扇形擲出七把飛刀。
+12. 暗殺 [sd_assassinate]: 從影子裡出現在三隻敵人身邊，一刀一隻，必定暴擊。
+13. 覺醒・暗殺 [sd_assassinate_aw]: （二轉・覺醒）從影子裡出現在三隻��人身邊，一刀一隻，必定暴擊。威力 ×2；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+14. 飢渴 [yt_hunger]: 妖刀持續吸取生命 5 秒：身邊的敵人持續受傷，吸血系數 +300。
+15. 妖斬・四方 [yt_four]: 妖刀往前後左右同時斬出四刀。
+16. 蝕月 [yt_eclipse]: 妖刀的魔力質吞掉四周的光：周圍的敵人重傷並被詛咒；6 秒內傷害 +30%、吸血系數 +100。

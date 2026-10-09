@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 騎士 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 盾牌衝鋒 [charge]: 往前衝鋒，撞到的敵人被擊退並暈眩。
+2. 聖光衝鋒 [holycharge]: 衝鋒並放出聖光震波，回復 15% 生命。
+3. 堡壘 [fortress]: 5 秒內受到的傷害 −70%，並反彈 30%。
+4. 龍躍 [jump]: 跳起並落在準心處，震飛周圍敵人。
+5. 盾擊 [shieldbash]: 用盾牌撞向前方：敵人受傷、暈眩 1.4 秒並被撞退。
+6. 挺身護衛 [guard]: 5 秒內受到的傷害 −40%，周圍的敵人改打你；身邊隊友受到的傷害 −30%。
+7. 突刺 [k_thrust]: 往前一記長長的突刺。
+8. 橫掃 [k_sweep]: 用盾和劍橫掃一大片，把敵人推開。
+9. 誓約 [k_vow]: 回復 25% 生命，並獲得可吸收相當於最大生命 25% 傷害的護盾。
+10. 神盾 [tp_aegis]: 獲得可吸收相當於最大生命 40% 傷害的神盾。
+11. 聖戰 [tp_crusade]: 高舉長劍：周圍的敵人暈眩，接下來 4 秒改打你。
+12. 按手禮 [pl_hands]: 你回復 40% 生命，隊友回復 30%。
+13. 審判之錘 [pl_hammer]: 在準心處落下光之錘，敵人暈眩。
+14. 擲槍 [dg_spear]: 把長槍擲出去，穿過四隻敵人（槍會自己飛回來）。
+15. 龍落 [dg_dive]: 躍上半空，砸在準心處：周圍的敵人重傷、暈眩。
+16. 擲盾 [k_throw]: 把盾扔出去再接回來，來回都會撞暈敵人。

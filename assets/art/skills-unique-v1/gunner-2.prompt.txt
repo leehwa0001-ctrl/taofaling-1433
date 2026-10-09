@@ -1,0 +1,19 @@
+Use case: stylized-concept. Asset type: production-ready RPG skill icon atlas for 槍手 class. Create ONE atlas containing EXACTLY 4 columns by 4 rows, 16 equal square cells, laid out edge-to-edge with NO gutters, margin, title, numbers, letters, labels, watermark or decorative frames. Row-major reading order. Every cell has its own dark jewel background, bold readable hand-painted 2D cel-shaded illustration, 2-3 broad clean color tones, sharp clear silhouette, limited soft lighting. Like polished classic mobile RPG ability icons, smooth and clean, NOT noisy AI fantasy textures, NO speckles, grain, tiny particles or excessive bloom. Main subject fills 75-85% of each cell but does not cross its edge. Consistent style across the whole atlas. High resolution, aim 256 pixels per tile or more.
+CRITICAL: These are different abilities, NOT variations of one generic symbol. Every listed skill MUST have an independently recognizable main illustration based on its action, weapon, body pose, summon, terrain or effect. Design each silhouette and composition differently: camera angle, action direction, impact point, object shape and number, relationship of subject to target. DO NOT recycle identical swords, orbs, shields or magic circles with only recoloring or badges. Render what the ability DOES. Repeated effect types need different scenes. Same skill's awakening (_aw) should keep the source weapon/creature identity but visibly amplify the action, silhouette and composition; do not merely change border/color. Use ability name and description for concept, never render text. Translate all Chinese briefs internally. Ignore numeric damage/cooldown statistics; focus on concrete action. Be anatomically clear with any hands or figures. No nudity/gore. CLEAN ICON COMPOSITION: one primary subject and at most one secondary effect or target. Prefer bold close-up weapon / limb / creature / symbolic object to crowded scenes. Most background must remain quiet dark flat color. NO crowds, scenery, rubble clouds, starfields, scattered shards, tiny specks, explosion confetti, radiating lines everywhere. Give every subject clear breathing room; preserve readable silhouette when reduced to 40px. For kick show a BOOT or extended LEG, not hands; healing show life regrowth or restoration, not generic lightball; summons show their actual creature. Awakened variants add a real new silhouette feature (e.g. split blade wings, expanding enclosure, multi-limb action) instead of just a new color. Fill trailing 0 unused cells with flat #171323 only.
+ORDERED CELL BRIEFS (1-based, left-to-right then next row):
+1. 定向爆破 [bo_demo]: 把爆裂核心的威力往前方集中炸出去（佩特拉會注意到）。
+2. 獨頭彈 [g_slug]: 射出一發沉重的獨頭彈：打中的敵人暈眩一下、變慢。
+3. 自動砲台 [g_turret]: 在準心處架起一座刻了索敵咒文的小砲台，8 秒內自動射擊附近的敵人。
+4. 鋼索鉤爪 [g_hook]: 射出鋼索鉤爪，把敵人拉到面前、撞暈 1 秒（領主體拉不動，改成把你拉過去）。
+5. 全彈發射 [g_allout]: 把彈匣和腰包裡的魔力鋼彈頭全部打出去，然後一瞬間換好彈匣。
+6. 標定 [sn_mark]: 用瞄準鏡標定一隻獵物：10 秒內受到的傷害 +30%；下一發必定暴擊。
+7. 貫通連射 [sn_pierce]: 每隔一下射出一發貫穿彈，連射三發。
+8. 一發入魂 [sn_one]: 屏住呼吸 1.2 秒，射出蓄力重擊（必定暴擊）。
+9. 覺醒・一發入魂 [sn_one_aw]: （二轉・覺醒）屏住呼吸 1.2 秒，射出蓄力重擊（必定暴擊）。威力 ×2；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+10. 魔導光束 [mg_beam]: 槍口接上魔導迴路，射出持續 2 秒的光束（跟著準心轉），照到的敵人燃燒。
+11. 魔導砲台 [mg_turret]: 架起魔導砲台 10 秒，連續射出魔力彈。
+12. 元素新星 [mg_tri]: 火、冰、雷三圈新星接連炸開：燃燒、變慢、暈眩。
+13. 覺醒・元素新星 [mg_tri_aw]: （二轉・覺醒）火、冰、雷三圈新星接連炸開：燃燒、變慢、暈眩。威力 ×2.6；增益的加成 ×1.5、持續時間 ×1.25（熟練度沿用原版）。
+14. 連鎖地雷 [bo_mines]: 在準心附近一次埋下五顆爆裂核心做的地雷。
+15. 火箭推進 [bo_rocket]: 背上的爆裂核心把你推出去 8 公尺，落地炸開（佩特拉會注意到）。
+16. 地毯轟炸 [bo_carpet]: 一整排爆裂核心沿著準心方向接連引爆（佩特拉會注意到）。

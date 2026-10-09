@@ -1,0 +1,18 @@
+STYLE LOCK to provided reference: clean cel-shaded graphic skill symbols with quiet dark backgrounds, smooth broad highlights and flat color. No detailed human faces, no muscular comic characters, no crowds or cinematic scenes. One dominant object/limb/featureless silhouette plus at most one clear action effect. Every cell needs a different dominant silhouette and composition, not recolored repeats. Translate skill descriptions into distinct visual metaphors. Awakened skills share source identity but substantially expand silhouette/geometry. Output a SQUARE image with exactly 4 equal square columns and 4 equal square rows covering the ENTIRE canvas. No outer margin or bottom strip. The reference is STYLE ONLY, do NOT inherit its wide aspect ratio or 8x5 layout.
+Exactly 4 by 4 atlas. Follow these specific silhouettes, no generic substitute effects. No lettering.
+1. [m_breathe] Close side profile of a calm face exhaling one curling green ribbon through pursed lips; two broad blue breath strokes entering below, no seated body.
+2. [fs_hundred] Head-on view of one large clenched fist with seven progressively smaller fists spiraling in a circular tunnel behind it; strong concentric perspective, not a side-view fist barrage.
+3. [sp2_blade_2] Silver upright katana reflected in a huge clear diamond mirror split into four symmetrical panels, restrained gold light. No meditating person.
+4. [tk_still] One katana blade lies horizontally across a perfectly still dark-blue pool with one large concentric ripple underneath and a single falling leaf. No human figure.
+5. [sp2_blade_0] Close-up of a forward planted sandal and unsheathed katana crossing from lower left to upper right, enormous narrow blue cut extends behind them. No sprinting full-body figure.
+6. [ultpath:blade:kensei] A sheathed black katana with silver hilt in left foreground, a single extremely long horizontal white-red slash divides the dark background cleanly in half. No person.
+7. [sp2_knight_2] Frontal close-up of an enormous rectangular steel tower shield smashing through a stone gate, spear tip protrudes beside shield. No side-view running knight.
+8. [ult:knight] A squat blue-steel castle bastion with three battlements and a single closed portcullis withstands two bent red incoming arrows. Castle silhouette, no full-body knight.
+9. [ultpath:knight:templar] A huge gold-steel bastion with tall central spire and two heavy square wings sends four broad shockwave slabs out across ground. Retain castle motif, different stepped silhouette.
+10. [ultpath:knight:paladin] Ivory castle gate opened in a wide arch, green restoration light flows OUT from door in three broad paths, golden cross integrated into lintel. No people.
+11. [ultpath:knight:dragoon] A red-black castle tower descends point-first inside a dragon-jaw-shaped impact flare. Tower is the main object, not a jumping knight.
+12. [holycharge] A close-up wing-shaped white-gold shield nose rushes diagonally upward, a cross-shaped healing trail behind. No humanoid body.
+13. [a2_mage_shikigami_1] A large golden origami guardian LION sitting upright between two squared gate pillars, folded-paper chest and sturdy forepaws. No humanoid origami giant.
+14. [yt_drink] Close-up katana tip dipping into a blood-red chalice, a single broad red stream winds UP the blade. No circular sword slash.
+15. [p_prayer] Three open upward palms arranged like a fan beneath one soft green restorative droplet, clean broad silhouettes; no full figures or domes.
+16. [a2_blade_shadow_1] A purple cage made of five huge shadow HANDS rising from below and clasping inward around empty black center. No person wrapped in ribbons.
