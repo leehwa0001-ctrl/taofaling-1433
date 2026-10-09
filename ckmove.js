@@ -26,6 +26,12 @@
       let best = -1, bd = 1e9; nodes.forEach((q, k) => { if (roadOf[k] !== rj) return; const dd = Math.hypot(q[0] - p[0], q[1] - p[1]); if (dd < bd) { bd = dd; best = k; } });
       if (best >= 0 && bd < 14 && !adj[i].includes(best)) { adj[i].push(best); adj[best].push(i); }
     }));
+    // 斜的、彎的路（citykit8.js 的 D.lines，車走得到的）：沿著折線每 10 公尺一個點；點落在別條路的車道裡就連到那條路最近的點
+    const segD = (px, pz, a, b) => { const dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz, t = L2 ? Math.max(0, Math.min(1, ((px - a[0]) * dx + (pz - a[1]) * dz) / L2)) : 0; return Math.hypot(px - a[0] - dx * t, pz - a[1] - dz * t); };
+    const lineD = (ln, x, z) => { let d = 1e9; for (let i = 1; i < ln.pts.length; i++) d = Math.min(d, segD(x, z, ln.pts[i - 1], ln.pts[i])); return d; };
+    const lines = (D.lines || []).filter(l => l.cars), lineOf = [];
+    lines.forEach((ln, li) => { let prev = -1; for (let i = 1; i < ln.pts.length; i++) { const a = ln.pts[i - 1], b = ln.pts[i], L = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.max(1, Math.round(L / 10)); for (let k = i === 1 ? 0 : 1; k <= n; k++) { const t = k / n; nodes.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]); adj.push([]); roadOf.push(-1); lineOf[nodes.length - 1] = li; const me = nodes.length - 1; if (prev >= 0) { adj[me].push(prev); adj[prev].push(me); } prev = me; } } });
+    nodes.forEach((pt, i) => { if (lineOf[i] == null) return; lines.forEach((ln, lj) => { if (lj === lineOf[i] || lineD(ln, pt[0], pt[1]) > ln.w / 2 + 1) return; let best = -1, bd = 1e9; nodes.forEach((q, k) => { if (lineOf[k] !== lj) return; const dd = Math.hypot(q[0] - pt[0], q[1] - pt[1]); if (dd < bd) { bd = dd; best = k; } }); if (best >= 0 && bd < 14 && !adj[i].includes(best)) { adj[i].push(best); adj[best].push(i); } }); });
     return { nodes, adj };
   };
   const nearest = (nav, x, z) => { let b = -1, bd = 1e9; nav.nodes.forEach((p, i) => { const d = (p[0] - x) ** 2 + (p[1] - z) ** 2; if (d < bd) { bd = d; b = i; } }); return b; };
@@ -73,6 +79,9 @@
   const pz0 = R.pedZone;
   R.pedZone = (x, z) => {
     const tw = W.town; if (!tw || !tw.ck) return pz0 ? pz0(x, z) : true;
+    // 斜的、彎的路：在車道上（離中心線不到路寬一半）、又不在別條路的路口 4.5 公尺內＝車道（巷子、石板路人車共用，算人走的）
+    const lines = ((tw.D && tw.D.lines) || []).filter(l => l.sw > 0 && l.cars);
+    if (lines.length && R.CK.streetDist) { const onL = lines.filter(l => R.CK.streetDist(x, z, [l])[1] < l.w / 2); if (onL.length) return lines.some(l => !onL.includes(l) && R.CK.streetDist(x, z, [l])[1] < l.w / 2 + 4.5); }
     const roads = (tw.D && tw.D.roads) || [], on = roads.filter(rd => rd.kind !== 'alley' && inR(x, z, rd.r));
     if (!on.length) return true;
     return roads.some(rd => !on.includes(rd) && rd.kind !== 'alley' && inR(x, z, rd.r, 4.5));   // 路口附近（斑馬線）
