@@ -17,7 +17,7 @@
     censer: { name: '香爐', cls: ['priest'], kind: 'magic', dmg: 9, rate: 1.9, speed: 14, range: 11, mp: 1.5, splash: 1.6, holy: 1 },
     nodachi: { name: '野太刀', cls: ['blade'], kind: 'melee', dmg: 24, rate: 1.6, range: 3.2, arc: 2.2, kb: 1.5 },
     halberd: { name: '斧槍', cls: ['knight'], kind: 'thrust', dmg: 22, rate: 1.4, range: 4, width: 1.1, kb: 2.5 },
-    claws: { name: '鐵爪', cls: ['monk'], kind: 'melee', dmg: 24, hits: 1, rate: 3.2, range: 3.4, arc: 1.4, kb: 0.4, skillK: 0.7333 },   // 2026-10-09 作者：一下普攻只揮一次（原本三爪）、傷害 ×3、範圍 ×2；skillK：技能、大招的威力維持原本（8×三爪）
+    claws: { name: '鐵爪', cls: ['monk'], kind: 'melee', dmg: 24, hits: 1, rate: 3.2, range: 2.4, arc: 1.4, kb: 0.4, skillK: 0.7333 },   // 2026-10-09 作者：一下普攻只揮一次（原本三爪）、傷害 ×3；基礎範圍 2.4 公尺；skillK：技能、大招的威力維持原本（8×三爪）
     harp: { name: '豎琴', cls: ['bard'], kind: 'magic', dmg: 7, pellets: 3, rate: 1.8, speed: 16, range: 13, mp: 1.5, spread: 0.4 },
     totem: { name: '圖騰', cls: ['summoner'], kind: 'magic', dmg: 14, rate: 1.5, speed: 14, range: 12, mp: 2, splash: 1.4 },
     compass: { name: '羅盤', cls: ['arraymage'], kind: 'magic', dmg: 10, rate: 2.2, speed: 18, range: 14, mp: 1.5, homing: 1 },

@@ -123,7 +123,7 @@ window.R = window.R || {};
     katana: { name: '刀', cls: ['blade'], kind: 'melee', dmg: 15, rate: 2.7, range: 2.6, arc: 1.6, kb: 1 },
     dualblades: { name: '雙刀', cls: ['blade'], kind: 'melee', dmg: 8.5, hits: 2, rate: 3.4, range: 2, arc: 1.4 },
     spear: { name: '長槍', cls: ['knight'], kind: 'thrust', dmg: 17, rate: 1.9, range: 3.7, width: 0.9, kb: 1.5 },
-    gauntlet: { name: '拳套', cls: ['monk'], kind: 'melee', dmg: 21, hits: 1, rate: 3.5, range: 3.6, arc: 1.5, kb: 0.6, skillK: 0.5333 },   // 2026-10-09 作者：一下普攻只揮一次（原本兩拳）、傷害 ×3、範圍 ×2；skillK：技能、大招的威力維持原本（7×兩拳）
+    gauntlet: { name: '拳套', cls: ['monk'], kind: 'melee', dmg: 21, hits: 1, rate: 3.5, range: 2, arc: 1.5, kb: 0.6, skillK: 0.5333 },   // 2026-10-09 作者：一下普攻只揮一次（原本兩拳）、傷害 ×3；基礎範圍 2 公尺；skillK：技能、大招的威力維持原本（7×兩拳）
     staffpole: { name: '長棍', cls: ['monk'], kind: 'melee', dmg: 12, rate: 2.3, range: 3, arc: 2.6, kb: 1.6 }
   };
   R.STARTER = { gunner: 'pistol', archer: 'shortbow', warrior: 'sword', mage: 'staff', priest: 'holystaff', blade: 'katana', knight: 'sword', monk: 'gauntlet' };
