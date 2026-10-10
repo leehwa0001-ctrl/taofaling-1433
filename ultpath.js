@@ -134,12 +134,14 @@
   });
 
   // ---------- 技能書：最上面的「大招」卡片，最下面選 ----------
+  // 2026-10-10 作者：卡片上的大圖跟著選的大招換，標題也要跟著換——選了路線的大招，標題寫路線大招的名字、小字寫路線
+  const headOf = cls => { const u = U[cls], p = pathOf(cls), base = u.baseName ? u.baseName() : u.name; return { name: p ? p.name : base, small: p ? advName(cls, advOf(cls)) + '的大招（' + base + '＋路線效果）' : R.CLASSES[cls].name + '的大招' }; };
   (R.SB_HEAD = R.SB_HEAD || []).push((cls, st) => {
-    const u = U[cls]; if (!u) return '';
+    const u = U[cls]; if (!u) return ''; const hd = headOf(cls);
     const ic = R.ultIconURL ? R.ultIconURL(cls) : R.skillIconURL && R.skillIconURL('ult_' + cls);
     return '<details class="sb-group" open><summary><b>大招</b> <small>遺跡裡集滿量表按 V（或點大招鈕）</small></summary><div class="recipes sb-list"><div class="recipe sb-card sb-ult"><div class="sb-pick">'
       + (ic ? '<img class="sb-ico" src="' + ic + '" alt="" draggable="false">' : '<span class="sb-ico sb-ico-ult" aria-hidden="true">★</span>')
-      + '<b>' + esc(u.baseName ? u.baseName() : u.name) + '</b><small>' + esc(R.CLASSES[cls].name) + '的大招</small><span>' + esc(u.baseSub ? u.baseSub() : u.sub) + '</span></div><div class="sb-foot" data-foot="ult:' + cls + '"></div></div></div></details>';
+      + '<b class="up-name">' + esc(hd.name) + '</b><small class="up-small">' + esc(hd.small) + '</small><span>' + esc(u.baseSub ? u.baseSub() : u.sub) + '</span></div><div class="sb-foot" data-foot="ult:' + cls + '"></div></div></div></details>';
   });
   (R.SB_FOOT = R.SB_FOOT || []).push(function fill(foot, id) {
     const m = /^ult:(\w+)$/.exec(id || ''); if (!m) return;
@@ -155,6 +157,7 @@
       + '<div class="up-d">' + (on ? '<b>' + esc(mine.name) + '</b>：原本的大招照放，再加上——' + esc(mine.d) : '<b>原版</b>：用' + esc(R.CLASSES[cls].name) + '原本的大招。') + '</div>';
     const card = foot.closest('.sb-ult'), art = card && card.querySelector('.sb-ico');
     if (art && R.ultIconURL) art.src = R.ultIconURL(cls);
+    if (card) { const hd = headOf(cls), nm = card.querySelector('.up-name'), sm = card.querySelector('.up-small'); if (nm) nm.textContent = hd.name; if (sm) sm.textContent = hd.small; }
     box.querySelectorAll('[data-up]').forEach(b => {
       if (R.skillIconURL) { const im = document.createElement('img'); im.src = R.skillIconURL(b.dataset.up === 'base' ? 'ult:' + cls : 'ultpath:' + cls + ':' + adv); im.alt = ''; im.width = im.height = 28; im.style.cssText = 'vertical-align:middle;margin-right:5px;border-radius:4px'; b.prepend(im); }
       b.onclick = e => { e.stopPropagation(); const s = S(); s.ultPick = s.ultPick || {}; s.ultPick[cls] = b.dataset.up; R.save && R.save(); fill(foot, id); };
