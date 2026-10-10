@@ -163,6 +163,6 @@
   const css = document.createElement('style');
   css.textContent = '.sb-ult{border-color:#C9A13A;background:linear-gradient(180deg,rgba(201,161,58,.12),transparent 70%),var(--bg2)}'
     + '.sb-ult,.sb-ult .sb-pick{cursor:default}.sb-ico-ult{display:grid;place-items:center;font-size:24px;color:#FFE08A;border:1px solid #C9A13A;text-shadow:0 0 8px #E8C04A}'
-    + '.up-box{display:grid;gap:4px}.up-d{font-size:11.5px;line-height:1.45;color:var(--dim)}.up-d b{color:#E8D8B0}';
+    + '.up-box{display:grid;gap:4px}.up-box .sv-vars+.up-d{margin-top:6px}.up-d{font-size:11.5px;line-height:1.45;color:var(--dim)}.up-d b{color:#E8D8B0}';
   document.head.appendChild(css);
 })(window.R);

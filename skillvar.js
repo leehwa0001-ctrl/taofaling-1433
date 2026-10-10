@@ -86,7 +86,7 @@
     + '.sv-vars button{font-size:11px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:inherit;cursor:pointer;line-height:1.3}'
     + '.sv-vars button.on{outline:2px solid #E8C04A;background:rgba(232,192,74,.2);border-color:transparent}'
     + '.sv-vars .sv-lock{font-size:11px;opacity:.7;line-height:1.35}'
-    + '.sb-foot .sv-d{font-size:11.5px;line-height:1.4;color:var(--dim)}.sb-foot .sv-d b{color:#E8D8B0;font-weight:700}';
+    + '.sb-foot .sv-d{font-size:11.5px;line-height:1.4;color:var(--dim);margin-top:8px}.sb-foot .sv-d b{color:#E8D8B0;font-weight:700}';
   document.head.appendChild(css);
   const fill = (foot, id) => {
     if (!id || !R.SKILLS[id]) return;

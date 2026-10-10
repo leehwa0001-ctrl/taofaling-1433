@@ -34,9 +34,10 @@
     const state = sheetOf(entry.sheet);
     if (state.failed) return old(raw);
     if (!state.loaded) {
-      // 暫時包住原圖，附上技能編號，避免兩個舊圖相同的技能在載入後被配錯。
-      const fallback = old(raw), safe = String(id).replace(/[<>&"]/g, '');
-      const src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><title>' + safe + '</title><image href="' + fallback.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '" width="96" height="96"/></svg>');
+      // 2026-10-10 作者：一開始幾秒是不正常的圖、等一下才好——以前載入中先包住舊版的圖頂著（舊圖、或舊圖自己的佔位框），
+      // 現在載入中只放一個乾淨的暗色方塊（附上技能編號，載入後照編號換成正確的圖）；進城就先把這個職業的圖集載好（preload）。
+      const safe = String(id).replace(/[<>&"]/g, '');
+      const src = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><title>' + safe + '</title><rect x="3" y="3" width="90" height="90" rx="12" fill="#1C1828" stroke="#3A3448" stroke-width="2"/></svg>');
       pending.set(src, id);
       return src;
     }
@@ -53,6 +54,11 @@
     ctx.drawImage(im, x + 2, y + 2, w - 4, h - 4, 0, 0, 48, 48);
     const url = canvas.toDataURL('image/png'); cache.set(id, url); return url;
   };
+  // 預先載入（進城、打開技能書、技能點畫面的時候）：這個職業會用到的圖集
+  const preload = cls => { if (!cls) return; const need = new Set(); Object.values(R.SKILL_LIB || {}).forEach(sk => { if (sk && sk.cls === cls && map.icons[sk.id]) need.add(map.icons[sk.id].sheet); }); ['ult:' + cls].concat((R.ADV && R.ADV[cls] || []).map(a => 'ultpath:' + cls + ':' + a.id)).forEach(k => { if (map.icons[k]) need.add(map.icons[k].sheet); }); need.forEach(k => sheetOf(k)); };
+  R.preloadSkillArt = preload;
+  ['enterTown', 'enterTownNow', 'useSlot', 'skillBook', 'skillPoints', 'startRun'].forEach(k => { const f = R[k]; if (typeof f === 'function') R[k] = function (...a) { const r = f.apply(this, a); try { if (R.S) preload(R.S.cls); } catch (e) { } return r; /* 先跑原本的（useSlot 之後才有 R.S） */ }; });
+  setTimeout(() => { try { if (R.S) preload(R.S.cls); } catch (e) { } }, 0);
   R.skillArtInfo = raw => {
     const id = canonical(raw), entry = map.icons[id];
     return { ...(oldInfo ? oldInfo(id) : {}), covered: !!entry, unique: !!entry,
