@@ -35,6 +35,16 @@
   // ---------- 放技能的時候記住元素（延遲、持續的、子彈都帶著） ----------
   let CUR = null;
   const bind = (ctx, f) => function (...a) { const p = CUR; CUR = ctx; try { return f.apply(this, a); } finally { CUR = p; } };
+  // 在某個元素底下跑 f（延遲、持續的回呼也帶著）；大招（ultfx.js）也用
+  const runCtx = (ctx, f) => {
+    if (CUR || !ctx) return f();
+    const w = W, st0 = window.setTimeout, dyn = w.dyn, had = !!dyn && Object.prototype.hasOwnProperty.call(dyn, 'push'), dp0 = dyn && dyn.push;
+    window.setTimeout = function (cb, ms, ...a) { return st0.call(this, typeof cb === 'function' ? bind(ctx, cb) : cb, ms, ...a); };
+    if (dyn) dyn.push = function (...fs) { return dp0.apply(this, fs.map(g => (typeof g === 'function' ? bind(ctx, g) : g))); };
+    CUR = ctx;
+    try { return f(); }
+    finally { CUR = null; window.setTimeout = st0; if (dyn) { if (had) dyn.push = dp0; else delete dyn.push; } }
+  };
   Object.keys(T).forEach(k => {
     const f0 = T[k]; if (typeof f0 !== 'function') return;
     T[k] = function (s, P, w, pw) {
@@ -42,12 +52,7 @@
       const id = s && s._id ? String(s._id).split(':')[0] : null, L = id && LIB[id];
       if (!L || !w) return f0.call(this, s, P, w, pw);
       const ctx = { el: elemOf(L), col: (s && s.color) || (L.p && L.p.color) || null, fall: L._fxFall != null ? L._fxFall : (L._fxFall = /隕石|流星|落下|砸向|天降|墜|落雷/.test(String(L.name) + String(L.desc))) };
-      const st0 = window.setTimeout, dyn = w.dyn, had = !!dyn && Object.prototype.hasOwnProperty.call(dyn, 'push'), dp0 = dyn && dyn.push;
-      window.setTimeout = function (cb, ms, ...a) { return st0.call(this, typeof cb === 'function' ? bind(ctx, cb) : cb, ms, ...a); };
-      if (dyn) dyn.push = function (...fs) { return dp0.apply(this, fs.map(f => (typeof f === 'function' ? bind(ctx, f) : f))); };
-      CUR = ctx;
-      try { return f0.call(this, s, P, w, pw); }
-      finally { CUR = null; window.setTimeout = st0; if (dyn) { if (had) dyn.push = dp0; else delete dyn.push; } }
+      return runCtx(ctx, () => f0.call(this, s, P, w, pw));
     };
   });
   const fire0 = R.fire;
@@ -257,5 +262,5 @@
   // 換樓層：清掉
   const lf0 = R.loadFloor; if (lf0) R.loadFloor = (...a) => { RIB.length = 0; MARKS.splice(0).forEach(k => { if (k.m.parent) k.m.parent.remove(k.m); k.m.material.dispose(); }); [A, N].forEach(s => { if (s) s.life.fill(0); }); return lf0(...a); };
   void aoe0;
-  R.fx1010 = { elemOf, EL, lightning, burst: (...a) => burst(...a), sys: () => [A, N], ribs: RIB, cur: () => CUR };
+  R.fx1010 = { elemOf, EL, PAL, lightning, ribbon, emit, ring, burst, flash, runCtx, ensure: () => { if (window.THREE && W.scene) { sys(); ribInit(); } return !!A; }, sys: () => [A, N], ribs: RIB, cur: () => CUR };
 })(window.R);
