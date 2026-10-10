@@ -96,7 +96,8 @@
       let im = button.querySelector('.skill-ult-art');
       if (!im) { im = document.createElement('img'); im.className = 'skill-ult-art'; im.alt = ''; button.prepend(im); }
       const player = R.W.P, key = cls + '|' + player.adv + '|' + (R.S && R.S.ultPick && R.S.ultPick[cls]) + '|' + loaded.size;
-      // 2026-10-08 作者：大招的圖要隨著能量累積慢慢出來（不是一開始就當底圖）——底下一張灰的、淡的；上面一張彩色的，照能量（--u）從角落斜斜地露出來
+      // 2026-10-08 作者：大招的圖要隨著能量累積慢慢出來（不是一開始就當底圖）——上面一張彩色的，照能量（--u）從角落斜斜地露出來
+      // 2026-10-10 作者：底圖沒刪掉、看起來兩層——底下那張灰的不顯示（CSS display:none，元素留著當定位）
       let im2 = button.querySelector('.skill-ult-art2');
       if (!im2) { im2 = document.createElement('img'); im2.className = 'skill-ult-art2'; im2.alt = ''; im.after(im2); }
       if (im.dataset.art !== key) { im.dataset.art = key; im.src = im2.src = R.ultIconURL(cls, player.adv); }
@@ -110,6 +111,6 @@
     return result;
   };
   const style = document.createElement('style');
-  style.textContent = '.skill-ult-art,.skill-ult-art2{position:absolute;inset:4px;width:calc(100% - 8px);height:calc(100% - 8px);object-fit:cover;border-radius:inherit;pointer-events:none}.skill-ult-art{opacity:.22;filter:grayscale(1) brightness(.8)}.skill-ult-art2{z-index:1;-webkit-mask-image:linear-gradient(to top left,#000 calc(var(--u,0) * 100%),transparent calc(var(--u,0) * 100% + 2px));mask-image:linear-gradient(to top left,#000 calc(var(--u,0) * 100%),transparent calc(var(--u,0) * 100% + 2px))}.ul-btn.ready .skill-ult-art2{filter:brightness(1.15) saturate(1.2)}.ul-btn .ul-fill{opacity:.35}.ul-btn.ready .ul-fill{opacity:.5!important}.ul-btn .ul-txt,.ul-btn kbd{z-index:2;text-shadow:0 1px 3px #000,0 0 3px #000}.ul-btn .ul-fill{z-index:1;pointer-events:none}';
+  style.textContent = '.skill-ult-art,.skill-ult-art2{position:absolute;inset:4px;width:calc(100% - 8px);height:calc(100% - 8px);object-fit:cover;border-radius:inherit;pointer-events:none}.skill-ult-art{display:none}.skill-ult-art2{z-index:1;-webkit-mask-image:linear-gradient(to top left,#000 calc(var(--u,0) * 100%),transparent calc(var(--u,0) * 100% + 2px));mask-image:linear-gradient(to top left,#000 calc(var(--u,0) * 100%),transparent calc(var(--u,0) * 100% + 2px))}.ul-btn.ready .skill-ult-art2{filter:brightness(1.15) saturate(1.2)}.ul-btn .ul-fill{opacity:.35}.ul-btn.ready .ul-fill{opacity:.5!important}.ul-btn .ul-txt,.ul-btn kbd{z-index:2;text-shadow:0 1px 3px #000,0 0 3px #000}.ul-btn .ul-fill{z-index:1;pointer-events:none}';
   document.head.appendChild(style);
 })(window.R);
