@@ -48,7 +48,7 @@
     if (CK.quality() < 2 || !P || !W.town || !W.town.D || !W.town.D.water.length && !W.town.city.sea) return;   // 2026-10-09：倒影只有高畫質才畫（中、低畫質省一次整個場景）
     const lv = levelNear(P.x, P.z); if (lv == null) return;
     // 水在不在畫面裡（看不到就不畫倒影：省一次整個場景）
-    { if (!RF.fr) { RF.fr = new TH.Frustum(); RF.pm = new TH.Matrix4(); RF.bx = new TH.Box3(); } RF.pm.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse); RF.fr.setFromProjectionMatrix(RF.pm); const D = W.town.D; let seen = !!W.town.city.sea; if (!seen) for (const wt of D.water) { const b = wt.bb; if (!b) continue; RF.bx.min.set(b[0], wt.level - 0.5, b[1]); RF.bx.max.set(b[2], wt.level + 0.5, b[3]); if (RF.fr.intersectsBox(RF.bx)) { seen = true; break; } } if (!seen) return; }
+    { if (!RF.fr) { RF.fr = new TH.Frustum(); RF.pm = new TH.Matrix4(); RF.bx = new TH.Box3(); } RF.pm.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse); RF.fr.setFromProjectionMatrix(RF.pm); const D = W.town.D; let seen = W.town.city.sea ? (CK.seaInView ? CK.seaInView(cam) : true) : false;   /* 2026-10-10：海真的在畫面裡才算（ckperf2.js） */ if (!seen) for (const wt of D.water) { const b = wt.bb; if (!b) continue; RF.bx.min.set(b[0], wt.level - 0.5, b[1]); RF.bx.max.set(b[2], wt.level + 0.5, b[3]); if (RF.fr.intersectsBox(RF.bx)) { seen = true; break; } } if (!seen) return; }
     const rw = Math.max(2, Math.floor(w * (CK.quality() >= 2 ? 0.4 : 0.3))), rh = Math.max(2, Math.floor(h * (CK.quality() >= 2 ? 0.4 : 0.3)));
     if (!RF.rt) RF.rt = new TH.WebGLRenderTarget(rw, rh, { type: TH.HalfFloatType });
     if (RF.rt.width !== rw || RF.rt.height !== rh) RF.rt.setSize(rw, rh);

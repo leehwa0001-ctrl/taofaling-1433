@@ -23,7 +23,8 @@
   const precompile = () => {
     const sc = W.scene, r = W.renderer, cam = W.camera; if (!sc || !r || !cam) return; const hid = [];
     sc.traverse(o => { if (!o.visible) { hid.push(o); o.visible = true; } });
-    try { r.compile(sc, cam); } catch (e) { } hid.forEach(o => { o.visible = false; });
+    const rt = new THREE.WebGLRenderTarget(1, 1), rt0 = r.getRenderTarget();   // 2026-10-10：要對「畫布」編譯——精緻城市先畫到另一張畫布（線性色彩），對螢幕編的著色器是另一份、用不到
+    try { r.setRenderTarget(rt); r.compile(sc, cam); } catch (e) { } finally { r.setRenderTarget(rt0); rt.dispose(); } hid.forEach(o => { o.visible = false; });
   };
   const ce0 = CK.enter;
   CK.enter = (...a) => { const r = ce0(...a); try { if (W.town && W.town.ck) { if (CK.quality() === 0) strip(true); precompile(); } } catch (e) { console.warn('[ckperf]', e); } return r; };
