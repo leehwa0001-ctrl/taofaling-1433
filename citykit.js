@@ -357,7 +357,7 @@
         const cat = (G, k) => { let n = 0; G.forEach(A => { n += A[k].length; }); const out = new Float32Array(n); let off = 0; G.forEach(A => { const a = A[k]; for (let i = 0; i < a.length; i++) out[off + i] = a[i]; off += a.length; }); return out; };
         map.forEach((bucket, mat) => {
           const parts = [...bucket.values()].filter(A => A.P.length); let tot = 0; parts.forEach(A => { tot += A.P.length / 3; });
-          (tot < MERGE_V && !mat.transparent ? [parts] : parts.map(A => [A])).forEach(G => {
+          (tot < (CK.mergeV ? CK.mergeV() : MERGE_V) && !mat.transparent ? [parts] : parts.map(A => [A])).forEach(G => {   /* CK.mergeV：俯瞰的鏡頭門檻低很多（cktopcam.js） */
           if (!G.length) return;
           const geo = new TH.BufferGeometry(); geo.setAttribute('position', new TH.BufferAttribute(cat(G, 'P'), 3)); geo.setAttribute('normal', new TH.BufferAttribute(cat(G, 'N'), 3)); geo.setAttribute('uv', new TH.BufferAttribute(cat(G, 'U'), 2)); geo.computeBoundingSphere();
           const mesh = new TH.Mesh(geo, mat); mesh.castShadow = !o.noShadow && !mat.userData.noShadow && !mat.transparent && !(mat.emissive && mat.emissiveIntensity > 0 && !mat.userData.win); mesh.receiveShadow = !mat.userData.noReceive; mesh.matrixAutoUpdate = false; mesh.updateMatrix(); par.add(mesh);

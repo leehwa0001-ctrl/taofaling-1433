@@ -4,12 +4,18 @@
 // - 俯瞰看不到天空和地平線，所以：
 //   天空不畫（天空的球不會被裁掉，原本每一格都先把整個畫面畫一次天空的雲、雜訊，再被街道蓋掉；水面倒影照樣有天空）；
 //   太陽陰影只算鏡頭附近（150 公尺見方 → 100 公尺見方：要算的東西少，陰影也比較清楚）。
+// - 合併繪製改成照 48 公尺的區塊切（原本 96 公尺，而且整座城加起來不到 6 萬個頂點的材質合成一整塊）：
+//   低角度看得到遠處，合成大塊比較省；俯瞰一次只看得到 60×45 公尺左右，切小塊才能把看不到的整塊跳過（陰影也是）。
+//   實測（每格的三角形）：東鶴 33～60 萬 → 8～29 萬，皇嶺 30～62 萬 → 20～40 萬；繪製次數差不多。進城的時候決定，切換鏡頭要下次進城才換。
 // 放在 citykit*.js、ckperf.js 後面（最外層的 CK.camMode、CK.render）。
 (function (R) {
   const CK = R.CK, W = R.W; if (!CK || !CK.render) return;
   const KEY = 'tfl-citycam2';
   CK.camMode = () => { try { return localStorage.getItem(KEY) || 'top'; } catch (e) { return 'top'; } };
   CK.setCamMode = m => { try { localStorage.setItem(KEY, m); } catch (e) { } };
+  const cs0 = CK.chunkSize;
+  CK.chunkSize = () => (CK.camMode() === 'top' ? 48 : cs0());
+  CK.mergeV = () => (CK.camMode() === 'top' ? 4000 : 60000);
   const top = () => !!(W.town && W.town.ck && !W.town.room && CK.camMode() === 'top');
   // 陰影的範圍（citykit2.js 進城時設成 ±75）
   const shadowBox = r => { const L = W.town && W.town.L, sc = L && L.sun && L.sun.shadow.camera; if (!sc || sc.right === r) return; sc.left = -r; sc.right = r; sc.top = r; sc.bottom = -r; sc.updateProjectionMatrix(); };
