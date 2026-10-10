@@ -5,6 +5,8 @@
 // - R.nearAllies(P, range, { downed })：電腦隊友＋連線人物（remote proxy，有 .remote id）
 // - R.aidAlly(al, { healPct, shieldPct, healAbs, shieldAbs, shieldT, cleanse, revive, revivePct, quiet, iframe })（healAbs、shieldAbs＝固定量，疊在原本的護盾上；rateK、rateT＝攻速加成）：
 //     電腦隊友直接改血／盾；連線隊友送 { k:'aid', rid,f,n, hp,sh,sht,cl,rv,q,ifr }，對方自己 healP／加盾／站起來
+// - 2026-10-11 吟遊詩人：shKey（'atk:段號' 這種）＝同一個 key 的護盾累加、換了段號就換掉上一段給的（刷新、不疊）；
+//   mpAbs＝回魔力（固定量）；dmgK、dmgT＝傷害加成（大招狂想曲）
 // - 包住 SKILL_TYPES.heal／revive／aura、castSkillId('ward')、CORE.priest.act、CORE.bard.play、ULTS.priest.go
 // 放在 net.js、net2.js、skillbook.js、skills.js、adv2more.js、ult.js、classcore2.js、skillbook2.js 後面。
 (function (R) {
@@ -34,19 +36,31 @@
     return out;
   };
 
+  // 照 key 給護盾：同一段（同一個 key）累加，換了段號就先拿掉上一段還剩的（最多拿掉現在的護盾量）。kind 前面加上給的人，兩個吟遊詩人不會互相蓋掉
+  R.keyedShield = (o, amt, key, from) => {
+    if (!o || !(amt > 0)) return;
+    const i = String(key || '').lastIndexOf(':'), kind = (from != null ? from + '/' : '') + String(key).slice(0, i), id = String(key).slice(i + 1);
+    o._bdSh = o._bdSh || {}; let rec = o._bdSh[kind];
+    if (!rec || rec.id !== id) { const old = rec ? Math.min(rec.amt, o.shield || 0) : 0; o.shield = Math.max(0, (o.shield || 0) - old); rec = o._bdSh[kind] = { id, amt: 0 }; }
+    const before = o.shield || 0; o.shield = Math.min(o.hpMax || before + amt, before + amt); rec.amt += o.shield - before;
+  };
+  const KEY = /^[a-z]{2,6}:\d{1,9}$/;
+
   const sendAid = (id, o) => {
     const run = crun(); if (!run || id == null || !N().send) return;
     const d = Object.assign({ k: 'aid' }, tag(run));
     if (o.healPct > 0) d.hp = Math.round(Math.min(1, o.healPct) * 1000) / 1000;
     if (o.shieldPct > 0) { d.sh = Math.round(Math.min(1, o.shieldPct) * 1000) / 1000; d.sht = o.shieldT > 0 ? Math.min(30, o.shieldT) : 6; }
     if (o.healAbs > 0) d.ha = Math.round(Math.min(1e5, o.healAbs));   // 2026-10-10 吟遊詩人的樂譜：照吟遊詩人的魔力上限算的固定量（不是對方生命的％）
-    if (o.shieldAbs > 0) { d.sa = Math.round(Math.min(1e5, o.shieldAbs)); d.sht = o.shieldT > 0 ? Math.min(30, o.shieldT) : 6; }
+    if (o.shieldAbs > 0) { d.sa = Math.round(Math.min(1e5, o.shieldAbs)); d.sht = o.shieldT > 0 ? Math.min(30, o.shieldT) : 6; if (o.shKey && KEY.test(o.shKey)) d.sk = o.shKey; }
+    if (o.mpAbs > 0) d.ma = Math.round(Math.min(1e5, o.mpAbs));
+    if (o.dmgK > 1) { d.dk = Math.round(Math.min(3, o.dmgK) * 1000) / 1000; d.dt = o.dmgT > 0 ? Math.min(30, o.dmgT) : 10; }
     if (o.rateK > 1) { d.rk = Math.round(Math.min(3, o.rateK) * 1000) / 1000; d.rt = o.rateT > 0 ? Math.min(30, o.rateT) : 8; }   // 吟遊詩人的八分音符：攻速加成
     if (o.cleanse) d.cl = 1;
     if (o.revive) { d.rv = 1; if (!(d.hp > 0) && o.revivePct > 0) d.hp = Math.round(Math.min(1, o.revivePct) * 1000) / 1000; }
     if (o.quiet) d.q = 1;
     if (o.iframe > 0) d.ifr = Math.min(10, o.iframe);
-    if (!(d.hp > 0) && !(d.sh > 0) && !(d.ha > 0) && !(d.sa > 0) && !(d.rk > 1) && !d.cl && !d.rv) return;
+    if (!(d.hp > 0) && !(d.sh > 0) && !(d.ha > 0) && !(d.sa > 0) && !(d.rk > 1) && !(d.ma > 0) && !(d.dk > 1) && !d.cl && !d.rv) return;
     try { N().send(d, id); } catch (e) { }
   };
 
@@ -72,7 +86,8 @@
     }
     if (o.shieldPct > 0) { al.shield = Math.max(al.shield || 0, al.hpMax * o.shieldPct); al.shieldT = o.shieldT || 6; }
     if (o.healAbs > 0) { al.hp = Math.min(al.hpMax, al.hp + o.healAbs); if (!o.quiet) R.num && R.num(al.x, 2.2, al.z, '+' + Math.round(o.healAbs), 'heal'); }
-    if (o.shieldAbs > 0) { al.shield = Math.min(al.hpMax, (al.shield || 0) + o.shieldAbs); al.shieldT = Math.max(al.shieldT || 0, o.shieldT || 6); }
+    if (o.shieldAbs > 0) { if (o.shKey) R.keyedShield(al, o.shieldAbs, o.shKey); else al.shield = Math.min(al.hpMax, (al.shield || 0) + o.shieldAbs); al.shieldT = Math.max(al.shieldT || 0, o.shieldT || 6); }
+    if (o.mpAbs > 0 && al.mpMax > 0) al.mp = Math.min(al.mpMax, (al.mp || 0) + o.mpAbs);
     if (o.healPct > 0 || o.shieldPct > 0 || o.healAbs > 0 || o.shieldAbs > 0) R.fx && R.fx('ring', al.x, 0.1, al.z, { r: 1.2, color: '#FFE8A0' });
   };
 
@@ -105,8 +120,10 @@
         R.fx && R.fx('block', P.x, 1.2, P.z);
       }
       if (num(d.ha, 0, 1e5) && d.ha > 0) R.healP(d.ha, !!d.q);
-      if (num(d.sa, 0, 1e5) && d.sa > 0) { P.shield = Math.min(P.hpMax, (P.shield || 0) + d.sa); if (P.buff) P.buff.shieldT = Math.max(P.buff.shieldT || 0, num(d.sht, 0, 30) ? d.sht : 6); R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 1.4, color: '#7FE8B8' }); }
+      if (num(d.sa, 0, 1e5) && d.sa > 0) { if (typeof d.sk === 'string' && KEY.test(d.sk)) R.keyedShield(P, d.sa, d.sk, from); else P.shield = Math.min(P.hpMax, (P.shield || 0) + d.sa); if (P.buff) P.buff.shieldT = Math.max(P.buff.shieldT || 0, num(d.sht, 0, 30) ? d.sht : 6); R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 1.4, color: '#7FE8B8' }); }
       if (num(d.rk, 1, 3) && d.rk > 1 && P.ws) { P.sb = P.sb || {}; const old = P.sb['bd:ally']; if (old && old.rate) P.ws.rate /= old.rate; const t = num(d.rt, 0, 30) ? d.rt : 8; P.sb['bd:ally'] = { left: t, t, rate: d.rk, color: '#FFE08A' }; P.ws.rate *= d.rk; }
+      if (num(d.ma, 0, 1e5) && d.ma > 0) P.mp = Math.min(P.mpMax, P.mp + d.ma);
+      if (num(d.dk, 1, 3) && d.dk > 1) { P.sb = P.sb || {}; const t = num(d.dt, 0, 30) ? d.dt : 10; P.sb['bd:ally:dmg'] = { left: t, t, dmg: d.dk, color: '#FFB8E0' }; }
       if (d.cl) { P.slowT = 0; P.blindT = 0; if (P.dbf) Object.keys(P.dbf).forEach(k => { P.dbf[k] = 0; }); }
       if (num(d.ifr, 0, 10) && d.ifr > 0 && !d.rv) P.iframe = Math.max(P.iframe || 0, d.ifr);
     }

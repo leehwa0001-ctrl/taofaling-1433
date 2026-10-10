@@ -174,7 +174,7 @@
   const pw = P => R.ultBase(P);   // 大招的基準：一下普攻×ULT_K（ult.js；原本照攻速算、又多乘一次傷害倍率）
   const cast = (type, s, P) => { try { T[type](Object.assign({ _id: 'ult:' + type + rnd() }, s), P, W(), pw(P)); } catch (e) { console.warn('[classes2b]', e); } };
   if (R.ULTS) Object.assign(R.ULTS, {
-    bard: { name: '狂想曲', sub: '吟遊詩人的大招：回復自己與附近隊友的生命，連續震擊周圍敵人', go: P => { cast('heal', { pct: 0.5, allies: 0.5, shield: 0.2 }, P); cast('nova', { r: 5, k: 1.6, stun: 1, waves: 5, gap: 300, color: '#FFB8E0' }, P); cast('buff', { t: 10, dmg: 1.3, color: '#FFB8E0' }, P); } },
+    bard: { name: '狂想曲', sub: '吟遊詩人的大招：回復你和附近隊友「你最大魔力 50%」的生命與魔力，你和隊友得到兩倍的樂譜技能加成（10 秒），連續震擊周圍敵人', go: P => { if (R.bardUlt) R.bardUlt(P); else cast('heal', { pct: 0.5, allies: 0.5 }, P); cast('nova', { r: 5, k: 1.6, stun: 1, waves: 5, gap: 300, color: '#FFB8E0' }, P); } },   // 2026-10-11 作者：拿掉增傷（傷害 ×1.3）和護盾，改成回生命與魔力＋兩倍樂譜加成（bardchord.js 的 R.bardUlt）
     summoner: { name: '百鬼夜行', sub: '召喚師的大招：一口氣捏出六隻召喚物和一尊巨像', go: P => { cast('pet', { beast: 'okuriinu', n: 6, t: 15, k: 0.7 }, P); cast('pet', { beast: 'nurikabe', n: 1, t: 15, k: 2, speed: 3.5, rate: 1.1, kb: 3 }, P); } },
     arraymage: { name: '天地大陣', sub: '術陣師的大招：以你為中心畫一個巨大的閉環，連爆三次', go: P => { cast('at', { range: 0.1, r: 7, k: 3, waves: 3, gap: 500, delay: 600, fx: 'ring', color: '#7AC8E8' }, P); cast('heal', { shield: 0.3 }, P); } },
     enchanter: { name: '萬象附魔', sub: '附魔師的大招：焰、霜、雷一起灌進武器，周圍一圈魔力爆發', go: P => { cast('buff', { t: 12, burn: 1, frost: 1, shock: 1, dmg: 1.4, crit: 0.2, color: '#FFFFFF' }, P); cast('nova', { r: 5, k: 3, kb: 4, color: '#FF8A4A' }, P); } },

@@ -3,15 +3,18 @@
 //   2026-10-11 作者：製作樂譜、更換和弦的按鍵改成 X——原本在 R（右鍵、手機的 R 鈕），技能改放 3～6、最多四招；現在 R 變回一般的技能格（跟其他職業一樣五格）。
 // - 寫樂譜：10 秒內記下出手——普攻一下＝八分音符（半拍）、基礎冷卻 13 秒以內的技能＝四分音符（一拍）、13 秒以上＝二分音符（兩拍）；
 //   一個小節 4 拍（被動「樂譜延長」多 2 拍），下一個音放不下就寫完。攻擊技能的音符是紅的、增益（守、治）是綠的、普攻是金的；音高照和弦，
-//   演奏的時候每個音隨機升高或降低 1～2 個音階（每次演奏都不太一樣）。
+//   演奏的時候整段樂譜一起升高或降低 1～2 個音階（每次演奏隨機選一個方向，同一段不會忽升忽降）；第一個音和最後一個音同時彈出和弦。
 //   寫樂譜的時候普攻、技能照常放出去（普攻是一發普通的音符）。
 // - 出手的順序：按下技能或普攻 → 演奏（照樂譜彈出聲音，2 秒；這段時間可以走、翻滾，不能普攻）→ 發出攻擊；下一次技能或普攻再演奏、再發出。
 //   樂譜是空的：普攻不會發出任何攻擊；技能照常馬上放。攻速每 +1% 演奏快 1%（+100% 攻速只要一半的時間）。
+//   2026-10-11 作者：每次演奏花 5 點魔力；普攻本身不再耗魔力（寫樂譜時的普攻也不耗）。
 //   普攻：演奏完照樂譜一個一個往前方射出音符（每個隔 0.2 秒、吃攻速；方向在前方 5 度內飄）。射的期間可以馬上開始下一次演奏，
-//         但一次只能有一段演奏；上一輪還沒射完就接在後面射。攻擊音符碰到敵人炸開（半徑 1 公尺，算技能傷害，吃技能傷害的加成；二分的半徑、傷害兩倍）；
-//         四分增益音符每個給你和隊友最大魔力 1% 的護盾，二分的再回同樣多的生命。
-//   技能：每個八分音符你和隊友攻速 +5%（8 秒）；攻擊四分每個傷害與範圍 +8%；增益四分每個冷卻 −5%、恢復與護盾 +5%；
-//         攻擊二分每個耗魔 +25%、傷害與範圍 +30%、冷卻 +10%；增益二分每個增益效果 +40%，周圍的友軍（含你）得到你最大魔力 20% 的護盾、回復你最大魔力 10% 的生命。
+//         但一次只能有一段演奏。攻擊音符碰到敵人、撞牆或飛到最遠都會炸開（四分半徑 2 公尺、二分 4 公尺，二分傷害兩倍，算技能傷害）；
+//         四分增益音符每個給你和隊友最大魔力 10% 的護盾，二分的再回同樣多的生命（2026-10-11 作者）。
+//   技能（2026-10-11 作者）：每個八分音符你和隊友攻速 +10%（8 秒）；攻擊四分每個傷害與範圍 +10%；增益四分每個冷卻 −10%、恢復與護盾 +10%；
+//         攻擊二分每個耗魔 +20%、傷害與範圍 +30%、冷卻 +10%；增益二分每個增益效果 +25%，周圍的友軍（含你）得到你最大魔力 10% 的護盾、回復你最大魔力 10% 的生命。
+//         同一種音符重複：第二個效果減半、第三個起只剩 1/4（例：八分音符 2 個攻速 +15%、4 個 +20%、8 個 +30%）。
+//   普攻、技能的音符效果各算各的、可以疊；但護盾只會刷新——新的一段演奏換掉上一段演奏給的護盾（普攻、技能分開算），攻速也是刷新。
 // - 和弦（一直有效）：大三和弦 傷害 +(10+等級/2)%、小三和弦 恢復與護盾 +(10+等級/2)%（等級算到 40 為止，最多 +30%）；
 //   20 級七和弦 範圍 +(10+等級/2)%（2026-10-11 作者：大三和弦與七和弦的效果交換）、30 級九和弦 技能急速 +(40+等級×1.5)、40 級十一和弦 每次演奏完回復 5% 最大魔力。
 // - 被動（passives.js）：快速演奏（1 級）演奏時間 −20%、節奏加速（15 級）演奏時間 −30%、樂譜延長（30 級）、絕對音感（26 級）音符效果 +25%。
@@ -20,7 +23,9 @@
 // - 2026-10-11 作者：普攻改成演奏的期間每經過一個音符、發出聲音的那一下就發出那顆音符的普攻（不再等演奏完一次全部發出）；
 //   技能的演奏也一樣，每經過一個音符就發出一顆普攻音符，演奏完才放出技能。音符與普攻本身的效果不變。
 // - 2026-10-11 作者：技能「和弦」改名「三重奏」，射出的音符撞到敵人炸開（半徑 3 公尺）。
-// - 聲音（2026-10-11 作者）：演奏的時候照樂譜彈；演奏完發出攻擊的那一下不出聲（武器、技能的聲音、每顆音符的音都靜音）；音符打中敵人的時候彈那顆音符的音。
+// - 聲音（2026-10-11 作者）：只有演奏的時候有聲音；發出攻擊、音符打中敵人都不出聲。
+// - 和弦各有顏色：五線譜的外框（演奏中）、底下的字跟著和弦的顏色；五線譜底下列出現在這份樂譜演奏完技能會得到的加成。
+// - 大招狂想曲（2026-10-11 作者）：拿掉增傷、減傷；改成回復你和隊友「你最大魔力 50%」的生命與魔力，並讓你和隊友得到兩倍的樂譜技能加成（10 秒）。
 // 放在最後面（main.js 前面）：包在 R.attack、R.castSlot、R.useSkill、R.fire、R.updateShots、R.hurtEnemy、R.calcPlayer、R.step、R.hudTick 最外面。
 (function (R) {
   const W = () => R.W, $ = id => document.getElementById(id);
@@ -36,18 +41,19 @@
 
   // ---------- 和弦 ----------
   const CH = [
-    { id: 'maj', name: '大三和弦', sym: 'C', lv: 1, tones: [60, 64, 67, 72, 76, 79, 84], sc: [0, 2, 4, 5, 7, 9, 11] },
-    { id: 'min', name: '小三和弦', sym: 'Am', lv: 1, tones: [57, 60, 64, 69, 72, 76, 81], sc: [0, 2, 4, 5, 7, 9, 11] },
-    { id: 'sev', name: '七和弦', sym: 'G7', lv: 20, tones: [55, 59, 62, 65, 67, 71, 74], sc: [0, 2, 4, 5, 7, 9, 11] },
-    { id: 'nin', name: '九和弦', sym: 'Dm9', lv: 30, tones: [62, 65, 69, 72, 76, 77, 81], sc: [0, 2, 4, 5, 7, 9, 11] },
-    { id: 'ele', name: '十一和弦', sym: 'C11', lv: 40, tones: [60, 64, 67, 70, 74, 77, 79], sc: [0, 2, 4, 5, 7, 9, 10] }
+    { id: 'maj', name: '大三和弦', sym: 'C', col: '#FF8A5A', lv: 1, tones: [60, 64, 67, 72, 76, 79, 84], sc: [0, 2, 4, 5, 7, 9, 11] },
+    { id: 'min', name: '小三和弦', sym: 'Am', col: '#5AE8B0', lv: 1, tones: [57, 60, 64, 69, 72, 76, 81], sc: [0, 2, 4, 5, 7, 9, 11] },
+    { id: 'sev', name: '七和弦', sym: 'G7', col: '#C08AFF', lv: 20, tones: [55, 59, 62, 65, 67, 71, 74], sc: [0, 2, 4, 5, 7, 9, 11] },
+    { id: 'nin', name: '九和弦', sym: 'Dm9', col: '#6AB8FF', lv: 30, tones: [62, 65, 69, 72, 76, 77, 81], sc: [0, 2, 4, 5, 7, 9, 11] },
+    { id: 'ele', name: '十一和弦', sym: 'C11', col: '#FFD86A', lv: 40, tones: [60, 64, 67, 70, 74, 77, 79], sc: [0, 2, 4, 5, 7, 9, 10] }
   ];
-  // 演奏的時候每個音隨機升高或降低 1～2 個音階（沿著和弦的音階走，不會走出調）
-  const vary = (m, c) => {
+  // 演奏的時候整段一起升高或降低 d 個音階（沿著和弦的音階走，不會走出調）；d 每段演奏選一次（±1、±2）
+  const pickShift = () => (Math.random() < 0.5 ? -1 : 1) * (Math.random() < 0.5 ? 1 : 2);
+  const vary = (m, c, d) => {
     const sc = c.sc || [0, 2, 4, 5, 7, 9, 11], all = [];
     for (let o = 3; o <= 8; o++) sc.forEach(p => all.push(o * 12 + p));
     let k = 0; all.forEach((x, j) => { if (Math.abs(x - m) < Math.abs(all[k] - m)) k = j; });
-    const d = (Math.random() < 0.5 ? -1 : 1) * (Math.random() < 0.5 ? 1 : 2);
+    if (d == null) d = pickShift();
     return all[Math.max(0, Math.min(all.length - 1, k + d))];
   };
   const L40 = P => Math.min(40, P.lv || 1);
@@ -63,9 +69,9 @@
   const nextChord = P => {
     const av = CH.filter(c => (P.lv || 1) >= c.lv), i = av.findIndex(c => c.id === chordOf(P).id), c = av[(i + 1) % av.length];
     SV().chord = c.id; syncHaste(P);
-    toast('和弦：' + c.sym + ' ' + c.name + '（' + chordDesc(c, P) + '）');
+    toast('和弦：' + c.sym + ' ' + c.name + '（' + chordDesc(c, P) + '）', c.col);
     melody(P, c.tones.slice(0, 4).map((m, k) => [m, k * 0.06, 0.5]), 0.08);
-    R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 1.6, color: '#FFB8E0' });
+    R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 1.6, color: c.col });
   };
 
   // ---------- 音符 ----------
@@ -80,8 +86,9 @@
 
   // ---------- 這一趟的狀態 ----------
   // q＝演奏完還沒射出去的音符（一個一個射）、qT＝下一個還要等幾秒、qO＝射出去的樣子（照那一下普攻）
-  const ST = { run: null, rec: null, perf: null, cast: null, release: null, inRel: false, press: null, lastShotT: 0, hintT: -99, ally: [], q: [], qT: 0, qO: null };
-  const reset = () => { ST.rec = null; ST.perf = null; ST.cast = null; ST.release = null; ST.inRel = false; ST.press = null; ST.ally = []; ST.q = []; ST.qT = 0; ST.qO = null; };
+  // pid＝第幾段演奏（護盾照這個刷新）；ally＝電腦隊友身上的攻速、傷害加成（時間到還原）
+  const ST = { run: null, rec: null, perf: null, cast: null, release: null, inRel: false, press: null, lastShotT: 0, hintT: -99, ally: [], q: [], qT: 0, qO: null, pid: 0 };
+  const reset = () => { ST.rec = null; ST.perf = null; ST.cast = null; ST.release = null; ST.inRel = false; ST.press = null; ST.ally.forEach(b => { if (b.a && b.a.st) b.a.st[b.key] /= b.k; }); ST.ally = []; ST.q = []; ST.qT = 0; ST.qO = null; };
 
   // ---------- 寫樂譜 ----------
   const REC_T = 10, HOLD = 0.45;
@@ -110,20 +117,27 @@
   const baseRate = P => { const b = R.WEAPONS && P.item && R.WEAPONS[P.item.base]; return (b && b.rate) || (P.ws && P.ws.rate) || 1; };
   const spdK = P => Math.max(0.25, (P.ws && P.ws.rate ? P.ws.rate : 1) / baseRate(P));
   const perfDur = P => Math.max(0.3, Math.min(4, 2 * (P.pv && P.pv.bdFast ? 0.8 : 1) * (P.pv && P.pv.bdRhythm ? 0.7 : 1) / spdK(P)));
+  const PERF_MP = 5;   // 每次演奏花的魔力（2026-10-11 作者）
   const startPerf = (P, what) => {
     const notes = SV().notes; if (!notes || !notes.length || ST.rec || ST.perf) return false;
-    const dur = perfDur(P), cap = Math.max(capOf(P), notes.reduce((a, n) => a + n.d, 0)), bt = dur / cap, c = chordOf(P);
+    if (P.mp < PERF_MP) { const t = now(); if (t - ST.hintT > 2) { ST.hintT = t; toast('魔力不夠（演奏要 ' + PERF_MP + ' 點魔力）'); } return false; }
+    P.mp -= PERF_MP;
+    const dur = perfDur(P), cap = Math.max(capOf(P), notes.reduce((a, n) => a + n.d, 0)), bt = dur / cap, c = chordOf(P), dv = pickShift();
     let at = 0; const times = notes.map(n => { const t = at; at += n.d * bt; return t; });
-    const mid = notes.map((n, i) => vary(midiOf(n, i, c), c));
-    ST.perf = Object.assign({ t: 0, dur, notes: notes.slice(), times, mid, shown: 0 }, what);
-    melody(P, notes.map((n, i) => [mid[i], times[i], Math.max(0.08, n.d * bt * 0.9)]), 0.085);
-    R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 1.2, color: '#FFB8E0' });
+    const mid = notes.map((n, i) => vary(midiOf(n, i, c), c, dv));
+    ST.perf = Object.assign({ t: 0, dur, notes: notes.slice(), times, mid, shown: 0, pid: ++ST.pid }, what);
+    // 第一個音、最後一個音同時彈出和弦（低八度的三個和弦音）
+    const len = i => Math.max(0.08, notes[i].d * bt * 0.9), chord = i => c.tones.slice(0, 3).map(m => [m - 12, times[i], Math.max(0.3, len(i))]);
+    const last = notes.length - 1;
+    melody(P, notes.map((n, i) => [mid[i], times[i], len(i)]).concat(chord(0), last > 0 ? chord(last) : []), 0.085);
+    R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 1.2, color: c.col });
     return true;
   };
-  const shieldAll = (P, sh, hl, range) => {
-    if (sh > 0) { P.shield = Math.min(P.hpMax, (P.shield || 0) + sh); P.buff = P.buff || {}; P.buff.shieldT = Math.max(P.buff.shieldT || 0, 6); }
+  // key＝'atk:段號'、'skill:段號'、'ult:段號'：同一個 key 累加，換了段號就把上一段給的護盾換掉（netaid.js 的 R.keyedShield）
+  const shieldAll = (P, sh, hl, range, key) => {
+    if (sh > 0) { if (R.keyedShield && key) R.keyedShield(P, sh, key); else P.shield = Math.min(P.hpMax, (P.shield || 0) + sh); P.buff = P.buff || {}; P.buff.shieldT = Math.max(P.buff.shieldT || 0, 6); }
     if (hl > 0 && R.healP) R.healP(hl);
-    if (R.nearAllies && R.aidAlly) R.nearAllies(P, range || 8).forEach(al => R.aidAlly(al, { shieldAbs: sh, healAbs: hl, shieldT: 6, quiet: true }));
+    if (R.nearAllies && R.aidAlly) R.nearAllies(P, range || 8).forEach(al => R.aidAlly(al, { shieldAbs: sh, shKey: key, healAbs: hl, shieldT: 6, quiet: true }));
     if (sh > 0 || hl > 0) R.fx && R.fx('ring', P.x, 0.1, P.z, { r: range ? 3 : 1.6, color: '#5AE8A0' });
   };
   // 攻速：自己（P.sb，時間到 skillbook.js 會還原）、電腦隊友（a.st.rate，這裡自己還原）、連線隊友（netaid.js 送過去）
@@ -132,9 +146,16 @@
     if (P.ws) { P.sb = P.sb || {}; const id = 'bd:score', old = P.sb[id]; if (old && old.rate) P.ws.rate /= old.rate; P.sb[id] = { left: t, t, rate: k, color: '#FFE08A' }; P.ws.rate *= k; }
     (R.nearAllies ? R.nearAllies(P, 9) : []).forEach(al => {
       if (al.remote != null) { R.aidAlly && R.aidAlly(al, { rateK: k, rateT: t }); return; }
-      if (!al.st || !al.st.rate) return; const old = ST.ally.find(b => b.a === al); if (old) { al.st.rate /= old.k; old.k = k; old.left = t; } else ST.ally.push({ a: al, k, left: t }); al.st.rate *= k;
+      allyMod(al, 'rate', k, t);
     });
   };
+  // 電腦隊友身上的加成：同一種刷新（不疊），時間到還原
+  function allyMod(al, key, k, t) {
+    if (!(k > 1) || !al || !al.st || !al.st[key]) return;
+    const old = ST.ally.find(b => b.a === al && b.key === key);
+    if (old) { al.st[key] /= old.k; old.k = k; old.left = t; } else ST.ally.push({ a: al, key, k, left: t });
+    al.st[key] *= k;
+  }
 
   // ---------- 音符的樣子（顏色照種類：攻擊紅、增益綠、普攻金；二分的大一點） ----------
   const TEX = {};
@@ -159,7 +180,8 @@
     const rounds = leg(P) === 'lg_echo' ? 2 : 1;
     ST.qO = { o: Object.assign({}, o), off: Math.hypot(o.x - P.x, o.z - P.z) };
     const was = ST.q.length;
-    for (let r = 0; r < rounds; r++) notes.forEach((n, i) => ST.q.push({ n, i, m: mid && mid[i] }));
+    const pid = ST.perf ? ST.perf.pid : ST.pid;
+    for (let r = 0; r < rounds; r++) notes.forEach((n, i) => ST.q.push({ n, i, m: mid && mid[i], pid }));
     if (R.num) R.num(P.x, 2.6, P.z, '♫×' + notes.length * rounds, 'crit');
     if (!was) { const f = fireNote(P); ST.qT = gapOf(P); return f; }
     return null;
@@ -171,26 +193,65 @@
     const n = it.n, a = P.aimA + (Math.random() - 0.5) * SPREAD, off = ST.qO.off;
     const s = hush(() => fi0(Object.assign({}, ST.qO.o, { x: P.x + Math.sin(a) * off, z: P.z + Math.cos(a) * off, a, _bd: 1 })));
     if (s) {
-      s.bdMidi = it.m || midiOf(n, it.i, chordOf(P)); s.bdD = n.d;   // 打中敵人的時候彈這個音（發出的時候不出聲）
       dress(s, n);
-      if (n.d >= 1 && n.k === 'a') { const big = n.d >= 2 ? 2 : 1, m = nk(P, 'a'); s.bdBoom = { r: big * areaK(P), dmg: (s.dmg || 0) * big * m, col: '#FF6A5A' }; }
+      // 攻擊音符：四分半徑 2 公尺、二分 4 公尺（傷害兩倍）；碰到敵人、撞牆、飛到最遠都炸
+      if (n.d >= 1 && n.k === 'a') { const big = n.d >= 2 ? 2 : 1, m = nk(P, 'a'); s.bdBoom = { r: 2 * big * areaK(P), dmg: (s.dmg || 0) * big * m, col: '#FF6A5A', wall: 1 }; }
     }
-    if (n.d >= 1 && n.k === 'b') { const v = P.mpMax * 0.01 * healK(P) * nk(P, 'b'); shieldAll(P, v, n.d >= 2 ? v : 0); }
+    // 增益音符：你和隊友最大魔力 10% 的護盾（二分再回同樣多的生命）；同一段演奏累加，下一段演奏刷新
+    if (n.d >= 1 && n.k === 'b') { const v = P.mpMax * 0.1 * healK(P) * nk(P, 'b'); shieldAll(P, v, n.d >= 2 ? v : 0, 8, 'atk:' + it.pid); }
     return s;
   };
   // 技能：照樂譜算倍率
+  // 同一種音符重複：第一個全額、第二個一半、第三個起 1/4（2 個＝1.5、4 個＝2、8 個＝3）
+  const dim = n => (n <= 0 ? 0 : n === 1 ? 1 : 1.5 + 0.25 * (n - 2));
   const castMods = (P, notes) => {
     const c = tally(notes), a = nk(P, 'a'), b = nk(P, 'b'), e = nk(P, 'n');
-    return { c, dmg: 1 + (0.08 * c.aq + 0.3 * c.ah) * a, area: 1 + (0.08 * c.aq + 0.3 * c.ah) * a, heal: 1 + 0.05 * c.bq * b, buff: 1 + 0.4 * c.bh * b,
-      cd: Math.max(0.3, 1 - 0.05 * c.bq * b + 0.1 * c.ah), mpx: 0.25 * c.ah, rate: 1 + 0.05 * c.e * e, ally: c.bh * b };
+    const atk = (0.1 * dim(c.aq) + 0.3 * dim(c.ah)) * a, cdCut = 0.1 * dim(c.bq) * b, cdAdd = 0.1 * dim(c.ah);
+    return { c, dmg: 1 + atk, area: 1 + atk, heal: 1 + 0.1 * dim(c.bq) * b, buff: 1 + 0.25 * dim(c.bh) * b, cdCut, cdAdd,
+      cd: Math.max(0.3, 1 - cdCut + cdAdd), mpx: 0.2 * dim(c.ah), rate: 1 + 0.1 * dim(c.e) * e, ally: dim(c.bh) * b };
   };
-  const post = (P, i, id, m) => {
+  // 這份樂譜演奏完放技能會得到的加成（五線譜底下列出來）
+  const pctS = x => { const v = Math.round(x * 1000) / 10; return (v % 1 ? v.toFixed(1) : String(v)) + '%'; };
+  const gainsOf = P => {
+    const notes = SV().notes; if (!notes || !notes.length) return ['樂譜是空的'];
+    const m = castMods(P, notes), L = [];
+    if (m.rate > 1) L.push('攻速 +' + pctS(m.rate - 1) + '（' + (P.adv === 'serane' ? 16 : 8) + ' 秒）');
+    if (m.dmg > 1) L.push('傷害與範圍 +' + pctS(m.dmg - 1));
+    if (m.heal > 1) L.push('恢復與護盾 +' + pctS(m.heal - 1));
+    if (m.buff > 1) L.push('增益 +' + pctS(m.buff - 1));
+    if (m.cd < 1) L.push('冷卻 −' + pctS(1 - m.cd)); else if (m.cd > 1) L.push('冷卻 +' + pctS(m.cd - 1));
+    if (m.mpx > 0) L.push('耗魔 +' + pctS(m.mpx));
+    if (m.ally > 0) L.push('友軍護盾與回血各 ' + pctS(0.1 * m.ally * healK(P)) + ' 魔力上限');
+    return L.length ? L : ['沒有加成'];
+  };
+  const post = (P, i, id, m, pid) => {
     const sk = R.SKILLS[id] || {};
     if (i === 0) { if (P.skillCd > 0) P.skillCd *= m.cd; } else if (P.skCd && P.skCd[i] > 0) P.skCd[i] *= m.cd;
     if (m.mpx > 0) P.mp = Math.max(0, P.mp - (sk.mp || 0) * m.mpx);
     applyRate(P, m.rate, P.adv === 'serane' ? 16 : 8);
-    if (m.ally > 0) shieldAll(P, P.mpMax * 0.2 * m.ally * healK(P), P.mpMax * 0.1 * m.ally * healK(P), 9);
+    if (m.ally > 0) shieldAll(P, P.mpMax * 0.1 * m.ally * healK(P), P.mpMax * 0.1 * m.ally * healK(P), 9, 'skill:' + pid);
     if (R.num) R.num(P.x, 2.6, P.z, '♫ ' + (sk.name || ''), 'crit');
+  };
+
+  // ---------- 大招狂想曲（classes2b.js 的 R.ULTS.bard 呼叫；2026-10-11 作者：拿掉增傷、減傷） ----------
+  // 回復：你最大魔力 50%（× 小三和弦、增益四分的恢復加成 ×2）的生命與魔力，給你和 12 公尺內的隊友；
+  // 兩倍的樂譜技能加成 10 秒：攻速、傷害（增益二分的「增益 +%」也兩倍、乘在上面）、你自己的技能冷卻減少、增益二分的護盾與回血。
+  R.bardUlt = P => {
+    const m = castMods(P, SV().notes || []), hk = healK(P), c = chordOf(P), pid = ++ST.pid;
+    const H = P.mpMax * 0.5 * hk * (1 + 2 * (m.heal - 1)), bk = 1 + 2 * (m.buff - 1);
+    const rate = 1 + 2 * (m.rate - 1) * bk, dmg = 1 + 2 * (m.dmg - 1) * bk, sh = 2 * P.mpMax * 0.1 * m.ally * hk, t = 10;
+    if (R.healP) R.healP(H + sh); P.mp = Math.min(P.mpMax, P.mp + H);
+    if (sh > 0) shieldAll(P, sh, 0, 0.01, 'ult:' + pid);
+    // 直接掛在 P.sb（不走 SKILL_TYPES.buff：那裡吟遊詩人的增益會再照魔力上限放大，就不是剛好兩倍了）；時間到 skillbook.js 會還原攻速
+    if (rate > 1 || dmg > 1) { P.sb = P.sb || {}; const old = P.sb['bd:ult']; if (old && old.rate && P.ws) P.ws.rate /= old.rate; P.sb['bd:ult'] = Object.assign({ left: t, t, color: c.col }, rate > 1 && P.ws ? { rate } : {}, dmg > 1 ? { dmg } : {}); if (rate > 1 && P.ws) P.ws.rate *= rate; R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 2, color: c.col }); }
+    if (m.cdCut > 0) { const f = Math.max(0.1, 1 - 2 * m.cdCut); if (P.skillCd > 0) P.skillCd *= f; if (P.skCd) P.skCd = P.skCd.map(x => (x || 0) * f); }
+    (R.nearAllies ? R.nearAllies(P, 12) : []).forEach(al => {
+      if (!R.aidAlly) return;
+      R.aidAlly(al, Object.assign({ healAbs: H + sh, mpAbs: H, shieldAbs: sh, shKey: 'ult:' + pid, shieldT: t }, al.remote != null ? { rateK: rate, rateT: t, dmgK: dmg, dmgT: t } : {}));
+      if (al.remote == null) { allyMod(al, 'rate', rate, t); allyMod(al, 'dmg', dmg, t); }
+    });
+    R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 12, color: c.col });
+    if (R.num) R.num(P.x, 2.8, P.z, '♫ 狂想曲 ×2', 'heal');
   };
 
   // ---------- 技能的型：和弦（範圍、恢復）＋樂譜（傷害、範圍、恢復、增益） ----------
@@ -232,23 +293,25 @@
     const sk = R.SKILLS[id]; if (!sk) return raw(i);
     if (cdOf(P, i) > 0) return raw(i);   // 還在冷卻：照原本的（不放）
     const m = castMods(P, notes);
-    if (P.mp < sk.mp * (1 + m.mpx)) { toast('魔力不夠'); return; }
+    if (P.mp < sk.mp * (1 + m.mpx) + PERF_MP) { toast('魔力不夠（技能 ' + Math.ceil(sk.mp * (1 + m.mpx)) + '＋演奏 ' + PERF_MP + '）'); return; }
     startPerf(P, { kind: 'skill', i, id });
   };
   R.useSkill = (...a) => { const P = W().P; if (!IS(P) || !W().run) return us0(...a); return slotCast(P, 0); };
   R.castSlot = i => { const P = W().P; if (!IS(P) || !(i >= 1) || !W().run) return cs0(i); return slotCast(P, i); };
   // 普攻：寫樂譜的時候照常射一發（記成八分音符）；有樂譜就先演奏（演奏的時候不能普攻）、演奏完一個一個射出樂譜的音；樂譜是空的就不射
   const at0 = R.attack;
+  // 普攻不耗魔力（2026-10-11 作者：魔力改成每次演奏花 5 點）：借原本的普攻之前把魔力補到夠扣，扣完還原
+  const freeMp = (P, f) => { const mp0 = P.mp, need = (P.ws && P.ws.mp) || 0; if (P.mp < need) P.mp = need; try { return f(); } finally { P.mp = mp0; } };
   R.attack = (...a) => {
     const P = W().P; if (!IS(P) || !W().run || ST.release) return at0(...a);
-    if (ST.rec) return at0(...a);
+    if (ST.rec) return freeMp(P, () => at0(...a));
     if (P.atkCd > 0 || P.dead || P.knockT > 0 || P.stance > 0) return;
     if (!SV().notes || !SV().notes.length) { const t = now(); if (t - ST.hintT > 4) { ST.hintT = t; toast('樂譜是空的，普攻不會發出攻擊——按住 X 寫一段樂譜（寫的時候普攻照常）'); } P.atkCd = 0.3; return; }
     if (ST.perf) return;
-    startPerf(P, { kind: 'atk' });
+    if (!startPerf(P, { kind: 'atk' })) P.atkCd = 0.3;
   };
   // 演奏中經過一個音符：發出那一顆的普攻（2026-10-11 作者）。借原本的普攻算出位置、速度、傷害，攔下來換成這一顆音符；聲音由演奏負責，這一下不出聲
-  const noteAtk = (P, n, m) => { const cd = P.atkCd; ST.release = [n]; ST.relMid = [m]; ST.inRel = true; P.atkCd = 0; try { hush(() => at0()); } catch (e) { } finally { ST.release = null; ST.inRel = false; P.atkCd = cd; } };
+  const noteAtk = (P, n, m) => { const cd = P.atkCd; ST.release = [n]; ST.relMid = [m]; ST.inRel = true; P.atkCd = 0; try { hush(() => freeMp(P, () => at0())); } catch (e) { } finally { ST.release = null; ST.inRel = false; P.atkCd = cd; } };
   const perfDone = P => {
     const p = ST.perf; ST.perf = null;
     if (chordOf(P).id === 'ele') P.mp = Math.min(P.mpMax, P.mp + P.mpMax * 0.05);
@@ -256,7 +319,7 @@
     if (p.kind === 'atk') P.atkCd = 0;   // 音符已經在演奏中一顆一顆發出去了
     else if (p.kind === 'skill') {
       ST.cast = castMods(P, p.notes); let ok = false;
-      try { ok = hush(() => castNow(P, p.i)); } finally { const m = ST.cast; ST.cast = null; if (ok) post(P, p.i, p.id, m); }
+      try { ok = hush(() => castNow(P, p.i)); } finally { const m = ST.cast; ST.cast = null; if (ok) post(P, p.i, p.id, m, p.pid); }
     }
   };
   // 主要的那一發：寫樂譜的時候記一個八分音符；演奏完的那一下換成音符的佇列（同一下的其他發不射）；演奏中不射
@@ -272,16 +335,20 @@
   };
   // 三重奏的音符：撞到敵人炸開半徑 3 公尺（傷害照那一發）
   const fiT = R.fire;
-  R.fire = o => { const s = fiT(o); try { const P = W().P; if (s && o && o.owner === 'p' && !o.primary && !o._bd && IS(P) && now() < (ST.trioT || 0)) { dress(s, { d: 1, k: 'a' }); s.bdBoom = { r: 3, dmg: s.dmg || 0, col: '#FF6A5A' }; } } catch (e) { } return s; };
-  // 攻擊音符：碰到敵人的那一下炸開（打牆、飛完不炸）；每顆音符打中敵人的時候彈它的音（同一瞬間打中很多下只彈兩個）
-  let hitT = 0, hitN = 0;
+  R.fire = o => { const s = fiT(o); try { const P = W().P; if (s && o && o.owner === 'p' && !o.primary && !o._bd && IS(P) && now() < (ST.trioT || 0)) { dress(s, { d: 1, k: 'a' }); s.bdBoom = { r: 3, dmg: s.dmg || 0, col: '#FF6A5A', wall: 1 }; } } catch (e) { } return s; };
+  // 攻擊音符、三重奏的音符：碰到敵人的那一下炸開；撞牆、飛到最遠（從子彈裡消失）也炸（2026-10-11 作者）。打中不出聲（聲音只在演奏）
+  const boom = s => { const b = s.bdBoom; s.bdBoom = null; R.fx && R.fx('boom', s.x, 0.6, s.z, { r: b.r, color: b.col }); R.aoe(s.x, s.z, b.r, b.dmg, { props: true }); };
   const up0 = R.updateShots;
   R.updateShots = dt => {
-    const tones = (W().shots || []).filter(s => s.bdMidi && !s.dead && s.hit).map(s => [s, s.hit.size]);
-    const live = (W().shots || []).filter(s => s.bdBoom && !s.dead).map(s => [s, s.hit ? s.hit.size : 0]);
+    const arr = W().shots || [], run = W().run;
+    const live = arr.filter(s => s.bdBoom && !s.dead).map(s => [s, s.hit ? s.hit.size : 0]);
     const r = up0(dt);
-    tones.forEach(([s, n]) => { if (!(s.hit && s.hit.size > n)) return; const t = now(); if (t - hitT > 0.05) { hitT = t; hitN = 0; } if (hitN++ >= 2) return; const P = W().P; if (P) melody(P, [[s.bdMidi, 0, 0.16 + (s.bdD || 0.5) * 0.12]].concat(s.bdD >= 2 ? [[s.bdMidi - 12, 0, 0.4]] : []), 0.1); });
-    live.forEach(([s, n]) => { if (s.hit && s.hit.size > n) { const b = s.bdBoom; s.bdBoom = null; R.fx && R.fx('boom', s.x, 0.6, s.z, { r: b.r, color: b.col }); R.aoe(s.x, s.z, b.r, b.dmg, { props: true }); } });
+    const after = W().shots || [];
+    live.forEach(([s, n]) => {
+      if (!s.bdBoom) return;
+      if (s.hit && s.hit.size > n) return boom(s);
+      if (s.bdBoom.wall && W().run === run && (s.dead || after.indexOf(s) < 0)) boom(s);
+    });
     return r;
   };
   // 七和弦：傷害
@@ -318,7 +385,7 @@
       if (p.t >= p.dur) perfDone(P);
     }
     if (ST.q.length) { ST.qT -= dt; while (ST.q.length && ST.qT <= 0) { fireNote(P); ST.qT += gapOf(P); } } else ST.qT = 0;
-    for (let k = ST.ally.length - 1; k >= 0; k--) { const b = ST.ally[k]; b.left -= dt; if (b.left <= 0 || !b.a || b.a.dead) { if (b.a && b.a.st) b.a.st.rate /= b.k; ST.ally.splice(k, 1); } }
+    for (let k = ST.ally.length - 1; k >= 0; k--) { const b = ST.ally[k]; b.left -= dt; if (b.left <= 0 || !b.a || b.a.dead) { if (b.a && b.a.st) b.a.st[b.key] /= b.k; ST.ally.splice(k, 1); } }
   };
 
   // ---------- 職業鍵（X）、職業特效的條 ----------
@@ -331,19 +398,19 @@
   };
   const C = R.CORE && R.CORE.bard;
   if (C) Object.assign(C, {
-    name: '和弦', col: '#FFB8E0',
+    name: '和弦', col: '#FFB8E0',   // 職業條的顏色跟著和弦（gauge 回傳的 col）
     help: P => '和弦與樂譜：X 點一下換和弦／大小調（大三＝傷害、小三＝恢復與護盾、20 級七和弦＝範圍、30 級九和弦＝技能急速、40 級十一和弦＝演奏回魔）；按住 X 重新錄製 10 秒的樂譜——普攻是八分音符、基礎冷卻 13 秒以內的技能是四分、以上是二分（一個小節 '
-      + capOf(P) + ' 拍）。之後每次出手：按下 → 演奏（' + perfDur(P).toFixed(1) + ' 秒，可以走、翻滾，不能普攻；攻速越快演奏越快）→ 發出。普攻演奏完一個一個往前方射出樂譜的音符（每個隔 ' + gapOf(P).toFixed(2) + ' 秒；攻擊音符碰到敵人炸開、增益音符給護盾；射的時候就能開始下一次演奏；樂譜是空的就不射），技能照音符加攻速、傷害、範圍、恢復、增益。'
+      + capOf(P) + ' 拍）。之後每次出手：按下 → 演奏（' + perfDur(P).toFixed(1) + ' 秒、花 5 點魔力，可以走、翻滾，不能普攻；攻速越快演奏越快）→ 發出。普攻演奏中經過一個音符就射出那一顆（普攻本身不耗魔力；攻擊音符碰到敵人、撞牆、飛完都會炸開，四分 2 公尺、二分 4 公尺；增益音符給你和隊友最大魔力 10% 的護盾，二分再回同樣多的生命；樂譜是空的就不射），技能照音符加攻速、傷害、範圍、恢復、增益（同一種音符第二個減半、第三個起 1/4）。護盾每段演奏刷新、不疊。'
       + ({ aria: '詠嘆詩人：增益音符效果 ×1.5。', drummer: '戰鼓手：攻擊音符效果 ×1.5。', serane: '奏域師：八分音符的攻速維持兩倍久。' }[P && P.adv] || ''),
     step() { }, onCast() { }, play() { },
     act() { },
-    gauge(P) { const c = chordOf(P); return { name: '和弦 ' + c.sym, col: '#FFB8E0', text: c.name + '・' + chordDesc(c, P), sub: status(P), x: ST.rec ? '按住寫完' : '換和弦／按住寫樂譜' }; }
+    gauge(P) { const c = chordOf(P); return { name: '和弦 ' + c.sym, col: c.col, text: c.name + '・' + chordDesc(c, P), sub: status(P), x: ST.rec ? '按住寫完' : '換和弦／按住寫樂譜' }; }
   });
 
   // ---------- 畫面：左邊的五線譜（2026-10-11：R 鈕變回技能，不再畫和弦） ----------
   const css = document.createElement('style');
   css.textContent = '#bd-staff{position:fixed;z-index:30;pointer-events:none;display:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.6))}'
-    + '#bd-staff canvas{display:block;width:236px;height:78px}';
+    + '#bd-staff canvas{display:block;width:236px}';
   document.head.appendChild(css);
   const box = document.createElement('div'); box.id = 'bd-staff'; const can = document.createElement('canvas'); box.appendChild(can); document.body.appendChild(box);
   const DPR = () => Math.min(2, window.devicePixelRatio || 1);
@@ -362,15 +429,22 @@
   let drawKey = '';
   const draw = P => {
     const c = chordOf(P), notes = ST.rec ? ST.rec.notes : SV().notes || [], cap = Math.max(capOf(P), notes.reduce((a, n) => a + n.d, 0));
-    const key = [c.id, notes.length, cap, ST.rec ? Math.ceil(ST.rec.t * 4) : -1, ST.perf ? Math.floor(ST.perf.t / ST.perf.dur * 24) : -1, P.lv, (P.ws && P.ws.rate || 0).toFixed(2)].join('|');
+    const key = [c.id, notes.map(n => n.d + n.k).join(''), cap, ST.rec ? Math.ceil(ST.rec.t * 4) : -1, ST.perf ? Math.floor(ST.perf.t / ST.perf.dur * 24) : -1, P.lv, P.adv, (P.ws && P.ws.rate || 0).toFixed(2), ST.q.length].join('|');
     if (key === drawKey) return; drawKey = key;
-    const d = DPR(), Wd = 236, Hd = 78; if (can.width !== Wd * d) { can.width = Wd * d; can.height = Hd * d; }
-    const g = can.getContext('2d'); g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, Wd, Hd);
+    // 底下的技能加成：先量好要幾行
+    const d = DPR(), Wd = 236, g = can.getContext('2d');
+    g.setTransform(1, 0, 0, 1, 0, 0); g.font = '11px "Segoe UI","Microsoft JhengHei",sans-serif';
+    const lines = []; let cur = '技能演奏：';
+    gainsOf(P).forEach((t, i) => { const add = (i ? '・' : '') + t; if (g.measureText(cur + add).width > Wd - 20 && cur !== '技能演奏：') { lines.push(cur); cur = t; } else cur += add; });
+    lines.push(cur);
+    const Hd = 80 + lines.length * 14;
+    if (can.width !== Wd * d || can.height !== Hd * d) { can.width = Wd * d; can.height = Hd * d; can.style.height = Hd + 'px'; }
+    g.setTransform(d, 0, 0, d, 0, 0); g.clearRect(0, 0, Wd, Hd);
     const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
     const bg = g.createLinearGradient(0, 0, 0, Hd); bg.addColorStop(0, 'rgba(46,32,40,.94)'); bg.addColorStop(1, 'rgba(18,12,16,.94)');
-    rr(1, 1, Wd - 2, Hd - 2, 8); g.fillStyle = bg; g.fill(); g.lineWidth = 1.5; g.strokeStyle = ST.rec ? '#FF6A8A' : ST.perf ? '#FFE08A' : '#7A5A48'; g.stroke();
+    rr(1, 1, Wd - 2, Hd - 2, 8); g.fillStyle = bg; g.fill(); g.lineWidth = ST.perf ? 2 : 1.5; g.strokeStyle = ST.rec ? '#FF6A8A' : ST.perf ? c.col : '#7A5A48'; g.stroke();
     g.font = 'bold 12px "Segoe UI","Microsoft JhengHei",sans-serif'; g.textBaseline = 'middle'; g.textAlign = 'left';
-    g.fillStyle = '#FFB8E0'; g.fillText(c.sym + '  ' + c.name, 10, 12); g.fillStyle = '#C8B8A8'; g.font = '11px "Segoe UI","Microsoft JhengHei",sans-serif'; g.textAlign = 'right'; g.fillText(chordDesc(c, P), Wd - 10, 12);
+    g.fillStyle = c.col; g.fillText(c.sym + '  ' + c.name, 10, 12); g.fillStyle = '#C8B8A8'; g.font = '11px "Segoe UI","Microsoft JhengHei",sans-serif'; g.textAlign = 'right'; g.fillText(chordDesc(c, P), Wd - 10, 12);
     const x0 = 30, x1 = Wd - 10, yb = 50, sp = 5; g.strokeStyle = 'rgba(232,216,200,.55)'; g.lineWidth = 1;
     for (let i = 0; i < 5; i++) { g.beginPath(); g.moveTo(x0 - 18, yb - i * sp + 0.5); g.lineTo(x1, yb - i * sp + 0.5); g.stroke(); }
     g.beginPath(); g.moveTo(x1 + 0.5, yb - 4 * sp); g.lineTo(x1 + 0.5, yb); g.stroke();
@@ -384,10 +458,13 @@
       g.beginPath(); g.moveTo(x + 3.3, y); g.lineTo(x + 3.3, y - 15); g.stroke();
       if (n.d < 1) { g.beginPath(); g.moveTo(x + 3.3, y - 15); g.quadraticCurveTo(x + 9, y - 10, x + 7, y - 5); g.stroke(); }
     });
-    if (ST.perf) { const x = x0 + 8 + (ST.perf.t / ST.perf.dur) * (x1 - x0 - 14); g.strokeStyle = 'rgba(255,224,138,.9)'; g.lineWidth = 2; g.beginPath(); g.moveTo(x, yb - 4 * sp - 4); g.lineTo(x, yb + 4); g.stroke(); }
-    g.font = '11px "Segoe UI","Microsoft JhengHei",sans-serif'; g.textAlign = 'left'; g.fillStyle = ST.rec ? '#FF8AA8' : ST.perf ? '#FFE08A' : '#B8A898';
-    g.fillText((ST.rec ? '● ' : '') + status(P), 10, Hd - 10);
-    if (ST.rec) { g.fillStyle = 'rgba(255,106,138,.85)'; g.fillRect(10, Hd - 3, (Wd - 20) * (1 - ST.rec.t / REC_T), 2); }
+    if (ST.perf) { const x = x0 + 8 + (ST.perf.t / ST.perf.dur) * (x1 - x0 - 14); g.strokeStyle = c.col; g.lineWidth = 2; g.beginPath(); g.moveTo(x, yb - 4 * sp - 4); g.lineTo(x, yb + 4); g.stroke(); }
+    g.font = '11px "Segoe UI","Microsoft JhengHei",sans-serif'; g.textAlign = 'left'; g.fillStyle = ST.rec ? '#FF8AA8' : ST.perf ? c.col : '#B8A898';
+    g.fillText((ST.rec ? '● ' : '') + status(P), 10, 68);
+    // 技能加成（顏色跟著和弦）
+    g.strokeStyle = 'rgba(232,216,200,.18)'; g.lineWidth = 1; g.beginPath(); g.moveTo(10, 78.5); g.lineTo(Wd - 10, 78.5); g.stroke();
+    g.fillStyle = c.col; lines.forEach((t, i) => g.fillText(t, 10, 87 + i * 14));
+    if (ST.rec) { g.fillStyle = 'rgba(255,106,138,.85)'; g.fillRect(10, 74, (Wd - 20) * (1 - ST.rec.t / REC_T), 2); }
   };
   // 只在遺跡裡、這一趟還沒結束的時候顯示（結算畫面、回到城裡、換職業都收起來）
   const shown = () => { const w = W(), P = w.P, run = $('run'); return IS(P) && !!w.run && !w.run.done && !w.town && !!run && !run.hidden && !run.classList.contains('town'); };
@@ -405,11 +482,11 @@
       // 放在畫面左邊、職業特效的條（#core-g）正上方，不擋中間的技能列；左上的資訊框底下留空
       const vis = el => { if (!el) return null; const q = el.getBoundingClientRect(); return q.width && q.height ? q : null; }, r = vis($('core-g')), rt = vis($('r-tl'));
       const top0 = rt && rt.height ? rt.bottom + 6 : 6;
-      const y = r && r.height ? r.top - 84 : window.innerHeight / 2 - 39;
+      const bh = box.getBoundingClientRect().height || 90, y = r && r.height ? r.top - bh - 6 : window.innerHeight / 2 - bh / 2;
       box.style.display = 'block'; box.style.left = (r && r.width ? r.left : 12) + 'px'; box.style.top = Math.max(top0, y) + 'px';
     } catch (e) { }
   };
   { const L = R.SKILL_LIB && R.SKILL_LIB.bd_chord, K = R.SKILLS && R.SKILLS.bd_chord, d = '一次撥三條弦，三個音符扇形飛出去，撞到敵人炸開（半徑 3 公尺）。';
     if (L) { L.name = '三重奏'; L.desc = d; L.p = Object.assign({}, L.p, { trio: 1 }); } if (K) { K.name = '三重奏'; K.desc = d; } }
-  R.bardChord = { ST, SV, vary, scaleArgs, chordOf, castMods, tally, nextChord, startRec, endRec, perfDur, capOf, spdK };
+  R.bardChord = { ST, SV, vary, dim, gainsOf, scaleArgs, chordOf, castMods, tally, nextChord, startRec, endRec, perfDur, capOf, spdK };
 })(window.R);
