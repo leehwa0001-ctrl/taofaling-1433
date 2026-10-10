@@ -133,6 +133,30 @@
     + '.ul-cast{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);z-index:60;pointer-events:none;font:900 22px/1 var(--serif,serif);letter-spacing:.12em;color:#FFF;text-shadow:0 0 10px var(--c),0 0 22px var(--c),0 2px 0 #000;opacity:0}.ul-cast.on{animation:ulk .9s ease-out forwards}@keyframes ulk{0%{opacity:0;transform:translate(-50%,10px) scale(.9)}15%{opacity:1;transform:translate(-50%,0) scale(1.05)}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-14px)}}'
     + 'body.touch .ul-btn{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:calc(230px + env(safe-area-inset-bottom));width:64px;height:64px;border-radius:50%;z-index:7}body.touch .ul-cast{bottom:42%}';
   document.head.appendChild(css);
+  // ---------- 大招集滿的提示（2026-10-11 作者：集滿以後提示更明顯；大招圖的飽和度、對比 +30%） ----------
+  // 寶石：更亮、更快的呼吸光，外面一圈一圈往外擴的光環；名字變成職業色、發亮；集滿的那一下跳一次「大招集滿了」。
+  // 選擇器前面加 #run（比 hud3.js、skillicons-clean.js 的 .ul-btn 規則優先）
+  const css2 = document.createElement('style');
+  css2.textContent = '#run .ul-btn .skill-ult-art2{filter:saturate(1.3) contrast(1.3)}'
+    + '#run .ul-btn.ready .skill-ult-art2{filter:brightness(1.2) saturate(1.3) contrast(1.3)!important}'
+    + '#run .ul-btn.ready{animation:ulRdy .8s ease-in-out infinite!important}'
+    + '@keyframes ulRdy{0%,100%{box-shadow:inset 0 0 0 1px var(--cc,#E8C04A),inset 0 0 0 3px #120E0A,0 0 0 2px var(--cc,#E8C04A),0 0 14px var(--cc,#E8C04A)}'
+    + '50%{box-shadow:inset 0 0 0 2px #FFF,inset 0 0 0 4px #120E0A,0 0 0 3px var(--cc,#E8C04A),0 0 30px var(--cc,#E8C04A),0 0 64px color-mix(in srgb,var(--cc,#E8C04A) 65%,transparent)}}'
+    + '#run .ul-btn .ul-ring{position:absolute;inset:-3px;border-radius:inherit;border:2px solid var(--cc,#E8C04A);opacity:0;pointer-events:none;z-index:3}'
+    + '#run .ul-btn.ready .ul-ring{animation:ulRing 1.1s ease-out infinite}'
+    + '@keyframes ulRing{0%{opacity:.95;transform:scale(1)}100%{opacity:0;transform:scale(1.75)}}'
+    + '#run .ul-btn.ready .ul-txt{color:var(--cc,#E8C04A)!important;font-weight:900!important;text-shadow:0 0 6px var(--cc,#E8C04A),0 0 12px var(--cc,#E8C04A),0 1px 2px #000!important;animation:ulTxt .8s ease-in-out infinite}'
+    + '@keyframes ulTxt{50%{filter:brightness(1.7)}}';
+  document.head.appendChild(css2);
+  const htR = R.hudTick; let wasReady = null;
+  R.hudTick = dt => {
+    htR(dt);
+    const P = W().P, b = P && W().run ? document.querySelector('#run [data-tact="ult"]') : null; if (!b) { wasReady = null; return; }
+    if (!b.querySelector('.ul-ring')) { const r = document.createElement('i'); r.className = 'ul-ring'; b.appendChild(r); }
+    const rd = b.classList.contains('ready');
+    if (rd && wasReady === false) { const c = col(P.cls); R.toast && R.toast('大招集滿了！按 V 放「' + (ULT[P.cls] || ULT.warrior).name + '」', c); R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 2.4, color: c }); }
+    wasReady = rd;
+  };
   const stU = R.step;
   R.step = dt => {
     const r = stU(dt);
