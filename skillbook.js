@@ -302,7 +302,7 @@
     },
     zone(s, P, w, pw) {
       const [x0, z0] = s.self ? [P.x, P.z] : aimIn(P, s.range || 8), n = s.count || 1;
-      for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, o = n > 1 ? 1.8 : 0, [x, z] = R.nearestFloor(x0 + Math.sin(a) * o, z0 + Math.cos(a) * o); R.addZone({ kind: s.zone, x, z, r: s.r, life: s.life, dmg: pw * s.k }); }
+      for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, o = n > 1 ? 1.8 : 0, [x, z] = R.nearestFloor(x0 + Math.sin(a) * o, z0 + Math.cos(a) * o); R.addZone({ kind: s.zone, x, z, r: s.r, life: s.life, dmg: pw * s.k, healK: s.healK }); }   /* healK：聖域回血的倍率（heal1010.js） */
     },
     mark(s, P, w, pw) {
       const [x, z] = aimIn(P, s.range || 10); R.fx('ring', x, 0.1, z, { r: s.r, color: '#9A4ACF' });

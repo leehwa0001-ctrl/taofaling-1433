@@ -401,7 +401,7 @@
     for (const z of w.zones) {
       z.life -= dt; z.t += dt;
       if (z.kind === 'trap') { const e = w.enemies.find(e => !e.dead && Math.hypot(e.x - z.x, e.z - z.z) < z.r + e.def.size * 0.4); if (e) { e.st.root = 3; R.hurtEnemy(e, z.dmg, {}); z.life = 0; R.fx('ring', z.x, 0.1, z.z, { r: 1.2, color: '#C9A13A' }); } }
-      if (z.kind === 'sanct' && z.t > 0.5) { z.t = 0; if (Math.hypot(P.x - z.x, P.z - z.z) < z.r) R.healP(P.hpMax * 0.05, true); w.enemies.forEach(e => { if (!e.dead && Math.hypot(e.x - z.x, e.z - z.z) < z.r) R.hurtEnemy(e, z.dmg, {}); }); }
+      if (z.kind === 'sanct' && z.t > 0.5) { z.t = 0; if (Math.hypot(P.x - z.x, P.z - z.z) < z.r) R.healP(P.hpMax * 0.05 * (z.healK || 1), true);   /* healK：heal1010.js */ w.enemies.forEach(e => { if (!e.dead && Math.hypot(e.x - z.x, e.z - z.z) < z.r) R.hurtEnemy(e, z.dmg, {}); }); }
       if (z.kind === 'web' && Math.hypot(P.x - z.x, P.z - z.z) < z.r) P.slowT = Math.max(P.slowT, 0.3);
       if (z.kind === 'caltrop' && Math.hypot(P.x - z.x, P.z - z.z) < z.r && !P.air) { P.slowT = Math.max(P.slowT, 0.6); if (z.t > 0.8) { z.t = 0; R.hurtPlayer(z.dmg, null); } }
       if (z.kind === 'lava') { if (z.own === 'p') { if (z.t > 0.3) { z.t = 0; w.enemies.forEach(e => { if (!e.dead && Math.hypot(e.x - z.x, e.z - z.z) < z.r + 0.5) R.hurtEnemy(e, z.dmg, {}); }); } } else if (Math.hypot(P.x - z.x, P.z - z.z) < z.r) { if (z.t > 0.5) { z.t = 0; R.hurtPlayer(z.dmg, null); } } }

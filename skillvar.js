@@ -84,7 +84,7 @@
   css.textContent = '.sv-vars{display:flex;flex-wrap:wrap;align-items:center;gap:3px}'
     + '.sv-vars .sv-h{font-size:11px;color:var(--gold);margin-right:2px}'
     + '.sv-vars button{font-size:11px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:inherit;cursor:pointer;line-height:1.3}'
-    + '.sv-vars button.on{outline:2px solid #E8C04A;background:rgba(232,192,74,.2);border-color:transparent}'
+    + '.sv-vars button.on{outline:2px solid #E8C04A;background:rgba(232,192,74,.2);border-color:transparent}.sv-vars button:disabled{opacity:.45;cursor:default}'
     + '.sv-vars .sv-lock{font-size:11px;opacity:.7;line-height:1.35}'
     + '.sb-foot .sv-d{font-size:11.5px;line-height:1.4;color:var(--dim);margin-top:8px}.sb-foot .sv-d b{color:#E8D8B0;font-weight:700}';
   document.head.appendChild(css);
@@ -94,7 +94,7 @@
     let box = foot.querySelector('.sv-box');
     if (!box) { box = document.createElement('div'); box.className = 'sv-box'; foot.insertBefore(box, foot.firstChild); }
     const cur = chosen(id), r = rankOf(id);
-    if (!unlocked(id)) { box.innerHTML = '<div class="sv-vars"><span class="sv-lock">變化（這招練到 ★' + NEED + ' 才能選，目前 ★' + r + '）：' + vs.map(v => esc(VAR[v].n)).join('・') + '</span></div>'; return; }
+    if (!unlocked(id)) { box.innerHTML = '<div class="sv-vars"><span class="sv-h">變化</span>' + vs.map(v => '<button type="button" disabled title="' + esc(VAR[v].d) + '">' + esc(VAR[v].n) + '</button>').join('') + '<span class="sv-lock">（練到 ★' + NEED + ' 才能選，目前 ★' + r + '）</span></div>'; return; }   // 2026-10-10：還沒解鎖也排成一排（作者給的卡片樣子）
     box.innerHTML = '<div class="sv-vars"><span class="sv-h">變化</span><button type="button" class="' + (cur ? '' : 'on') + '" data-v="">原版</button>'
       + vs.map(v => '<button type="button" class="' + (cur === v ? 'on' : '') + '" data-v="' + v + '" title="' + esc(VAR[v].d) + '">' + esc(VAR[v].n) + '</button>').join('') + '</div>'
       + '<div class="sv-d">' + (cur ? '<b>' + esc(VAR[cur].n) + '</b>：' + esc(VAR[cur].d) : '原版：不改這招。') + '</div>';
