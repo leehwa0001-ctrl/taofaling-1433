@@ -269,7 +269,7 @@
     if (f && P && !P.dead && !w.paused) {
       if (f.mpRegen) P.mp = Math.min(P.mpMax, P.mp + f.mpRegen * dt);
       if (f.mpPct) P.mp = Math.min(P.mpMax, P.mp + P.mpMax * f.mpPct * dt);   // 2026-10-10 作者：周天太弱——固定點數改成照最大值的百分比
-      if (f.hpPct && P.hp < P.hpMax) P.hp = Math.min(P.hpMax, P.hp + P.hpMax * f.hpPct * dt);
+      if (f.hpPct && P.hp < P.hpMax) P.hp = Math.min(P.hpMax, P.hp + P.hpMax * f.hpPct * dt * (R.regenMul ? R.regenMul(P) : 1));   // 被動的回血（bal1010.js 把固定點數改成 %）也吃重傷之類的回復減少
       if (P.a2Rage > 0) P.a2Rage -= dt;
       if (f.crowd) { ct -= dt; if (ct <= 0) { ct = 0.4; P.a2Crowd = Math.min(5, (w.enemies || []).filter(e => !e.dead && !e.under && Math.hypot(e.x - P.x, e.z - P.z) < 6).length); } }
     }
