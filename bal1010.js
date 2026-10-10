@@ -72,6 +72,12 @@
   set('se_lock_aw', p => { p.k = Math.round(p.k / 3.8 * 2.6 * 100) / 100; }, rep('威力 ×3.8', '威力 ×2.6'));
   set('a2_summoner_medium_0', p => { p.k = 3; });
   set('a2_priest_bishop_1', p => { p.k = 1.4; });
+  // 補（2026-10-10 作者指出外修者是術士的轉職）：同名路線在別的職業是舊的，第一次比的時候被一起跳過——術士的外修者、武術家的內修者、召喚師的式神使，照同一個標準
+  set('wx_storm', p => { p.k = 0.42; });
+  set('a2_mage_waixiu_0', p => { p.k = 2.6; });
+  set('ss_shiki', p => { p.t = 6; }, rep('10 秒', '6 秒'));
+  set('ss_paper', p => { p.k = 0.5; });
+  set('a2_summoner_shikigami_1', p => { p.k = 1.6; });
 
   // ---------- C. 太弱 ----------
   set('g_allout', p => { const s = p.parts && p.parts[0] && p.parts[0][1]; if (s) { s.k = 1.6; s.spread = 0.9; } });
