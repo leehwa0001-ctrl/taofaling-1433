@@ -226,24 +226,24 @@
     if (!window.THREE || !W.scene || !pix()) return fx0(kind, x, y, z, o);
     try {
       sys(); ribInit();
-      const ctx = CUR, el0 = ctx && ctx.el, el = el0 === 'multi' ? byColor(o.color || ctx.col) : el0, r = o.r || 2;
+      const ctx = CUR, el0 = ctx && ctx.el, el = el0 === 'multi' ? byColor(o.color || ctx.col) : el0, r = o.r || 2, FQ = R.FXQ && R.FXQ.handles(kind) ? R.FXQ : null;   // FQ：fx1011.js 的貼圖面片（取代原本純色的形狀）
       // 原本一顆一顆小方塊的：改成粒子
-      if (kind === 'spark') { const cols = o.crit ? ['#FFE28A', '#FFFFFF'] : ['#FFF6D8', '#FFE8B0']; for (let i = 0; i < n(o.crit ? 12 : 7); i++) { const an = (o.a || 0) + (rnd() - 0.5) * 1.8, sp = 3 + rnd() * (o.crit ? 7 : 5); emit(A, x, y, z, Math.sin(an) * sp, 1 + rnd() * 3, Math.cos(an) * sp, o.crit ? 0.3 : 0.22, cols[i % 2], { size: o.crit ? 3.5 : 2.5, size1: 1, grav: 10 }); } if (o.crit) { ring(A, x, y, z, 14, 6, 0.16, '#FFFFFF', { size: 3, size1: 1 }); flash(x, y, z, '#FFF0C0', 12); } return; }
-      if (kind === 'poof' || kind === 'spawn') { const c = o.color || (el && PAL[el] ? PAL[el][0] : '#FFFFFF'); for (let i = 0; i < n(o.n || 10); i++) emit(A, x, y, z, (rnd() - 0.5) * 6, rnd() * 5 + (kind === 'spawn' ? 2 : 0), (rnd() - 0.5) * 6, 0.6, c, { size: 3.5, size1: 1.5, grav: 6, drag: 1.5 }); if (el && EL[el] && kind === 'poof' && (o.n || 10) >= 6) EL[el](x, z, 1.2, kind); return; }
+      if (kind === 'spark') { const cols = o.crit ? ['#FFE28A', '#FFFFFF'] : ['#FFF6D8', '#FFE8B0']; for (let i = 0; i < n(o.crit ? 12 : 7); i++) { const an = (o.a || 0) + (rnd() - 0.5) * 1.8, sp = 3 + rnd() * (o.crit ? 7 : 5); emit(A, x, y, z, Math.sin(an) * sp, 1 + rnd() * 3, Math.cos(an) * sp, o.crit ? 0.3 : 0.22, cols[i % 2], { size: o.crit ? 3.5 : 2.5, size1: 1, grav: 10 }); } if (o.crit) { ring(A, x, y, z, 14, 6, 0.16, '#FFFFFF', { size: 3, size1: 1 }); flash(x, y, z, '#FFF0C0', 12); } if (FQ) FQ.fx('spark', x, y, z, o, el); return; }
+      if (kind === 'poof' || kind === 'spawn') { const c = o.color || (el && PAL[el] ? PAL[el][0] : '#FFFFFF'); for (let i = 0; i < n(o.n || 10); i++) emit(A, x, y, z, (rnd() - 0.5) * 6, rnd() * 5 + (kind === 'spawn' ? 2 : 0), (rnd() - 0.5) * 6, 0.6, c, { size: 3.5, size1: 1.5, grav: 6, drag: 1.5 }); if (el && EL[el] && kind === 'poof' && (o.n || 10) >= 6) EL[el](x, z, 1.2, kind); if (FQ && kind === 'poof') FQ.fx('poof', x, y, z, Object.assign({}, o, { color: o.color || (el && PAL[el] ? PAL[el][0] : null) }), el); return; }
       if (kind === 'dust') { for (let i = 0; i < n(o.n || 6); i++) emit(N, x, y, z, (rnd() - 0.5) * 3, rnd() * 1.5, (rnd() - 0.5) * 3, 0.5, '#B8B0A0', { size: 4, size1: 8, a: 0.45, drag: 2 }); return; }
       // 連鎖閃電：鋸齒（白芯＋外光），一次畫完
       if (kind === 'bolt' && o.to) { lightning(x, y || 1.1, z, o.to.x, o.to.y != null ? o.to.y : 1.1, o.to.z, o.color || '#7FC8FF', 0.25, 1); emit(A, o.to.x, 1.1, o.to.z, 0, 0, 0, 0.1, '#E8F6FF', { size: 10, size1: 14, a: 0.8 }); return; }
       // 你的範圍技能落點
-      if (kind === 'mark' && ctx) { markFx(x, z, r, o.t, ctx.col || (el && PAL[el] ? PAL[el][0] : '#FFFFFF')); return; }
+      if (kind === 'mark' && ctx) { const mc = ctx.col || (el && PAL[el] ? PAL[el][0] : '#FFFFFF'); if (FQ) FQ.fx('mark', x, y, z, { r, t: o.t, color: mc }); else markFx(x, z, r, o.t, mc); return; }
       // 雷的光柱：換成劈下來的閃電
-      if (kind === 'pillar' && el === 'thunder') { EL.thunder(x, z, o.r || 1, kind); return; }
-      fx0(kind, x, y, z, o);
+      if (kind === 'pillar' && el === 'thunder') { EL.thunder(x, z, o.r || 1, kind); if (R.FXQ) R.FXQ.el('thunder', x, z, o.r || 1); return; }
+      if (FQ && kind !== 'mark') FQ.fx(kind, x, y, z, Object.assign({}, o, { color: o.color || (ctx && ctx.col) || (el && PAL[el] ? PAL[el][0] : undefined) }), el); else fx0(kind, x, y, z, o);
       // 從天上落下來的（隕石、流星……）：落地那一下多一道劃下來的光
       if (ctx && ctx.fall && el !== 'thunder' && (kind === 'boom' || kind === 'pillar')) { const c = el && PAL[el] ? PAL[el][0] : (o.color || '#FFFFFF'), sx = x + 2.2, sz = z - 1.4; ribbon([[sx, 11, sz], [x + 1.1, 5.5, z - 0.7], [x, 0.4, z]], 0.55, c, 0.16, { a: 0.9 }); ribbon([[sx, 11, sz], [x, 0.4, z]], 0.16, '#FFFFFF', 0.12, {}); }
       // 光環類（aura）每 0.2 秒就一圈：同一招的光環 0.3 秒最多加一次元素
       const rt = W.run ? W.run.t : 0, okRing = kind !== 'ring' || !ctx || !(ctx.ringT > rt); if (kind === 'ring' && ctx && okRing) ctx.ringT = rt + 0.3;
-      if (el && EL[el] && okRing && (kind === 'boom' || kind === 'ring' || kind === 'pillar' || kind === 'groundwave' || kind === 'rain')) EL[el](x, z, Math.min(5, kind === 'pillar' ? (o.r || 1) * 1.5 : r), kind);
-      else if (kind === 'slash' && o.len) { const a = o.a || 0, c = (el && PAL[el] ? PAL[el][0] : null) || o.color || '#FFFFFF'; for (let i = 0; i < n(10); i++) { const d = rnd() * o.len; emit(A, x + Math.sin(a) * d, 0.6 + rnd() * 0.6, z + Math.cos(a) * d, (rnd() - 0.5) * 1.5, 1 + rnd() * 2, (rnd() - 0.5) * 1.5, 0.35, c, { size: 3, size1: 1 }); } ribbon([[x, 0.9, z], [x + Math.sin(a) * o.len, 0.9, z + Math.cos(a) * o.len]], 0.25, c, 0.18, { a: 0.8 }); }
+      if (el && EL[el] && okRing && (kind === 'boom' || kind === 'ring' || kind === 'pillar' || kind === 'groundwave' || kind === 'rain')) { EL[el](x, z, Math.min(5, kind === 'pillar' ? (o.r || 1) * 1.5 : r), kind); if (R.FXQ) R.FXQ.el(el, x, z, Math.min(5, kind === 'pillar' ? (o.r || 1) * 1.5 : r)); }
+      else if (kind === 'slash' && o.len) { const a = o.a || 0, c = (el && PAL[el] ? PAL[el][0] : null) || o.color || '#FFFFFF'; for (let i = 0; i < n(10); i++) { const d = rnd() * o.len; emit(A, x + Math.sin(a) * d, 0.6 + rnd() * 0.6, z + Math.cos(a) * d, (rnd() - 0.5) * 1.5, 1 + rnd() * 2, (rnd() - 0.5) * 1.5, 0.35, c, { size: 3, size1: 1 }); } if (!FQ) ribbon([[x, 0.9, z], [x + Math.sin(a) * o.len, 0.9, z + Math.cos(a) * o.len]], 0.25, c, 0.18, { a: 0.8 }); }
       else if (kind === 'blink' && el && PAL[el]) burst(A, x, y || 1, z, 12, 4, 0.3, PAL[el], { size: 3, size1: 1 });
     } catch (e) { return fx0(kind, x, y, z, o); }
   };
