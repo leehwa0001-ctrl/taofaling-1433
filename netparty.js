@@ -53,6 +53,12 @@
       const a = list[+row.dataset.i - n0]; if (!a || +row.dataset.i < n0) return;
       const span = row.querySelector('.pm-t span'); if (span && !span.querySelector('em.np')) span.insertAdjacentHTML('beforeend', '<em class="np" style="color:#7FE0FF">連線</em>');
       const box = row.querySelector('.pm-t'); if (!box) return;
+      // 徽章獨立於姓名與生命數字，倒下或更新狀態時也保留。
+      let emblem = row.querySelector('.np-class');
+      if (R.classEmblemHTML && (!emblem || emblem.dataset.cls !== a.cls)) {
+        if (!emblem) { emblem = document.createElement('div'); emblem.className = 'np-class'; row.appendChild(emblem); }
+        emblem.dataset.cls = a.cls; emblem.innerHTML = R.classEmblemHTML(a.cls);
+      }
       let mp = box.querySelector('.np-mp'); if (!mp) { mp = document.createElement('div'); mp.className = 'meter np-mp'; mp.style.cssText = 'height:3px;margin-top:1px'; mp.innerHTML = '<i style="background:linear-gradient(90deg,#2A4A8A,#5AA8FF)"></i>'; box.appendChild(mp); }
       mp.firstChild.style.width = (a.s.mm ? Math.max(0, Math.min(1, a.s.mp / a.s.mm)) * 100 : 0) + '%';
       let sh = box.querySelector('.np-sh'); if (!sh) { sh = document.createElement('b'); sh.className = 'np-sh'; sh.style.cssText = 'position:absolute;top:0;height:100%;background:rgba(138,216,255,.55);pointer-events:none'; const meter = row.querySelector('.meter'); if (meter) { if (getComputedStyle(meter).position === 'static') meter.style.position = 'relative'; meter.appendChild(sh); } }
