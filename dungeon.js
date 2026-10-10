@@ -479,6 +479,7 @@
         if (Math.hypot(x - r.x, z - r.z) < (o.clear || 3)) continue;
         if (r.doors.some(d => { const [dx2, dz2] = kxz(d); return Math.hypot(cX(dx2) - x, cZ(dz2) - z) < 3; })) continue;
         if (!freeAt(x, z, o.rad || 0.6)) continue;
+        if (F.keepOut && F.keepOut.some(([kx, kz, kr]) => Math.hypot(x - kx, z - kz) < kr + (o.rad || 0.6))) continue;   // 第 0 層的樓梯、記錄碑那一排（savepoint.js）
         return [x, z];
       }
       return null;
@@ -601,6 +602,7 @@
     const keep = [];
     F.chests.forEach(c => keep.push([c.x, c.z, 2.2])); F.crystals.forEach(c => keep.push([c.x, c.z, 2.4]));
     if (F.stairs) keep.push([F.stairs.x, F.stairs.z, 3.4]); if (F.up) keep.push([F.up.x, F.up.z, 3.2]); if (F.coreView) keep.push([F.coreView.x, F.coreView.z, 4]);
+    (F.keepOut || []).forEach(k => keep.push(k));
     const kept = (x, z, rad) => keep.some(([kx, kz, kr]) => Math.hypot(x - kx, z - kz) < kr + rad);
     const sp2 = (r, o) => { for (let i = 0; i < 6; i++) { const s = spot(r, o); if (s && !kept(s[0], s[1], (o && o.rad) || 0.6)) return s; } return null; };
     // 靠牆的位置：回傳那一格的中心、牆在哪一邊、朝房間裡的方向

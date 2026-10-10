@@ -6,6 +6,10 @@
 // - 2026-10-05 作者：打倒領主體後記錄當前深度，該深度「以淺」的存檔點（含目前這一層）全部可用——
 //   中間忘了按記錄碑也不會卡。R.unlockSaveDepth(遺跡 id, 畫面層數, run) 給 lordfloor.js 用。
 // - 從存檔點傳送：R.loadFloor(f, { warp: 1 })，委託板的「運送補給」不把傳送算進去。
+// - 2026-10-11 作者：哈米莉亞級、阿彌勒級的第 0 層只剩一個大房間（hub）。營火旁紫色的轉送碑拿掉，改成房間前方（北邊）一整排往下的樓梯：
+//   這座遺跡每個存檔點一座（不管記過沒有，深的在左），最右邊多一座「第 1 層」（從頭走）；每座樓梯後面一塊記錄碑——記過＝綠、沒記過＝紅，
+//   碑的上方標著從那裡下去會到第幾層。走記過的樓梯直接到那一層；走沒記過的樓梯，會被傳回入口的樓梯前。碰記錄碑可以選記過的任一層。
+//   回歸水晶移到房間右邊（原本在北邊正中間，會擋到那一排）。dungeon.js 的擺設避開 F.keepOut。
 // 放在 restfloor.js、ruinvar.js 後面。
 (function (R) {
   const W = () => R.W, S = () => R.S, EVERY = 5;
@@ -32,6 +36,34 @@
   const SPOTS = [[-3.6, -2.4], [3.6, -2.4], [-3.6, 2.6], [3.6, 2.6], [0, -3.4], [-5, 0], [5, 0], [0, 3.6]];
   const WARP_SPOTS = [[4.6, -3.6], [-4.6, -3.6], [5.4, 0.6], [-5.4, 0.6], [3, -5], [-3, -5], [0, -4.6]];   // 第 0 層休息區的營火、勇者在房間中間，離遠一點
 
+  // ---------- 第 0 層只有一個大房間（哈米莉亞級、阿彌勒級） ----------
+  const hubOn = run => ok(run) && !!(run.grade && run.grade.floor0) && (run.grade.id === 'hamilia' || run.grade.id === 'amile');
+  // 這座遺跡所有的存檔點（畫面上的第幾層）：每 saveEvery 層一個（跟 build() 放記錄碑的規則一樣）
+  const allSaves = run => { const every = R.saveEvery ? R.saveEvery(run) : EVERY, L = []; if (every > 0) for (let n = every; floorOf(run, n) < run.floors; n += every) if (n >= 3) L.push(n); return L; };
+  const gfH = R.genFloor;
+  R.genFloor = (run, f) => {
+    const F = gfH(run, f);
+    if (f !== 0 || !hubOn(run) || !F.rooms || !F.rooms[0]) return F;
+    const st = F.rooms[0];
+    Object.assign(st, { i: 0, gx: 0, gy: 0, links: {}, x: 0, z: 0, hx: 18, hz: 14, shape: 'hall', type: 'start', rest: 1, cleared: true, visited: false, dist: 0 }); delete st.big;
+    st.w = st.hx * 2; st.h = st.hz * 2;
+    const H = Object.assign({}, F, { rooms: [st], hub: true, rest: true, links: undefined, tile: undefined });
+    // 那一排：深的在左，最右邊是第 1 層
+    const saves = allSaves(run), list = saves.slice().reverse().map(n => ({ n, save: true })).concat([{ n: 1, save: false }]);
+    const cnt = list.length, sp = Math.min(5.6, (st.hx * 2 - 6) / cnt), zS = st.z - st.hz + 6.2, zT = st.z - st.hz + 2.4;
+    list.forEach((it, i) => { it.x = st.x - (cnt - 1) / 2 * sp + i * sp; it.zS = zS; it.zT = zT; it.f = floorOf(run, it.n); });
+    H.hubRow = list;
+    H.keepOut = []; list.forEach(it => { H.keepOut.push([it.x, it.zS, 2.4]); if (it.save) H.keepOut.push([it.x, it.zT, 1.4]); });
+    R.carve(H, run);
+    return H;
+  };
+  // 回歸水晶：第 0 層大房間裡移到右邊（不擋那一排）
+  const ac0 = R.addCrystal;
+  R.addCrystal = (group, F, x, z, room) => {
+    if (F && F.hub && F.f === 0 && F.rooms && F.rooms[0] && F.tile) { const r = F.rooms[0]; [x, z] = R.nearestFloorLocal ? R.nearestFloorLocal(F.tile, r.x + r.hx - 4.5, r.z + 2) : [r.x + r.hx - 4.5, r.z + 2]; }
+    return ac0(group, F, x, z, room);
+  };
+
   const build = () => {
     const w = W(), run = w.run, F = w.F; if (!ok(run) || !F || !F.group || !F.rooms || !F.rooms[0]) return;
     F.save = null; F.warp = null;
@@ -53,7 +85,50 @@
     // 入口那一層：轉送到記下的那一層
     const raw = wl(run.site.id), list = raw.filter(n => n >= 3 && n % every === 0 && floorOf(run, n) < run.floors), entry = 0;
     if (list.length !== raw.length) { const store = S().waypointList[run.site.id]; store.splice(0, store.length, ...list); wp()[run.site.id] = list.length ? list[list.length - 1] : 0; R.save && R.save(); }
-    if (run.floor === entry && list.length) { const [x, z] = placeNear(r, WARP_SPOTS); F.warp = Object.assign(stone(x, z, '#B88AFF'), { n: list[list.length - 1], list }); }
+    if (run.floor === entry && list.length && !F.hub) { const [x, z] = placeNear(r, WARP_SPOTS); F.warp = Object.assign(stone(x, z, '#B88AFF'), { n: list[list.length - 1], list }); }
+    if (F.hub && F.hubRow) buildRow(F, run, stone, list);
+  };
+  // 一排樓梯＋記錄碑＋層數的牌子
+  const label = (txt, col) => {
+    const c = document.createElement('canvas'); c.width = 128; c.height = 64; const g = c.getContext('2d');
+    g.font = '900 44px "Segoe UI","Microsoft JhengHei",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.lineWidth = 8; g.strokeStyle = '#0A0806'; g.strokeText(txt, 64, 34); g.fillStyle = col; g.fillText(txt, 64, 34);
+    const t = new THREE.CanvasTexture(c), m = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, transparent: true, depthWrite: false, fog: false }));
+    m.scale.set(2.2, 1.1, 1); return m;
+  };
+  const GREEN = '#5AE88A', RED = '#E85A5A';
+  const buildRow = (F, run, stone, rec) => {
+    const TH = THREE, th = R.theme ? R.theme(run) : { wall: '#6A6A6A', accent: '#FFE08A' };
+    F.hubRow.forEach(it => {
+      it.open = !it.save || rec.includes(it.n);
+      const col = !it.save ? '#F4E9CD' : it.open ? GREEN : RED;
+      // 樓梯：黑洞＋往下的台階＋發光的框（記過綠、沒記過紅、第 1 層照遺跡的顏色）
+      const g = new TH.Group();
+      const hole = new TH.Mesh(new TH.BoxGeometry(3.2, 0.05, 3.2), new TH.MeshBasicMaterial({ color: '#05030A' })); hole.position.y = 0.02; g.add(hole);
+      for (let i = 0; i < 4; i++) { const s = new TH.Mesh(new TH.BoxGeometry(2.6 - i * 0.4, 0.06, 0.5), new TH.MeshLambertMaterial({ color: th.wall })); s.position.set(0, 0.05 - i * 0.01, -1 + i * 0.58); g.add(s); }
+      const ec = it.save ? col : th.accent, edge = new TH.Mesh(new TH.TorusGeometry(1.95, 0.07, 4, 4), new TH.MeshLambertMaterial({ color: ec, emissive: ec, emissiveIntensity: 0.8 }));
+      edge.rotation.set(Math.PI / 2, 0, Math.PI / 4); edge.position.y = 0.1; g.add(edge);
+      g.position.set(it.x, 0, it.zS); F.group.add(g); it.g = g;
+      // 記錄碑（存檔點才有）、上方的層數
+      if (it.save) it.stone = stone(it.x, it.zT, col);
+      const lb = label(String(it.n), col); lb.position.set(it.x, it.save ? 3.1 : 1.9, it.save ? it.zT : it.zS - 2.2); F.group.add(lb);
+    });
+  };
+  let hubLock = 0;
+  const hubGo = fn => { const t = performance.now(); if (t < hubLock || (R.stairBusy && R.stairBusy())) return; hubLock = t + 60000; R.fade(() => { try { fn(); } finally { hubLock = performance.now() + 700; } }); };
+  const hubStair = it => {
+    const run = W().run; if (!run) return;
+    if (!it.save) { hubGo(() => R.loadFloor(1)); return; }
+    if (it.open) { hubGo(() => { R.loadFloor(it.f, { warp: 1 }); R.banner(R.floorLabel ? R.floorLabel(W().run) : '第 ' + it.n + ' 層', '從存檔點的樓梯下來了'); }); return; }
+    // 沒記過：被傳回入口的樓梯前
+    hubGo(() => {
+      const P = W().P, F = W().F; if (!P || !F) return;
+      const up = F.up || { x: F.rooms[0].x, z: F.rooms[0].z + F.rooms[0].hz - 2.6 };
+      [P.x, P.z] = R.nearestFloor(up.x, up.z - 3); P.y = 0; P.yaw = Math.PI;
+      (W().allies || []).forEach((a, i) => { if (!a.downed) { [a.x, a.z] = R.nearestFloor(up.x + (i % 2 ? 1.6 : -1.6), up.z - 3.5); if (a.h && a.h.g) a.h.g.position.set(a.x, 0, a.z); } });
+      if (R.placeCam) R.placeCam(null);
+      R.toast('第 ' + it.n + ' 層的存檔點還沒記過——樓梯把你送回了入口。', RED);
+    });
   };
   const lf0 = R.loadFloor;
   R.loadFloor = (f, o) => { const r = lf0(f, o); try { build(); } catch (e) { console.warn('[savepoint]', e); } return r; };
@@ -65,9 +140,10 @@
     R.sfx && R.sfx('magic'); if (R.fx) R.fx('spawn', F.save.x, 0.1, F.save.z, { color: '#7AC8FF' });
     R.toast(fresh ? '存檔點：記下了第 ' + n + ' 層。下次進「' + run.site.name + '」，入口可以選這一層直接過去。' : '這一層之前記過了（記過：第 ' + L.join('、') + ' 層）。', '#7AC8FF');
   };
-  const warp = () => {
-    const run = W().run, F = W().F; if (!F || !F.warp) return;
-    const list = F.warp.list || [F.warp.n];
+  const warp = L => {
+    const run = W().run, F = W().F; if (!F || (!F.warp && !L)) return;
+    const list = L || F.warp.list || [F.warp.n];
+    if (!list.length) { R.toast('這座遺跡還沒有記過的存檔點。走到存檔點那一層，按記錄碑記下來。', '#7AC8FF'); return; }
     R.sheet('<p class="kicker">公會的轉送陣</p><h2>存檔點：選一層過去</h2><p>記錄碑記得你在這座遺跡記過的樓層。要從哪一層開始？</p><p class="note">中間的樓層就不會經過了（寶箱、經驗也一樣）。</p>'
       + '<div class="row sp-list">' + list.slice().reverse().map((n, i) => '<button type="button" class="btn' + (i ? '' : ' pri') + '" data-spgo="' + n + '">第 ' + n + ' 層</button>').join('') + '</div>',
       '<div class="row"><button type="button" class="btn" id="sp-no">從頭走</button></div>');
@@ -79,10 +155,18 @@
     const best = ni0(), P = W().P, F = W().F; if (!P || !F) return best;
     let bd = best ? Math.hypot(best.x - P.x, best.z - P.z) : 1e9, mine = null;
     if (F.save) { const d = Math.hypot(F.save.x - P.x, F.save.z - P.z); if (d < 2 && (d < bd || d < 1.6)) { bd = d; mine = { x: F.save.x, z: F.save.z, r: 2, label: '存檔點（公會的記錄碑）：記下第 ' + F.save.n + ' 層', act: record }; } }
-    if (F.warp) { const d = Math.hypot(F.warp.x - P.x, F.warp.z - P.z); if (d < 2 && (d < bd || d < 1.6)) { bd = d; mine = { x: F.warp.x, z: F.warp.z, r: 2, label: '存檔點：選一層直接過去（記過 ' + (F.warp.list || [F.warp.n]).length + ' 層）', act: warp }; } }
+    if (F.warp) { const d = Math.hypot(F.warp.x - P.x, F.warp.z - P.z); if (d < 2 && (d < bd || d < 1.6)) { bd = d; mine = { x: F.warp.x, z: F.warp.z, r: 2, label: '存檔點：選一層直接過去（記過 ' + (F.warp.list || [F.warp.n]).length + ' 層）', act: () => warp() }; } }
+    // 第 0 層那一排：樓梯、記錄碑
+    if (F.hub && F.hubRow) F.hubRow.forEach(it => {
+      const ds = Math.hypot(it.x - P.x, it.zS - P.z);
+      if (ds < 2.3 && ds < bd) { bd = ds; mine = { x: it.x, z: it.zS, r: 2.3, label: !it.save ? '走下樓層通道（第 1 層，從頭走）' : it.open ? '往下：直接到第 ' + it.n + ' 層（存檔點記過了）' : '往下：第 ' + it.n + ' 層（存檔點還沒記過，會被送回入口）', act: () => hubStair(it) }; }
+      if (!it.save) return;
+      const dt = Math.hypot(it.x - P.x, it.zT + 0.9 - P.z);
+      if (dt < 1.9 && dt < bd) { bd = dt; const L = wl(W().run.site.id).filter(n => F.hubRow.some(o => o.save && o.n === n)); mine = { x: it.x, z: it.zT + 0.9, r: 1.9, label: '記錄碑（第 ' + it.n + ' 層' + (it.open ? '，記過了' : '，還沒記過') + '）：選一層直接過去', act: () => warp(L) }; }
+    });
     return mine || best;
   };
   // 符文一亮一暗
   const st0 = R.step;
-  R.step = dt => { st0(dt); const F = W().F; if (!F) return; [F.save, F.warp].forEach(o => { if (!o) return; const k = 0.6 + 0.3 * Math.sin(performance.now() / 400); o.top.material.opacity = k; o.ring.material.opacity = k * 0.6; }); };
+  R.step = dt => { st0(dt); const F = W().F; if (!F) return; [F.save, F.warp].concat(F.hubRow ? F.hubRow.map(it => it.stone) : []).forEach(o => { if (!o) return; const k = 0.6 + 0.3 * Math.sin(performance.now() / 400); o.top.material.opacity = k; o.ring.material.opacity = k * 0.6; }); };
 })(window.R);
