@@ -52,7 +52,7 @@
 
   // 原本的排法：欄 0 站、1 走 1、2 走 2、3 砍下、4 舉起、5 收招；列 0 正面、1 背面、2 朝右、3 朝左
   const COLMAP = [['stand', 0], ['move', 0], ['move', 2], ['swing', 1], ['swing', 0], ['swing', 2]];
-  const DIRMAP = ['front', 'back', 'left', 'right'];   // 素材的 left＝看得到左半邊＝臉朝右
+  const DIRMAP = ['front', 'back', 'right', 'left'];   // 素材的 right＝臉朝右、left＝臉朝左（2026-10-11 作者：原本對反了，人物左右是反的）
   // 素材那四列照外觀快取（城裡兩百多人，很多人長得一樣）；每個人只把原本圖的翻滾、倒下、坐著貼過來
   const CACHE = new Map();
   const kitRows = o => {
