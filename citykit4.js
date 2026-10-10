@@ -48,7 +48,7 @@
     if (CK.quality() < 2 || !P || !W.town || !W.town.D || !W.town.D.water.length && !W.town.city.sea) return;   // 2026-10-09：倒影只有高畫質才畫（中、低畫質省一次整個場景）
     const lv = levelNear(P.x, P.z); if (lv == null) return;
     // 水在不在畫面裡（看不到就不畫倒影：省一次整個場景）
-    { if (!RF.fr) { RF.fr = new TH.Frustum(); RF.pm = new TH.Matrix4(); RF.bx = new TH.Box3(); } RF.pm.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse); RF.fr.setFromProjectionMatrix(RF.pm); const D = W.town.D; let seen = W.town.city.sea ? (CK.seaInView ? CK.seaInView(cam) : true) : false;   /* 2026-10-10：海真的在畫面裡才算（ckperf2.js） */ if (!seen) for (const wt of D.water) { const b = wt.bb; if (!b) continue; RF.bx.min.set(b[0], wt.level - 0.5, b[1]); RF.bx.max.set(b[2], wt.level + 0.5, b[3]); if (RF.fr.intersectsBox(RF.bx)) { seen = true; break; } } if (!seen) return; }
+    { if (!RF.fr) { RF.fr = new TH.Frustum(); RF.pm = new TH.Matrix4(); RF.bx = new TH.Box3(); } RF.pm.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse); RF.fr.setFromProjectionMatrix(RF.pm); const D = W.town.D; let seen = W.town.city.sea ? (CK.seaInView ? CK.seaInView(cam) : true) : false;   /* 2026-10-10：海真的在畫面裡才算（ckperf2.js） */ if (!seen && CK.waterInView) seen = CK.waterInView(cam); else if (!seen) for (const wt of D.water) {   /* waterInView：照水的形狀判斷（ckperf2.js） */ const b = wt.bb; if (!b) continue; RF.bx.min.set(b[0], wt.level - 0.5, b[1]); RF.bx.max.set(b[2], wt.level + 0.5, b[3]); if (RF.fr.intersectsBox(RF.bx)) { seen = true; break; } } if (!seen) return; }
     const rw = Math.max(2, Math.floor(w * (CK.quality() >= 2 ? 0.4 : 0.3))), rh = Math.max(2, Math.floor(h * (CK.quality() >= 2 ? 0.4 : 0.3)));
     if (!RF.rt) RF.rt = new TH.WebGLRenderTarget(rw, rh, { type: TH.HalfFloatType });
     if (RF.rt.width !== rw || RF.rt.height !== rh) RF.rt.setSize(rw, rh);
@@ -75,7 +75,7 @@
     wm.visible = false; r.shadowMap.autoUpdate = false; if (sky) sky.position.copy(vc.position);
     // 2026-10-08：遠處（180 公尺外）的小區塊不畫進倒影（倒影只有 0.4 倍解析度看不出來；皇嶺改建後河邊一格多畫上千次）。山、火山這種大的照畫
     const tw = W.town; if (!tw._rl || tw._rlS !== W.scene) { tw._rlS = W.scene; tw._rl = []; W.scene.traverse(o => { if (!o.isMesh || !o.geometry || (o.isInstancedMesh && !o.userData.forest) || o.matrixAutoUpdate) return; const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere(); const s = g.boundingSphere; if (!s || s.radius > 150) return; o.updateMatrixWorld(); const c = s.center.clone().applyMatrix4(o.matrixWorld); tw._rl.push([o, c.x, c.y, c.z, s.radius]); }); }
-    const off = []; tw._rl.forEach(q => { const o = q[0]; if (o.visible && Math.hypot(q[1] - RF.cw.x, q[3] - RF.cw.z) - q[4] > 140) { o.visible = false; off.push(o); } });
+    const off = []; tw._rl.forEach(q => { const o = q[0]; if (o.visible && Math.hypot(q[1] - RF.cw.x, q[3] - RF.cw.z) - q[4] > (CK.reflR ? CK.reflR() : 140) || (CK.reflFar && CK.reflFar(q))) {   /* reflFar：離看得到的那段水太遠的不畫進倒影（ckperf2.js） */ o.visible = false; off.push(o); } });
     r.setRenderTarget(RF.rt); r.clear(); r.render(W.scene, vc);
     off.forEach(o => { o.visible = true; });
     wm.visible = vis; r.shadowMap.autoUpdate = au; if (sky) sky.position.copy(sp);

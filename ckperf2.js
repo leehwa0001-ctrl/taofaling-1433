@@ -31,6 +31,7 @@
   // ---------- 2. 海在不在畫面裡 ----------
   let TV = null;
   CK.seaInView = cam => {
+    CK._wv = null;
     const tw = W.town, city = tw && tw.city; if (!city || !city.sea) return false;
     const land = city.land; if (!land) return true;
     const TH = THREE; if (!TV) TV = { v: new TH.Vector3(), o: new TH.Vector3() };
@@ -44,4 +45,28 @@
     }
     return false;
   };
+  // ---------- 3. 河、渠在不在畫面裡（2026-10-10 作者：東鶴可能會卡） ----------
+  // citykit4.js 原本看每一片水的外框：東鶴的河、護城河、運河合成一大片，外框幾乎蓋住整座城，倒影一直在畫（每格多畫一百多次、三角形多一倍）。
+  // 改成：鏡頭在水面的高度看得到的那一塊（四個角看出去，一個梯形）跟每一片水的形狀比對，真的重疊才畫倒影；
+  // 畫倒影的時候，離「看得到的那一段水」超過 25 公尺的東西不畫進倒影（照不到）。看得到地平線（低角度鏡頭）就照舊全畫。
+  let WV = null;
+  const cross = (ax, az, bx, bz, cx, cz) => (bx - ax) * (cz - az) - (bz - az) * (cx - ax);
+  const segX = (a, b, c, d) => { const d1 = cross(c[0], c[1], d[0], d[1], a[0], a[1]), d2 = cross(c[0], c[1], d[0], d[1], b[0], b[1]), d3 = cross(a[0], a[1], b[0], b[1], c[0], c[1]), d4 = cross(a[0], a[1], b[0], b[1], d[0], d[1]); if ((d1 > 0) === (d2 > 0) || (d3 > 0) === (d4 > 0)) return null; const t = d1 / (d1 - d2); return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; };
+  const inQuad = (x, z, Q) => { let s = 0; for (let k = 0; k < 4; k++) { const c = cross(Q[k][0], Q[k][1], Q[(k + 1) % 4][0], Q[(k + 1) % 4][1], x, z); if (c !== 0) { if (s && Math.sign(c) !== s) return false; s = Math.sign(c); } } return true; };
+  CK.waterInView = cam => {
+    CK._wv = null; const tw = W.town, D = tw && tw.D; if (!D || !D.water || !D.water.length) return false;
+    const TH = THREE; if (!WV) WV = { v: new TH.Vector3(), o: new TH.Vector3() };
+    const v = WV.v, o = WV.o, Q = [], pip = CK.util.pip; o.setFromMatrixPosition(cam.matrixWorld);
+    for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { v.set(sx, sy, 0.5).unproject(cam).sub(o); if (v.y > -1e-4) return true; const t = (-1.3 - o.y) / v.y; if (t > 600) return true; Q.push([o.x + v.x * t, o.z + v.z * t]); }
+    const qx0 = Math.min(...Q.map(q => q[0])), qx1 = Math.max(...Q.map(q => q[0])), qz0 = Math.min(...Q.map(q => q[1])), qz1 = Math.max(...Q.map(q => q[1]));
+    let bx = null; const grow = (x, z) => { if (!bx) bx = [x, z, x, z]; else { bx[0] = Math.min(bx[0], x); bx[1] = Math.min(bx[1], z); bx[2] = Math.max(bx[2], x); bx[3] = Math.max(bx[3], z); } };
+    D.water.forEach(w => {
+      const p = w.poly, b = w.bb; if (!p || p.length < 3 || (b && (b[2] < qx0 || b[0] > qx1 || b[3] < qz0 || b[1] > qz1))) return;
+      p.forEach(pt => { if (inQuad(pt[0], pt[1], Q)) grow(pt[0], pt[1]); });
+      Q.forEach(q => { if (pip(q[0], q[1], p)) grow(q[0], q[1]); });
+      for (let i = 0, j = p.length - 1; i < p.length; j = i++) for (let k = 0; k < 4; k++) { const ip = segX(p[j], p[i], Q[k], Q[(k + 1) % 4]); if (ip) grow(ip[0], ip[1]); }
+    });
+    CK._wv = bx; return !!bx;
+  };
+  CK.reflFar = q => { const b = CK._wv; if (!b) return false; const M = 25 + q[4]; return q[1] < b[0] - M || q[1] > b[2] + M || q[3] < b[1] - M || q[3] > b[3] + M; };
 })(window.R);
