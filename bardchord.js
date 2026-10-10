@@ -376,12 +376,17 @@
     g.fillText((ST.rec ? '● ' : '') + status(P), 10, Hd - 10);
     if (ST.rec) { g.fillStyle = 'rgba(255,106,138,.85)'; g.fillRect(10, Hd - 3, (Wd - 20) * (1 - ST.rec.t / REC_T), 2); }
   };
+  // 只在遺跡裡、這一趟還沒結束的時候顯示（結算畫面、回到城裡、換職業都收起來）
+  const shown = () => { const w = W(), P = w.P, run = $('run'); return IS(P) && !!w.run && !w.run.done && !w.town && !!run && !run.hidden && !run.classList.contains('town'); };
+  const hide = () => { if (box.style.display !== 'none') box.style.display = 'none'; const b = $('r-skill'); if (b && b.classList.contains('bd-on')) b.classList.remove('bd-on', 'rec', 'perf'); };
+  // 這一趟結束以後遊戲就不再呼叫 R.hudTick，所以另外每 0.2 秒檢查一次，不該出現就收起來
+  setInterval(() => { try { if (!shown()) hide(); } catch (e) { } }, 200);
   const ht0 = R.hudTick;
   R.hudTick = dt => {
     ht0(dt);
-    const w = W(), P = w.P, b = $('r-skill'), on = IS(P) && !!w.run && !w.town;
-    if (b) b.classList.toggle('bd-on', on);
-    if (!on) { box.style.display = 'none'; return; }
+    const w = W(), P = w.P, b = $('r-skill'), on = shown();
+    if (!on) { hide(); return; }
+    if (b) b.classList.add('bd-on');
     try {
       const c = chordOf(P), n = $('r-skill-n'), ic = b && b.querySelector('.h2-ic'), sec = b && b.querySelector('.bh-sec');
       if (n && n.textContent !== '和弦') n.textContent = '和弦';
