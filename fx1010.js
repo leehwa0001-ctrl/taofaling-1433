@@ -240,8 +240,8 @@
       if (FQ && kind !== 'mark') FQ.fx(kind, x, y, z, Object.assign({}, o, { color: o.color || (ctx && ctx.col) || (el && PAL[el] ? PAL[el][0] : undefined) }), el); else fx0(kind, x, y, z, o);
       // 從天上落下來的（隕石、流星……）：落地那一下多一道劃下來的光
       if (ctx && ctx.fall && el !== 'thunder' && (kind === 'boom' || kind === 'pillar')) { const c = el && PAL[el] ? PAL[el][0] : (o.color || '#FFFFFF'), sx = x + 2.2, sz = z - 1.4; ribbon([[sx, 11, sz], [x + 1.1, 5.5, z - 0.7], [x, 0.4, z]], 0.55, c, 0.16, { a: 0.9 }); ribbon([[sx, 11, sz], [x, 0.4, z]], 0.16, '#FFFFFF', 0.12, {}); }
-      // 轉職路線的招：第一下打中的地方跳出那條路線的徽記（fx1011.js；大招等落地、擊中才出，不在按下去那一圈出）
-      if (ctx && ctx.adv && !ctx.motifDone && R.FXQ && R.FXQ.motif && /^(boom|ring|pillar|groundwave|slash|rain)$/.test(kind) && !(ctx.motifAfter && W.run && W.run.t < ctx.motifAfter)) { const sx = kind === 'slash' && o.len ? x + Math.sin(o.a || 0) * o.len * 0.6 : x, sz = kind === 'slash' && o.len ? z + Math.cos(o.a || 0) * o.len * 0.6 : z; if (R.FXQ.motif(ctx.adv, sx, sz, (o.r || 2) * 1.3)) ctx.motifDone = 1; }
+      // 轉職路線的大招：落地、擊中的那一下跳出路線徽記（fx1011.js；2026-10-10 作者：只有大招顯示徽記，一般技能不用）
+      if (ctx && ctx.adv && ctx.ult && !ctx.motifDone && R.FXQ && R.FXQ.motif && /^(boom|ring|pillar|groundwave|slash|rain)$/.test(kind) && !(ctx.motifAfter && W.run && W.run.t < ctx.motifAfter)) { const sx = kind === 'slash' && o.len ? x + Math.sin(o.a || 0) * o.len * 0.6 : x, sz = kind === 'slash' && o.len ? z + Math.cos(o.a || 0) * o.len * 0.6 : z; if (R.FXQ.motif(ctx.adv, sx, sz, (o.r || 2) * 1.3)) ctx.motifDone = 1; }
       // 光環類（aura）每 0.2 秒就一圈：同一招的光環 0.3 秒最多加一次元素
       const rt = W.run ? W.run.t : 0, okRing = kind !== 'ring' || !ctx || !(ctx.ringT > rt); if (kind === 'ring' && ctx && okRing) ctx.ringT = rt + 0.3;
       if (el && EL[el] && okRing && (kind === 'boom' || kind === 'ring' || kind === 'pillar' || kind === 'groundwave' || kind === 'rain')) { EL[el](x, z, Math.min(5, kind === 'pillar' ? (o.r || 1) * 1.5 : r), kind); if (R.FXQ) R.FXQ.el(el, x, z, Math.min(5, kind === 'pillar' ? (o.r || 1) * 1.5 : r)); }

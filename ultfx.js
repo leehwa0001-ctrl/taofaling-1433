@@ -45,7 +45,7 @@
     const P = it.P, u = R.ULTS && (R.ULTS[P.cls] || R.ULTS.warrior), name = u ? String(u.name || '') : '', sub = u ? String(u.sub || '') : '';
     const el = FX.elemOf({ name, desc: sub }) || ULT_EL[P.cls] || null;
     const pick = R.S && R.S.ultPick && R.S.ultPick[P.cls], adv = P.adv && pick !== 'base' && R.FXQ && R.FXQ.ROUTE && R.FXQ.ROUTE[P.adv] ? P.adv : null;
-    const ctx = { el: el === 'multi' ? null : el, col: it.col, fall: /隕|流星|落下|砸|天降|墜|箭雨/.test(name + sub), adv, motifAfter: W.run ? W.run.t + 0.12 : 0 };   // adv：轉職路線的大招在落地／擊中的那一下跳出路線徽記（鬼武者的鬼面……）
+    const ctx = { el: el === 'multi' ? null : el, col: it.col, fall: /隕|流星|落下|砸|天降|墜|箭雨/.test(name + sub), adv, ult: true, motifAfter: W.run ? W.run.t + 0.12 : 0 };   // adv：轉職路線的大招在落地／擊中的那一下跳出路線徽記（鬼武者的鬼面……）
     FX.runCtx(ctx, () => it.cast());   // 原本的 R.castUlt：閃光、大字、震動、招式本身
     const [A, N] = FX.sys(), x = P.x, z = P.z;
     FX.emit(A, x, 1, z, 0, 0, 0, 0.14, '#FFFFFF', { size: 60, size1: 90, a: 0.9 });
