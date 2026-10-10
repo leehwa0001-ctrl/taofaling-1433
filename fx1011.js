@@ -11,11 +11,12 @@
   const hexc = h => { const n = parseInt(String(h || '#FFFFFF').replace('#', ''), 16); return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; };
   const mix = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
   const C = { glow: 0, ring: 1, wave: 2, rune: 3, beam: 4, streak: 5, puff: 6, flame: 7, star: 8, crescent: 9, shard: 10, swirl: 11, cross: 12, note: 13, burst: 14, dot: 15 };
+  const M = { oni: 16, dragon: 17, wings: 18, torii: 19, paw: 20, ghost: 21, leaf: 22, katana: 23, kunai: 24, fist: 25, ofuda: 26, eye: 27, shield: 28, skull: 29, crosshair: 30, swords: 31 };   // 路線徽記（貼圖集下半）
   // ---------- 貼圖集（白色＋透明度，顏色照面片的頂點色） ----------
   let TEX = null;
   const atlas = () => {
     if (TEX) return TEX;
-    const S = 256, cv = document.createElement('canvas'); cv.width = cv.height = S * 4; const g = cv.getContext('2d');
+    const S = 256, cv = document.createElement('canvas'); cv.width = S * 4; cv.height = S * 8; const g = cv.getContext('2d');
     const cell = (i, f) => { g.save(); g.translate((i % 4) * S, Math.floor(i / 4) * S); g.beginPath(); g.rect(0, 0, S, S); g.clip(); f(S / 2, S / 2, S / 2); g.restore(); };
     const radial = (cx, cy, stops, r) => { const gr = g.createRadialGradient(cx, cy, 0, cx, cy, r); stops.forEach(([o, a]) => gr.addColorStop(o, 'rgba(255,255,255,' + a + ')')); g.fillStyle = gr; g.fillRect(0, 0, S, S); };
     g.strokeStyle = '#FFF'; g.fillStyle = '#FFF';
@@ -45,6 +46,47 @@
     cell(C.note, (x, y, r) => { g.font = 'bold ' + Math.round(r * 1.5) + 'px "Segoe UI Symbol","Noto Sans Symbols",serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.shadowColor = '#FFF'; g.shadowBlur = 12; g.fillText('♪', x, y + r * 0.05); });
     cell(C.burst, (x, y, r) => { radial(x, y, [[0, 1], [0.2, 0.5], [0.5, 0]], r); for (let i = 0; i < 12; i++) { const a = i / 12 * TAU + (i % 2) * 0.1, L = r * (i % 2 ? 0.6 : 0.95), w = r * 0.07; g.beginPath(); g.moveTo(x + Math.cos(a + 1.57) * w, y + Math.sin(a + 1.57) * w); g.lineTo(x + Math.cos(a) * L, y + Math.sin(a) * L); g.lineTo(x + Math.cos(a - 1.57) * w, y + Math.sin(a - 1.57) * w); g.closePath(); g.fill(); } });
     cell(C.dot, (x, y, r) => radial(x, y, [[0, 1], [0.5, 1], [0.62, 0], [1, 0]], r));
+    // ---------- 路線徽記（第 16～31 格；2026-10-10 作者：鬼武者跳下來要有鬼面那種特效） ----------
+    const cut = f => { g.save(); g.globalCompositeOperation = 'destination-out'; f(); g.restore(); };
+    const P = pts => { g.beginPath(); pts.forEach(([a, b], i) => (i ? g.lineTo(a, b) : g.moveTo(a, b))); g.closePath(); };
+    cell(M.oni, (x, y, r) => {
+      g.beginPath(); g.ellipse(x, y + r * 0.08, r * 0.56, r * 0.64, 0, 0, TAU); g.fill();
+      [-1, 1].forEach(s => { g.beginPath(); g.moveTo(x + s * r * 0.24, y - r * 0.42); g.quadraticCurveTo(x + s * r * 0.55, y - r * 0.7, x + s * r * 0.66, y - r * 0.98); g.quadraticCurveTo(x + s * r * 0.6, y - r * 0.55, x + s * r * 0.48, y - r * 0.3); g.closePath(); g.fill(); });
+      cut(() => {
+        [-1, 1].forEach(s => { P([[x + s * r * 0.42, y - r * 0.16], [x + s * r * 0.1, y - r * 0.02], [x + s * r * 0.36, y + r * 0.1]]); g.fill(); P([[x + s * r * 0.5, y - r * 0.3], [x + s * r * 0.08, y - r * 0.12], [x + s * r * 0.1, y - r * 0.2]]); g.fill(); });
+        g.beginPath(); g.moveTo(x - r * 0.38, y + r * 0.3); g.quadraticCurveTo(x, y + r * 0.42, x + r * 0.38, y + r * 0.3); g.quadraticCurveTo(x, y + r * 0.7, x - r * 0.38, y + r * 0.3); g.fill();
+        g.beginPath(); g.ellipse(x - r * 0.06, y + r * 0.16, r * 0.03, r * 0.05, 0, 0, TAU); g.ellipse(x + r * 0.06, y + r * 0.16, r * 0.03, r * 0.05, 0, 0, TAU); g.fill();
+      });
+      [-1, 1].forEach(s => { P([[x + s * r * 0.3, y + r * 0.31], [x + s * r * 0.18, y + r * 0.34], [x + s * r * 0.24, y + r * 0.52]]); g.fill(); });
+    });
+    cell(M.dragon, (x, y, r) => {
+      P([[x - r * 0.75, y + r * 0.7], [x - r * 0.55, y - r * 0.05], [x - r * 0.45, y - r * 0.5], [x - r * 0.75, y - r * 0.92], [x - r * 0.2, y - r * 0.55], [x - r * 0.1, y - r * 0.8], [x + r * 0.05, y - r * 0.45], [x + r * 0.5, y - r * 0.32], [x + r * 0.85, y - r * 0.12], [x + r * 0.8, y + r * 0.02], [x + r * 0.2, y + r * 0.05], [x + r * 0.7, y + r * 0.22], [x + r * 0.62, y + r * 0.36], [x + r * 0.05, y + r * 0.32], [x - r * 0.2, y + r * 0.7]]); g.fill();
+      cut(() => { g.beginPath(); g.ellipse(x - r * 0.02, y - r * 0.22, r * 0.12, r * 0.05, -0.3, 0, TAU); g.fill(); g.beginPath(); g.arc(x + r * 0.7, y - r * 0.12, r * 0.03, 0, TAU); g.fill(); for (let i = 0; i < 4; i++) { P([[x - r * 0.45 + i * r * 0.1, y + r * 0.1 + i * r * 0.12], [x - r * 0.3 + i * r * 0.1, y + r * 0.05 + i * r * 0.12], [x - r * 0.36 + i * r * 0.1, y + r * 0.16 + i * r * 0.12]]); g.fill(); } });
+    });
+    cell(M.wings, (x, y, r) => { [-1, 1].forEach(s => { for (let i = 0; i < 5; i++) { const a = -0.25 - i * 0.28, L = r * (0.95 - i * 0.12); g.save(); g.translate(x + s * r * 0.08, y + r * 0.15); g.scale(s, 1); g.rotate(a); g.beginPath(); g.ellipse(L * 0.5, 0, L * 0.5, r * 0.11, 0, 0, TAU); g.fill(); g.restore(); } }); g.beginPath(); g.arc(x, y + r * 0.15, r * 0.12, 0, TAU); g.fill(); });
+    cell(M.torii, (x, y, r) => { g.fillRect(x - r * 0.55, y - r * 0.45, r * 0.13, r * 1.3); g.fillRect(x + r * 0.42, y - r * 0.45, r * 0.13, r * 1.3); g.beginPath(); g.moveTo(x - r * 0.9, y - r * 0.72); g.quadraticCurveTo(x, y - r * 0.55, x + r * 0.9, y - r * 0.72); g.lineTo(x + r * 0.82, y - r * 0.56); g.quadraticCurveTo(x, y - r * 0.42, x - r * 0.82, y - r * 0.56); g.closePath(); g.fill(); g.fillRect(x - r * 0.7, y - r * 0.32, r * 1.4, r * 0.12); g.fillRect(x - r * 0.06, y - r * 0.48, r * 0.12, r * 0.2); });
+    cell(M.paw, (x, y, r) => { g.beginPath(); g.ellipse(x, y + r * 0.3, r * 0.38, r * 0.32, 0, 0, TAU); g.fill(); [[-0.5, -0.12, -0.35], [-0.2, -0.45, -0.12], [0.2, -0.45, 0.12], [0.5, -0.12, 0.35]].forEach(([a, b, rot]) => { g.beginPath(); g.ellipse(x + r * a, y + r * b, r * 0.15, r * 0.2, rot, 0, TAU); g.fill(); }); });
+    cell(M.ghost, (x, y, r) => {
+      g.beginPath(); g.arc(x, y - r * 0.2, r * 0.48, Math.PI, 0); g.lineTo(x + r * 0.48, y + r * 0.45);
+      for (let i = 0; i < 4; i++) { const x1 = x + r * 0.48 - (i + 0.5) * r * 0.24, x2 = x + r * 0.48 - (i + 1) * r * 0.24; g.quadraticCurveTo(x1, y + r * (i % 2 ? 0.55 : 0.85), x2, y + r * 0.6); }
+      g.lineTo(x - r * 0.48, y - r * 0.2); g.closePath(); g.fill();
+      cut(() => { g.beginPath(); g.ellipse(x - r * 0.18, y - r * 0.2, r * 0.09, r * 0.14, 0, 0, TAU); g.ellipse(x + r * 0.18, y - r * 0.2, r * 0.09, r * 0.14, 0, 0, TAU); g.fill(); g.beginPath(); g.ellipse(x, y + r * 0.1, r * 0.08, r * 0.12, 0, 0, TAU); g.fill(); });
+    });
+    cell(M.leaf, (x, y, r) => { g.save(); g.translate(x, y); g.rotate(-0.6); g.beginPath(); g.moveTo(0, -r * 0.9); g.quadraticCurveTo(r * 0.6, -r * 0.2, 0, r * 0.85); g.quadraticCurveTo(-r * 0.6, -r * 0.2, 0, -r * 0.9); g.fill(); cut(() => { g.lineWidth = r * 0.05; g.beginPath(); g.moveTo(0, -r * 0.7); g.lineTo(0, r * 0.8); for (let i = 0; i < 4; i++) { const yy = -r * 0.45 + i * r * 0.3; g.moveTo(0, yy + r * 0.12); g.lineTo(r * 0.28, yy - r * 0.04); g.moveTo(0, yy + r * 0.12); g.lineTo(-r * 0.28, yy - r * 0.04); } g.stroke(); }); g.restore(); });
+    cell(M.katana, (x, y, r) => { g.save(); g.translate(x, y); g.rotate(-Math.PI / 4); g.beginPath(); g.moveTo(-r * 0.95, -r * 0.04); g.quadraticCurveTo(0, -r * 0.12, r * 0.42, -r * 0.05); g.lineTo(r * 0.42, r * 0.06); g.quadraticCurveTo(0, r * 0.0, -r * 0.88, r * 0.06); g.closePath(); g.fill(); g.beginPath(); g.ellipse(r * 0.46, 0, r * 0.05, r * 0.16, 0, 0, TAU); g.fill(); g.fillRect(r * 0.5, -r * 0.06, r * 0.42, r * 0.12); cut(() => { for (let i = 0; i < 4; i++) { P([[r * (0.56 + i * 0.09), 0], [r * (0.6 + i * 0.09), -r * 0.04], [r * (0.64 + i * 0.09), 0], [r * (0.6 + i * 0.09), r * 0.04]]); g.fill(); } }); g.restore(); });
+    cell(M.kunai, (x, y, r) => { g.save(); g.translate(x, y); g.rotate(Math.PI / 4); P([[0, -r * 0.9], [r * 0.2, -r * 0.2], [0, -r * 0.1], [-r * 0.2, -r * 0.2]]); g.fill(); g.fillRect(-r * 0.06, -r * 0.12, r * 0.12, r * 0.6); g.lineWidth = r * 0.07; g.beginPath(); g.arc(0, r * 0.62, r * 0.14, 0, TAU); g.stroke(); g.restore(); });
+    cell(M.fist, (x, y, r) => {
+      const rr = (a, b, w, h, k) => { g.beginPath(); g.moveTo(a + k, b); g.arcTo(a + w, b, a + w, b + h, k); g.arcTo(a + w, b + h, a, b + h, k); g.arcTo(a, b + h, a, b, k); g.arcTo(a, b, a + w, b, k); g.fill(); };
+      for (let i = 0; i < 4; i++) rr(x - r * 0.5 + i * r * 0.25, y - r * 0.5, r * 0.24, r * 0.5, r * 0.1);
+      rr(x - r * 0.55, y - r * 0.15, r * 1.05, r * 0.65, r * 0.18); rr(x - r * 0.75, y - r * 0.05, r * 0.4, r * 0.28, r * 0.12);
+      cut(() => { g.lineWidth = r * 0.03; for (let i = 1; i < 4; i++) { g.beginPath(); g.moveTo(x - r * 0.5 + i * r * 0.25, y - r * 0.42); g.lineTo(x - r * 0.5 + i * r * 0.25, y - r * 0.1); g.stroke(); } });
+    });
+    cell(M.ofuda, (x, y, r) => { g.fillRect(x - r * 0.32, y - r * 0.9, r * 0.64, r * 1.8); cut(() => { g.lineWidth = r * 0.04; g.strokeRect(x - r * 0.24, y - r * 0.82, r * 0.48, r * 1.64); g.lineWidth = r * 0.06; g.beginPath(); g.moveTo(x, y - r * 0.6); g.lineTo(x, y + r * 0.55); g.moveTo(x - r * 0.15, y - r * 0.35); g.lineTo(x + r * 0.15, y - r * 0.35); g.moveTo(x - r * 0.15, y - r * 0.05); g.lineTo(x + r * 0.15, y + r * 0.1); g.moveTo(x + r * 0.15, y - r * 0.05); g.lineTo(x - r * 0.15, y + r * 0.1); g.stroke(); g.beginPath(); g.arc(x, y + r * 0.35, r * 0.1, 0, TAU); g.stroke(); }); });
+    cell(M.eye, (x, y, r) => { g.beginPath(); g.moveTo(x - r * 0.9, y); g.quadraticCurveTo(x, y - r * 0.75, x + r * 0.9, y); g.quadraticCurveTo(x, y + r * 0.75, x - r * 0.9, y); g.fill(); cut(() => { g.beginPath(); g.arc(x, y, r * 0.32, 0, TAU); g.fill(); }); g.beginPath(); g.ellipse(x, y, r * 0.08, r * 0.26, 0, 0, TAU); g.fill(); });
+    cell(M.shield, (x, y, r) => { g.beginPath(); g.moveTo(x - r * 0.62, y - r * 0.72); g.lineTo(x + r * 0.62, y - r * 0.72); g.lineTo(x + r * 0.62, y - r * 0.05); g.quadraticCurveTo(x + r * 0.5, y + r * 0.6, x, y + r * 0.9); g.quadraticCurveTo(x - r * 0.5, y + r * 0.6, x - r * 0.62, y - r * 0.05); g.closePath(); g.fill(); cut(() => { g.fillRect(x - r * 0.08, y - r * 0.55, r * 0.16, r * 1.1); g.fillRect(x - r * 0.42, y - r * 0.25, r * 0.84, r * 0.16); }); });
+    cell(M.skull, (x, y, r) => { g.beginPath(); g.arc(x, y - r * 0.15, r * 0.62, 0, TAU); g.fill(); g.fillRect(x - r * 0.38, y + r * 0.2, r * 0.76, r * 0.45); cut(() => { g.beginPath(); g.ellipse(x - r * 0.25, y - r * 0.12, r * 0.16, r * 0.19, 0, 0, TAU); g.ellipse(x + r * 0.25, y - r * 0.12, r * 0.16, r * 0.19, 0, 0, TAU); g.fill(); P([[x, y + r * 0.08], [x - r * 0.08, y + r * 0.24], [x + r * 0.08, y + r * 0.24]]); g.fill(); g.lineWidth = r * 0.04; for (let i = -2; i <= 2; i++) { g.beginPath(); g.moveTo(x + i * r * 0.13, y + r * 0.36); g.lineTo(x + i * r * 0.13, y + r * 0.62); g.stroke(); } }); });
+    cell(M.crosshair, (x, y, r) => { g.lineWidth = r * 0.08; g.beginPath(); g.arc(x, y, r * 0.62, 0, TAU); g.stroke(); g.lineWidth = r * 0.06; [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(([a, b]) => { g.beginPath(); g.moveTo(x + a * r * 0.35, y + b * r * 0.35); g.lineTo(x + a * r * 0.92, y + b * r * 0.92); g.stroke(); }); g.beginPath(); g.arc(x, y, r * 0.08, 0, TAU); g.fill(); });
+    cell(M.swords, (x, y, r) => { [-1, 1].forEach(s => { g.save(); g.translate(x, y); g.rotate(s * Math.PI / 4); g.beginPath(); g.moveTo(0, -r * 0.92); g.lineTo(r * 0.07, -r * 0.78); g.lineTo(r * 0.07, r * 0.32); g.lineTo(-r * 0.07, r * 0.32); g.lineTo(-r * 0.07, -r * 0.78); g.closePath(); g.fill(); g.fillRect(-r * 0.24, r * 0.3, r * 0.48, r * 0.08); g.fillRect(-r * 0.04, r * 0.38, r * 0.08, r * 0.32); g.beginPath(); g.arc(0, r * 0.74, r * 0.07, 0, TAU); g.fill(); g.restore(); }); });
     TEX = new THREE.CanvasTexture(cv); TEX.userData.shared = true;
     return TEX;
   };
@@ -91,7 +133,7 @@
       else if (o.m === 'vert') { let hx = o.x - cxp, hz = o.z - czp; const hl = Math.hypot(hx, hz) || 1; hx /= hl; hz /= hl; ax = -hz * w / 2; ay = 0; az = hx * w / 2; bx = 0; by = h / 2; bz = 0; oy = o.y + h / 2; }
       else { ax = (rx * cs + ux * sn) * w / 2; ay = (ry * cs + uy * sn) * w / 2; az = (rz * cs + uz * sn) * w / 2; bx = (ux * cs - rx * sn) * h / 2; by = (uy * cs - ry * sn) * h / 2; bz = (uz * cs - rz * sn) * h / 2; }
       const p0 = [ox - ax - bx, oy - ay - by, oz - az - bz], p1 = [ox + ax - bx, oy + ay - by, oz + az - bz], p2 = [ox + ax + bx, oy + ay + by, oz + az + bz], p3 = [ox - ax + bx, oy - ay + by, oz - az + bz];
-      const u0 = (o.c % 4) / 4, u1 = u0 + 0.25, v1 = 1 - Math.floor(o.c / 4) / 4, v0 = v1 - 0.25, du = 0.002;
+      const u0 = (o.c % 4) / 4, u1 = u0 + 0.25, v1 = 1 - Math.floor(o.c / 4) / 8, v0 = v1 - 0.125, du = 0.002;   /* 貼圖集 4 欄 8 列 */
       const V = [p0, p1, p2, p0, p2, p3], UV = [[u0 + du, v0 + du], [u1 - du, v0 + du], [u1 - du, v1 - du], [u0 + du, v0 + du], [u1 - du, v1 - du], [u0 + du, v1 - du]];
       const col = o.col2 ? mix(o.col, o.col2, k) : o.col, cr = col[0] * (o.add === false ? 1 : al), cg = col[1] * (o.add === false ? 1 : al), cb = col[2] * (o.add === false ? 1 : al);
       for (let j = 0; j < 6; j++) { const q = n * 6 + j; P[q * 3] = V[j][0]; P[q * 3 + 1] = V[j][1]; P[q * 3 + 2] = V[j][2]; U[q * 2] = UV[j][0]; U[q * 2 + 1] = UV[j][1]; Cc[q * 4] = cr; Cc[q * 4 + 1] = cg; Cc[q * 4 + 2] = cb; Cc[q * 4 + 3] = al; }
@@ -174,6 +216,21 @@
   const st0 = R.step; R.step = dt => { const r = st0(dt); try { step(dt); } catch (e) { } return r; };
   const ts0 = R.townStep; R.townStep = dt => { const r = ts0(dt); try { if (W.town && !W.town.ck) step(dt); } catch (e) { } return r; };
   const lf0 = R.loadFloor; if (lf0) R.loadFloor = (...a) => { QS.length = 0; return lf0(...a); };
+  // ---------- 路線徽記：轉職路線的招打中的那一下，跳出那條路線的徽記（鬼武者的鬼面、龍騎士的龍頭……），地上留一個印 ----------
+  const ROUTE = { sniper: [M.crosshair, '#FFE08A'], magigun: [C.rune, '#BFE8FF'], bomber: [C.burst, '#FFB45A'], arcane: [M.eye, '#B89AFF'], ranger: [M.paw, '#9AE07A'], hama: [M.ofuda, '#FF8A8A'],
+    berserker: [M.skull, '#E83A3A'], gladiator: [M.swords, '#FFD27A'], onimusha: [M.oni, '#FF3A3A'], elementalist: [C.star, '#FF8A3A'], hexer: [M.eye, '#B04AE8'], waixiu: [M.shield, '#9AE8FF'],
+    bishop: [C.cross, '#FFE8A0'], druid: [M.leaf, '#6FD86A'], shinkan: [M.torii, '#FF5A4A'], kensei: [M.katana, '#BFE0FF'], shadow: [M.kunai, '#8A5AC8'], yoto: [M.katana, '#B060E8'],
+    templar: [M.shield, '#E8C04A'], paladin: [M.wings, '#FFE8A0'], dragoon: [M.dragon, '#5AC8FF'], fistsaint: [M.fist, '#FFB86A'], staffmonk: [C.swirl, '#C8A878'], inner: [C.swirl, '#FFD27A'],
+    aria: [C.note, '#FFB8E0'], drummer: [C.note, '#FF8A5A'], serane: [C.note, '#E888C8'], beastlord: [M.paw, '#C8A878'], medium: [M.ghost, '#B8A8E8'], tamer: [M.paw, '#8AC86A'], shikigami: [M.ofuda, '#E8D8A0'],
+    grandarray: [C.rune, '#7AC8E8'], warder: [M.shield, '#9AD8FF'], eidanora: [C.rune, '#5AB8E8'], runesmith: [C.rune, '#FFB86A'], spellblade: [M.swords, '#FFB86A'], entian: [M.eye, '#9AE8FF'],
+    scribe: [M.ofuda, '#E8D8A0'], sealer: [M.ofuda, '#E8C048'], noxa: [C.rune, '#C8A85A'] };
+  const motif = (adv, x, z, size) => {
+    const m = ROUTE[adv]; if (!m || !ensure()) return false; const s = Math.max(2.2, Math.min(5, size || 3));
+    add({ c: C.glow, m: 'bill', x, y: 3.2, z, s0: s * 1.2, s1: s * 1.9, life: 0.55, col: m[1], a: 0.7, fi: 0.1 });
+    add({ c: m[0], m: 'bill', x, y: 3.2, z, s0: s * 0.35, s1: s * 1.15, vy: 0.4, life: 1.0, col: m[1], a: 1, fi: 0.08, hold: 0.6 });   // 浮在頭頂上方、慢慢往上飄
+    add({ c: m[0], m: 'ground', x, y: 0.09, z, s0: s * 1.6, s1: s * 1.45, rot: 0, life: 1.2, col: m[1], a: 0.42, fi: 0.08, hold: 0.5 });   // 地上的印淡一點（太搶眼）
+    return true;
+  };
   const KINDS = new Set(Object.keys(FX));
-  R.FXQ = { C, add, ensure, handles: k => KINDS.has(k) && pix() && ensure(), fx: (k, x, y, z, o, el) => FX[k](x, y, z, o || {}, el), el: (el, x, z, r) => { if (EL[el] && ensure()) EL[el](x, z, r); }, count: () => QS.length };
+  R.FXQ = { C, add, ensure, handles: k => KINDS.has(k) && pix() && ensure(), fx: (k, x, y, z, o, el) => FX[k](x, y, z, o || {}, el), el: (el, x, z, r) => { if (EL[el] && ensure()) EL[el](x, z, r); }, motif, ROUTE, M, count: () => QS.length, _qs: QS };
 })(window.R);
