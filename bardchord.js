@@ -326,7 +326,7 @@
     gauge(P) { const c = chordOf(P); return { name: '和弦 ' + c.sym, col: '#FFB8E0', text: c.name + '・' + chordDesc(c, P), sub: status(P), x: '' }; }
   });
 
-  // ---------- 畫面：R 鈕（和弦）、上面的五線譜 ----------
+  // ---------- 畫面：R 鈕（和弦）、左邊的五線譜 ----------
   const css = document.createElement('style');
   css.textContent = '#bd-staff{position:fixed;z-index:30;pointer-events:none;display:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.6))}'
     + '#bd-staff canvas{display:block;width:236px;height:78px}'
@@ -393,9 +393,11 @@
         if (sec) { const t = ST.rec ? Math.max(0, REC_T - ST.rec.t).toFixed(1) : ST.perf ? Math.max(0, ST.perf.dur - ST.perf.t).toFixed(1) : ''; if (sec.textContent !== t) sec.textContent = t; }
       }
       draw(P);
-      const r = b && b.getBoundingClientRect();
-      if (r && r.width) { box.style.display = 'block'; const x = Math.max(6, Math.min(window.innerWidth - 242, r.left + r.width / 2 - 118)), y = r.top - 84 - (R.touch ? 56 : 0); box.style.left = x + 'px'; box.style.top = Math.max(6, y) + 'px'; }
-      else box.style.display = 'none';
+      // 放在畫面左邊、職業特效的條（#core-g）正上方，不擋中間的技能列；左上的資訊框底下留空
+      const vis = el => { if (!el) return null; const q = el.getBoundingClientRect(); return q.width && q.height ? q : null; }, r = vis($('core-g')), rt = vis($('r-tl'));
+      const top0 = rt && rt.height ? rt.bottom + 6 : 6;
+      const y = r && r.height ? r.top - 84 : window.innerHeight / 2 - 39;
+      box.style.display = 'block'; box.style.left = (r && r.width ? r.left : 12) + 'px'; box.style.top = Math.max(top0, y) + 'px';
     } catch (e) { }
   };
   R.bardChord = { ST, SV, vary, scaleArgs, chordOf, castMods, tally, nextChord, startRec, endRec, perfDur, capOf, spdK };
