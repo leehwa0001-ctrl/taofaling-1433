@@ -164,12 +164,15 @@
   const need = (s, st) => (R.skillNeedLv ? R.skillNeedLv(s, st) : s.lv);   // 轉職路線的技能：轉職等級調高以後往後挪（promote.js）
   const known = (cls, st, id) => { const s = info(id); return !!s && s.cls === cls && st.lv >= need(s, st) && (!s.adv || s.adv === st.adv); };
   const allOf = cls => [...new Set(Object.keys(OLD).filter(id => OLD[id].cls === cls).concat(Object.keys(LIB).filter(id => LIB[id].cls === cls)))];   // 去掉重複（2026-10-04 作者：鬼武者有兩招一樣——轉職技能「鬼斬」同時也在技能書的清單裡）
-  const NSLOT = () => R.SKILL_UNLOCK.length;   // 技能格的數目（skills.js；2026-10-04 起五格）
-  const defaults = (cls, st) => [st.adv ? R.ADV[cls].find(a => a.id === st.adv).skill : R.CLASSES[cls].skill, (R.SKILL_SLOTS[cls] || [])[0], (R.SKILL_SLOTS[cls] || [])[1]].concat(Array(Math.max(0, NSLOT() - 3)).fill(null));
+  // 2026-10-10 吟遊詩人的 R 改成和弦（bardchord.js）：R.SLOT_OFF[職業]＝前面幾個按鍵不放技能，技能從後面的鍵開始放（開格的等級照舊從第一格算）
+  const off = cls => (R.SLOT_OFF && R.SLOT_OFF[cls]) || 0;
+  R.slotOff = off;
+  const NSLOT = cls => R.SKILL_UNLOCK.length - off(cls);   // 技能格的數目（skills.js；2026-10-04 起五格）
+  const defaults = (cls, st) => [st.adv ? R.ADV[cls].find(a => a.id === st.adv).skill : R.CLASSES[cls].skill, (R.SKILL_SLOTS[cls] || [])[0], (R.SKILL_SLOTS[cls] || [])[1]].concat(Array(Math.max(0, NSLOT(cls) - 3)).fill(null)).slice(0, NSLOT(cls));
   R.loadoutOf = cls => {
     const S = R.S, st = S.classes[cls], def = defaults(cls, st);
     S.loadout = S.loadout || {}; const lo = S.loadout[cls] || [];
-    const out = Array.from({ length: NSLOT() }, (_, i) => (lo[i] && known(cls, st, lo[i]) ? lo[i] : null));
+    const out = Array.from({ length: NSLOT(cls) }, (_, i) => (lo[i] && known(cls, st, lo[i]) ? lo[i] : null));
     // 沒換過的格子用預設；預設的技能已經被放在別格，就找一個還沒裝的
     // 一格一格填：已經裝上的（包括這一輪剛填的）不再重複；新的第四、五格沒有預設，就填還沒裝的學會的技能（沒有就空著）
     const used = new Set(out.filter(Boolean));
@@ -177,7 +180,7 @@
   };
   const cp0 = R.calcPlayer;
   R.calcPlayer = cls => { const P = cp0(cls); try { P.skill = R.loadoutOf(cls)[0]; } catch (e) { } return P; };
-  R.slotSkill = (P, i) => { const lo = R.S ? R.loadoutOf(P.cls) : []; if (i === 0) return P.skill; return P.lv >= R.SKILL_UNLOCK[i] ? lo[i] || null : null; };
+  R.slotSkill = (P, i) => { const j = i - off(P.cls); if (j < 0) return null; const lo = R.S ? R.loadoutOf(P.cls) : []; if (j === 0) return P.skill; return P.lv >= R.SKILL_UNLOCK[j] ? lo[j] || null : null; };   // i＝按鍵的格子；j＝技能書的第幾格
 
   // ---------- 放技能 ----------
   const us0 = R.useSkill;
@@ -202,7 +205,7 @@
     const w = W(), P = w.P; if (!P || !w.run || w.paused) return;
     if (i === 0) { R.useSkill(); return; }
     const id = R.slotSkill(P, i);
-    if (!id) { R.toast('職業等級 ' + R.SKILL_UNLOCK[i] + ' 才會打開這一格'); return; }
+    if (!id) { R.toast('職業等級 ' + (R.SKILL_UNLOCK[i - off(P.cls)] || R.SKILL_UNLOCK[i]) + ' 才會打開這一格'); return; }
     castAny(id, i);
   };
 
@@ -363,13 +366,14 @@
   };
 
   // ---------- 技能書（換技能的畫面） ----------
-  const KEYS = () => (R.touch ? ['技能鈕', '第二鈕', '第三鈕', '第四鈕', '第五鈕'] : [
+  const KEYS = cls => (R.touch ? ['技能鈕', '第二鈕', '第三鈕', '第四鈕', '第五鈕'] : [
     (R.keyName ? R.keyName('skill1') : 'R') + '／右鍵', R.keyName ? R.keyName('skill2') : '3', R.keyName ? R.keyName('skill3') : '4', R.keyName ? R.keyName('skill4') : '5', R.keyName ? R.keyName('skill5') : '6'
-  ]);
+  ]).slice(off(cls));
   let pickSlot = 0;
   R.SB_FOOT = R.SB_FOOT || []; R.SB_HEAD = R.SB_HEAD || [];   // SB_HEAD：fn(職業, 職業存檔) 回傳放在技能列表最上面的 HTML（ultpath.js 的大招卡片）   // 技能卡片最下面那一格：fn(格子, 技能編號)，自己往裡面放東西（skillvar.js 的變化、souyu.js 的奏域選項）
   const book = (host, close) => {
-    const S = R.S, cls = S.cls, st = S.classes[cls], lo = R.loadoutOf(cls), keys = KEYS();
+    const S = R.S, cls = S.cls, st = S.classes[cls], lo = R.loadoutOf(cls), keys = KEYS(cls);
+    if (pickSlot >= NSLOT(cls)) pickSlot = 0;
     const ids = allOf(cls), learned = ids.filter(id => known(cls, st, id)), locked = ids.filter(id => !known(cls, st, id));
     const who = t => (R.TEACHER && R.TEACHER[t]) || '望月瀧';   // 教的人（storyally.js：雷諾、楚璐也會教）
     const req = id => { const s = info(id); if (s.taught) return who(s.taught) + '教的：成為戀人之後請' + who(s.taught) + '教'; if (s.adv2) return R.adv2Req ? R.adv2Req(s, st) : '二次轉職'; if (s.adv && s.adv !== st.adv) return '轉職：' + R.ADV[cls].find(a => a.id === s.adv).name + (need(s, st) > R.PROMOTE_LV ? '・Lv ' + need(s, st) : ''); return '職業等級 ' + need(s, st); };
@@ -391,8 +395,8 @@
         + '<b>' + esc(sk.name) + (s.adv ? ' <small class="sb-adv">' + esc(R.ADV[cls].find(a => a.id === s.adv).name) + '</small>' : '') + (at >= 0 ? ' <small class="sb-at">裝在「' + keys[at] + '」</small>' : '') + '</b>'
         + '<small>' + (R.skillTag && R.skillTag(id) ? esc(R.skillTag(id)) + '・' : '') + '冷卻 ' + sk.cd + ' 秒・魔力 ' + sk.mp + (ok ? '' : '・' + esc(req(id))) + '</small>'
         + '<span>' + esc(sk.desc) + '</span></button>' + (ok ? '<div class="sb-foot" data-foot="' + id + '"></div>' : '') + '</div>'; };   // 2026-10-08 作者：技能變化放在說明那格最下面（skillvar.js、souyu.js 往 .sb-foot 裡填）
-    host.innerHTML = '<h2>技能書・' + esc(R.clsName(cls)) + ' Lv ' + st.lv + '</h2><p class="note">每一格技能都可以換。先點上面的一格，再點下面學會的技能。第二到第五格在職業等級 ' + R.SKILL_UNLOCK.slice(1).join('、') + ' 打開。進了遺跡就不能換。</p>'
-      + '<div class="row sb-slots">' + Array.from({ length: NSLOT() }, (_, i) => i).map(i => { const open = i === 0 || st.lv >= R.SKILL_UNLOCK[i]; return '<button type="button" class="btn' + (pickSlot === i ? ' pri' : '') + '" data-slot="' + i + '"' + (open ? '' : ' disabled') + '>' + keys[i] + '：' + (open ? esc(R.SKILLS[lo[i]].name) : 'Lv ' + R.SKILL_UNLOCK[i] + ' 打開') + '</button>'; }).join('') + '<button type="button" class="btn" data-reset="1">恢復預設</button></div>'
+    host.innerHTML = '<h2>技能書・' + esc(R.clsName(cls)) + ' Lv ' + st.lv + '</h2><p class="note">每一格技能都可以換。先點上面的一格，再點下面學會的技能。第二格以後在職業等級 ' + R.SKILL_UNLOCK.slice(1, NSLOT(cls)).join('、') + ' 打開。' + (off(cls) && R.SLOT_NOTE && R.SLOT_NOTE[cls] ? R.SLOT_NOTE[cls] : '') + '進了遺跡就不能換。</p>'
+      + '<div class="row sb-slots">' + Array.from({ length: NSLOT(cls) }, (_, i) => i).map(i => { const open = i === 0 || st.lv >= R.SKILL_UNLOCK[i]; return '<button type="button" class="btn' + (pickSlot === i ? ' pri' : '') + '" data-slot="' + i + '"' + (open ? '' : ' disabled') + '>' + keys[i] + '：' + (open ? esc(R.SKILLS[lo[i]].name) : 'Lv ' + R.SKILL_UNLOCK[i] + ' 打開') + '</button>'; }).join('') + '<button type="button" class="btn" data-reset="1">恢復預設</button></div>'
       + '<p class="note">學會 ' + learned.length + '／' + ids.length + ' 種。依轉職路線分類，可展開各區查看學習條件。</p>' + R.SB_HEAD.map(f => { try { return f(cls, st) || ''; } catch (e) { return ''; } }).join('') + groups(ids)
       + '<div class="row"><button type="button" class="btn pri" data-close="1">好了</button></div>';
     host.querySelectorAll('.sb-foot').forEach(f => { R.SB_FOOT.forEach(fn => { try { fn(f, f.dataset.foot); } catch (e) { } }); if (!f.childElementCount) f.remove(); });

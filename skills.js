@@ -189,9 +189,10 @@
     if (!force && key === shown) return; shown = key;
     R.SKILL_UNLOCK.slice(1).map((u, k) => k + 1).forEach(i => {
       const el = slotEl(i); if (!el.b) return; const id = R.slotSkill(P, i), sk = id && R.SKILLS[id];
-      el.n.textContent = sk ? sk.name : 'Lv ' + R.SKILL_UNLOCK[i];
+      const ul = R.SKILL_UNLOCK[i - (R.slotOff ? R.slotOff(P.cls) : 0)] || R.SKILL_UNLOCK[i];
+      el.n.textContent = sk ? sk.name : 'Lv ' + ul;
       el.b.classList.toggle('locked', !sk);
-      el.b.title = sk ? sk.name + '：' + sk.desc + '（魔力 ' + sk.mp + '、冷卻 ' + sk.cd + ' 秒）' : '職業等級 ' + R.SKILL_UNLOCK[i] + ' 打開這一格' + ((R.SKILL_SLOTS[P.cls] || [])[i - 1] && R.SKILLS[(R.SKILL_SLOTS[P.cls] || [])[i - 1]] ? '：' + R.SKILLS[(R.SKILL_SLOTS[P.cls] || [])[i - 1]].name : '（到技能書裝技能）');
+      el.b.title = sk ? sk.name + '：' + sk.desc + '（魔力 ' + sk.mp + '、冷卻 ' + sk.cd + ' 秒）' : '職業等級 ' + ul + ' 打開這一格' + ((R.SKILL_SLOTS[P.cls] || [])[i - 1] && R.SKILLS[(R.SKILL_SLOTS[P.cls] || [])[i - 1]] ? '：' + R.SKILLS[(R.SKILL_SLOTS[P.cls] || [])[i - 1]].name : '（到技能書裝技能）');
     });
   };
   const hudFloor0 = R.hudFloor;

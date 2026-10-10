@@ -12,7 +12,7 @@
     const r = he0(e, d, o, ...rest);
     try {
       const P = W.P, run = W.run;
-      if (o && o.primary && P && P.cls === 'bard' && (P.lv || 1) < LV && run && !run.done && !P.dead) {
+      if (!R.bardChord && o && o.primary && P && P.cls === 'bard' && (P.lv || 1) < LV && run && !run.done && !P.dead) {   // 2026-10-10 樂句換成和弦與樂譜（bardchord.js）之後就不用了
         const t = R.coreTime ? R.coreTime() : run.t || 0;
         if (t - (P._bnT == null ? -99 : P._bnT) >= GAP) { P._bnT = t; C.onCast(P, -1, '__basic'); if (R.num) R.num(P.x, 2.3, P.z, '♪', 'heal'); }
       }
@@ -20,5 +20,5 @@
     return r;
   };
   const h0 = C.help;
-  if (h0) C.help = P => h0(P) + ((P && (P.lv || 1) < LV) ? ' ' + LV + ' 級以前：普攻打中也算一個「攻」（每 ' + GAP + ' 秒最多一個）。' : '');
+  if (h0 && !R.bardChord) C.help = P => h0(P) + ((P && (P.lv || 1) < LV) ? ' ' + LV + ' 級以前：普攻打中也算一個「攻」（每 ' + GAP + ' 秒最多一個）。' : '');
 })(window.R);

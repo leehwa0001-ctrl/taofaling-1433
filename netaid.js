@@ -3,7 +3,7 @@
 //   連線的朋友站在旁邊也吃不到。
 // 做法：
 // - R.nearAllies(P, range, { downed })：電腦隊友＋連線人物（remote proxy，有 .remote id）
-// - R.aidAlly(al, { healPct, shieldPct, shieldT, cleanse, revive, revivePct, quiet, iframe })：
+// - R.aidAlly(al, { healPct, shieldPct, healAbs, shieldAbs, shieldT, cleanse, revive, revivePct, quiet, iframe })（healAbs、shieldAbs＝固定量，疊在原本的護盾上）：
 //     電腦隊友直接改血／盾；連線隊友送 { k:'aid', rid,f,n, hp,sh,sht,cl,rv,q,ifr }，對方自己 healP／加盾／站起來
 // - 包住 SKILL_TYPES.heal／revive／aura、castSkillId('ward')、CORE.priest.act、CORE.bard.play、ULTS.priest.go
 // 放在 net.js、net2.js、skillbook.js、skills.js、adv2more.js、ult.js、classcore2.js、skillbook2.js 後面。
@@ -39,11 +39,13 @@
     const d = Object.assign({ k: 'aid' }, tag(run));
     if (o.healPct > 0) d.hp = Math.round(Math.min(1, o.healPct) * 1000) / 1000;
     if (o.shieldPct > 0) { d.sh = Math.round(Math.min(1, o.shieldPct) * 1000) / 1000; d.sht = o.shieldT > 0 ? Math.min(30, o.shieldT) : 6; }
+    if (o.healAbs > 0) d.ha = Math.round(Math.min(1e5, o.healAbs));   // 2026-10-10 吟遊詩人的樂譜：照吟遊詩人的魔力上限算的固定量（不是對方生命的％）
+    if (o.shieldAbs > 0) { d.sa = Math.round(Math.min(1e5, o.shieldAbs)); d.sht = o.shieldT > 0 ? Math.min(30, o.shieldT) : 6; }
     if (o.cleanse) d.cl = 1;
     if (o.revive) { d.rv = 1; if (!(d.hp > 0) && o.revivePct > 0) d.hp = Math.round(Math.min(1, o.revivePct) * 1000) / 1000; }
     if (o.quiet) d.q = 1;
     if (o.iframe > 0) d.ifr = Math.min(10, o.iframe);
-    if (!(d.hp > 0) && !(d.sh > 0) && !d.cl && !d.rv) return;
+    if (!(d.hp > 0) && !(d.sh > 0) && !(d.ha > 0) && !(d.sa > 0) && !d.cl && !d.rv) return;
     try { N().send(d, id); } catch (e) { }
   };
 
@@ -51,7 +53,7 @@
     if (!al || !o) return;
     if (al.remote != null) {
       sendAid(al.remote, o);
-      if (R.fx && (o.healPct > 0 || o.shieldPct > 0 || o.revive)) R.fx(o.revive ? 'spawn' : 'ring', al.x, 0.1, al.z, { r: 1.2, color: '#FFE8A0' });
+      if (R.fx && (o.healPct > 0 || o.shieldPct > 0 || o.healAbs > 0 || o.shieldAbs > 0 || o.revive)) R.fx(o.revive ? 'spawn' : 'ring', al.x, 0.1, al.z, { r: 1.2, color: '#FFE8A0' });
       return;
     }
     if (o.revive && al.downed) {
@@ -68,7 +70,9 @@
       if (!o.quiet) R.num && R.num(al.x, 2.2, al.z, '+' + Math.round(v), 'heal');
     }
     if (o.shieldPct > 0) { al.shield = Math.max(al.shield || 0, al.hpMax * o.shieldPct); al.shieldT = o.shieldT || 6; }
-    if (o.healPct > 0 || o.shieldPct > 0) R.fx && R.fx('ring', al.x, 0.1, al.z, { r: 1.2, color: '#FFE8A0' });
+    if (o.healAbs > 0) { al.hp = Math.min(al.hpMax, al.hp + o.healAbs); if (!o.quiet) R.num && R.num(al.x, 2.2, al.z, '+' + Math.round(o.healAbs), 'heal'); }
+    if (o.shieldAbs > 0) { al.shield = Math.min(al.hpMax, (al.shield || 0) + o.shieldAbs); al.shieldT = Math.max(al.shieldT || 0, o.shieldT || 6); }
+    if (o.healPct > 0 || o.shieldPct > 0 || o.healAbs > 0 || o.shieldAbs > 0) R.fx && R.fx('ring', al.x, 0.1, al.z, { r: 1.2, color: '#FFE8A0' });
   };
 
   R.aidNear = (P, range, o) => {
@@ -99,6 +103,8 @@
         R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 1.4, color: '#FFE8A0' });
         R.fx && R.fx('block', P.x, 1.2, P.z);
       }
+      if (num(d.ha, 0, 1e5) && d.ha > 0) R.healP(d.ha, !!d.q);
+      if (num(d.sa, 0, 1e5) && d.sa > 0) { P.shield = Math.min(P.hpMax, (P.shield || 0) + d.sa); if (P.buff) P.buff.shieldT = Math.max(P.buff.shieldT || 0, num(d.sht, 0, 30) ? d.sht : 6); R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 1.4, color: '#7FE8B8' }); }
       if (d.cl) { P.slowT = 0; P.blindT = 0; if (P.dbf) Object.keys(P.dbf).forEach(k => { P.dbf[k] = 0; }); }
       if (num(d.ifr, 0, 10) && d.ifr > 0 && !d.rv) P.iframe = Math.max(P.iframe || 0, d.ifr);
     }
