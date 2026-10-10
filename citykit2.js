@@ -14,7 +14,7 @@
   const W = R.W, T = () => THREE, CK = R.CK, $ = id => document.getElementById(id), esc = s => R.esc(s), S = () => R.S;
   const CITIES = CK.cities = {};
   CK.define = def => { CITIES[def.id] = def; };
-  R.inCity3D = () => !!(W.town && W.town.ck);
+  R.inCity3D = () => !!(W.town && W.town.ck && !W.inside);   // 2026-10-10：在舊的室內（interior.js，東鶴的店）的時候交給原本的那一套
   const inR = (x, z, r, m) => x > r[0] - (m || 0) && x < r[2] + (m || 0) && z > r[1] - (m || 0) && z < r[3] + (m || 0);
   const pip = (x, z, poly) => { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const a = poly[i], b = poly[j]; if ((a[1] > z) !== (b[1] > z) && x < (b[0] - a[0]) * (z - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; };
   const rectPoly = r => [[r[0], r[1]], [r[2], r[1]], [r[2], r[3]], [r[0], r[3]]];
@@ -513,7 +513,7 @@
   const QN = ['低', '中', '高'];
   const menu = () => {
     const tw = W.town, city = tw.city;
-    R.sheet('<h2>' + esc(city.name) + '</h2><p class="note">' + (R.dateLabel ? esc(R.dateLabel()) : '') + '</p><p class="note">' + (R.touch ? '左搖桿移動・靠近人或店按「互動」' : 'WASD 移動・Shift 跑步・空白鍵互動・Q／E 轉視角・Tab 地圖') + '。回東鶴或去別的城：到' + esc(city.stationName || '車站') + '買票。</p>'
+    R.sheet('<h2>' + esc(city.name) + '</h2><p class="note">' + (R.dateLabel ? esc(R.dateLabel()) : '') + '</p><p class="note">' + (R.touch ? '左搖桿移動・靠近人或店按「互動」' : 'WASD 移動・Shift 跑步・空白鍵互動・Q／E 轉視角・Tab 地圖') + '。' + (city.id === 'donghe' ? '去別的城：到東鶴站買票。' : '回東鶴或去別的城：到' + esc(city.stationName || '車站') + '買票。') + '</p>'
       + '<p class="note">畫質：' + QN[CK.quality()] + '（高：反鋸齒、泛光、清楚的陰影；手機建議中或低）</p>',
       '<div class="row"><button type="button" class="btn pri" id="ck-x">繼續</button><button type="button" class="btn" id="ck-map">' + esc(city.name) + '地圖</button><button type="button" class="btn" id="ck-book">昭旭觀光手冊</button><button type="button" class="btn" id="ck-q">畫質：' + QN[CK.quality()] + '</button><button type="button" class="btn" id="ck-cam">鏡頭：' + (CK.camMode() === 'top' ? '俯瞰' : '漫遊（低角度）') + '</button>' + (R.reportClip ? '<button type="button" class="btn" id="ck-clip">回報穿模</button>' : '') + '<button type="button" class="btn" id="ck-title">回到標題</button></div>');
     $('ck-x').onclick = R.closeSheet; $('ck-map').onclick = () => { R.closeSheet(); setTimeout(bigMap, 30); }; $('ck-book').onclick = () => R.azukiBook && R.azukiBook();
