@@ -17,6 +17,9 @@
 // - 被動（passives.js）：快速演奏（1 級）演奏時間 −20%、節奏加速（15 級）演奏時間 −30%、樂譜延長（30 級）、絕對音感（26 級）音符效果 +25%。
 // - 原本的「樂句」（三個音湊曲子）拿掉。轉職：詠嘆詩人增益音符 ×1.5、戰鼓手攻擊音符 ×1.5、奏域師八分音符的攻速維持兩倍久；
 //   傳說：萬曲之琴音符效果 +50%、迴響長笛普攻演奏完射出兩輪音符。和弦、樂譜存在存檔（R.S.bardScore）。
+// - 2026-10-11 作者：普攻改成演奏的期間每經過一個音符、發出聲音的那一下就發出那顆音符的普攻（不再等演奏完一次全部發出）；
+//   技能的演奏也一樣，每經過一個音符就發出一顆普攻音符，演奏完才放出技能。音符與普攻本身的效果不變。
+// - 2026-10-11 作者：技能「和弦」改名「三重奏」，射出的音符撞到敵人炸開（半徑 3 公尺）。
 // - 聲音（2026-10-11 作者）：演奏的時候照樂譜彈；演奏完發出攻擊的那一下不出聲（武器、技能的聲音、每顆音符的音都靜音）；音符打中敵人的時候彈那顆音符的音。
 // 放在最後面（main.js 前面）：包在 R.attack、R.castSlot、R.useSkill、R.fire、R.updateShots、R.hurtEnemy、R.calcPlayer、R.step、R.hudTick 最外面。
 (function (R) {
@@ -207,6 +210,7 @@
     const f = T[type]; if (type === 'combo' || typeof f !== 'function') return;
     T[type] = function (s, P, w, pw, ...a) {
       if (!IS(P) || P !== W().P || !s || typeof s !== 'object') return f.call(this, s, P, w, pw, ...a);
+      if (s.trio) ST.trioT = now() + 0.4;   // 三重奏：接下來射出的音符撞到敵人會炸開
       const r = scaleArgs(type, s, P, pw); if (!r) return f.call(this, s, P, w, pw, ...a);
       return f.call(this, r[0], P, w, r[1], ...a);
     };
@@ -243,11 +247,13 @@
     if (ST.perf) return;
     startPerf(P, { kind: 'atk' });
   };
+  // 演奏中經過一個音符：發出那一顆的普攻（2026-10-11 作者）。借原本的普攻算出位置、速度、傷害，攔下來換成這一顆音符；聲音由演奏負責，這一下不出聲
+  const noteAtk = (P, n, m) => { const cd = P.atkCd; ST.release = [n]; ST.relMid = [m]; ST.inRel = true; P.atkCd = 0; try { hush(() => at0()); } catch (e) { } finally { ST.release = null; ST.inRel = false; P.atkCd = cd; } };
   const perfDone = P => {
     const p = ST.perf; ST.perf = null;
     if (chordOf(P).id === 'ele') P.mp = Math.min(P.mpMax, P.mp + P.mpMax * 0.05);
     // 普攻：借原本的普攻算出那一發的樣子（位置、速度、傷害），換成音符的佇列；射的期間馬上可以開始下一次演奏
-    if (p.kind === 'atk') { ST.release = p.notes; ST.relMid = p.mid; ST.inRel = true; P.atkCd = 0; try { hush(() => at0()); } finally { ST.release = null; ST.inRel = false; } P.atkCd = 0; }
+    if (p.kind === 'atk') P.atkCd = 0;   // 音符已經在演奏中一顆一顆發出去了
     else if (p.kind === 'skill') {
       ST.cast = castMods(P, p.notes); let ok = false;
       try { ok = hush(() => castNow(P, p.i)); } finally { const m = ST.cast; ST.cast = null; if (ok) post(P, p.i, p.id, m); }
@@ -264,6 +270,9 @@
     if (ST.perf && !ST.rec) return null;
     return fi0(o);
   };
+  // 三重奏的音符：撞到敵人炸開半徑 3 公尺（傷害照那一發）
+  const fiT = R.fire;
+  R.fire = o => { const s = fiT(o); try { const P = W().P; if (s && o && o.owner === 'p' && !o.primary && !o._bd && IS(P) && now() < (ST.trioT || 0)) { dress(s, { d: 1, k: 'a' }); s.bdBoom = { r: 3, dmg: s.dmg || 0, col: '#FF6A5A' }; } } catch (e) { } return s; };
   // 攻擊音符：碰到敵人的那一下炸開（打牆、飛完不炸）；每顆音符打中敵人的時候彈它的音（同一瞬間打中很多下只彈兩個）
   let hitT = 0, hitN = 0;
   const up0 = R.updateShots;
@@ -305,7 +314,7 @@
     if (ST.rec) { ST.rec.t += dt; if (ST.rec.t >= REC_T) endRec(P); }
     if (ST.perf) {
       const p = ST.perf; p.t += dt;
-      while (p.shown < p.notes.length && p.t >= p.times[p.shown]) { const n = p.notes[p.shown++]; if (R.num) R.num(P.x + (Math.random() - 0.5) * 0.8, 2.2, P.z, n.d < 1 ? '♪' : n.d < 2 ? '♩' : '♫', n.k === 'a' ? 'crit' : 'heal'); }
+      while (p.shown < p.notes.length && p.t >= p.times[p.shown]) { const k = p.shown++, n = p.notes[k]; if (R.num) R.num(P.x + (Math.random() - 0.5) * 0.8, 2.2, P.z, n.d < 1 ? '♪' : n.d < 2 ? '♩' : '♫', n.k === 'a' ? 'crit' : 'heal'); noteAtk(P, n, p.mid[k]); }
       if (p.t >= p.dur) perfDone(P);
     }
     if (ST.q.length) { ST.qT -= dt; while (ST.q.length && ST.qT <= 0) { fireNote(P); ST.qT += gapOf(P); } } else ST.qT = 0;
@@ -400,5 +409,7 @@
       box.style.display = 'block'; box.style.left = (r && r.width ? r.left : 12) + 'px'; box.style.top = Math.max(top0, y) + 'px';
     } catch (e) { }
   };
+  { const L = R.SKILL_LIB && R.SKILL_LIB.bd_chord, K = R.SKILLS && R.SKILLS.bd_chord, d = '一次撥三條弦，三個音符扇形飛出去，撞到敵人炸開（半徑 3 公尺）。';
+    if (L) { L.name = '三重奏'; L.desc = d; L.p = Object.assign({}, L.p, { trio: 1 }); } if (K) { K.name = '三重奏'; K.desc = d; } }
   R.bardChord = { ST, SV, vary, scaleArgs, chordOf, castMods, tally, nextChord, startRec, endRec, perfDur, capOf, spdK };
 })(window.R);
