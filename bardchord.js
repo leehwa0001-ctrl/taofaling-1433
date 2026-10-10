@@ -1,6 +1,6 @@
-// 吟遊詩人重做：R＝和弦、樂譜、演奏（2026-10-10 作者）
-// - R（右鍵、手機的技能鈕一樣）：點一下換和弦（大小調）；按住 0.45 秒重新錄製樂譜（錄的時候再按住一次＝提早寫完）。沒有撕掉樂譜（X 不做事）。
-//   吟遊詩人的技能改放 3、4、5、6（skillbook.js 的 R.SLOT_OFF）：1 級就有「3」那一格，開格等級照舊往前挪一格，最多四招。
+// 吟遊詩人重做：X＝和弦、樂譜，出手先演奏（2026-10-10 作者）
+// - X（職業鍵；手機點職業條）：點一下換和弦（大小調）；按住 0.45 秒重新錄製樂譜（錄的時候再按住一次＝提早寫完）。沒有撕掉樂譜。
+//   2026-10-11 作者：製作樂譜、更換和弦的按鍵改成 X——原本在 R（右鍵、手機的 R 鈕），技能改放 3～6、最多四招；現在 R 變回一般的技能格（跟其他職業一樣五格）。
 // - 寫樂譜：10 秒內記下出手——普攻一下＝八分音符（半拍）、基礎冷卻 13 秒以內的技能＝四分音符（一拍）、13 秒以上＝二分音符（兩拍）；
 //   一個小節 4 拍（被動「樂譜延長」多 2 拍），下一個音放不下就寫完。攻擊技能的音符是紅的、增益（守、治）是綠的、普攻是金的；音高照和弦，
 //   演奏的時候每個音隨機升高或降低 1～2 個音階（每次演奏都不太一樣）。
@@ -12,16 +12,17 @@
 //         四分增益音符每個給你和隊友最大魔力 1% 的護盾，二分的再回同樣多的生命。
 //   技能：每個八分音符你和隊友攻速 +5%（8 秒）；攻擊四分每個傷害與範圍 +8%；增益四分每個冷卻 −5%、恢復與護盾 +5%；
 //         攻擊二分每個耗魔 +25%、傷害與範圍 +30%、冷卻 +10%；增益二分每個增益效果 +40%，周圍的友軍（含你）得到你最大魔力 20% 的護盾、回復你最大魔力 10% 的生命。
-// - 和弦（一直有效）：大三和弦 範圍 +(10+等級/2)%、小三和弦 恢復與護盾 +(10+等級/2)%（等級算到 40 為止，最多 +30%）；
-//   20 級七和弦 傷害 +(10+等級/2)%、30 級九和弦 技能急速 +(40+等級×1.5)、40 級十一和弦 每次演奏完回復 5% 最大魔力。
+// - 和弦（一直有效）：大三和弦 傷害 +(10+等級/2)%、小三和弦 恢復與護盾 +(10+等級/2)%（等級算到 40 為止，最多 +30%）；
+//   20 級七和弦 範圍 +(10+等級/2)%（2026-10-11 作者：大三和弦與七和弦的效果交換）、30 級九和弦 技能急速 +(40+等級×1.5)、40 級十一和弦 每次演奏完回復 5% 最大魔力。
 // - 被動（passives.js）：快速演奏（1 級）演奏時間 −20%、節奏加速（15 級）演奏時間 −30%、樂譜延長（30 級）、絕對音感（26 級）音符效果 +25%。
 // - 原本的「樂句」（三個音湊曲子）拿掉。轉職：詠嘆詩人增益音符 ×1.5、戰鼓手攻擊音符 ×1.5、奏域師八分音符的攻速維持兩倍久；
 //   傳說：萬曲之琴音符效果 +50%、迴響長笛普攻演奏完射出兩輪音符。和弦、樂譜存在存檔（R.S.bardScore）。
+// - 聲音（2026-10-11 作者）：演奏的時候照樂譜彈；演奏完發出攻擊的那一下不出聲（武器、技能的聲音、每顆音符的音都靜音）；音符打中敵人的時候彈那顆音符的音。
 // 放在最後面（main.js 前面）：包在 R.attack、R.castSlot、R.useSkill、R.fire、R.updateShots、R.hurtEnemy、R.calcPlayer、R.step、R.hudTick 最外面。
 (function (R) {
   const W = () => R.W, $ = id => document.getElementById(id);
-  R.SLOT_OFF = Object.assign(R.SLOT_OFF || {}, { bard: 1 });
-  R.SLOT_NOTE = Object.assign(R.SLOT_NOTE || {}, { bard: '吟遊詩人的 R 是和弦（點一下換和弦、按住寫樂譜），技能從 3 開始放、最多四格。' });
+  R.SLOT_OFF = Object.assign(R.SLOT_OFF || {}, { bard: 0 });   // 2026-10-11：R 變回技能格
+  R.SLOT_NOTE = Object.assign(R.SLOT_NOTE || {}, { bard: '吟遊詩人的 X（職業鍵）是和弦：點一下換和弦、按住寫樂譜。' });
   const IS = P => !!P && P.cls === 'bard';
   const ME = () => { const w = W(), P = w.P; return IS(P) && w.run && !w.run.done && !P.dead ? P : null; };
   const now = () => performance.now() / 1000;
@@ -51,10 +52,10 @@
   const hasteOf = P => 40 + L40(P) * 1.5;
   const SV = () => { const s = R.S || {}; s.bardScore = s.bardScore || { chord: 'maj', notes: null }; return s.bardScore; };
   const chordOf = P => { const c = CH.find(x => x.id === SV().chord); return c && (P.lv || 1) >= c.lv ? c : CH[0]; };
-  const chordDesc = (c, P) => (c.id === 'maj' ? '範圍 +' + pctOf(P) + '%' : c.id === 'min' ? '恢復與護盾 +' + pctOf(P) + '%' : c.id === 'sev' ? '傷害 +' + pctOf(P) + '%' : c.id === 'nin' ? '技能急速 +' + hasteOf(P) : '每次演奏回復 5% 最大魔力');
-  const areaK = P => (chordOf(P).id === 'maj' ? 1 + pctOf(P) / 100 : 1);
+  const chordDesc = (c, P) => (c.id === 'maj' ? '傷害 +' + pctOf(P) + '%' : c.id === 'min' ? '恢復與護盾 +' + pctOf(P) + '%' : c.id === 'sev' ? '範圍 +' + pctOf(P) + '%' : c.id === 'nin' ? '技能急速 +' + hasteOf(P) : '每次演奏回復 5% 最大魔力');
+  const areaK = P => (chordOf(P).id === 'sev' ? 1 + pctOf(P) / 100 : 1);   // 2026-10-11：大三和弦與七和弦交換
   const healK = P => (chordOf(P).id === 'min' ? 1 + pctOf(P) / 100 : 1);
-  const dmgK = P => (chordOf(P).id === 'sev' ? 1 + pctOf(P) / 100 : 1);
+  const dmgK = P => (chordOf(P).id === 'maj' ? 1 + pctOf(P) / 100 : 1);
   const syncHaste = P => { if (!P || !('haste' in P)) return; const want = IS(P) && chordOf(P).id === 'nin' ? hasteOf(P) : 0, had = P._bdHaste || 0; if (want !== had) { P.haste = (P.haste || 0) - had + want; P._bdHaste = want; } };
   const nextChord = P => {
     const av = CH.filter(c => (P.lv || 1) >= c.lv), i = av.findIndex(c => c.id === chordOf(P).id), c = av[(i + 1) % av.length];
@@ -83,7 +84,7 @@
   const REC_T = 10, HOLD = 0.45;
   const startRec = P => {
     ST.rec = { t: 0, notes: [], beats: 0 }; ST.perf = null;
-    toast((SV().notes ? '重新錄製樂譜' : '開始寫樂譜') + '：10 秒內的普攻、技能都會記成音符（一個小節 ' + capOf(P) + ' 拍；再按住 R 提早寫完）');
+    toast((SV().notes ? '重新錄製樂譜' : '開始寫樂譜') + '：10 秒內的普攻、技能都會記成音符（一個小節 ' + capOf(P) + ' 拍；再按住 X 提早寫完）');
     R.fx && R.fx('ring', P.x, 0.1, P.z, { r: 2.6, color: '#FFB8E0' }); melody(P, [[72, 0, 0.15], [79, 0.12, 0.35]], 0.08);
   };
   const endRec = (P, why) => {
@@ -160,12 +161,14 @@
     if (!was) { const f = fireNote(P); ST.qT = gapOf(P); return f; }
     return null;
   };
+  // 發出攻擊的那一下不出聲：武器、技能的音效和旋律先關掉（2026-10-11 作者：發出攻擊時沒有聲音）
+  const hush = f => { const sf = R.sfx, pm = R.playMelody, ps = R.playSfx; R.sfx = () => { }; R.playMelody = () => { }; if (ps) R.playSfx = () => { }; try { return f(); } finally { R.sfx = sf; R.playMelody = pm; if (ps) R.playSfx = ps; } };
   const fireNote = P => {
     const it = ST.q.shift(); if (!it || !ST.qO) return null;
     const n = it.n, a = P.aimA + (Math.random() - 0.5) * SPREAD, off = ST.qO.off;
-    const s = fi0(Object.assign({}, ST.qO.o, { x: P.x + Math.sin(a) * off, z: P.z + Math.cos(a) * off, a, _bd: 1 }));
-    melody(P, [[it.m || midiOf(n, it.i, chordOf(P)), 0, 0.1 + n.d * 0.08]], 0.06);
+    const s = hush(() => fi0(Object.assign({}, ST.qO.o, { x: P.x + Math.sin(a) * off, z: P.z + Math.cos(a) * off, a, _bd: 1 })));
     if (s) {
+      s.bdMidi = it.m || midiOf(n, it.i, chordOf(P)); s.bdD = n.d;   // 打中敵人的時候彈這個音（發出的時候不出聲）
       dress(s, n);
       if (n.d >= 1 && n.k === 'a') { const big = n.d >= 2 ? 2 : 1, m = nk(P, 'a'); s.bdBoom = { r: big * areaK(P), dmg: (s.dmg || 0) * big * m, col: '#FF6A5A' }; }
     }
@@ -180,7 +183,7 @@
   };
   const post = (P, i, id, m) => {
     const sk = R.SKILLS[id] || {};
-    if (P.skCd && P.skCd[i] > 0) P.skCd[i] *= m.cd;
+    if (i === 0) { if (P.skillCd > 0) P.skillCd *= m.cd; } else if (P.skCd && P.skCd[i] > 0) P.skCd[i] *= m.cd;
     if (m.mpx > 0) P.mp = Math.max(0, P.mp - (sk.mp || 0) * m.mpx);
     applyRate(P, m.rate, P.adv === 'serane' ? 16 : 8);
     if (m.ally > 0) shieldAll(P, P.mpMax * 0.2 * m.ally * healK(P), P.mpMax * 0.1 * m.ally * healK(P), 9);
@@ -210,32 +213,33 @@
   });
 
   // ---------- 接到遊戲裡 ----------
-  // R：不再放技能（技能在 3～6）
-  const us0 = R.useSkill;
-  R.useSkill = (...a) => { const P = W().P; if (IS(P) && W().run) return; return us0(...a); };
   // 技能：寫樂譜的時候照常放、記下來；有樂譜就先演奏（演奏完才真的放出去）；沒有樂譜照常放
-  const cs0 = R.castSlot;
-  const castNow = (P, i) => { const cdOf = () => (P.skCd && P.skCd[i]) || 0, c0 = cdOf(); cs0(i); return cdOf() > c0 + 0.01; };
-  R.castSlot = i => {
-    const P = W().P; if (!IS(P) || !(i >= 1) || !W().run) return cs0(i);
-    const id = R.slotSkill ? R.slotSkill(P, i) : null;
+  // 2026-10-11：R 變回技能格（第一格走 R.useSkill，冷卻在 P.skillCd；其他格走 R.castSlot，冷卻在 P.skCd）
+  const us0 = R.useSkill, cs0 = R.castSlot;
+  const cdOf = (P, i) => (i === 0 ? P.skillCd || 0 : (P.skCd && P.skCd[i]) || 0);
+  const raw = i => (i === 0 ? us0() : cs0(i));
+  const castNow = (P, i) => { const c0 = cdOf(P, i); raw(i); return cdOf(P, i) > c0 + 0.01; };
+  const slotCast = (P, i) => {
+    const id = i === 0 ? P.skill : R.slotSkill ? R.slotSkill(P, i) : null;
     if (ST.rec) { if (castNow(P, i) && id) { const n = noteOfSkill(id); if (n) addNote(P, n); } return; }
     const notes = SV().notes;
-    if (!notes || !notes.length || !id) return cs0(i);
+    if (!notes || !notes.length || !id) return raw(i);
     if (ST.perf || P.dead) return;
-    const sk = R.SKILLS[id]; if (!sk) return cs0(i);
-    if (((P.skCd && P.skCd[i]) || 0) > 0) return cs0(i);   // 還在冷卻：照原本的（不放）
+    const sk = R.SKILLS[id]; if (!sk) return raw(i);
+    if (cdOf(P, i) > 0) return raw(i);   // 還在冷卻：照原本的（不放）
     const m = castMods(P, notes);
     if (P.mp < sk.mp * (1 + m.mpx)) { toast('魔力不夠'); return; }
     startPerf(P, { kind: 'skill', i, id });
   };
+  R.useSkill = (...a) => { const P = W().P; if (!IS(P) || !W().run) return us0(...a); return slotCast(P, 0); };
+  R.castSlot = i => { const P = W().P; if (!IS(P) || !(i >= 1) || !W().run) return cs0(i); return slotCast(P, i); };
   // 普攻：寫樂譜的時候照常射一發（記成八分音符）；有樂譜就先演奏（演奏的時候不能普攻）、演奏完一個一個射出樂譜的音；樂譜是空的就不射
   const at0 = R.attack;
   R.attack = (...a) => {
     const P = W().P; if (!IS(P) || !W().run || ST.release) return at0(...a);
     if (ST.rec) return at0(...a);
     if (P.atkCd > 0 || P.dead || P.knockT > 0 || P.stance > 0) return;
-    if (!SV().notes || !SV().notes.length) { const t = now(); if (t - ST.hintT > 4) { ST.hintT = t; toast('樂譜是空的，普攻不會發出攻擊——按住 R 寫一段樂譜（寫的時候普攻照常）'); } P.atkCd = 0.3; return; }
+    if (!SV().notes || !SV().notes.length) { const t = now(); if (t - ST.hintT > 4) { ST.hintT = t; toast('樂譜是空的，普攻不會發出攻擊——按住 X 寫一段樂譜（寫的時候普攻照常）'); } P.atkCd = 0.3; return; }
     if (ST.perf) return;
     startPerf(P, { kind: 'atk' });
   };
@@ -243,10 +247,10 @@
     const p = ST.perf; ST.perf = null;
     if (chordOf(P).id === 'ele') P.mp = Math.min(P.mpMax, P.mp + P.mpMax * 0.05);
     // 普攻：借原本的普攻算出那一發的樣子（位置、速度、傷害），換成音符的佇列；射的期間馬上可以開始下一次演奏
-    if (p.kind === 'atk') { ST.release = p.notes; ST.relMid = p.mid; ST.inRel = true; P.atkCd = 0; try { at0(); } finally { ST.release = null; ST.inRel = false; } P.atkCd = 0; }
+    if (p.kind === 'atk') { ST.release = p.notes; ST.relMid = p.mid; ST.inRel = true; P.atkCd = 0; try { hush(() => at0()); } finally { ST.release = null; ST.inRel = false; } P.atkCd = 0; }
     else if (p.kind === 'skill') {
       ST.cast = castMods(P, p.notes); let ok = false;
-      try { ok = castNow(P, p.i); } finally { const m = ST.cast; ST.cast = null; if (ok) post(P, p.i, p.id, m); }
+      try { ok = hush(() => castNow(P, p.i)); } finally { const m = ST.cast; ST.cast = null; if (ok) post(P, p.i, p.id, m); }
     }
   };
   // 主要的那一發：寫樂譜的時候記一個八分音符；演奏完的那一下換成音符的佇列（同一下的其他發不射）；演奏中不射
@@ -260,11 +264,14 @@
     if (ST.perf && !ST.rec) return null;
     return fi0(o);
   };
-  // 攻擊音符：碰到敵人的那一下炸開（打牆、飛完不炸）
+  // 攻擊音符：碰到敵人的那一下炸開（打牆、飛完不炸）；每顆音符打中敵人的時候彈它的音（同一瞬間打中很多下只彈兩個）
+  let hitT = 0, hitN = 0;
   const up0 = R.updateShots;
   R.updateShots = dt => {
+    const tones = (W().shots || []).filter(s => s.bdMidi && !s.dead && s.hit).map(s => [s, s.hit.size]);
     const live = (W().shots || []).filter(s => s.bdBoom && !s.dead).map(s => [s, s.hit ? s.hit.size : 0]);
     const r = up0(dt);
+    tones.forEach(([s, n]) => { if (!(s.hit && s.hit.size > n)) return; const t = now(); if (t - hitT > 0.05) { hitT = t; hitN = 0; } if (hitN++ >= 2) return; const P = W().P; if (P) melody(P, [[s.bdMidi, 0, 0.16 + (s.bdD || 0.5) * 0.12]].concat(s.bdD >= 2 ? [[s.bdMidi - 12, 0, 0.4]] : []), 0.1); });
     live.forEach(([s, n]) => { if (s.hit && s.hit.size > n) { const b = s.bdBoom; s.bdBoom = null; R.fx && R.fx('boom', s.x, 0.6, s.z, { r: b.r, color: b.col }); R.aoe(s.x, s.z, b.r, b.dmg, { props: true }); } });
     return r;
   };
@@ -279,14 +286,12 @@
   const inGame = () => { const run = $('run'); return run && !run.hidden && !(R.sheetOpen && R.sheetOpen()) && !W().paused; };
   const press = src => { if (!ME() || !inGame() || ST.press) return; ST.press = { t0: now(), src, held: false }; };
   const release = src => { const p = ST.press; if (!p || p.src !== src) return; ST.press = null; const P = ME(); if (P && !p.held) nextChord(P); };
-  window.addEventListener('keydown', e => { if ((e.key || '').toLowerCase() === 'r' && !e.repeat && !/INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || '')) press('k'); });
-  window.addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 'r') release('k'); });
-  const cv = $('gl');
-  if (cv) cv.addEventListener('mousedown', e => { if (e.button === 2) press('m'); });
-  window.addEventListener('mouseup', e => { if (e.button === 2) release('m'); });
+  // 2026-10-11：X（職業鍵；keybinds.js 改過鍵的也會送 key＝x 的事件過來）。手機沒有 X 鈕：點、按住職業條（#core-g）
+  window.addEventListener('keydown', e => { if ((e.key || '').toLowerCase() === 'x' && !e.repeat && !/INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || '')) press('k'); });
+  window.addEventListener('keyup', e => { if ((e.key || '').toLowerCase() === 'x') release('k'); });
   window.addEventListener('blur', () => { ST.press = null; });
-  const rb = $('r-skill');
-  if (rb) { rb.addEventListener('pointerdown', e => { if (ME()) { e.preventDefault(); press('p'); } }); ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => rb.addEventListener(t, () => release('p'))); }
+  document.addEventListener('pointerdown', e => { if (ME() && e.target && e.target.closest && e.target.closest('#core-g')) { e.preventDefault(); press('p'); } });
+  ['pointerup', 'pointercancel'].forEach(t => document.addEventListener(t, () => release('p')));
 
   // ---------- 每一幀 ----------
   const st0 = R.step;
@@ -310,7 +315,7 @@
   // ---------- 職業鍵（X）、職業特效的條 ----------
   const status = P => {
     if (ST.rec) return '寫樂譜中 ' + Math.max(0, REC_T - ST.rec.t).toFixed(1) + ' 秒・' + ST.rec.beats + '／' + capOf(P) + ' 拍';
-    if (!SV().notes) return '樂譜是空的：按住 R 寫樂譜';
+    if (!SV().notes) return '樂譜是空的：按住 X 寫樂譜';
     if (ST.q.length && !ST.perf) return '射出音符中（還有 ' + ST.q.length + ' 個）——可以開始下一次演奏';
     if (ST.perf) return '演奏中' + (ST.perf.kind === 'skill' && R.SKILLS[ST.perf.id] ? '（' + R.SKILLS[ST.perf.id].name + '）' : '（普攻）') + ' ' + Math.max(0, ST.perf.dur - ST.perf.t).toFixed(1) + ' 秒';
     return '出手會先演奏 ' + perfDur(P).toFixed(1) + ' 秒再發出';
@@ -318,19 +323,18 @@
   const C = R.CORE && R.CORE.bard;
   if (C) Object.assign(C, {
     name: '和弦', col: '#FFB8E0',
-    help: P => '和弦與樂譜：R 點一下換和弦／大小調（大三＝範圍、小三＝恢復與護盾、20 級七和弦＝傷害、30 級九和弦＝技能急速、40 級十一和弦＝演奏回魔）；按住 R 重新錄製 10 秒的樂譜——普攻是八分音符、基礎冷卻 13 秒以內的技能是四分、以上是二分（一個小節 '
+    help: P => '和弦與樂譜：X 點一下換和弦／大小調（大三＝傷害、小三＝恢復與護盾、20 級七和弦＝範圍、30 級九和弦＝技能急速、40 級十一和弦＝演奏回魔）；按住 X 重新錄製 10 秒的樂譜——普攻是八分音符、基礎冷卻 13 秒以內的技能是四分、以上是二分（一個小節 '
       + capOf(P) + ' 拍）。之後每次出手：按下 → 演奏（' + perfDur(P).toFixed(1) + ' 秒，可以走、翻滾，不能普攻；攻速越快演奏越快）→ 發出。普攻演奏完一個一個往前方射出樂譜的音符（每個隔 ' + gapOf(P).toFixed(2) + ' 秒；攻擊音符碰到敵人炸開、增益音符給護盾；射的時候就能開始下一次演奏；樂譜是空的就不射），技能照音符加攻速、傷害、範圍、恢復、增益。'
       + ({ aria: '詠嘆詩人：增益音符效果 ×1.5。', drummer: '戰鼓手：攻擊音符效果 ×1.5。', serane: '奏域師：八分音符的攻速維持兩倍久。' }[P && P.adv] || ''),
     step() { }, onCast() { }, play() { },
     act() { },
-    gauge(P) { const c = chordOf(P); return { name: '和弦 ' + c.sym, col: '#FFB8E0', text: c.name + '・' + chordDesc(c, P), sub: status(P), x: '' }; }
+    gauge(P) { const c = chordOf(P); return { name: '和弦 ' + c.sym, col: '#FFB8E0', text: c.name + '・' + chordDesc(c, P), sub: status(P), x: ST.rec ? '按住寫完' : '換和弦／按住寫樂譜' }; }
   });
 
-  // ---------- 畫面：R 鈕（和弦）、左邊的五線譜 ----------
+  // ---------- 畫面：左邊的五線譜（2026-10-11：R 鈕變回技能，不再畫和弦） ----------
   const css = document.createElement('style');
   css.textContent = '#bd-staff{position:fixed;z-index:30;pointer-events:none;display:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.6))}'
-    + '#bd-staff canvas{display:block;width:236px;height:78px}'
-    + '#r-skill.bd-on{opacity:1!important}#r-skill.bd-on.none{filter:none!important}#r-skill.bd-on.rec{box-shadow:0 0 0 2px #FF6A8A,0 0 12px #FF6A8A!important}#r-skill.bd-on.perf{box-shadow:0 0 0 2px #FFE08A,0 0 14px #FFE08A!important}';
+    + '#bd-staff canvas{display:block;width:236px;height:78px}';
   document.head.appendChild(css);
   const box = document.createElement('div'); box.id = 'bd-staff'; const can = document.createElement('canvas'); box.appendChild(can); document.body.appendChild(box);
   const DPR = () => Math.min(2, window.devicePixelRatio || 1);
@@ -386,17 +390,8 @@
     ht0(dt);
     const w = W(), P = w.P, b = $('r-skill'), on = shown();
     if (!on) { hide(); return; }
-    if (b) b.classList.add('bd-on');
+    if (b && b.classList.contains('bd-on')) b.classList.remove('bd-on', 'rec', 'perf');   // 舊版留下的和弦樣子
     try {
-      const c = chordOf(P), n = $('r-skill-n'), ic = b && b.querySelector('.h2-ic'), sec = b && b.querySelector('.bh-sec');
-      if (n && n.textContent !== '和弦') n.textContent = '和弦';
-      if (ic) { const src = iconOf(c); if (ic.dataset.bd !== c.id) { ic.dataset.bd = c.id; ic.dataset.k = 'sk:'; ic.src = src; } }
-      if (b) {
-        b.title = '和弦：' + c.sym + ' ' + c.name + '（' + chordDesc(c, P) + '）。點一下換和弦；按住寫 10 秒的樂譜。';
-        b.classList.remove('none', 'locked', 'nomp'); b.classList.add('lit'); b.classList.toggle('rec', !!ST.rec); b.classList.toggle('perf', !!ST.perf);
-        const cd = b.querySelector('.cd'); if (cd) cd.style.setProperty('--p', ST.rec ? 1 - ST.rec.t / REC_T : ST.perf ? 1 - ST.perf.t / ST.perf.dur : 0);
-        if (sec) { const t = ST.rec ? Math.max(0, REC_T - ST.rec.t).toFixed(1) : ST.perf ? Math.max(0, ST.perf.dur - ST.perf.t).toFixed(1) : ''; if (sec.textContent !== t) sec.textContent = t; }
-      }
       draw(P);
       // 放在畫面左邊、職業特效的條（#core-g）正上方，不擋中間的技能列；左上的資訊框底下留空
       const vis = el => { if (!el) return null; const q = el.getBoundingClientRect(); return q.width && q.height ? q : null; }, r = vis($('core-g')), rt = vis($('r-tl'));
