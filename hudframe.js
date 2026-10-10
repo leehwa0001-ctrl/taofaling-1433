@@ -95,16 +95,22 @@
   // 原本 #r-where 的 hf-g-分級 只在遺跡裡換，回到城裡還掛著最後那座遺跡的顏色和字母牌。
   // 東鶴的街上＝暖色的燈籠金、牌子「東鶴」；公會（東鶴分館、奉主分館）＝金色雙線框、紅底金字的「公會」印；奉主＝鋼灰、一排鉚釘、「奉主」；其他室內＝素色、沒有牌子。
   const PLACE = { town: '東鶴', guild: '公會', hosu: '奉主', inside: '' };
-  const placeOf = w => { if (w.inside) { const n = (w.inside.pl && w.inside.pl.name) || ''; return /公會/.test(n) ? 'guild' : w.town && w.town.hosu ? 'hosu' : 'inside'; } if (w.town) return w.town.hosu ? 'hosu' : 'town'; return null; };
-  setInterval(() => {
+  // 2026-10-10：精緻城市（皇嶺、吉山、奉主、東鶴）的牌子寫自己的名字（原本一律「東鶴」）；精緻城市的店裡＝室內（公會的照公會）
+  const placeOf = w => { if (w.inside) { const n = (w.inside.pl && w.inside.pl.name) || ''; return /公會/.test(n) ? 'guild' : w.town && w.town.hosu ? 'hosu' : 'inside'; } if (w.town) { if (w.town.room) return /公會/.test((w.town.room && (w.town.room.name || w.town.room.title)) || '') ? 'guild' : 'inside'; if (w.town.ck) return w.town.ck === 'hosu' ? 'hosu' : 'town'; return w.town.hosu ? 'hosu' : 'town'; } return null; };
+  const labelOf = (w, p) => (p === 'town' && w.town && w.town.ck && w.town.city ? w.town.city.name : PLACE[p]);
+  const badge = () => {
     try {
       const w = W(); if (!w || w.run) return; const el = $('r-where'), p = el && placeOf(w); if (!p) return;
       el.classList.add('hf-where'); [...el.classList].forEach(c => { if (/^hf-g-/.test(c) && c !== 'hf-g-' + p) el.classList.remove(c); }); el.classList.add('hf-g-' + p);
-      let b = el.querySelector('.hf-badge'); const t = PLACE[p];
+      let b = el.querySelector('.hf-badge'); const t = labelOf(w, p);
       if (!t) { if (b) b.remove(); return; }
       if (!b) { b = document.createElement('i'); b.className = 'hf-badge'; el.appendChild(b); } if (b.textContent !== t) b.textContent = t;
     } catch (e) { }
-  }, 400);
+  };
+  setInterval(badge, 400);
+  // 2026-10-10 作者：「東鶴」牌子一直閃——精緻城市的狀態列時間一走就整個重寫，牌子被洗掉、要等下一次（最多 0.4 秒）才補回來。
+  // 重寫的當下馬上補回去（MutationObserver 在畫面更新之前就跑）
+  { let mo = null, el0 = null; setInterval(() => { const el = $('r-where'); if (!el || el === el0) return; el0 = el; if (mo) mo.disconnect(); mo = new MutationObserver(() => { const w = W(); if (w && !w.run && !el.querySelector('.hf-badge')) badge(); }); mo.observe(el, { childList: true }); }, 1000); }
 
   // ---------- 樣式 ----------
   const ICE = "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='46' height='12' viewBox='0 0 46 12'><path d='M0 0h46L44 3 42 9 40 3 36 6 33 2 30 11 27 2 23 5 20 1 17 8 14 2 10 6 7 1 4 10 2 2z' fill='%23E6F4FF'/><path d='M30 11l-1-6M17 8l-1-4M4 10l-1-5' stroke='%23FFFFFF' stroke-width='.6'/></svg>\")";
